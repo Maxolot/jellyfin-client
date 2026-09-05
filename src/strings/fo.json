@@ -1725,5 +1725,6 @@
     "MessageSyncPlayDisabled": "SyncPlay er óvirkt.",
     "MessageSyncPlayEnabled": "SyncPlay er virkt.",
     "MessageNoNextUpItems": "Einki á skránni. Byrja at hyggja eftir sendirøðum!",
-    "Mixer": "Ljóðblandari"
+    "Mixer": "Ljóðblandari",
+    "MessageSyncPlayGroupWait": "{0} innlesur…"
 }
