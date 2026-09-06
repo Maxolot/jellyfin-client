@@ -1190,7 +1190,7 @@
     "SettingsPageLoadError": "Miseydnaðist at innlesa stillingarsíðuna",
     "ResumeLoadError": "Miseydnaðist at innlesa uppafturtøkustillingar",
     "ThemeVideos": "Eyðkenniskykmyndir",
-    "Sample": "Kut",
+    "Sample": "Sýnislutur",
     "ThemeVideo": "Eyðkenniskykmynd",
     "LabelJpegQualityHelp": "JPEG-stappingargóðskan at brúka til trickplay-myndir.",
     "LogLoadFailure": "Miseydnaðist at innlesa gerðalistafíluna. Møguliga verður framvegis skriva í hana.",
@@ -1740,5 +1740,10 @@
     "HeaderPasswordReset": "Loyniorðsendurseting",
     "PasswordResetComplete": "Loyniorðið er endursett.",
     "ResetPassword": "Endurset loyniorð",
-    "GridView": "Talvusýni"
+    "GridView": "Talvusýni",
+    "MediaInfoCodecTag": "Kodek-eyðmerki",
+    "MediaInfoSampleRate": "Sýnistídd",
+    "LabelAudioSampleRate": "Ljóðsýnistídd",
+    "AudioSampleRateNotSupported": "Virkisføri vantar fyri ljóðsýnistíddini",
+    "MessageNoMovieSuggestionsAvailable": "Eingi filmsuppskot eru tøk í løtuni. Eftir at tú hevur hugt at og ummælt tínar filmar skuldi tú sæð uppskot her."
 }
