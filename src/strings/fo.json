@@ -1726,5 +1726,7 @@
     "MessageSyncPlayEnabled": "SyncPlay er virkt.",
     "MessageNoNextUpItems": "Einki á skránni. Byrja at hyggja eftir sendirøðum!",
     "Mixer": "Ljóðblandari",
-    "MessageSyncPlayGroupWait": "{0} innlesur…"
+    "MessageSyncPlayGroupWait": "{0} innlesur…",
+    "MessagePleaseEnsureInternetMetadata": "Vinaliga tryggja at niðurtøka av metadátum frá alnetinum er virkt.",
+    "MessageUnsetContentHelp": "Innihaldið verður víst sum reiðar skjáttur. At áseta innihaldsslagið í metadátuumsitaranum gevur besta úrslitið."
 }
