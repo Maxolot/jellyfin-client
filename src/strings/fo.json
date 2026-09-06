@@ -1728,5 +1728,13 @@
     "Mixer": "Ljóðblandari",
     "MessageSyncPlayGroupWait": "{0} innlesur…",
     "MessagePleaseEnsureInternetMetadata": "Vinaliga tryggja at niðurtøka av metadátum frá alnetinum er virkt.",
-    "MessageUnsetContentHelp": "Innihaldið verður víst sum reiðar skjáttur. At áseta innihaldsslagið í metadátuumsitaranum gevur besta úrslitið."
+    "MessageUnsetContentHelp": "Innihaldið verður víst sum reiðar skjáttur. At áseta innihaldsslagið í metadátuumsitaranum gevur besta úrslitið.",
+    "EnableSmoothScroll": "Virkja javnt skrull",
+    "LabelDropImageHere": "Hála og slepp eini mynd her, ella trýst fyri at velja.",
+    "LabelDropLyricsHere": "Hála og slepp einum sangteksti her, ella trýst fyri at velja.",
+    "LabelDropSubtitleHere": "Hála og slepp einum undirteksti her, ella trýst fyri at velja.",
+    "LabelMetadataDownloadLanguage": "Ynskt mál fyri niðurtøkur",
+    "LabelPublishedServerUriHelp": "Broyt leinkjuna ið Jellyfin brúkar alt eftir netmarkamóti ella viðskiftarans IP-atsetri.",
+    "LabelPublishedServerUri": "Kunngjørdar ambætaraleinkjur",
+    "LabelUseSamePublishedServerUri": "Brúka somu kunngjørdu ambætaraleinkju fyri nærnets- og fjarnetsatkomu"
 }
