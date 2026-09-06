@@ -1739,5 +1739,6 @@
     "LabelUseSamePublishedServerUri": "Brúka somu kunngjørdu ambætaraleinkju fyri nærnets- og fjarnetsatkomu",
     "HeaderPasswordReset": "Loyniorðsendurseting",
     "PasswordResetComplete": "Loyniorðið er endursett.",
-    "ResetPassword": "Endurset loyniorð"
+    "ResetPassword": "Endurset loyniorð",
+    "GridView": "Talvusýni"
 }
