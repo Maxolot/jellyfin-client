@@ -1745,5 +1745,12 @@
     "MediaInfoSampleRate": "Sýnistídd",
     "LabelAudioSampleRate": "Ljóðsýnistídd",
     "AudioSampleRateNotSupported": "Virkisføri vantar fyri ljóðsýnistíddini",
-    "MessageNoMovieSuggestionsAvailable": "Eingi filmsuppskot eru tøk í løtuni. Eftir at tú hevur hugt at og ummælt tínar filmar skuldi tú sæð uppskot her."
+    "MessageNoMovieSuggestionsAvailable": "Eingi filmsuppskot eru tøk í løtuni. Eftir at tú hevur hugt at og ummælt tínar filmar skuldi tú sæð uppskot her.",
+    "HeaderRemoteControl": "Fjarstýring",
+    "HeaderSeriesOptions": "Sendiraðarstillingar",
+    "HeaderSeriesStatus": "Sendiraðarstøða",
+    "HeaderEpisodesStatus": "Partastøðu",
+    "LabelBlastMessageInterval": "Virkisfráboðanartíðarbil",
+    "LabelBlastMessageIntervalHelp": "Avgerð tíðarbili í sekundum ímillum boðini har kervi ger vart við seg.",
+    "PasswordResetConfirmation": "Ynskir tú at endurstilla loyniorðið?"
 }
