@@ -1764,5 +1764,6 @@
     "LabelSimultaneousConnectionLimit": "Hámark á samstundis stroymum",
     "LabelLocalHttpServerPortNumber": "Lurta á HTTP-portur nummari",
     "LabelSyncPlayHaltPlayback": "Steðga spælingini á hesi eindini",
-    "LabelSyncPlayResumePlayback": "Tak spælingina á hesi eindini uppaftur"
+    "LabelSyncPlayResumePlayback": "Tak spælingina á hesi eindini uppaftur",
+    "MessageSyncPlayGroupDoesNotExist": "Bar ikki til at luttaka í bólkinum tí hann er ikki til."
 }
