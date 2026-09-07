@@ -185,7 +185,7 @@
     "ButtonSignIn": "Innrita",
     "ButtonSignOut": "Útrita",
     "Channels": "Rásir",
-    "Favorites": "Yndis",
+    "Favorites": "Yndislista",
     "Folders": "Skjáttur",
     "Collections": "Samlingar",
     "Default": "Forsett",
@@ -442,7 +442,7 @@
     "EnableCinemaMode": "Biografstøða",
     "EnableLibrary": "Virkja savnið",
     "ExtraLarge": "Eyka stórt",
-    "Favorite": "Yndis",
+    "Favorite": "Legg á yndislistan",
     "FastForward": "Spola fram",
     "GuideProviderLogin": "Rita inn",
     "HeaderActivity": "Virksemi",
@@ -964,7 +964,7 @@
     "LabelLibraryPageSizeHelp": "Áset hvussu nógvir miðlar verða vístir á hvørjari savnssíðu. Verður 0 ásett verða søvn ikki deild upp í síður. Hav í huga at um hetta verður sett til 0 ella hægri enn 100 kann tað elva til villur og skert avrikaføri.",
     "LabelImportOnlyFavoriteChannels": "Einans yndisrásir",
     "ImportFavoriteChannelsHelp": "Einans rásir ið á móttakaranum eru merktar yndisrásir verða innlisnar.",
-    "LabelKodiMetadataEnableExtraThumbs": "Avrita \"extrafanart\" til \"extrathumbs\" reinin",
+    "LabelKodiMetadataEnableExtraThumbs": "Avrita \"extrafanart\" til \"extrathumbs\"-teigin",
     "LabelKodiMetadataSaveImagePaths": "Goym leiðir til myndir í NFO-fílum",
     "LabelKodiMetadataSaveImagePathsHelp": "Mælt er til at virkja hettar í fall tú hevur myndir við fílunøvnum ið ikki eru lagað eftir Kodi leiðreglunum.",
     "LabelLockItemToPreventChanges": "Læs hendan miðilin til tess at forða framtíðar metadátubroytingum",
@@ -1752,5 +1752,10 @@
     "HeaderEpisodesStatus": "Partastøða",
     "LabelBlastMessageInterval": "Virkisfráboðanartíðarbil",
     "LabelBlastMessageIntervalHelp": "Avgerð tíðarbili í sekundum ímillum boðini har kervi ger vart við seg.",
-    "PasswordResetConfirmation": "Ynskir tú at endurstilla loyniorðið?"
+    "PasswordResetConfirmation": "Ynskir tú at endurstilla loyniorðið?",
+    "HeaderEnabledFieldsHelp": "Frável upplýsingar til tess at læsa tilsvarandi teigarnar og harvið forða teimum í at verða broyttir.",
+    "LabelChapterImageResolutionHelp": "Loysnið ið kapitlamyndir skulu framleiðast í. At broyta hetta hevur onga ávirkan á fyribilskapitlamyndir ið longu eru framleiddar.",
+    "LabelDummyChapterDurationHelp": "Tíðarbil í sekundum í millum fyribilskapitlar. Áset 0 til tess at óvirkja framleiðslu av fyribilskapitlamyndum. At broyta hetta hevur onga ávirkan á fyribilskapitlamyndir ið longu eru framleiddar.",
+    "LabelKodiMetadataEnableExtraThumbsHelp": "Niðurtiknar myndir kunnu verða vístar til bæði í \"extrafanart\" og \"extrathumbs\"-teigunum fyri besta sínamillumvirkni við Kodi.",
+    "LabelMaxMuxingQueueSize": "Hámark á pakkibíðirøð"
 }
