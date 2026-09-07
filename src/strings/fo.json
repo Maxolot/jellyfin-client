@@ -1762,5 +1762,7 @@
     "LabelNoChangelog": "Eingin broytingarlisti fylgir við hesi útgávuni.",
     "LabelMetadataReadersHelp": "Raðfest tínar lokalu metadátukeldur. Fyrst funna fílan verður innlisin.",
     "LabelSimultaneousConnectionLimit": "Hámark á samstundis stroymum",
-    "LabelLocalHttpServerPortNumber": "Lurta á HTTP-portur nummari"
+    "LabelLocalHttpServerPortNumber": "Lurta á HTTP-portur nummari",
+    "LabelSyncPlayHaltPlayback": "Steðga spælingini á hesi eindini",
+    "LabelSyncPlayResumePlayback": "Tak spælingina á hesi eindini uppaftur"
 }
