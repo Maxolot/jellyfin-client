@@ -1699,7 +1699,7 @@
     "MediaSegmentAction.Skip": "Izlaist",
     "MediaSegmentAction.AskToSkip": "Prasīt pirms pārlēkt",
     "MediaSegmentSkipPrompt": "Izlaist {0}",
-    "MediaSegmentType.Commercial": "Komerciāls",
+    "MediaSegmentType.Commercial": "Reklāma",
     "MediaSegmentType.Intro": "Ievads",
     "PasswordMissingSaveError": "Jaunā parole nedrīkst būt tukša.",
     "SearchForLyrics": "Meklēt dziesmu vārdus",
