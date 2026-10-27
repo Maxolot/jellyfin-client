@@ -3,6 +3,7 @@
 // from an isolated runner. No administrator token or instance address is embedded.
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { createHash } from 'node:crypto';
 
 const runtime = process.env.ACTIONS_RUNTIME_URL;
 const token = process.env.ACTIONS_RUNTIME_TOKEN;
@@ -27,7 +28,7 @@ async function request(url: URL, method: string, body: Buffer | string, headers:
         signal: AbortSignal.timeout(60000),
         redirect: 'error'
     });
-    if (!response.ok) throw new Error(`Artifact request failed: HTTP ${response.status}`);
+    if (!response.ok) throw new Error(`Artifact ${method} request failed: HTTP ${response.status}`);
     return response;
 }
 
@@ -54,6 +55,7 @@ for (const file of (await readdir(folder)).sort()) {
         const end = Math.min(start + chunkSize, data.length);
         const response = await request(url, 'PUT', data.subarray(start, end), {
             'Content-Type': 'application/octet-stream',
+            'x-actions-results-md5': createHash('md5').update(data.subarray(start, end)).digest('base64'),
             'Content-Range': `bytes ${start}-${end - 1}/${data.length}`
         });
         await response.arrayBuffer();
