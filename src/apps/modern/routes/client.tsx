@@ -2,7 +2,7 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import { getUserDataApi } from '@jellyfin/sdk/lib/utils/api/user-data-api';
 import { useQueryClient } from '@tanstack/react-query';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 
 import Page from 'components/Page';
@@ -57,18 +57,24 @@ function useClientController() {
     }, [search]);
     useEffect(() => {
         setActionError('');
-        const key = `client-scroll-${params.toString()}`;
+    }, [params]);
+    const pageReady = id ? !!item : view === 'settings' || !!media.data;
+    useLayoutEffect(() => {
+        if (!pageReady) return;
+        const key = `${prefKey}-scroll-${params.toString()}`;
         try {
             window.scrollTo(0, Number(sessionStorage.getItem(key)) || 0);
         } catch {
             window.scrollTo(0, 0);
         }
-        return () => {
+        const saveScroll = () => {
             try {
                 sessionStorage.setItem(key, String(window.scrollY));
             } catch { /* Storage can be disabled. */ }
         };
-    }, [params]);
+        window.addEventListener('scroll', saveScroll, { passive: true });
+        return () => window.removeEventListener('scroll', saveScroll);
+    }, [params, pageReady, prefKey]);
 
     function savePreference(next: Preferences) {
         setPreferences(next);

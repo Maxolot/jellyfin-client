@@ -508,6 +508,12 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     outline-offset: 4px;
 }
 
+@media (prefers-reduced-motion: reduce) {
+    .client-card {
+        transition: none;
+    }
+}
+
 @media (max-width: 700px) {
     .client-interface {
         padding-top: 9px;
