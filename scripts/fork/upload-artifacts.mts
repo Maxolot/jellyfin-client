@@ -55,7 +55,7 @@ for (const file of (await readdir(folder)).sort()) {
         const end = Math.min(start + chunkSize, data.length);
         const response = await request(url, 'PUT', data.subarray(start, end), {
             'Content-Type': 'application/octet-stream',
-            'x-actions-results-md5': createHash('md5').update(data.subarray(start, end)).digest('base64'),
+            'x-actions-results-md5': createHash('md5').update(new Uint8Array(data.subarray(start, end))).digest('base64'),
             'Content-Range': `bytes ${start}-${end - 1}/${data.length}`
         });
         await response.arrayBuffer();
