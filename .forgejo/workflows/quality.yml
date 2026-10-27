@@ -1,0 +1,46 @@
+name: Client quality
+on:
+  push:
+    branches: ['main', 'setup/**', 'feature/**', 'fix/**', 'upstream/**']
+    tags: ['client-v*']
+  pull_request:
+  workflow_dispatch:
+jobs:
+  quality:
+    name: quality
+    runs-on: docker
+    timeout-minutes: 40
+    steps:
+      - uses: https://github.com/actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: https://github.com/actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+      - name: Locked dependency installation
+        run: npm ci --no-audit
+      - name: TypeScript
+        run: npm run build:check
+      - name: Unit tests
+        run: npm test -- --maxWorkers=2
+      - name: JavaScript and TypeScript style
+        run: npm run lint
+      - name: Stylesheet style
+        run: npm run stylelint
+      - name: Production build (bounded memory)
+        env:
+          NODE_ENV: production
+          NODE_OPTIONS: --max-old-space-size=2304
+          JELLYFIN_VERSION: ${{ github.sha }}
+        run: node node_modules/webpack/bin/webpack.js --config packaging/fork/webpack.ci.cjs
+      - name: Legacy JavaScript target
+        run: npm run escheck
+      - name: Traceable binary and source archives
+        run: scripts/fork/package.sh
+      - uses: https://code.forgejo.org/forgejo/upload-artifact@16871d9e8cfcf27ff31822cac382bbb5450f1e1e # Forgejo-patched v4
+        with:
+          name: jellyfin-client-${{ github.sha }}
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 30

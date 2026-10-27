@@ -1,0 +1,7 @@
+**
+!dist/
+!dist/**
+!packaging/
+!packaging/fork/
+!packaging/fork/Dockerfile.runtime
+!packaging/fork/nginx.conf
