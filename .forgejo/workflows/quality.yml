@@ -18,10 +18,18 @@ jobs:
       - uses: https://github.com/actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .node-version
+      - name: Prepare artifact transport probe
+        run: mkdir -p .fork-local/ci-probe && printf 'pipeline artifact routing OK\n' > .fork-local/ci-probe/probe.txt
+      - uses: ./.forgejo/actions/upload-artifact
+        with:
+          name: pipeline-routing-${{ github.sha }}
+          path: .fork-local/ci-probe
       - name: Locked dependency installation
         run: npm ci --no-audit
       - name: TypeScript
-        run: npm run build:check
+        run: |
+          npm run build:check
+          node node_modules/typescript/bin/tsc --noEmit --skipLibCheck --target ES2022 --module nodenext scripts/fork/upload-artifacts.mts
       - name: Unit tests
         run: npm test -- --maxWorkers=2
       - name: JavaScript and TypeScript style
@@ -38,9 +46,7 @@ jobs:
         run: npm run escheck
       - name: Traceable binary and source archives
         run: scripts/fork/package.sh
-      - uses: https://code.forgejo.org/forgejo/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3 artifact protocol
+      - uses: ./.forgejo/actions/upload-artifact
         with:
           name: jellyfin-client-${{ github.sha }}
-          path: artifacts/
-          if-no-files-found: error
-          retention-days: 30
+          path: artifacts

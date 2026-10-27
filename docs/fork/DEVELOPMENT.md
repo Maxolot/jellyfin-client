@@ -62,3 +62,11 @@ the previous version for rollback with the same runtime configuration.
 
 CI runs on pull requests, main updates and release tags. Feature-branch pushes do not
 run a second identical job alongside their pull request. Main requires the PR quality check.
+
+Artifact upload uses the authenticated runtime endpoint throughout, including when
+the Forgejo API returns its public web URL for an upload. Isolated runners may not
+reach that public address. The local action uses the standard v3 pipeline protocol,
+short-lived runtime credentials, same-instance path validation and no redirects.
+It has no administrator secret and contains no deployment-specific hostnames.
+A small transport probe runs before expensive checks, and the archives are uploaded
+only after successful validation.
