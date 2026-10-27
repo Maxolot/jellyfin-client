@@ -1,6 +1,6 @@
 # Fork changelog
 
-## Unreleased
+## client-v0.1.0-alpha.2
 
 - Recover expired SDK sessions through inherited sign-out; share concurrent recovery.
 - Keep permission errors distinct from expired authentication.
