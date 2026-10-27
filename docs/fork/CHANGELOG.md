@@ -1,5 +1,10 @@
 # Fork changelog
 
+## client-v0.1.0-alpha.3
+
+- Restore keyboard focus to the selected media card when returning from details.
+- Preserve the parent return context across linked media details and season changes.
+
 ## client-v0.1.0-alpha.2
 
 - Recover expired SDK sessions through inherited sign-out; share concurrent recovery.

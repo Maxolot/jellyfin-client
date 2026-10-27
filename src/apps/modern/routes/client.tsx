@@ -3,7 +3,7 @@ import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import { getUserDataApi } from '@jellyfin/sdk/lib/utils/api/user-data-api';
 import { useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useLayoutEffect, useState } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigationType, useSearchParams } from 'react-router-dom';
 
 import Page from 'components/Page';
 import { playbackManager } from 'components/playback/playbackmanager';
@@ -17,6 +17,7 @@ import { useClientDetails, useClientGenres, useClientMedia } from '../features/c
 import '../features/client/client.scss';
 
 type Preferences = { glass: boolean, floating: boolean, detail: 'continuous' | 'fade' | 'immersive' };
+type ClientNavigationState = { returnTo?: string, returnState?: ClientNavigationState | null, restoreFocus?: boolean };
 const defaults: Preferences = { glass: true, floating: false, detail: 'continuous' };
 const links = [['home', 'Accueil'], ['series', 'Séries'], ['films', 'Films'], ['search', 'Rechercher'], ['mine', 'Ma liste']];
 
@@ -24,6 +25,7 @@ function useClientController() {
     const { api, user } = useApi();
     const [params, setParams] = useSearchParams();
     const location = useLocation();
+    const restoreFocus = useNavigationType() === 'POP' || (location.state as ClientNavigationState | null)?.restoreFocus === true;
     const view = params.get('view') || 'home';
     const id = params.get('id') || '';
     const search = params.get('q') || '';
@@ -67,14 +69,33 @@ function useClientController() {
         } catch {
             window.scrollTo(0, 0);
         }
+        try {
+            const savedFocus = sessionStorage.getItem(`${key}-focus`);
+            const target = restoreFocus ? Array.from(document.querySelectorAll<HTMLElement>('#clientPage [data-client-focus]'))
+                .find(element => savedFocus && element.getAttribute('data-client-focus') === savedFocus) : undefined;
+            (target || (id ? document.querySelector<HTMLElement>('#clientPage .client-back') : null))?.focus({ preventScroll: true });
+        } catch { /* Navigation remains usable when storage is unavailable. */ }
+        const saveFocus = (event: FocusEvent) => {
+            const target = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-client-focus]') : null;
+            if (target?.dataset.clientFocus) {
+                try {
+                    sessionStorage.setItem(`${key}-focus`, target.dataset.clientFocus);
+                } catch { /* Storage can be disabled. */ }
+            }
+        };
         const saveScroll = () => {
             try {
                 sessionStorage.setItem(key, String(window.scrollY));
             } catch { /* Storage can be disabled. */ }
         };
         window.addEventListener('scroll', saveScroll, { passive: true });
-        return () => window.removeEventListener('scroll', saveScroll);
-    }, [params, pageReady, prefKey]);
+        const page = document.getElementById('clientPage');
+        page?.addEventListener('focusin', saveFocus);
+        return () => {
+            window.removeEventListener('scroll', saveScroll);
+            page?.removeEventListener('focusin', saveFocus);
+        };
+    }, [params, pageReady, prefKey, id, restoreFocus]);
 
     function savePreference(next: Preferences) {
         setPreferences(next);
@@ -110,8 +131,8 @@ function useClientController() {
         }
     }
     function cards(items: BaseItemDto[], horizontal = false) {
-        return items.map(i => <Link className={`client-card${horizontal ? ' client-card-wide' : ''}`} key={i.Id}
-            to={`/client?id=${i.Id}`} state={{ returnTo: location.pathname + location.search }} aria-label={[i.SeriesName, i.Name].filter(Boolean).join(' · ')}>
+        return items.map(i => <Link className={`client-card${horizontal ? ' client-card-wide' : ''}`} key={i.Id} data-client-focus={i.Id}
+            to={`/client?id=${i.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }} aria-label={[i.SeriesName, i.Name].filter(Boolean).join(' · ')}>
             <img src={image(i, horizontal)} alt='' loading='lazy' onError={e => { e.currentTarget.hidden = true; }} />
             {horizontal && <span className='client-card-caption'><strong>{i.SeriesName || i.Name}</strong>
                 <small>{i.Type === 'Episode' ? `${episodeLabel(i)} · ${i.Name}` : i.ProductionYear}</small></span>}
@@ -171,7 +192,7 @@ function HeroView({ model }: ViewProps) {
     if (hero.Type === 'Episode') kind = hero.SeriesName || 'ÉPISODE';
     return <section className={`client-hero${id ? ' client-detail' : ''}`}>
         <img className='client-background' src={image(hero, true)} alt='' onError={e => { e.currentTarget.hidden = true; }} />
-        {id && <Link className='client-back' to={(location.state as { returnTo?: string } | null)?.returnTo || '/client'}>‹ Retour</Link>}
+        {id && <Link className='client-back' to={(location.state as ClientNavigationState | null)?.returnTo || '/client'} state={{ ...(location.state as ClientNavigationState | null)?.returnState, restoreFocus: true }}>‹ Retour</Link>}
         <div className='client-hero-copy'><span className='client-eyebrow'>{kind}</span>
             {hero.ImageTags?.Logo ? <img className='client-title-logo' src={`${api?.basePath}/Items/${hero.Id}/Images/Logo?maxWidth=740&quality=90`} alt={hero.Name || ''} onError={e => {
                 e.currentTarget.hidden = true;
@@ -182,7 +203,7 @@ function HeroView({ model }: ViewProps) {
             <p className='client-overview'>{hero.Overview}</p>
             <div className='client-actions'>
                 {playable && <button className='client-play' onClick={() => play(playable)}>▶ {playLabel}</button>}
-                {!id && <Link className='client-button' to={`/client?id=${hero.Id}`} state={{ returnTo: location.pathname + location.search }}>ⓘ Plus d’infos</Link>}
+                {!id && <Link className='client-button' data-client-focus={`info-${hero.Id}`} to={`/client?id=${hero.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }}>ⓘ Plus d’infos</Link>}
                 {id && <><button className='client-button' disabled={busy} aria-pressed={!!item?.UserData?.IsFavorite} onClick={() => updateState('favorite')}>{item?.UserData?.IsFavorite ? '✓ Ma liste' : '+ Ma liste'}</button>
                     <button className='client-button' disabled={busy} aria-pressed={!!item?.UserData?.Played} onClick={() => updateState('played')}>{item?.UserData?.Played ? '✓ Vu' : 'Marquer vu'}</button></>}
             </div>
