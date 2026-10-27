@@ -1,0 +1,651 @@
+/* Client-specific surface. Playback and inherited pages keep their own styles. */
+body:has(.client-page:not(.hide)) .skinHeader,
+body:has(.client-page:not(.hide)) .mainDrawer,
+body:has(.client-page:not(.hide)) .backgroundContainer {
+    display: none;
+}
+
+.client-page {
+    padding: 0 !important;
+    background: #090a0d;
+    color: #f4f4f5;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.client-interface {
+    --client-margin: clamp(20px, 4vw, 80px);
+
+    position: relative;
+    min-height: 100vh;
+    padding-top: 22px;
+    isolation: isolate;
+
+    * {
+        box-sizing: border-box;
+    }
+
+    a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    button,
+    input {
+        color: inherit;
+        font: inherit;
+    }
+
+    button {
+        cursor: pointer;
+    }
+}
+
+.client-nav {
+    position: sticky;
+    z-index: 20;
+    top: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    min-height: 74px;
+    margin: 0 var(--client-margin) 22px;
+    padding: 13px 20px;
+    border: 1px solid #ffffff24;
+    border-radius: 28px;
+    background: #191c24b3;
+    backdrop-filter: blur(22px);
+
+    > div {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    > div a {
+        padding: 11px 17px;
+        border-radius: 99px;
+        white-space: nowrap;
+        font-size: 15px;
+    }
+
+    a[aria-current='page'] {
+        background: #ffffff1c;
+        box-shadow: inset 0 0 0 1px #ffffff48;
+    }
+}
+
+.client-brand,
+.client-profile {
+    display: grid;
+    place-items: center;
+    width: 35px;
+    height: 35px;
+    border-radius: 12px;
+    background: #a53242;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.client-profile {
+    background: #303746;
+}
+
+.client-floating .client-nav {
+    border-color: transparent;
+    background: none;
+    backdrop-filter: none;
+}
+
+.client-classic .client-nav {
+    background: linear-gradient(#090a0df5, #090a0d99);
+    border-color: transparent;
+    backdrop-filter: none;
+}
+
+.client-floating.client-classic .client-nav {
+    background: none;
+}
+
+.client-hero {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: calc(100svh - 118px);
+    padding: 70px var(--client-margin) 85px;
+    isolation: isolate;
+}
+
+.client-background {
+    position: absolute;
+    z-index: -2;
+    inset: -118px 0 0;
+    width: 100%;
+    height: calc(100% + 118px);
+    object-fit: cover;
+}
+
+.client-hero::before {
+    position: absolute;
+    z-index: -1;
+    inset: -118px 0 0;
+    background: linear-gradient(90deg, #090a0dcc, #090a0d66 24%, transparent 60%), linear-gradient(0deg, #090a0d, transparent 55%);
+    content: '';
+}
+
+.client-hero-copy {
+    width: min(540px, 43vw);
+    padding: 25px 0;
+}
+
+.client-title-logo {
+    width: min(400px, 100%);
+    height: 110px;
+    margin: 15px 0;
+    object-fit: contain;
+    object-position: left center;
+}
+
+.client-hero h1 {
+    margin: 18px 0;
+    font-size: clamp(28px, 3.7vw, 60px);
+    line-height: 1.1;
+}
+
+.client-eyebrow {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: #c9cbd4;
+}
+
+.client-meta {
+    color: #d3d7df;
+    font-size: 12px;
+    line-height: 1.8;
+}
+
+.client-overview {
+    display: -webkit-box;
+    overflow: hidden;
+    margin: 20px 0;
+    color: #e0e1e8;
+    font-size: 15px;
+    line-height: 1.8;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+}
+
+.client-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.client-button,
+.client-play,
+.client-settings button,
+.client-library button,
+.client-message button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 13px 20px;
+    border: 1px solid #ffffff64;
+    border-radius: 99px;
+    background: #ffffff18;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.client-play {
+    background: #f0f1f4;
+    color: #15191e !important;
+}
+
+.client-glass .client-button {
+    backdrop-filter: blur(18px);
+}
+
+.client-original-link {
+    display: inline-block;
+    margin-top: 19px;
+    color: #c8cfdb !important;
+    font-size: 11px;
+}
+
+.client-back {
+    position: absolute;
+    top: 18px;
+    left: var(--client-margin);
+    padding: 12px 18px;
+    border: 1px solid #fff6;
+    border-radius: 99px;
+    background: #15191d80;
+}
+
+.client-detail {
+    justify-content: space-between;
+    padding-top: 80px;
+    padding-bottom: 25px;
+}
+
+.client-detail .client-hero-copy {
+    flex: 1;
+    align-content: center;
+}
+
+.client-layout-fade .client-detail::after {
+    position: absolute;
+    z-index: -1;
+    top: -118px;
+    right: 0;
+    left: 0;
+    height: 400px;
+    background: linear-gradient(#090a0d, #090a0dc0 35%, transparent);
+    content: '';
+}
+
+.client-layout-immersive.client-detail-page .client-nav {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.client-layout-immersive .client-back {
+    position: fixed;
+    z-index: 30;
+    top: 25px;
+}
+
+.client-row {
+    margin: 20px 0 40px;
+}
+
+.client-row h2 {
+    margin: 0 var(--client-margin) 17px;
+    font-size: 22px;
+    font-weight: 500;
+}
+
+.client-strip {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding: 5px var(--client-margin) 15px;
+    scrollbar-width: none;
+}
+
+.client-card {
+    position: relative;
+    display: block;
+    flex: 0 0 clamp(130px, 13vw, 220px);
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #1c222d;
+    isolation: isolate;
+    transition: transform 0.25s;
+}
+
+.client-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.client-card:hover,
+.client-card:focus-visible {
+    transform: translateY(-3px);
+    box-shadow: 0 0 0 2px #fff;
+}
+
+.client-card-wide {
+    flex-basis: clamp(260px, 27vw, 430px);
+    aspect-ratio: 16 / 9;
+}
+
+.client-card-caption {
+    position: absolute;
+    inset: 35% 0 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 7px;
+    padding: 18px;
+    background: linear-gradient(transparent, #000d);
+}
+
+.client-card-caption strong {
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.client-card-caption small {
+    font-size: 11px;
+    color: #c7d1e0;
+}
+
+.client-card-fallback {
+    position: absolute;
+    z-index: -1;
+    inset: 20px;
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+    text-align: center;
+}
+
+.client-progress {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: #ffffff30;
+}
+
+.client-progress i {
+    display: block;
+    height: 100%;
+    background: #e23843;
+}
+
+.client-episodes {
+    width: 100%;
+    margin-top: 22px;
+}
+
+.client-episodes header {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin-bottom: 14px;
+}
+
+.client-episodes h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+}
+
+.client-episodes header > div {
+    display: flex;
+    gap: 7px;
+    overflow-x: auto;
+}
+
+.client-episodes header button {
+    flex-shrink: 0;
+    padding: 10px 13px;
+    border: 1px solid #ffffff48;
+    border-radius: 10px;
+    background: #10151b80;
+    font-size: 12px;
+}
+
+.client-episodes [aria-pressed='true'] {
+    background: #eee;
+    color: #171a20;
+}
+
+.client-episodes .client-strip {
+    padding-right: 0;
+    padding-left: 2px;
+}
+
+.client-episode {
+    position: relative;
+    flex: 0 0 clamp(230px, 21vw, 340px);
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    padding: 0;
+    border: 1px solid #fff2;
+    border-radius: 10px;
+    background: #191f2a;
+}
+
+.client-episode img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.client-episode > span {
+    position: absolute;
+    inset: 20% 0 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 7px;
+    padding: 15px;
+    background: linear-gradient(transparent, #000e);
+    text-align: left;
+}
+
+.client-episode strong {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.client-episode small {
+    font-size: 11px;
+    color: #c2ccdb;
+}
+
+.client-settings,
+.client-library,
+.client-message {
+    padding: 25px var(--client-margin) 60px;
+}
+
+.client-settings h1,
+.client-library h1 {
+    font-size: 32px;
+    font-weight: 500;
+}
+
+.client-settings h2 {
+    margin-top: 35px;
+    font-size: 19px;
+    font-weight: 500;
+}
+
+.client-setting-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.client-settings button[aria-pressed='true'] {
+    background: #e8eaf0;
+    color: #15191f;
+}
+
+.client-settings-link {
+    margin-top: 40px;
+}
+
+.client-library form {
+    display: flex;
+    gap: 12px;
+    margin: 25px 0 30px;
+}
+
+.client-library input {
+    width: min(500px, 70%);
+    padding: 14px 18px;
+    border: 1px solid #ffffff40;
+    border-radius: 99px;
+    background: #ffffff08;
+}
+
+.client-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 19px;
+}
+
+.client-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin: 35px 0;
+    font-size: 12px;
+}
+
+.client-interface button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.client-interface :is(button, a, input):focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 4px;
+}
+
+@media (max-width: 700px) {
+    .client-interface {
+        padding-top: 9px;
+    }
+
+    .client-nav {
+        top: 7px;
+        min-height: 61px;
+        gap: 6px;
+        margin: 0 10px 10px;
+        padding: 10px 8px;
+        border-radius: 20px;
+    }
+
+    .client-nav > div a {
+        padding: 10px;
+        font-size: 12px;
+    }
+
+    .client-brand,
+    .client-profile {
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        font-size: 12px;
+    }
+
+    .client-hero {
+        min-height: 65svh;
+        padding: 180px var(--client-margin) 35px;
+    }
+
+    .client-hero-copy {
+        width: 100%;
+    }
+
+    .client-hero::before {
+        background: linear-gradient(0deg, #090a0d, #090a0d88 65%, #090a0d22);
+    }
+
+    .client-background {
+        object-position: 65% center;
+    }
+
+    .client-title-logo {
+        height: 72px;
+    }
+
+    .client-overview {
+        font-size: 13px;
+        line-height: 1.7;
+        -webkit-line-clamp: 3;
+    }
+
+    .client-hero h1 {
+        font-size: 31px;
+    }
+
+    .client-button,
+    .client-play {
+        padding: 11px 15px;
+        font-size: 12px;
+    }
+
+    .client-detail {
+        min-height: calc(100svh - 80px);
+        padding-top: 130px;
+    }
+
+    .client-episodes header {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .client-row h2 {
+        font-size: 19px;
+    }
+
+    .client-card {
+        flex-basis: 135px;
+    }
+
+    .client-card-wide {
+        flex-basis: 280px;
+    }
+
+    .client-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .client-episode {
+        flex-basis: 78vw;
+    }
+
+    .client-library form {
+        flex-wrap: wrap;
+    }
+
+    .client-library input {
+        width: 100%;
+    }
+
+    .client-pagination {
+        gap: 8px;
+    }
+
+    .client-pagination button {
+        padding: 9px 12px;
+    }
+}
+
+.client-filter-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.client-filter-options label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #b9c3d1;
+    font-size: 12px;
+}
+
+.client-filter-options select {
+    max-width: 65vw;
+    padding: 10px 15px;
+    border: 1px solid #ffffff40;
+    border-radius: 99px;
+    background: #171b24;
+    color: #f4f4f5;
+    font: inherit;
+}
+
+.client-logout {
+    display: block !important;
+    margin-top: 24px;
+}
