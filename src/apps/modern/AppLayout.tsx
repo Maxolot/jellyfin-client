@@ -23,6 +23,7 @@ export const Component = () => {
     const { user } = useApi();
     const location = useLocation();
 
+    const isClientPage = ['/client', '/home'].includes(location.pathname);
     const isMediumScreen = useMediaQuery((t: Theme) => t.breakpoints.up('md'));
     const isDrawerAvailable = isDrawerPath(location.pathname) && Boolean(user) && !isMediumScreen;
     const isDrawerOpen = isDrawerActive && isDrawerAvailable;
@@ -42,17 +43,17 @@ export const Component = () => {
                 }}
             >
                 <StrictMode>
-                    <OffsetAppBar dense>
+                    {!isClientPage && <OffsetAppBar dense>
                         <AppToolbar
                             isDrawerAvailable={!isMediumScreen && isDrawerAvailable}
                             isDrawerOpen={isDrawerOpen}
                             onDrawerButtonClick={onToggleDrawer}
                         />
                         {isLibraryPath(location.pathname) && <LibraryToolbar />}
-                    </OffsetAppBar>
+                    </OffsetAppBar>}
 
                     {
-                        isDrawerAvailable && (
+                        isDrawerAvailable && !isClientPage && (
                             <AppDrawer
                                 open={isDrawerOpen}
                                 onClose={onToggleDrawer}
