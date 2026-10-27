@@ -32,3 +32,8 @@ responses share one recovery promise;403 remains a permissions error rather than
 forcing a sign-out. The Dashboard.logout helper returns its existing cleanup
 promise so this recovery can await it. Browser sessions identify as "Jellyfin Client"
 to distinguish the fork from the official web client; native wrapper overrides remain.
+
+Return navigation preserves the focused card separately from scroll. New detail
+pages focus the Back link; explicit return and browser history restore the saved
+card without moving the restored scroll. Nested recommendations carry their parent
+return state so returning through several details reaches the original search/list.
