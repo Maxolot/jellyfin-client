@@ -18,5 +18,7 @@
 5. Run the quality pipeline and the authenticated playback acceptance matrix.
 6. Record the new source commit, compatibility results and changes before releasing.
 
-Current application changes: none. Fork infrastructure and documentation are additive.
+Current application changes: custom React routes/styles and SDK queries, home routing,
+layout selection, a distinct web session name and awaitable upstream logout cleanup.
+Playback and authentication mechanisms are retained; see INTERFACE.md.
 Do not migrate bundlers or replace playback mechanisms as part of visual work.

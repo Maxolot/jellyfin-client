@@ -26,3 +26,9 @@ preferences remain reachable while the custom pages mature.
 The first implementation uses French interface strings. Upstream playback and
 account pages retain their existing localization. Expanded localization, custom
 collections, ratings, external discovery/requests and preview videos are later work.
+
+Expired SDK sessions reuse the inherited sign-out/reconnect flow. Concurrent401
+responses share one recovery promise;403 remains a permissions error rather than
+forcing a sign-out. The Dashboard.logout helper returns its existing cleanup
+promise so this recovery can await it. Browser sessions identify as "Jellyfin Client"
+to distinguish the fork from the official web client; native wrapper overrides remain.

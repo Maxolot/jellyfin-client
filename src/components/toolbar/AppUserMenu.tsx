@@ -54,7 +54,7 @@ const AppUserMenu: FC<AppUserMenuProps> = ({
     }, [ onMenuClose ]);
 
     const onLogoutClick = useCallback(() => {
-        Dashboard.logout();
+        void Dashboard.logout();
         onMenuClose();
     }, [ onMenuClose ]);
 

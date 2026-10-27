@@ -102,7 +102,7 @@ export function onServerChanged(_userId, _accessToken, apiClient) {
 }
 
 export function logout() {
-    ServerConnections.logout().then(function () {
+    return ServerConnections.logout().then(function () {
         // Clear the query cache
         queryClient.clear();
         // Reset cached views

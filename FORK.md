@@ -10,9 +10,11 @@ see [LICENSE](LICENSE). Third-party components retain their own licenses.
 
 ## Current state
 
-The initial milestone is a reproducible, tested upstream baseline, not the completed
-visual prototype. Authentication and playback remain the upstream implementations.
-The interface will be adapted in small, separately reviewed changes.
+The first alpha provides custom home, libraries/search, film and series details,
+favorites, watched state and interface preferences using real Jellyfin data.
+Authentication and playback retain the upstream implementations. Visual details
+and optional integrations continue in separately reviewed changes.
+See the [changelog](docs/fork/CHANGELOG.md).
 
 - [Build and run](docs/fork/DEVELOPMENT.md)
 - [Upstream baseline](docs/fork/UPSTREAM.md)
