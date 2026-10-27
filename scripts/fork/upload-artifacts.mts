@@ -1,3 +1,4 @@
+/* eslint-disable compat/compat -- This build tool runs in Node24, never in a browser. */
 // Forgejo v3 artifact transport using the runner's authenticated instance endpoint.
 // Keep all pipeline requests on that endpoint: the public web URL may be unreachable
 // from an isolated runner. No administrator token or instance address is embedded.
@@ -55,6 +56,7 @@ for (const file of (await readdir(folder)).sort()) {
         const end = Math.min(start + chunkSize, data.length);
         const response = await request(url, 'PUT', data.subarray(start, end), {
             'Content-Type': 'application/octet-stream',
+            // eslint-disable-next-line sonarjs/hashing -- Forgejo v3 requires MD5 for transport integrity, not authentication.
             'x-actions-results-md5': createHash('md5').update(new Uint8Array(data.subarray(start, end))).digest('base64'),
             'Content-Range': `bytes ${start}-${end - 1}/${data.length}`
         });
@@ -67,3 +69,5 @@ const finalize = new URL(collection);
 finalize.searchParams.set('artifactName', name);
 await request(finalize, 'PATCH', JSON.stringify({ Size: total }), { 'Content-Type': 'application/json' });
 console.log(`Artifact finalized (${total} bytes)`);
+
+/* eslint-enable compat/compat */
