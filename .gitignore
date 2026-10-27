@@ -21,3 +21,13 @@ config.json
 
 # environment related
 .envrc
+
+# Fork local deployment and browser state
+.env
+.env.*
+!.env.example
+.playwright/
+playwright-report/
+test-results/
+.fork-local/
+artifacts/

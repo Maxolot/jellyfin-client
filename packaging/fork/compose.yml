@@ -1,0 +1,23 @@
+name: jellyfin-client
+services:
+  web:
+    image: ${CLIENT_IMAGE:-jellyfin-client:local}
+    build:
+      context: ../..
+      dockerfile: packaging/fork/Dockerfile.runtime
+    ports:
+      - "${CLIENT_BIND_ADDRESS:-127.0.0.1}:${CLIENT_PORT:-8592}:8080"
+    volumes:
+      - ${CLIENT_CONFIG_PATH:-./config.example.json}:/usr/share/nginx/html/config.json:ro
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, http://127.0.0.1:8080/index.html]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped

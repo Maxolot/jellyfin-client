@@ -1,0 +1,12 @@
+name: Upload Forgejo pipeline artifacts
+description: Upload to the authenticated runtime endpoint without public-URL hairpin routing.
+inputs:
+  name:
+    description: Artifact name (defaults to the client commit)
+    required: false
+  path:
+    description: Directory of artifact files
+    default: artifacts
+runs:
+  using: node20
+  main: index.cjs
