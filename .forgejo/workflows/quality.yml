@@ -1,7 +1,7 @@
 name: Client quality
 on:
   push:
-    branches: ['main', 'setup/**', 'feature/**', 'fix/**', 'upstream/**']
+    branches: ['main']
     tags: ['client-v*']
   pull_request:
   workflow_dispatch:

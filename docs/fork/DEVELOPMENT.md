@@ -59,3 +59,6 @@ The runtime image is unprivileged and read-only, with a small writable /tmp.
 It serves only frontend files; playback goes through the configured Jellyfin server.
 Build a released image with CLIENT_IMAGE set to a versioned image name, and keep
 the previous version for rollback with the same runtime configuration.
+
+CI runs on pull requests, main updates and release tags. Feature-branch pushes do not
+run a second identical job alongside their pull request. Main requires the PR quality check.
