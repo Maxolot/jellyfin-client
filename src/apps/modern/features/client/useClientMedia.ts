@@ -10,6 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useApi } from 'hooks/useApi';
 
 import { uniqueItems } from './model';
+import { clientRequest } from './session';
 
 export function useClientMedia(view: string, search: string, offset: number, genre = '', sort = 'name') {
     const { api, user } = useApi();
@@ -17,7 +18,7 @@ export function useClientMedia(view: string, search: string, offset: number, gen
         queryKey: ['Client', api?.basePath, user?.Id, 'Browse', view, search, offset, genre, sort],
         staleTime: 0,
         enabled: !!api && !!user?.Id && view !== 'disabled',
-        queryFn: async ({ signal }) => {
+        queryFn: ({ signal }) => clientRequest(async () => {
             const library = getLibraryApi(api!);
             let types = [BaseItemKind.Movie, BaseItemKind.Series];
             if (view === 'films') types = [BaseItemKind.Movie];
@@ -46,7 +47,7 @@ export function useClientMedia(view: string, search: string, offset: number, gen
             return { items: [], total: 0, resume: continuing,
                 next: uniqueItems(next.data.Items || [], continuing),
                 movies: uniqueItems(movies.data.Items || [], continuing), series: uniqueItems(series.data.Items || []) };
-        }
+        })
     });
 }
 
@@ -56,32 +57,32 @@ export function useClientDetails(id: string, season: string) {
         queryKey: ['Client', api?.basePath, user?.Id, 'Detail', id],
         staleTime: 0,
         enabled: !!api && !!user?.Id && !!id,
-        queryFn: async ({ signal }) => (await getLibraryApi(api!).getItem({ itemId: id, userId: user!.Id! }, { signal })).data
+        queryFn: ({ signal }) => clientRequest(async () => (await getLibraryApi(api!).getItem({ itemId: id, userId: user!.Id! }, { signal })).data)
     });
     const seasons = useQuery({
         queryKey: ['Client', api?.basePath, user?.Id, 'Seasons', id],
         enabled: !!api && !!user?.Id && item.data?.Type === BaseItemKind.Series,
-        queryFn: async ({ signal }) => (await getShowApi(api!).getSeasons({ seriesId: id, userId: user!.Id }, { signal })).data.Items || []
+        queryFn: ({ signal }) => clientRequest(async () => (await getShowApi(api!).getSeasons({ seriesId: id, userId: user!.Id }, { signal })).data.Items || [])
     });
     const selected = season || seasons.data?.[0]?.Id || '';
     const episodes = useQuery({
         queryKey: ['Client', api?.basePath, user?.Id, 'Episodes', id, selected],
         enabled: !!api && !!user?.Id && !!selected && item.data?.Type === BaseItemKind.Series,
-        queryFn: async ({ signal }) => (await getShowApi(api!).getEpisodes({ seriesId: id, seasonId: selected,
-            userId: user!.Id, fields: [ItemFields.Overview] }, { signal })).data.Items || []
+        queryFn: ({ signal }) => clientRequest(async () => (await getShowApi(api!).getEpisodes({ seriesId: id, seasonId: selected,
+            userId: user!.Id, fields: [ItemFields.Overview] }, { signal })).data.Items || [])
     });
     const next = useQuery({
         queryKey: ['Client', api?.basePath, user?.Id, 'Next', id],
         staleTime: 0,
         enabled: !!api && !!user?.Id && item.data?.Type === BaseItemKind.Series,
-        queryFn: async ({ signal }) => (await getShowApi(api!).getNextUp({ seriesId: id, userId: user!.Id,
-            limit: 1, enableResumable: true }, { signal })).data.Items?.[0] || null
+        queryFn: ({ signal }) => clientRequest(async () => (await getShowApi(api!).getNextUp({ seriesId: id, userId: user!.Id,
+            limit: 1, enableResumable: true }, { signal })).data.Items?.[0] || null)
     });
     const similar = useQuery({
         queryKey: ['Client', api?.basePath, user?.Id, 'Similar', id],
         enabled: !!api && !!user?.Id && !!item.data,
-        queryFn: async ({ signal }) => (await getLibraryApi(api!).getSimilarItems({ itemId: id,
-            userId: user!.Id, limit: 12 }, { signal })).data.Items || []
+        queryFn: ({ signal }) => clientRequest(async () => (await getLibraryApi(api!).getSimilarItems({ itemId: id,
+            userId: user!.Id, limit: 12 }, { signal })).data.Items || [])
     });
     return { item, seasons, episodes, next, similar, selected };
 }
@@ -91,12 +92,12 @@ export function useClientGenres(view: string) {
     return useQuery({
         queryKey: ['Client', api?.basePath, user?.Id, 'Genres', view],
         enabled: !!api && !!user?.Id && ['films', 'series', 'search', 'mine'].includes(view),
-        queryFn: async ({ signal }) => {
+        queryFn: ({ signal }) => clientRequest(async () => {
             let types = [BaseItemKind.Movie, BaseItemKind.Series];
             if (view === 'films') types = [BaseItemKind.Movie];
             if (view === 'series') types = [BaseItemKind.Series];
             return (await getFilterApi(api!).getQueryFilters({ userId: user!.Id,
                 includeItemTypes: types, recursive: true }, { signal })).data.Genres || [];
-        }
+        })
     });
 }

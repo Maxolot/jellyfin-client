@@ -12,6 +12,7 @@ import type { ItemDto } from 'types/base/models/item-dto';
 import Dashboard from 'utils/dashboard';
 
 import { episodeLabel, progressPercent } from '../features/client/model';
+import { clientRequest } from '../features/client/session';
 import { useClientDetails, useClientGenres, useClientMedia } from '../features/client/useClientMedia';
 import '../features/client/client.scss';
 
@@ -93,8 +94,8 @@ function useClientController() {
         try {
             const data = getUserDataApi(api);
             const p = { userId: user.Id, itemId: item.Id };
-            if (kind === 'favorite') await (item.UserData?.IsFavorite ? data.unmarkFavoriteItem(p) : data.markFavoriteItem(p));
-            else await (item.UserData?.Played ? data.markUnplayedItem(p) : data.markPlayedItem(p));
+            if (kind === 'favorite') await clientRequest(() => item.UserData?.IsFavorite ? data.unmarkFavoriteItem(p) : data.markFavoriteItem(p));
+            else await clientRequest(() => item.UserData?.Played ? data.markUnplayedItem(p) : data.markPlayedItem(p));
             await cache.invalidateQueries({ queryKey: ['Client', api.basePath, user.Id] });
         } catch {
             setActionError('Le changement n’a pas été enregistré. Réessayez.');
