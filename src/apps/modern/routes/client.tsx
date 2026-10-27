@@ -9,6 +9,7 @@ import Page from 'components/Page';
 import { playbackManager } from 'components/playback/playbackmanager';
 import { useApi } from 'hooks/useApi';
 import type { ItemDto } from 'types/base/models/item-dto';
+import Dashboard from 'utils/dashboard';
 
 import { episodeLabel, progressPercent } from '../features/client/model';
 import { useClientDetails, useClientGenres, useClientMedia } from '../features/client/useClientMedia';
@@ -207,12 +208,13 @@ function ContentView({ model }: ViewProps) {
     return <LibraryView model={model} />;
 }
 function SettingsView({ model }: ViewProps) {
-    const { preferences, savePreference } = model;
+    const { preferences, savePreference, user } = model;
     return <section className='client-settings'><h1>Personnaliser l’interface</h1>
         <h2>Thème</h2><div className='client-setting-options'>{[[true, 'Liquid Glass'], [false, 'Classique']].map(([key, label]) => <button key={String(key)} aria-pressed={preferences.glass === key} onClick={() => savePreference({ ...preferences, glass: key as boolean })}>{label}</button>)}</div>
         <h2>Navigation</h2><div className='client-setting-options'>{[[false, 'Bandeau du thème'], [true, 'Boutons flottants']].map(([key, label]) => <button key={String(key)} aria-pressed={preferences.floating === key} onClick={() => savePreference({ ...preferences, floating: key as boolean })}>{label}</button>)}</div>
         <h2>Fond des fiches</h2><div className='client-setting-options'>{[['continuous', 'Fond continu'], ['fade', 'Fondu progressif'], ['immersive', 'Fiche immersive']].map(([key, label]) => <button key={key} aria-pressed={preferences.detail === key} onClick={() => savePreference({ ...preferences, detail: key as Preferences['detail'] })}>{label}</button>)}</div>
-        <Link className='client-button client-settings-link' to='/mypreferencesmenu'>Compte et réglages de lecture Jellyfin ›</Link>
+        <Link className='client-button client-settings-link' to={`/mypreferencesmenu?userId=${user?.Id || ''}`}>Compte et réglages de lecture Jellyfin ›</Link>
+        <button className='client-logout' onClick={Dashboard.logout}>Se déconnecter</button>
     </section>;
 }
 function LibraryView({ model }: ViewProps) {

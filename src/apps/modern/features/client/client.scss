@@ -644,3 +644,8 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     color: #f4f4f5;
     font: inherit;
 }
+
+.client-logout {
+    display: block !important;
+    margin-top: 24px;
+}
