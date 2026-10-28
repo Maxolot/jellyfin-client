@@ -6,11 +6,12 @@ export type Preferences = {
     chromatic: boolean;
     ambient: boolean;
     hoverDescriptions: boolean;
+    hero: 'framed' | 'background';
     previews: boolean;
     previewMuted: boolean;
     detail: 'continuous' | 'fade' | 'immersive';
 };
-const defaults: Preferences = { glass: true, floating: false, chromatic: false, ambient: true, hoverDescriptions: true, previews: true, previewMuted: true, detail: 'continuous' };
+const defaults: Preferences = { glass: true, floating: false, chromatic: false, ambient: true, hoverDescriptions: true, hero: 'framed', previews: true, previewMuted: true, detail: 'continuous' };
 
 export function readInterfacePreferences(key: string): Preferences {
     try {
@@ -20,6 +21,7 @@ export function readInterfacePreferences(key: string): Preferences {
             floating: saved.floating === true, chromatic: saved.chromatic === true,
             ambient: saved.ambient !== false, previews: saved.previews !== false,
             hoverDescriptions: saved.hoverDescriptions !== false,
+            hero: saved.hero === 'background' ? 'background' : 'framed',
             previewMuted: saved.previewMuted !== false,
             detail: ['continuous', 'fade', 'immersive'].includes(saved.detail) ? saved.detail : 'continuous'
         };

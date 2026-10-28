@@ -23,6 +23,7 @@ import HeroPagination from '../features/client/HeroPagination';
 import useLoadedHero from '../features/client/useLoadedHero';
 import Artwork from '../features/client/Artwork';
 import useClientMotion from '../features/client/useClientMotion';
+import useHeroBackground from '../features/client/useHeroBackground';
 import { artworkUrl, preloadArtwork } from '../features/client/artwork';
 import ClientIcon from '../features/client/ClientIcon';
 import useArtworkColor from '../features/client/useArtworkColor';
@@ -41,6 +42,7 @@ import '../features/client/prototype.scss';
 import '../features/client/motion.scss';
 import '../features/client/previews.scss';
 import '../features/client/ratings.scss';
+import '../features/client/heroBackground.scss';
 
 type ClientNavigationState = { returnTo?: string, returnState?: ClientNavigationState | null, restoreFocus?: boolean };
 import TonightPage from '../features/client/TonightPage';
@@ -333,7 +335,7 @@ function ClientSurface() {
 function ClientView({ model }: ViewProps) {
     const { preferences, id, view, user, actionError, error, media, details, profileOpen, setProfileOpen, profileButton, profileMenu, accent } = model;
     return <PreviewProvider surface={model.surface} enabled={preferences.previews} muted={preferences.previewMuted} suspended={model.previewSuspended} toggleMuted={() => model.savePreference({ ...preferences, previewMuted: !preferences.previewMuted })} onPlayingChange={model.setPreviewPlaying}><Page id='clientPage' title='Client' className='client-page' isBackButtonEnabled={false}>
-        <div ref={model.surface} className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} ${preferences.chromatic ? 'client-chromatic' : ''} client-layout-${preferences.detail} ${id ? 'client-detail-page' : ''}`} style={{ '--client-accent': accent } as CSSProperties}>
+        <div ref={model.surface} className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} ${preferences.chromatic ? 'client-chromatic' : ''} ${preferences.hero === 'background' ? 'client-hero-background' : ''} client-layout-${preferences.detail} ${id ? 'client-detail-page' : ''}`} style={{ '--client-accent': accent } as CSSProperties}>
             {preferences.ambient && !id && <AmbientBackdrop source={model.ambient} />}
             <nav className='client-nav' aria-label='Navigation principale'>
                 <button ref={profileButton} className='client-profile' aria-label='Menu du profil' aria-expanded={profileOpen} onClick={() => setProfileOpen(!profileOpen)}>{user?.Name?.slice(0, 1) || '•'}</button>
@@ -356,9 +358,11 @@ function ClientView({ model }: ViewProps) {
 }
 
 function HeroView({ model }: ViewProps) {
-    const { hero, id, location, image, heroItems, setHeroIndex, setHeroPaused } = model;
+    const { hero, id, location, image, heroItems, setHeroIndex, setHeroPaused, preferences } = model;
+    const region = useRef<HTMLElement>(null);
+    useHeroBackground(region, !id && preferences.hero === 'background', !!hero);
     if (!hero) return null;
-    return <section className={`client-hero${id ? ' client-detail' : ' client-home-hero'}${hero.Type === 'Series' && id ? ' client-series-detail' : ''}`} onPointerEnter={() => setHeroPaused(true)} onPointerLeave={() => setHeroPaused(false)} onFocus={() => setHeroPaused(true)} onBlur={event => {
+    return <section ref={region} className={`client-hero${id ? ' client-detail' : ' client-home-hero'}${hero.Type === 'Series' && id ? ' client-series-detail' : ''}`} onPointerEnter={() => setHeroPaused(true)} onPointerLeave={() => setHeroPaused(false)} onFocus={() => setHeroPaused(true)} onBlur={event => {
         if (!event.currentTarget.contains(event.relatedTarget)) setHeroPaused(false);
     }}>
         <HeroArtwork source={image(hero, true, true)} />
@@ -453,6 +457,7 @@ function SettingsView({ model }: ViewProps) {
         <label className='client-chromatic-option'><input type='checkbox' checked={preferences.chromatic} onChange={event => savePreference({ ...preferences, chromatic: event.target.checked })} /> Couleurs inspirées du média</label>
         <label className='client-chromatic-option'><input type='checkbox' checked={preferences.ambient} onChange={event => savePreference({ ...preferences, ambient: event.target.checked })} /> Fond immersif au survol</label>
         <label className='client-chromatic-option'><input type='checkbox' checked={preferences.hoverDescriptions} onChange={event => savePreference({ ...preferences, hoverDescriptions: event.target.checked })} /> Descriptions au survol entre les sections</label>
+        <h2>Visuel principal</h2><div className='client-setting-options'>{[['framed', 'Encadré'], ['background', 'Fond plein écran']].map(([key, label]) => <button key={key} aria-pressed={preferences.hero === key} onClick={() => savePreference({ ...preferences, hero: key as Preferences['hero'] })}><InterfacePreview kind={key === 'background' ? 'hero-background' : 'hero-framed'} /><strong>{label}</strong></button>)}</div>
         <h2>Navigation</h2><div className='client-setting-options'>{[[false, 'Bandeau du thème'], [true, 'Boutons flottants']].map(([key, label]) => <button key={String(key)} aria-pressed={preferences.floating === key} onClick={() => savePreference({ ...preferences, floating: key as boolean })}><InterfacePreview kind={key ? 'floating' : 'grouped'} /><strong>{label}</strong></button>)}</div>
         <h2>Fond des fiches</h2><div className='client-setting-options'>{[['continuous', 'Fond continu'], ['fade', 'Fondu progressif'], ['immersive', 'Fiche immersive']].map(([key, label]) => <button key={key} aria-pressed={preferences.detail === key} onClick={() => savePreference({ ...preferences, detail: key as Preferences['detail'] })}><InterfacePreview kind={key as 'continuous' | 'fade' | 'immersive'} /><strong>{label}</strong></button>)}</div>
         <section className='client-preview-setting'><h2>Aperçus vidéo</h2><label><input type='checkbox' disabled={!model.hasPreviews} checked={model.hasPreviews && preferences.previews} onChange={event => savePreference({ ...preferences, previews: event.target.checked })} /> Activer les extraits vidéo {!model.hasPreviews && <small>Aucun extrait configuré</small>}</label><label><input type='checkbox' disabled={!model.hasPreviews || !preferences.previews} checked={!preferences.previewMuted} onChange={event => savePreference({ ...preferences, previewMuted: !event.target.checked })} /> Activer le son des aperçus</label><p>Chaque extrait se joue une fois, puis revient doucement à l’affiche. Le son est partagé entre les aperçus.</p></section>
