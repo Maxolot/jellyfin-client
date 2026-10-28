@@ -1,6 +1,7 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-item-kind';
 import { ItemFields } from '@jellyfin/sdk/lib/generated-client/models/item-fields';
+import { getShowApi } from '@jellyfin/sdk/lib/utils/api/show-api';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
@@ -53,4 +54,12 @@ export function useSeerrDetail(type: MediaType | undefined, id: number | undefin
     return useQuery({ queryKey: [...seerr.root, 'Detail', type, id], enabled: seerr.connected && !!type && !!id,
         retry: false, staleTime: 15000, refetchInterval: 20000,
         queryFn: async ({ signal }) => ({ ...await seerr.call<ExternalMedia>(`Api/${type}/${id}?language=fr`, signal), mediaType: type }) });
+}
+
+export function useLocalSeasons(item?: BaseItemDto) {
+    const { api, user } = useApi();
+    return useQuery({ queryKey: ['Client', api?.basePath, user?.Id, 'Seasons', item?.Id],
+        enabled: !!api && !!user?.Id && item?.Type === 'Series', staleTime: 30000,
+        queryFn: async ({ signal }) => (await getShowApi(api!).getSeasons({ seriesId: item!.Id!, userId: user!.Id,
+            fields: [ItemFields.ChildCount] }, { signal })).data.Items || [] });
 }

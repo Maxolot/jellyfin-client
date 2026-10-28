@@ -44,8 +44,11 @@ missing proxy and disabled configuration. Context tests cover per-account opt-ou
 late identity responses across accounts, one-shot passwordless linkage and unsupported
 login fallback. These tests do not claim a new production request was submitted.
 
-A fresh isolated Seerr engine is being prepared to verify actual request persistence
-with no Radarr/Sonarr configured and no production configuration/database copied.
+A fresh isolated Seerr3.4.1 engine recorded a real film request and a selected-season
+request. Both stayed pending, survived browser reload and appeared in personal tracking.
+No Radarr/Sonarr was configured and no production configuration/database was copied.
+Local-library fixtures were empty to match that isolated engine; actual proxy session
+and real-library identity matching are checked separately.
 Exact CI archive and deployed-browser acceptance remain required before delivery.
 
 `clientSeerr: false` in runtime config disables the integration globally. Otherwise
@@ -59,3 +62,7 @@ Requests use the server's default quality profile/root folder. The 4K switch is 
 only with effective 4K rights. Seasons in active requests or already available/partial
 are excluded, matching the Seerr engine. Deleted seasons can be requested again;
 failed active requests stay visible and require server-side retry/administration. No iframe or dedicated Seerr tab.
+
+Jellyfin availability takes precedence over stale Seerr scanners: local films cannot
+be requested again in standard quality, and physical local seasons are compared with
+expected episode counts before offering missing seasons.214unit tests pass.

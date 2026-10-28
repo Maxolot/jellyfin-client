@@ -119,3 +119,21 @@ export function requestableSeasons(detail: ExternalMedia, is4k = false) {
         return !requested && ![2, 3, 4, 5, 6].includes(status || 0);
     });
 }
+
+/** Jellyfin playback availability wins over a lagging external scanner. */
+export function withLocalAvailability(detail: ExternalMedia, local?: BaseItemDto, localSeasons: BaseItemDto[] = []): ExternalMedia {
+    if (!local) return detail;
+    const info = { ...detail.mediaInfo };
+    if (local.Type === 'Movie') return { ...detail, mediaInfo: { ...info, status: 5 } };
+    const seasons = [...(info.seasons || [])];
+    localSeasons.filter(season => (season.IndexNumber || 0) > 0 && (season.ChildCount || 0) > 0).forEach(season => {
+        const expected = detail.seasons?.find(entry => entry.seasonNumber === season.IndexNumber)?.episodeCount || 0;
+        const actual = (expected > 0 && season.ChildCount! >= expected) ? 5 : 4;
+        const index = seasons.findIndex(entry => entry.seasonNumber === season.IndexNumber);
+        if (index >= 0) seasons[index] = { ...seasons[index], status: actual };
+        else seasons.push({ seasonNumber: season.IndexNumber!, status: actual });
+    });
+    const required = (detail.seasons || []).filter(season => season.seasonNumber > 0 && (season.episodeCount || 0) > 0);
+    const complete = required.length > 0 && required.every(season => seasons.some(entry => entry.seasonNumber === season.seasonNumber && entry.status === 5));
+    return { ...detail, mediaInfo: { ...info, seasons, status: complete ? 5 : 4 } };
+}

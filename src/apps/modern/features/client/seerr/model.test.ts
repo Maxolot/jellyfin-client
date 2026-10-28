@@ -1,7 +1,7 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import { describe, expect, it } from 'vitest';
 
-import { canRequest, catalogueItem, externalIdentity, imageUrl, mixCatalogue, requestableSeasons } from './model';
+import { withLocalAvailability, canRequest, catalogueItem, externalIdentity, imageUrl, mixCatalogue, requestableSeasons } from './model';
 
 const local: BaseItemDto[] = [{ Id: 'local-film', Name: 'Même titre', Type: 'Movie', ProviderIds: { Tmdb: '42' } },
     { Id: 'local-series', Name: 'Autre titre', Type: 'Series', ProviderIds: { Tmdb: '42' } }];
@@ -29,6 +29,16 @@ describe('optional Seerr catalogue and request rules', () => {
     it('only offers missing seasons and excludes specials and active requests', () => {
         expect(requestableSeasons({ id: 1, seasons: [0, 1, 2, 3, 4].map(seasonNumber => ({ id: seasonNumber, seasonNumber, name: String(seasonNumber) })),
             mediaInfo: { seasons: [{ seasonNumber: 1, status: 5 }, { seasonNumber: 2, status: 4 }], requests: [{ id: 3, status: 2, is4k: false, media: {}, seasons: [{ seasonNumber: 3, status: 2 }] }] } }).map(s => s.seasonNumber)).toEqual([4]);
+    });
+    it('prevents requesting an already local movie when the external scanner is stale', () => {
+        const detail = withLocalAvailability({ id: 42, mediaInfo: { status: 1, status4k: 1 } }, local[0]);
+        expect(detail.mediaInfo).toMatchObject({ status: 5, status4k: 1 });
+    });
+    it('compares actual local episode counts before offering missing seasons', () => {
+        const detail = withLocalAvailability({ id: 42, seasons: [1, 2, 3].map(seasonNumber => ({ id: seasonNumber, seasonNumber, name: '', episodeCount: 8 })) }, local[1],
+            [{ IndexNumber: 1, ChildCount: 8 }, { IndexNumber: 2, ChildCount: 3 }]);
+        expect(detail.mediaInfo?.seasons).toEqual([{ seasonNumber: 1, status: 5 }, { seasonNumber: 2, status: 4 }]);
+        expect(requestableSeasons(detail).map(season => season.seasonNumber)).toEqual([3]);
     });
     it('does not treat unrelated item IDs or invalid provider IDs as request identities', () => {
         expect(externalIdentity({ Id: 'seerr-movie-12' })).toEqual({ type: 'movie', id: 12 });

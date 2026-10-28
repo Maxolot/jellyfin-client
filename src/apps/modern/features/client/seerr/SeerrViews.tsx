@@ -9,9 +9,9 @@ import './seerr.scss';
 import Artwork from '../Artwork';
 import HeroArtwork from '../HeroArtwork';
 import ClientIcon from '../ClientIcon';
-import { externalIdentity, catalogueItem, providerKey, canRequest, imageUrl, localMatch, mediaLabel, requestableSeasons, requestLabel,
+import { withLocalAvailability, externalIdentity, catalogueItem, providerKey, canRequest, imageUrl, localMatch, mediaLabel, requestableSeasons, requestLabel,
     type ExternalMedia, type MediaRequest, type MediaType, type Quota, type Results, type SeerrIdentity } from './model';
-import { useLocalIdentities, useSeerrDetail } from './queries';
+import { useLocalIdentities, useLocalSeasons, useSeerrDetail } from './queries';
 import { useSeerr } from './SeerrContext';
 
 export function SeerrSettings() {
@@ -73,17 +73,23 @@ function RequestHistory({ entries }: { readonly entries: MediaRequest[] }) {
     return <div className='client-request-history'>{entries.map(entry => <p key={entry.id}>{entry.is4k ? '4K · ' : ''}{entry.seasons?.length ? `Saisons ${entry.seasons.map(season => season.seasonNumber).join(', ')} · ` : ''}{requestLabel(entry.status)}</p>)}</div>;
 }
 
-export function RequestPanel({ identity }: { readonly identity: SeerrIdentity }) {
+export function RequestPanel({ identity, localItem }: Readonly<{ identity: SeerrIdentity; localItem?: BaseItemDto }>) {
     const seerr = useSeerr();
     const detail = useSeerrDetail(identity.type, identity.id);
+    const localSeasons = useLocalSeasons(localItem);
     if (!seerr.connected) return null;
-    if (detail.isPending) return <section className='client-request-panel' role='status'>Chargement des disponibilités…</section>;
+    if (detail.isPending || (localItem?.Type === 'Series' && localSeasons.isPending)) return <section className='client-request-panel' role='status'>Chargement des disponibilités…</section>;
     if (!detail.data) {
         return <section className='client-request-panel'><p>Les disponibilités ne peuvent pas être vérifiées.</p><button onClick={() => {
             void detail.refetch();
         }}>Réessayer</button></section>;
     }
-    return <RequestForm identity={identity} data={detail.data} />;
+    if (localItem?.Type === 'Series' && localSeasons.isError) {
+        return <section className='client-request-panel'><p>Les saisons présentes dans Jellyfin ne peuvent pas être vérifiées.</p><button onClick={() => {
+            void localSeasons.refetch();
+        }}>Réessayer</button></section>;
+    }
+    return <RequestForm identity={identity} data={withLocalAvailability(detail.data, localItem, localSeasons.data)} />;
 }
 
 function RequestForm({ identity, data }: Readonly<{ identity: SeerrIdentity; data: ExternalMedia }>) {
@@ -144,7 +150,7 @@ export function ExternalDetail({ id, row }: Readonly<{ id: string; row: (title: 
     }
     const data = detail.data;
     const match = localMatch(data, identity.type, local.data || []);
-    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><Link className='client-back' to={back} state={{ restoreFocus: true }}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{(data.releaseDate || data.firstAirDate || '').slice(0, 4)} · {data.genres?.map(genre => genre.name).join(' · ')}</p><p className='client-overview'>{data.overview}</p>{match && <Link className='client-play' to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}</div></section><RequestPanel key={id} identity={identity} /><ExternalRecommendations identity={identity} local={local.data || []} row={row} /></>;
+    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><Link className='client-back' to={back} state={{ restoreFocus: true }}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{(data.releaseDate || data.firstAirDate || '').slice(0, 4)} · {data.genres?.map(genre => genre.name).join(' · ')}</p><p className='client-overview'>{data.overview}</p>{match && <Link className='client-play' to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}</div></section><RequestPanel key={id} identity={identity} localItem={match} /><ExternalRecommendations identity={identity} local={local.data || []} row={row} /></>;
 }
 
 function ExternalRecommendations({ identity, local, row }: Readonly<{ identity: SeerrIdentity; local: BaseItemDto[]; row: (title: string, items: BaseItemDto[]) => React.ReactNode }>) {

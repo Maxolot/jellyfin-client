@@ -1865,3 +1865,12 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
         transform: rotate(8deg);
     }
 }
+
+.client-collection-stack > svg {
+    width: 58px;
+    height: 82px;
+    padding: 12px;
+    border: 1px solid #ffffff20;
+    border-radius: 7px;
+    color: #9ca7b5;
+}

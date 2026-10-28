@@ -337,7 +337,7 @@ function ClientView({ model }: ViewProps) {
             <BrowseControls model={model} />
             {!id && media.isPending && (view === 'home' || model.discovery) && <div className='client-hero client-home-hero client-loading-surface' aria-hidden='true'><span /><span /><span /></div>}
             <HeroView model={model} />
-            {id && model.hero && externalIdentity(model.hero) && model.seerr.connected && <RequestPanel key={id} identity={externalIdentity(model.hero)!} />}
+            {id && model.hero && externalIdentity(model.hero) && model.seerr.connected && <RequestPanel key={id} identity={externalIdentity(model.hero)!} localItem={model.hero} />}
             <ContentView model={model} />
         </div>
     </Page></PreviewProvider>;
