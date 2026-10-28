@@ -66,10 +66,17 @@ failed active requests stay visible and require server-side retry/administration
 
 Jellyfin availability takes precedence over stale Seerr scanners: local films cannot
 be requested again in standard quality, and physical local seasons are compared with
-expected episode counts before offering missing seasons.215unit tests pass, including domain-error identity after actual ES5 transpilation.
+expected episode counts before offering missing seasons.218unit tests pass, including domain-error identity after actual ES5 transpilation.
 
 A live20s refresh test changed request state only in the isolated engine database,
 from pending to processing to available. The client updated without reload, refreshed
 its local identity index and replaced the external link with the matched local link.
 The local fixture gained one synthetic item at the availability transition; this
 checks reconciliation, not actual downloading/import or codec support.
+
+Films and series discovery render the mixed external selection alongside local rows.
+Standard genre filters share English/French provider genre aliases and typed IDs;
+custom local tags remain local when no provider mapping exists. Search counts reflect
+the displayed deduplicated mixture, with a loading message until external results
+arrive. Library pagination is shown only when useful; external continuation remains
+optional. Row identities reset selection when their ordered media IDs change.

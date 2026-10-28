@@ -7,6 +7,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 import { useApi } from 'hooks/useApi';
 
+import { genreIds, matchesCatalogueGenre, type Genre } from './genres';
 import { catalogueItem, type ExternalMedia, type MediaType, type Results } from './model';
 import { useSeerr } from './SeerrContext';
 
@@ -29,25 +30,46 @@ export function useLocalIdentities(enabled: boolean) {
             return items;
         } });
 }
-export function useSeerrCatalogue(view: string, search: string, enabled: boolean) {
+function useGenreList(type: MediaType, enabled: boolean) {
     const seerr = useSeerr();
-    const local = useLocalIdentities(enabled && seerr.connected);
+    return useQuery({ queryKey: [...seerr.root, 'Genres', type], enabled: enabled && seerr.connected,
+        retry: false, staleTime: 86400000, queryFn: async ({ signal }) => {
+            const results = await Promise.all(['en', 'fr'].map(language => seerr.call<Genre[]>(`Api/genres/${type}?language=${language}`, signal)));
+            return results.flat();
+        } });
+}
+function catalogueEndpoint(view: string, search: string, ids: number[]) {
     let category = 'trending';
     if (view === 'films') category = 'movies';
     if (view === 'series') category = 'tv';
     let endpoint = `discover/${category}?language=fr`;
+    if (ids.length && ['films', 'series'].includes(view)) endpoint += `&genre=${ids[0]}`;
     if (view === 'search' && search) endpoint = `search?query=${encodeURIComponent(search)}`;
-    const query = useInfiniteQuery({ queryKey: [...seerr.root, 'Catalogue', endpoint],
-        enabled: enabled && seerr.connected && local.isSuccess,
-        initialPageParam: 1, retry: false, staleTime: 60000,
+    return endpoint;
+}
+export function useSeerrCatalogue(view: string, search: string, enabled: boolean, genre = '') {
+    const seerr = useSeerr();
+    const local = useLocalIdentities(enabled && seerr.connected);
+    const needsGenres = !!genre || ['films', 'series'].includes(view);
+    const movieGenres = useGenreList('movie', enabled && needsGenres && view !== 'series');
+    const tvGenres = useGenreList('tv', enabled && needsGenres && view !== 'films');
+    const lists = { movie: movieGenres.data || [], tv: tvGenres.data || [] };
+    const selected = genreIds(view === 'series' ? lists.tv : lists.movie, genre);
+    const anyGenre = selected.length > 0 || genreIds(lists.tv, genre).length > 0;
+    const ready = enabled && seerr.connected && local.isSuccess && (!genre || anyGenre);
+    const endpoint = catalogueEndpoint(view, search, selected);
+    const query = useInfiniteQuery({ queryKey: [...seerr.root, 'Catalogue', endpoint, genre],
+        enabled: ready, initialPageParam: 1, retry: false, staleTime: 60000,
         queryFn: ({ signal, pageParam }) => seerr.call<Results<ExternalMedia>>(`Api/${endpoint}&page=${pageParam}`, signal),
         getNextPageParam: last => (last.page || 1) < (last.totalPages || 1) ? (last.page || 1) + 1 : undefined });
-    const pages = seerr.connected && enabled ? query.data?.pages : undefined;
-    const items = (pages?.flatMap(page => page.results) || []).filter(entry => entry.mediaType !== 'person').map(entry => {
+    const pages = ready ? query.data?.pages : undefined;
+    const mapped = (pages?.flatMap(page => page.results) || []).filter(entry => entry.mediaType !== 'person').map(entry => {
         const type: MediaType = entry.mediaType === 'tv' || view === 'series' ? 'tv' : 'movie';
         return catalogueItem(entry, type, local.data || []);
     });
-    return { ...query, items, local };
+    const items = mapped.filter(item => !genre || matchesCatalogueGenre(item, genre, lists));
+    const loading = enabled && seerr.connected && [local, movieGenres, tvGenres, query].some(observer => observer.isFetching);
+    return { ...query, hasNextPage: ready && query.hasNextPage, isError: ready && query.isError, items, local, loading, matchesGenre: (item: BaseItemDto, name: string) => matchesCatalogueGenre(item, name, lists) };
 }
 export function useSeerrDetail(type: MediaType | undefined, id: number | undefined, poll = true) {
     const seerr = useSeerr();

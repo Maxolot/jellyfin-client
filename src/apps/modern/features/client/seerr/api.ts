@@ -24,7 +24,7 @@ export function proxyClient(api: Pick<Api, 'basePath' | 'accessToken' | 'axiosIn
         const route = path.split('?')[0];
         const simple = ['Status', 'Validate', 'Login', 'Api/auth/me', 'Api/search', 'Api/request',
             'Api/discover/trending', 'Api/discover/movies', 'Api/discover/tv',
-            'Api/discover/movies/upcoming', 'Api/discover/tv/upcoming'];
+            'Api/discover/movies/upcoming', 'Api/discover/tv/upcoming', 'Api/genres/movie', 'Api/genres/tv'];
         const detail = /^Api\/(movie|tv|request)\/\d+(\/(recommendations|similar))?$/.test(route);
         const quota = /^Api\/user\/\d+\/quota$/.test(route);
         if (path.includes('#') || (!simple.includes(route) && !detail && !quota)

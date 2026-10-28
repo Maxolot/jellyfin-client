@@ -34,6 +34,7 @@ export type ExternalMedia = {
     firstAirDate?: string;
     voteAverage?: number;
     runtime?: number;
+    genreIds?: number[];
     genres?: { id: number; name: string }[];
     seasons?: { id: number; seasonNumber: number; name: string; episodeCount?: number; airDate?: string }[];
     externalIds?: { tvdbId?: number; imdbId?: string };
