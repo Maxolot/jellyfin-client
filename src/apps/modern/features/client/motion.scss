@@ -1,0 +1,240 @@
+/* Motion only animates opacity and transforms, except the intentional card expansion. */
+.client-loading-surface {
+    gap: 20px;
+
+    span {
+        z-index: 1;
+        width: 32%;
+        height: 18px;
+        border-radius: 8px;
+        background: #ffffff0a;
+    }
+
+    span:first-child {
+        width: 44%;
+        height: 70px;
+    }
+
+    &::after {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(100deg, transparent, #ffffff04, transparent);
+        animation: client-loading-sheen 2s ease-in-out infinite;
+        content: '';
+    }
+}
+
+@keyframes client-loading-sheen {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(100%); }
+}
+
+.client-ambient {
+    position: fixed;
+    z-index: -1;
+    inset: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+
+    .client-background {
+        inset: -5%;
+        width: 110%;
+        height: 110%;
+        filter: blur(38px) saturate(0.8);
+        opacity: 0;
+        transition: opacity 0.85s ease;
+    }
+
+    .artwork-loaded {
+        opacity: 0.2;
+    }
+}
+
+.client-ambient.is-active {
+    opacity: 1;
+}
+
+.client-glass:not(.client-floating) .client-nav {
+    background-image: radial-gradient(ellipse at var(--glass-x, 30%) var(--glass-y, 0%), #ffffff24, transparent 62%), linear-gradient(145deg, #ffffff16, #ffffff03);
+}
+
+.client-liquid-dots {
+    gap: 0;
+
+    button {
+        position: relative;
+        width: 28px;
+        height: 32px;
+        background: transparent;
+    }
+
+    button::after {
+        position: absolute;
+        top: 12px;
+        left: 10px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #ffffff50;
+        content: '';
+    }
+
+    button[aria-pressed='true']::after {
+        background: #fff;
+    }
+}
+
+.client-liquid-marker {
+    position: absolute;
+    inset: 0;
+    display: none;
+    width: 100%;
+    height: 32px;
+    overflow: visible;
+    fill: #e8f2ffb8;
+    pointer-events: none;
+
+    .marker-glint {
+        fill: #fff;
+    }
+}
+
+.client-glass .client-liquid-marker {
+    display: block;
+}
+
+.client-glass .client-liquid-dots button[aria-pressed='true']::after {
+    background: transparent;
+}
+
+.client-artwork {
+    opacity: 0;
+    transition: opacity 0.32s ease;
+}
+
+.client-artwork.artwork-ready {
+    opacity: 1;
+}
+
+.client-artwork[hidden] {
+    display: none;
+}
+
+.client-section-glow {
+    transition: opacity 0.3s ease, background-color 0.5s ease;
+}
+
+.client-media-card.active:not(.has-backdrop) .client-card-poster {
+    opacity: 1;
+}
+
+.client-media-card:not(.active) .client-card-backdrop,
+.client-media-card.active:not(.has-backdrop) .client-card-backdrop {
+    opacity: 0;
+}
+
+.client-title-logo:not(.artwork-ready),
+.client-title-logo.artwork-ready + .client-title-fallback {
+    display: none;
+}
+
+.client-expanded-title img:not(.artwork-ready) + strong {
+    display: block;
+}
+
+.client-home-hero .client-background.artwork-loaded {
+    animation: client-artwork-drift 18s ease-out both;
+    animation-play-state: paused;
+}
+
+.client-home-hero.client-motion-visible .client-background.artwork-loaded {
+    animation-play-state: running;
+}
+
+.client-interface[data-motion-paused='true'] .client-home-hero .client-background {
+    animation-play-state: paused;
+}
+
+.client-hero-copy {
+    animation: client-copy-enter 0.5s var(--client-ease) both;
+}
+
+.client-reveal-pending {
+    opacity: 0;
+    transform: translateY(18px);
+}
+
+.client-reveal-enter {
+    animation: client-section-enter 0.48s var(--client-ease) both;
+}
+
+.client-profile-menu,
+.client-cast-dialog[open] {
+    animation: client-copy-enter 0.22s var(--client-ease) both;
+}
+
+.client-interface button,
+.client-interface .client-button,
+.client-interface .client-person,
+.client-interface .client-nav a {
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.client-interface button:active,
+.client-interface .client-button:active {
+    transform: scale(0.97);
+}
+
+.client-person:hover {
+    transform: translateY(-4px);
+}
+
+.client-episodes header button[aria-pressed='true'] {
+    box-shadow: inset 0 0 0 1px #ffffff65;
+}
+
+@keyframes client-artwork-drift {
+    from { transform: scale(1.015); }
+    to { transform: scale(1.065); }
+}
+
+@keyframes client-copy-enter {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes client-section-enter {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #clientPage .client-interface *,
+    #clientPage .client-interface *::before,
+    #clientPage .client-interface *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+    }
+
+    .client-reveal-pending {
+        opacity: 1;
+        transform: none;
+    }
+}

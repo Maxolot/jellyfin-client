@@ -5,6 +5,7 @@ import { Link, useLocation } from 'react-router-dom';
 import ResizeObserver from 'resize-observer-polyfill';
 
 import ClientIcon from './ClientIcon';
+import Artwork from './Artwork';
 import FavoriteAction from './FavoriteAction';
 import useArtworkColor from './useArtworkColor';
 
@@ -16,6 +17,7 @@ type Props = {
     continuation?: boolean;
     image: (item: BaseItemDto, backdrop?: boolean) => string;
     logo: (item: BaseItemDto) => string | undefined;
+    onPrepare: (item: BaseItemDto) => void;
     onPlay: (item: BaseItemDto) => Promise<void>;
     onFavorite: (item: BaseItemDto) => Promise<void>;
 };
@@ -24,7 +26,8 @@ function continuationLabel(item: BaseItemDto) {
     return progressPercent(item) > 0 ? 'Reprendre' : 'À suivre';
 }
 
-export default function MediaRow({ title, items, continuation, image, logo, onPlay, onFavorite }: Readonly<Props>) {
+export default function MediaRow({ title, items, continuation, image, logo, onPrepare, onPlay, onFavorite }: Readonly<Props>) {
+    const [readyBackdrops, setReadyBackdrops] = useState<Record<string, boolean>>({});
     const [active, setActive] = useState(-1);
     const strip = useRef<HTMLDivElement>(null);
     const touchOpens = useRef(false);
@@ -71,8 +74,16 @@ export default function MediaRow({ title, items, continuation, image, logo, onPl
                 move(active + (event.key === 'ArrowRight' ? 1 : -1));
             }
             if (event.key === 'Escape') setActive(-1);
-        }}>{items.map((media, index) => <article className={`client-media-card${active === index ? ' active' : ''}`} key={media.Id} onPointerEnter={event => { if (event.pointerType !== 'touch') setActive(index); }} onFocus={() => {
-                if (!touchOpens.current) setActive(index);
+        }}>{items.map((media, index) => <article className={`client-media-card${active === index ? ' active' : ''}${readyBackdrops[media.Id || ''] ? ' has-backdrop' : ''}`} key={media.Id} onPointerEnter={event => {
+                if (event.pointerType !== 'touch') {
+                    setActive(index);
+                    onPrepare(media);
+                }
+            }} onFocus={() => {
+                if (!touchOpens.current) {
+                    setActive(index);
+                    onPrepare(media);
+                }
             }}>
                 <Link className='client-card' data-client-focus={media.Id} aria-label={[media.SeriesName, media.Name].filter(Boolean).join(' · ')} to={`/client?id=${media.Type === 'Episode' ? media.SeriesId || media.Id : media.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }} onPointerDown={event => { touchOpens.current = event.pointerType === 'touch' && active !== index; }} onClick={event => {
                     if (touchOpens.current) {
@@ -81,11 +92,11 @@ export default function MediaRow({ title, items, continuation, image, logo, onPl
                     }
                     touchOpens.current = false;
                 }}>
-                    <img className='client-card-poster' src={image(media)} alt='' loading='lazy' onError={event => { event.currentTarget.hidden = true; }} />
-                    <img className='client-card-backdrop' src={image(media, true)} alt='' loading='lazy' onError={event => { event.currentTarget.hidden = true; }} />
+                    <Artwork className='client-card-poster' source={image(media)} />
+                    <Artwork className='client-card-backdrop' source={image(media, true)} enabled={active === index} eager onReady={() => setReadyBackdrops(previous => previous[media.Id || ''] ? previous : { ...previous, [media.Id || '']: true })} />
                     <span className='client-card-fallback'>{media.SeriesName || media.Name}</span>
                     <span className='client-card-shade' />
-                    <span className='client-expanded-title'>{logo(media) && <img src={logo(media)} alt='' loading='lazy' onError={event => { event.currentTarget.hidden = true; }} />}<strong>{media.SeriesName || media.Name}</strong></span>
+                    <span className='client-expanded-title'>{logo(media) && <Artwork source={logo(media)!} enabled={active === index} eager />}<strong>{media.SeriesName || media.Name}</strong></span>
                     {continuation && <span className='client-continue-label'>{media.Type === 'Episode' ? episodeLabel(media) : continuationLabel(media)}</span>}
                     {progressPercent(media) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(media)}%` }} /></span>}
                 </Link>

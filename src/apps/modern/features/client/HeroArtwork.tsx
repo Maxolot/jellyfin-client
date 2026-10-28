@@ -9,7 +9,9 @@ export default function HeroArtwork({ source }: { readonly source: string }) {
     useEffect(() => {
         setFrames(previous => {
             const last = previous[previous.length - 1];
-            return last.source === source ? previous : [last, { source, visible: false }];
+            const visible = [...previous].reverse().find(frame => frame.visible && !frame.failed);
+            if (visible?.source === source) return [visible];
+            return last.source === source ? previous : [...(visible ? [visible] : []), { source, visible: false }];
         });
     }, [source]);
     useEffect(() => {
@@ -17,12 +19,17 @@ export default function HeroArtwork({ source }: { readonly source: string }) {
         const timer = window.setTimeout(() => setFrames(previous => [previous[previous.length - 1]]), 900);
         return () => window.clearTimeout(timer);
     }, [frames]);
-    function loaded(frameSource: string) {
+    async function loaded(frameSource: string, image: HTMLImageElement) {
+        try {
+            if (typeof image.decode === 'function') await image.decode();
+        } catch { return; }
         setFrames(previous => previous.map(entry => entry.source === frameSource ? { ...entry, visible: true } : entry));
     }
     function failed(frameSource: string) {
-        setFrames(previous => previous[previous.length - 1].source === frameSource ? [{ source: frameSource, visible: true, failed: true }] : previous);
+        setFrames(previous => previous.length > 1 ? previous.filter(entry => entry.source !== frameSource) : [{ source: frameSource, visible: true, failed: true }]);
     }
-    return <>{frames.map(frame => <img key={frame.source} className={`client-background${frame.visible ? ' artwork-loaded' : ''}`} src={frame.source} alt='' hidden={frame.failed} onLoad={() => loaded(frame.source)} onError={() => failed(frame.source)} />)}</>;
+    return <>{frames.map(frame => <img key={frame.source} className={`client-background${frame.visible ? ' artwork-loaded' : ''}`} src={frame.source} alt='' decoding='async' hidden={frame.failed} onLoad={event => {
+        void loaded(frame.source, event.currentTarget);
+    }} onError={() => failed(frame.source)} />)}</>;
 }
 /* eslint-enable react/jsx-no-bind */

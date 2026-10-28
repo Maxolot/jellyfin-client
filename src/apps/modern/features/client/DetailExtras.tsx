@@ -3,6 +3,8 @@ import type { BaseItemDto, BaseItemPerson } from '@jellyfin/sdk/lib/generated-cl
 import React, { useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
+import Artwork from './Artwork';
+
 type Props = { item: BaseItemDto; basePath: string; similar: BaseItemDto[]; image: (item: BaseItemDto, backdrop?: boolean) => string };
 
 export default function DetailExtras({ item, basePath, similar, image }: Readonly<Props>) {
@@ -13,7 +15,7 @@ export default function DetailExtras({ item, basePath, similar, image }: Readonl
     const directors = people.filter(person => person.Type === 'Director');
     function personCard(person: BaseItemPerson) {
         return <Link className='client-person' key={`${person.Id}-${person.Role || person.Type}`} to={`/client?view=search&person=${person.Id}&personName=${encodeURIComponent(person.Name || '')}`} onClick={() => dialog.current?.close()}>
-            <span className='client-person-portrait'>{person.PrimaryImageTag && <img src={`${basePath}/Items/${person.Id}/Images/Primary?maxWidth=400&quality=90`} alt='' loading='lazy' onError={event => { event.currentTarget.hidden = true; }} />}<span>{person.Name?.slice(0, 1)}</span></span>
+            <span className='client-person-portrait'>{person.PrimaryImageTag && <Artwork source={`${basePath}/Items/${person.Id}/Images/Primary?maxWidth=320&quality=85&tag=${encodeURIComponent(person.PrimaryImageTag)}`} />}<span>{person.Name?.slice(0, 1)}</span></span>
             <strong>{person.Name}</strong><small>{person.Role || person.Type}</small>
         </Link>;
     }
@@ -24,7 +26,7 @@ export default function DetailExtras({ item, basePath, similar, image }: Readonl
             <dialog ref={dialog} className='client-cast-dialog'><header><div><small>{item.Name}</small><h2>Distribution et réalisation</h2></div><button aria-label='Fermer la distribution' onClick={() => dialog.current?.close()}>×</button></header><div className='client-cast-grid'>{people.map(personCard)}</div></dialog>
         </section>}
         {similar.length > 0 && <section className='client-detail-recommendations'><h2>Dans le même esprit</h2><div className='client-related-grid'>{similar.map(media => <Link key={media.Id} className='client-card' data-client-focus={media.Id} to={`/client?id=${media.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }} aria-label={media.Name || ''}>
-            <img src={image(media)} alt='' loading='lazy' onError={event => { event.currentTarget.hidden = true; }} /><span className='client-card-fallback'>{media.Name}</span>
+            <Artwork source={image(media)} /><span className='client-card-fallback'>{media.Name}</span>
         </Link>)}</div></section>}
     </div>;
 }

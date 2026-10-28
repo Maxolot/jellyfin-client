@@ -24,7 +24,8 @@ export function useClientMedia(view: string, search: string, offset: number, { g
     const { api, user } = useApi();
     return useQuery({
         queryKey: ['Client', api?.basePath, user?.Id, 'Browse', view, search, offset, genre, sort, person, audio, collection],
-        staleTime: 0,
+        staleTime: 30000,
+        refetchOnMount: view === 'home' ? 'always' : true,
         enabled: !!api && !!user?.Id && view !== 'disabled',
         queryFn: ({ signal }) => clientRequest(async () => {
             const library = getLibraryApi(api!);
@@ -62,7 +63,7 @@ export function useClientDetails(id: string, season: string) {
     const { api, user } = useApi();
     const item = useQuery({
         queryKey: ['Client', api?.basePath, user?.Id, 'Detail', id],
-        staleTime: 0,
+        staleTime: 30000,
         enabled: !!api && !!user?.Id && !!id,
         queryFn: ({ signal }) => clientRequest(async () => (await getLibraryApi(api!).getItem({ itemId: id, userId: user!.Id! }, { signal })).data)
     });
@@ -80,7 +81,7 @@ export function useClientDetails(id: string, season: string) {
     });
     const next = useQuery({
         queryKey: ['Client', api?.basePath, user?.Id, 'Next', id],
-        staleTime: 0,
+        staleTime: 30000,
         enabled: !!api && !!user?.Id && item.data?.Type === BaseItemKind.Series,
         queryFn: ({ signal }) => clientRequest(async () => (await getShowApi(api!).getNextUp({ seriesId: id, userId: user!.Id,
             limit: 1, enableResumable: true }, { signal })).data.Items?.[0] || null)
