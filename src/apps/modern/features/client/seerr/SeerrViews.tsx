@@ -60,7 +60,7 @@ function SeasonPicker({ data, is4k, selected, disabled, toggle }: Readonly<{ dat
         const available = seasons.some(entry => entry.seasonNumber === season.seasonNumber);
         const seasonInfo = data.mediaInfo?.seasons?.find(entry => entry.seasonNumber === season.seasonNumber);
         let label = mediaLabel({ status: is4k ? seasonInfo?.status4k : seasonInfo?.status });
-        if (!available && label === 'À demander') label = 'Déjà demandée';
+        if (!available && label === 'À demander') label = season.episodeCount === 0 ? 'À venir' : 'Déjà demandée';
         return <button type='button' key={season.seasonNumber} disabled={!available} aria-pressed={selected.includes(season.seasonNumber)} onClick={() => toggle(season.seasonNumber)}><strong>Saison {season.seasonNumber}</strong><small>{label}</small></button>;
     })}</div></fieldset>;
 }
