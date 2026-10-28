@@ -12,6 +12,9 @@ export class SeerrError extends Error {
             202: 'Aucune nouvelle demande nécessaire. Actualisez le statut.'
         };
         super(messages[status] || 'Le service de demandes est indisponible. Réessayez.');
+        // TypeScript ES5 output otherwise returns a native Error with the wrong prototype.
+        Object.setPrototypeOf(this, new.target.prototype);
+        this.name = 'SeerrError';
     }
 }
 

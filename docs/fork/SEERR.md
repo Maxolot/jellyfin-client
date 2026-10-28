@@ -66,7 +66,7 @@ failed active requests stay visible and require server-side retry/administration
 
 Jellyfin availability takes precedence over stale Seerr scanners: local films cannot
 be requested again in standard quality, and physical local seasons are compared with
-expected episode counts before offering missing seasons.214unit tests pass.
+expected episode counts before offering missing seasons.215unit tests pass, including domain-error identity after actual ES5 transpilation.
 
 A live20s refresh test changed request state only in the isolated engine database,
 from pending to processing to available. The client updated without reload, refreshed
