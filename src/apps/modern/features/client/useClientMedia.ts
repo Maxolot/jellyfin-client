@@ -12,10 +12,10 @@ import { useApi } from 'hooks/useApi';
 import { uniqueItems } from './model';
 import { clientRequest } from './session';
 
-export function useClientMedia(view: string, search: string, offset: number, genre = '', sort = 'name') {
+export function useClientMedia(view: string, search: string, offset: number, genre = '', sort = 'name', person = '', audio = '') {
     const { api, user } = useApi();
     return useQuery({
-        queryKey: ['Client', api?.basePath, user?.Id, 'Browse', view, search, offset, genre, sort],
+        queryKey: ['Client', api?.basePath, user?.Id, 'Browse', view, search, offset, genre, sort, person, audio],
         staleTime: 0,
         enabled: !!api && !!user?.Id && view !== 'disabled',
         queryFn: ({ signal }) => clientRequest(async () => {
@@ -24,11 +24,11 @@ export function useClientMedia(view: string, search: string, offset: number, gen
             if (view === 'films') types = [BaseItemKind.Movie];
             if (view === 'series') types = [BaseItemKind.Series];
             const common = { userId: user!.Id, recursive: true, includeItemTypes: types,
-                fields: [ItemFields.Overview, ItemFields.Genres], imageTypeLimit: 1, enableUserData: true };
+                audioLanguages: audio ? [audio] : undefined, genres: genre ? [genre] : undefined, fields: [ItemFields.Overview, ItemFields.Genres], imageTypeLimit: 1, enableUserData: true };
             const request = { signal };
             if (view !== 'home') {
                 const result = await library.getItems({ ...common, limit: 48, startIndex: offset,
-                    searchTerm: search || undefined, genres: genre ? [genre] : undefined, isFavorite: view === 'mine' ? true : undefined,
+                    personIds: person ? [person] : undefined, searchTerm: search || undefined, genres: genre ? [genre] : undefined, isFavorite: view === 'mine' ? true : undefined,
                     sortBy: [sort === 'recent' ? ItemSortBy.DateCreated : ItemSortBy.SortName],
                     sortOrder: [sort === 'recent' ? SortOrder.Descending : SortOrder.Ascending] }, request);
                 return { items: result.data.Items || [], total: result.data.TotalRecordCount || 0,
@@ -62,7 +62,7 @@ export function useClientDetails(id: string, season: string) {
     const seasons = useQuery({
         queryKey: ['Client', api?.basePath, user?.Id, 'Seasons', id],
         enabled: !!api && !!user?.Id && item.data?.Type === BaseItemKind.Series,
-        queryFn: ({ signal }) => clientRequest(async () => (await getShowApi(api!).getSeasons({ seriesId: id, userId: user!.Id }, { signal })).data.Items || [])
+        queryFn: ({ signal }) => clientRequest(async () => (await getShowApi(api!).getSeasons({ seriesId: id, userId: user!.Id, fields: [ItemFields.ChildCount] }, { signal })).data.Items || [])
     });
     const selected = season || seasons.data?.[0]?.Id || '';
     const episodes = useQuery({
@@ -87,17 +87,17 @@ export function useClientDetails(id: string, season: string) {
     return { item, seasons, episodes, next, similar, selected };
 }
 
-export function useClientGenres(view: string) {
+export function useClientFilters(view: string) {
     const { api, user } = useApi();
     return useQuery({
         queryKey: ['Client', api?.basePath, user?.Id, 'Genres', view],
-        enabled: !!api && !!user?.Id && ['films', 'series', 'search', 'mine'].includes(view),
+        enabled: !!api && !!user?.Id && ['home', 'films', 'series', 'search', 'mine'].includes(view),
         queryFn: ({ signal }) => clientRequest(async () => {
             let types = [BaseItemKind.Movie, BaseItemKind.Series];
             if (view === 'films') types = [BaseItemKind.Movie];
             if (view === 'series') types = [BaseItemKind.Series];
             return (await getFilterApi(api!).getQueryFilters({ userId: user!.Id,
-                includeItemTypes: types, recursive: true }, { signal })).data.Genres || [];
+                includeItemTypes: types, recursive: true }, { signal })).data;
         })
     });
 }

@@ -1,7 +1,12 @@
 /* eslint-disable react/jsx-no-bind -- Row interactions are local to this component. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
-import React, { useRef, useState } from 'react';
+import React, { type CSSProperties, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import ResizeObserver from 'resize-observer-polyfill';
+
+import ClientIcon from './ClientIcon';
+import FavoriteAction from './FavoriteAction';
+import useArtworkColor from './useArtworkColor';
 
 import { episodeLabel, progressPercent } from './model';
 
@@ -22,8 +27,34 @@ function continuationLabel(item: BaseItemDto) {
 export default function MediaRow({ title, items, continuation, image, logo, onPlay, onFavorite }: Readonly<Props>) {
     const [active, setActive] = useState(-1);
     const strip = useRef<HTMLDivElement>(null);
+    const touchOpens = useRef(false);
     const location = useLocation();
     const item = items[active];
+    const color = useArtworkColor(item ? image(item, true) : undefined);
+    const glow = useRef<HTMLDivElement>(null);
+    useLayoutEffect(() => {
+        const list = strip.current;
+        const card = list?.children[active];
+        if (!(card instanceof HTMLElement) || !glow.current || !list) return;
+        const update = () => {
+            const rect = card.getBoundingClientRect();
+            const parent = list.parentElement!.getBoundingClientRect();
+            if (glow.current) {
+                glow.current.style.left = `${rect.left - parent.left}px`;
+                glow.current.style.top = `${rect.top - parent.top}px`;
+                glow.current.style.width = `${rect.width}px`;
+                glow.current.style.height = `${rect.height}px`;
+            }
+        };
+        update();
+        const resize = new ResizeObserver(update);
+        resize.observe(card);
+        list.addEventListener('scroll', update, { passive: true });
+        return () => {
+            resize.disconnect();
+            list.removeEventListener('scroll', update);
+        };
+    }, [active]);
     if (!items.length) return null;
     function move(index: number) {
         const next = Math.max(0, Math.min(items.length - 1, index));
@@ -31,21 +62,24 @@ export default function MediaRow({ title, items, continuation, image, logo, onPl
         strip.current?.querySelectorAll<HTMLElement>('.client-card')[next]?.focus({ preventScroll: true });
         strip.current?.children[next]?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'nearest', inline: 'nearest' });
     }
-    return <section className={`client-row client-expanding-row${item ? ' has-active-card' : ''}`} aria-label={title}>
-        <header className='client-row-heading'><h2>{title}</h2><div><button aria-label={`Précédents : ${title}`} onClick={() => move(active - 1)}>‹</button><button aria-label={`Suivants : ${title}`} onClick={() => move(active + 1)}>›</button></div></header>
-        <div className='client-section-glow' aria-hidden='true' />
+    return <section className={`client-row client-expanding-row${item ? ' has-active-card' : ''}`} aria-label={title} style={{ '--client-media-color': color } as CSSProperties}>
+        <header className='client-row-heading'><h2>{title}</h2><div><button aria-label={`Précédents : ${title}`} onClick={() => move(active - 1)}><ClientIcon name='back' /></button><button aria-label={`Suivants : ${title}`} onClick={() => move(active + 1)}><ClientIcon name='next' /></button></div></header>
+        <div className='client-section-glow' ref={glow} aria-hidden='true' />
         <div className='client-strip' role='toolbar' aria-label={title} ref={strip} onKeyDown={event => {
             if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
                 event.preventDefault();
                 move(active + (event.key === 'ArrowRight' ? 1 : -1));
             }
             if (event.key === 'Escape') setActive(-1);
-        }}>{items.map((media, index) => <article className={`client-media-card${active === index ? ' active' : ''}`} key={media.Id} onPointerEnter={event => { if (event.pointerType !== 'touch') setActive(index); }} onFocus={() => setActive(index)}>
-                <Link className='client-card' data-client-focus={media.Id} aria-label={[media.SeriesName, media.Name].filter(Boolean).join(' · ')} to={`/client?id=${media.Type === 'Episode' ? media.SeriesId || media.Id : media.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }} onClick={event => {
-                    if (event.detail > 0 && matchMedia('(hover: none)').matches && active !== index) {
+        }}>{items.map((media, index) => <article className={`client-media-card${active === index ? ' active' : ''}`} key={media.Id} onPointerEnter={event => { if (event.pointerType !== 'touch') setActive(index); }} onFocus={() => {
+                if (!touchOpens.current) setActive(index);
+            }}>
+                <Link className='client-card' data-client-focus={media.Id} aria-label={[media.SeriesName, media.Name].filter(Boolean).join(' · ')} to={`/client?id=${media.Type === 'Episode' ? media.SeriesId || media.Id : media.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }} onPointerDown={event => { touchOpens.current = event.pointerType === 'touch' && active !== index; }} onClick={event => {
+                    if (touchOpens.current) {
                         event.preventDefault();
                         setActive(index);
                     }
+                    touchOpens.current = false;
                 }}>
                     <img className='client-card-poster' src={image(media)} alt='' loading='lazy' onError={event => { event.currentTarget.hidden = true; }} />
                     <img className='client-card-backdrop' src={image(media, true)} alt='' loading='lazy' onError={event => { event.currentTarget.hidden = true; }} />
@@ -55,11 +89,11 @@ export default function MediaRow({ title, items, continuation, image, logo, onPl
                     {continuation && <span className='client-continue-label'>{media.Type === 'Episode' ? episodeLabel(media) : continuationLabel(media)}</span>}
                     {progressPercent(media) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(media)}%` }} /></span>}
                 </Link>
-                <span className='client-availability' aria-label='Disponible dans votre bibliothèque'>✓<span>Disponible</span></span>
+                <span className='client-availability' aria-label='Disponible dans votre bibliothèque'><ClientIcon name='check' /><span>Disponible</span></span>
                 <div className='client-card-actions'>
-                    <button className='client-card-play' aria-label={`Lire ${media.Name}`} onClick={() => { void onPlay(media); }}>▶</button>
-                    <button aria-label={`${media.UserData?.IsFavorite ? 'Retirer' : 'Ajouter'} ${media.Name} ${media.UserData?.IsFavorite ? 'de' : 'à'} ma liste`} aria-pressed={!!media.UserData?.IsFavorite} onClick={() => { void onFavorite(media); }}>{media.UserData?.IsFavorite ? '✓' : '+'}</button>
-                    <Link to={`/client?id=${media.Type === 'Episode' ? media.SeriesId || media.Id : media.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }} aria-label={`Informations sur ${media.Name}`}>⌄</Link>
+                    <button className='client-card-play' aria-label={`Lire ${media.Name}`} onClick={() => { void onPlay(media); }}><ClientIcon name='play' /></button>
+                    {active === index && <FavoriteAction item={media} onFavorite={onFavorite} />}
+                    <Link to={`/client?id=${media.Type === 'Episode' ? media.SeriesId || media.Id : media.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }} aria-label={`Informations sur ${media.Name}`}><ClientIcon name='down' /></Link>
                 </div>
             </article>)}</div>
         <div className='client-row-info' aria-live='polite'>{item && <><h3>{item.SeriesName || item.Name}</h3><span>{[item.Type === 'Episode' ? episodeLabel(item) : item.ProductionYear, ...(item.Genres || []).slice(0, 2)].filter(Boolean).join(' · ')}</span><p>{item.Overview}</p></>}</div>
