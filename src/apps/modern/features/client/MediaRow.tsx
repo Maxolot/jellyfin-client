@@ -94,6 +94,7 @@ export default function MediaRow({ title, items, continuation, image, logo, onPr
                     if (touchOpens.current) {
                         event.preventDefault();
                         setActive(index);
+                        onPrepare(media);
                     }
                     touchOpens.current = false;
                 }}>

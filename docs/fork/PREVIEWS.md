@@ -38,7 +38,7 @@ Only distribute media you have the right to distribute.
 Previews start after a short delay, muted by default. Hero/detail, expanded landscape
 cards, an explicitly configured episode and the personal spotlight may play them.
 Portrait grids never do. One visible surface owns playback; card/episode interaction
-preempts a background hero. Navigation, full playback, hidden/offscreen views,
+preempts a background hero. Navigation, full playback, an open cast dialog, hidden/offscreen views,
 disabling previews or reduced-motion preferences release the video. A clip plays once
 per surface/item during the current client visit, then fades image and volume toward
 the poster over the last0.8s. Sound is shared across previews without restarting them.

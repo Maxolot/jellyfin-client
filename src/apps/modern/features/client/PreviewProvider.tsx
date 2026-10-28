@@ -1,5 +1,5 @@
 import useMediaQuery from '@mui/material/useMediaQuery';
-import React, { createContext, type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, type PropsWithChildren, type RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { playbackManager } from 'components/playback/playbackmanager';
 import { useApi } from 'hooks/useApi';
@@ -25,6 +25,7 @@ const PreviewContext = createContext<PreviewContextValue | undefined>(undefined)
 export const usePreviews = () => useContext(PreviewContext);
 
 type Props = PropsWithChildren<{
+    surface: RefObject<HTMLDivElement>;
     enabled: boolean;
     muted: boolean;
     suspended: boolean;
@@ -32,13 +33,14 @@ type Props = PropsWithChildren<{
     onPlayingChange: (playing: boolean) => void;
 }>;
 
-export default function PreviewProvider({ children, enabled, muted, suspended, toggleMuted, onPlayingChange }: Readonly<Props>) {
+export default function PreviewProvider({ children, surface, enabled, muted, suspended, toggleMuted, onPlayingChange }: Readonly<Props>) {
     const config = useWebConfig();
     const { user } = useApi();
     const sources = config.clientPreviews?.[user?.ServerId || ''] || noSources;
     const reduced = useMediaQuery('(prefers-reduced-motion: reduce)');
     const [hidden, setHidden] = useState(false);
     const [realPlayback, setRealPlayback] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
     const [owners, setOwners] = useState<Owner[]>([]);
     const [playing, setPlaying] = useState<string>();
     const scope = `${user?.ServerId || ''}/${user?.Id || ''}`;
@@ -65,6 +67,15 @@ export default function PreviewProvider({ children, enabled, muted, suspended, t
         return previous === id ? undefined : previous;
     }), []);
     useEffect(() => {
+        const root = surface.current;
+        if (!root) return;
+        const check = () => setDialogOpen(!!root.querySelector('dialog[open]'));
+        check();
+        const observer = new MutationObserver(check);
+        observer.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ['open'] });
+        return () => observer.disconnect();
+    }, [surface]);
+    useEffect(() => {
         // eslint-disable-next-line compat/compat -- Visibility is a progressive enhancement.
         const visibility = () => setHidden(document.visibilityState === 'hidden');
         const start = () => setRealPlayback(true);
@@ -85,7 +96,7 @@ export default function PreviewProvider({ children, enabled, muted, suspended, t
         return () => onPlayingChange(false);
     }, [busy, onPlayingChange]);
     const selected = [...owners].sort((a, b) => a.priority - b.priority || a.order - b.order).pop()?.id;
-    const active = enabled && !hidden && !reduced && !suspended && !realPlayback;
+    const active = enabled && !hidden && !reduced && !suspended && !realPlayback && !dialogOpen;
     const value = useMemo(() => ({ enabled: active, muted, scope, sources, selected, completed, claim, release, report, toggleMuted, mute }), [active, muted, scope, sources, selected, completed, claim, release, report, toggleMuted, mute]);
     return <PreviewContext.Provider value={value}>{children}</PreviewContext.Provider>;
 }
