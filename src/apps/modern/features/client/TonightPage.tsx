@@ -69,7 +69,7 @@ function DrawFilters({ panel, criteria, draft, setDraft, canReset, onApply, onRe
             <div className='client-draw-choices' role='group' aria-label='Ambiance'>{Object.keys(moods).map(name => <button type='button' key={name} aria-pressed={draft.mood === name} onClick={() => setDraft(value => ({ ...value, mood: name }))}>{name}</button>)}</div>
             <span className='client-draw-filter-label'>Durée maximale</span>
             <div className='client-draw-choices' role='group' aria-label='Durée maximale'>{durations.map(([minutes, label]) => <button type='button' key={minutes} aria-pressed={draft.minutes === minutes} onClick={() => setDraft(value => ({ ...value, minutes }))}>{label}</button>)}</div>
-            <label className='client-draw-keywords'>Des mots-clés, si vous avez une envie précise<input aria-label='Une envie pour ce soir' maxLength={80} placeholder='Aventure, espace, années 90…' value={draft.prompt} onChange={event => setDraft(value => ({ ...value, prompt: event.target.value }))} /></label>
+            <label className='client-draw-keywords'>Des mots-clés, si vous avez une envie précise<input aria-label='Une envie pour ce soir' maxLength={80} placeholder='Un titre, un thème, un genre…' value={draft.prompt} onChange={event => setDraft(value => ({ ...value, prompt: event.target.value }))} /></label>
             <footer>{canReset && <button type='button' className='client-draw-reset' onClick={onReset}>Réinitialiser</button>}<button className='client-play'>Appliquer</button></footer>
         </form>
     </details>;
