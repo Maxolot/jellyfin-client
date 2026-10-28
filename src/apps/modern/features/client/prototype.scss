@@ -1,0 +1,518 @@
+/* stylelint-disable no-descending-specificity -- Scoped prototype layer intentionally overrides the earlier base and component states. */
+
+/* Validated prototype geometry; scoped to the custom client surface. */
+.client-interface {
+    --client-card-height: clamp(240px, 25vw, 390px);
+    --client-card-poster: calc(var(--client-card-height) * 0.6);
+    --client-card-expanded: calc(var(--client-card-height) * 1.7778);
+    --client-ease: cubic-bezier(0.22, 0.8, 0.2, 1);
+}
+
+.client-row-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 var(--client-margin) 18px;
+
+    h2 {
+        margin: 0;
+        font-size: 24px;
+    }
+
+    > div {
+        display: flex;
+        gap: 8px;
+    }
+
+    button {
+        width: 32px;
+        height: 32px;
+        border: 1px solid #ffffff30;
+        border-radius: 50%;
+        background: #ffffff08;
+        font-size: 23px;
+    }
+}
+
+.client-expanding-row {
+    position: relative;
+    isolation: isolate;
+    margin-bottom: 27px;
+
+    .client-strip {
+        gap: 15px;
+        padding-top: 6px;
+        padding-bottom: 6px;
+        overscroll-behavior-x: contain;
+    }
+
+    .client-card {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        aspect-ratio: auto;
+        border-radius: inherit;
+    }
+
+    .client-card:hover,
+    .client-card:focus-visible {
+        transform: none;
+    }
+
+    .client-card img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: opacity 0.5s, transform 0.65s var(--client-ease);
+    }
+
+    .client-card-backdrop {
+        opacity: 0;
+    }
+}
+
+.client-media-card {
+    position: relative;
+    flex: 0 0 var(--client-card-poster);
+    height: var(--client-card-height);
+    border-radius: 11px;
+    background: #1b1c22;
+    isolation: isolate;
+    transition: flex-basis 0.55s var(--client-ease), box-shadow 0.3s;
+
+    &.active {
+        flex-basis: min(var(--client-card-expanded), calc(100vw - 2 * var(--client-margin)));
+        box-shadow: 0 0 0 2px #fff;
+    }
+
+    &.active .client-card-poster {
+        opacity: 0;
+    }
+
+    &.active .client-card-backdrop {
+        opacity: 1;
+    }
+
+    &.active .client-expanded-title,
+    &.active .client-card-shade,
+    &.active .client-card-actions,
+    &.active .client-availability {
+        opacity: 1;
+    }
+
+    &.active .client-card-actions {
+        pointer-events: auto;
+        visibility: visible;
+    }
+
+    &.active:hover .client-card-backdrop {
+        transform: scale(1.025);
+    }
+}
+
+.client-card-shade {
+    position: absolute;
+    inset: 25% 0 0;
+    background: linear-gradient(transparent, #000d);
+    opacity: 0;
+    transition: opacity 0.35s;
+}
+
+.client-expanded-title {
+    position: absolute;
+    right: 6%;
+    bottom: 26%;
+    left: 6%;
+    opacity: 0;
+    transition: opacity 0.4s 0.1s;
+
+    strong {
+        display: block;
+        font-size: clamp(20px, 2vw, 30px);
+    }
+
+    img {
+        position: relative !important;
+        width: 75% !important;
+        max-height: 85px;
+        object-fit: contain !important;
+        object-position: left;
+    }
+
+    img:not([hidden]) + strong {
+        display: none;
+    }
+}
+
+.client-card-actions {
+    position: absolute;
+    z-index: 2;
+    bottom: 18px;
+    left: 6%;
+    display: flex;
+    gap: 9px;
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transition: opacity 0.25s;
+
+    button,
+    a {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        border: 1px solid #ffffff90;
+        border-radius: 50%;
+        background: #14171bc0;
+        font-size: 22px;
+    }
+
+    .client-card-play {
+        background: #fff;
+        color: #111;
+        font-size: 16px;
+    }
+}
+
+.client-availability {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid #ffffff40;
+    border-radius: 50%;
+    background: #15171bd9;
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transition: opacity 0.25s;
+
+    span {
+        position: absolute;
+        right: 36px;
+        font-size: 11px;
+    }
+}
+
+.client-continue-label {
+    position: absolute;
+    bottom: 15px;
+    left: 12px;
+    font-size: 12px;
+    text-shadow: 0 2px 4px #000;
+}
+
+.client-media-card.active .client-continue-label {
+    right: 18px;
+    bottom: 28px;
+    left: auto;
+}
+
+.client-row-info {
+    min-height: 95px;
+    margin: 18px var(--client-margin) 0;
+    max-width: 1080px;
+
+    h3 {
+        display: inline;
+        margin-right: 14px;
+        font-size: 20px;
+    }
+
+    > span {
+        color: #aaaeb7;
+        font-size: 13px;
+    }
+
+    p {
+        display: -webkit-box;
+        overflow: hidden;
+        margin-top: 9px;
+        color: #b6b8bf;
+        font-size: 16px;
+        line-height: 1.55;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+}
+
+.client-section-glow {
+    position: absolute;
+    z-index: -1;
+    top: 50px;
+    right: var(--client-margin);
+    left: var(--client-margin);
+    height: var(--client-card-height);
+    border-radius: 22px;
+    background: #8297b61f;
+    filter: blur(38px);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.has-active-card > .client-section-glow {
+    opacity: 1;
+}
+
+@media (max-width: 700px) {
+    .client-interface {
+        --client-card-height: 240px;
+    }
+
+    .client-row-heading h2 {
+        font-size: 19px;
+    }
+
+    .client-row-info {
+        min-height: 105px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .client-media-card,
+    .client-expanding-row .client-card img,
+    .client-expanded-title,
+    .client-card-shade,
+    .client-card-actions,
+    .client-availability,
+    .client-section-glow {
+        transition: none;
+    }
+}
+
+.client-nav {
+    height: 76px;
+    border-radius: 30px;
+    border-color: #9aafd059;
+    background: linear-gradient(145deg, #ffffff16, #ffffff03), #141923a8;
+    box-shadow: inset 0 1px 0 #ffffff40, 0 14px 45px #0004;
+    backdrop-filter: blur(26px) saturate(155%);
+
+    > div:not(.client-profile-menu) {
+        align-items: center;
+    }
+
+    .client-search-shortcut {
+        padding: 3px 16px;
+        font-size: 30px;
+    }
+
+    .client-profile-menu {
+        position: absolute;
+        top: 88px;
+        left: 0;
+        display: flex;
+        min-width: 240px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+        padding: 18px;
+        overflow: visible;
+        border: 1px solid #ffffff38;
+        border-radius: 22px;
+        background: #161b25f5;
+        box-shadow: 0 15px 50px #0008;
+        backdrop-filter: blur(28px);
+    }
+
+    .client-profile-menu strong {
+        padding: 8px 12px;
+    }
+
+    .client-profile-menu button {
+        padding: 11px 17px;
+        border: 0;
+        border-radius: 16px;
+        background: #ffffff0b;
+        text-align: left;
+    }
+}
+
+.client-profile {
+    border: 1px solid #ffffff38;
+    background: #c6323b;
+}
+
+.client-brand {
+    background: none;
+    color: #e50914;
+    font-size: 29px;
+    font-weight: 900;
+}
+
+.client-classic .client-nav {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.client-floating .client-nav {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+}
+
+.client-home-hero {
+    justify-content: flex-end;
+    height: 84svh;
+    min-height: 570px;
+    margin: 8px var(--client-margin) 34px;
+    padding: 42px;
+    overflow: hidden;
+    border: 1px solid #fff3;
+    border-radius: 28px;
+    background: #17191e;
+
+    .client-background {
+        inset: 0;
+        height: 100%;
+        animation: client-artwork-enter 0.85s ease both;
+    }
+
+    &::before {
+        inset: 0;
+        background: linear-gradient(0deg, #000d, transparent 65%), linear-gradient(90deg, #0008, transparent 75%);
+    }
+
+    .client-title-logo {
+        width: min(42vw, 580px);
+        height: 125px;
+        margin: 14px 0 18px;
+    }
+
+    .client-meta {
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    .client-eyebrow {
+        font-weight: 700;
+    }
+
+    .client-hero-copy {
+        max-width: 85%;
+    }
+}
+
+.client-hero-arrows {
+    position: absolute;
+    right: 28px;
+    bottom: 30px;
+    display: flex;
+    gap: 8px;
+}
+
+.client-hero-arrows button {
+    width: 43px;
+    height: 43px;
+    border: 1px solid #ffffff70;
+    border-radius: 50%;
+    background: #15161b88;
+    font-size: 26px;
+}
+
+.client-hero-dots {
+    position: absolute;
+    bottom: 58px;
+    left: min(46%, 570px);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.client-hero-dots button {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #ffffff50;
+}
+
+.client-hero-dots [aria-pressed='true'] {
+    background: #fff;
+}
+
+.client-glass .client-actions :is(.client-play, .client-button) {
+    border: 1px solid #ffffff57;
+    background: linear-gradient(140deg, #ffffff24, #ffffff08), #0f131947;
+    color: #f9fafb;
+    box-shadow: inset 0 1px 0 #ffffff78, 0 5px 20px #0004;
+    backdrop-filter: blur(20px) saturate(155%);
+}
+
+@keyframes client-artwork-enter {
+    from {
+        opacity: 0.2;
+        transform: scale(1.025);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@media (min-width: 1200px) and (min-height: 950px) {
+    .client-home-hero {
+        height: calc(100svh - 210px);
+    }
+}
+
+@media (max-width: 700px) {
+    .client-nav {
+        height: 62px;
+        border-radius: 23px;
+    }
+
+    .client-home-hero {
+        height: 77svh;
+        min-height: 570px;
+        margin: 10px 10px 24px;
+        padding: 30px 22px;
+        border-radius: 23px;
+    }
+
+    .client-home-hero .client-title-logo {
+        width: 76vw;
+        height: 105px;
+    }
+
+    .client-home-hero .client-hero-copy {
+        max-width: 100%;
+    }
+
+    .client-hero-dots {
+        top: 25px;
+        bottom: auto;
+        left: 22px;
+    }
+
+    .client-hero-arrows {
+        top: 20px;
+        right: 20px;
+        bottom: auto;
+    }
+
+    .client-home-hero .client-meta {
+        font-size: 12px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .client-home-hero .client-background {
+        animation: none;
+    }
+}
+
+/* stylelint-enable no-descending-specificity */

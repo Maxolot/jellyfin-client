@@ -11,10 +11,12 @@ import { useApi } from 'hooks/useApi';
 import type { ItemDto } from 'types/base/models/item-dto';
 import Dashboard from 'utils/dashboard';
 
-import { episodeLabel, progressPercent } from '../features/client/model';
+import MediaRow from '../features/client/MediaRow';
+import { episodeLabel, progressPercent, uniqueItems } from '../features/client/model';
 import { clientRequest } from '../features/client/session';
 import { useClientDetails, useClientGenres, useClientMedia } from '../features/client/useClientMedia';
 import '../features/client/client.scss';
+import '../features/client/prototype.scss';
 
 type Preferences = { glass: boolean, floating: boolean, detail: 'continuous' | 'fade' | 'immersive' };
 type ClientNavigationState = { returnTo?: string, returnState?: ClientNavigationState | null, restoreFocus?: boolean };
@@ -40,10 +42,22 @@ function useClientController() {
     const [actionError, setActionError] = useState('');
     const [busy, setBusy] = useState(false);
     const [searchInput, setSearchInput] = useState(search);
+    const [heroIndex, setHeroIndex] = useState(0);
+    const [heroPaused, setHeroPaused] = useState(false);
+    const [profileOpen, setProfileOpen] = useState(false);
     const media = useClientMedia(id || view === 'settings' ? 'disabled' : view, search, offset, genre, sort);
     const details = useClientDetails(id, season);
     const item = details.item.data;
     const prefKey = `client-interface-${api?.basePath}-${user?.Id}`;
+
+    useEffect(() => {
+        if (!profileOpen) return;
+        const close = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') setProfileOpen(false);
+        };
+        document.addEventListener('keydown', close);
+        return () => document.removeEventListener('keydown', close);
+    }, [profileOpen]);
 
     useEffect(() => {
         try {
@@ -107,7 +121,11 @@ function useClientController() {
         let imageId = i.ImageTags?.Primary ? i.Id : i.SeriesId || i.Id;
         if (backdrop) imageId = i.BackdropImageTags?.length ? i.Id : i.ParentBackdropItemId || i.SeriesId || i.Id;
         if (!api || !imageId) return '';
-        return `${api.basePath}/Items/${imageId}/Images/${backdrop ? 'Backdrop/0' : 'Primary'}?maxWidth=${backdrop ? 1920 : 420}&quality=90`;
+        return `${api.basePath}/Items/${imageId}/Images/${backdrop ? 'Backdrop/0' : 'Primary'}?maxWidth=${backdrop ? 2560 : 900}&quality=90`;
+    }
+    function logo(i: BaseItemDto) {
+        const imageId = i.ImageTags?.Logo ? i.Id : i.SeriesId;
+        return imageId && api ? `${api.basePath}/Items/${imageId}/Images/Logo?maxWidth=900&quality=90` : undefined;
     }
     async function play(i: BaseItemDto) {
         setActionError('');
@@ -115,14 +133,14 @@ function useClientController() {
             await playbackManager.play({ items: [i as ItemDto], startPositionTicks: i.UserData?.PlaybackPositionTicks || 0 });
         } catch { setActionError('La lecture n’a pas pu démarrer. Réessayez ou ouvrez la fiche Jellyfin.'); }
     }
-    async function updateState(kind: 'favorite' | 'played') {
-        if (!api || !user?.Id || !item?.Id || busy) return;
+    async function updateState(kind: 'favorite' | 'played', target = item) {
+        if (!api || !user?.Id || !target?.Id || busy) return;
         setBusy(true);
         try {
             const data = getUserDataApi(api);
-            const p = { userId: user.Id, itemId: item.Id };
-            if (kind === 'favorite') await clientRequest(() => item.UserData?.IsFavorite ? data.unmarkFavoriteItem(p) : data.markFavoriteItem(p));
-            else await clientRequest(() => item.UserData?.Played ? data.markUnplayedItem(p) : data.markPlayedItem(p));
+            const p = { userId: user.Id, itemId: target.Id };
+            if (kind === 'favorite') await clientRequest(() => target.UserData?.IsFavorite ? data.unmarkFavoriteItem(p) : data.markFavoriteItem(p));
+            else await clientRequest(() => target.UserData?.Played ? data.markUnplayedItem(p) : data.markPlayedItem(p));
             await cache.invalidateQueries({ queryKey: ['Client', api.basePath, user.Id] });
         } catch {
             setActionError('Le changement n’a pas été enregistré. Réessayez.');
@@ -142,15 +160,24 @@ function useClientController() {
     }
     function row(title: string, items: BaseItemDto[] | undefined, horizontal = false) {
         if (!items?.length) return null;
-        return <section className='client-row'><h2>{title}</h2><div className='client-strip'>{cards(items, horizontal)}</div></section>;
+        return <MediaRow title={title} items={items} continuation={horizontal} image={image} logo={logo} onPlay={play} onFavorite={target => updateState('favorite', target)} />;
     }
-    const lead = media.data?.movies[0] || media.data?.series[0];
+    const heroItems = [...(media.data?.movies || []).slice(0, 3), ...(media.data?.series || []).slice(0, 2)];
+    const lead = heroItems[heroIndex % Math.max(1, heroItems.length)];
+    useEffect(() => {
+        if (view !== 'home' || id || heroPaused || heroItems.length < 2 || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const timer = window.setInterval(() => {
+            if (!document.hidden) setHeroIndex(index => index + 1);
+        }, 8000);
+        return () => window.clearInterval(timer);
+    }, [view, id, heroPaused, heroItems.length]);
     const playItem = item?.Type === 'Series' ? details.next.data || details.episodes.data?.[0] : item;
     const homeHero = view === 'home' ? lead : undefined;
     const hero = id ? item : homeHero;
     const error = id ? details.item.isError : media.isError;
     return { api, user, params, location, setParams, view, id, search, offset, media, details, item, preferences, actionError, busy,
-        searchInput, setSearchInput, genres, genre, sort, savePreference, image, play, updateState, cards, row, playItem, hero, error };
+        searchInput, setSearchInput, genres, genre, sort, savePreference, image, play, updateState, cards, row, playItem, hero, error,
+        heroItems, heroIndex, setHeroIndex, setHeroPaused, profileOpen, setProfileOpen };
 }
 
 type ClientModel = ReturnType<typeof useClientController>;
@@ -162,13 +189,16 @@ export default function Client() {
 }
 
 function ClientView({ model }: ViewProps) {
-    const { preferences, id, view, user, actionError, error, media, details } = model;
+    const { preferences, id, view, user, actionError, error, media, details, profileOpen, setProfileOpen } = model;
     return <Page id='clientPage' title='Client' className='client-page' isBackButtonEnabled={false}>
         <div className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} client-layout-${preferences.detail} ${id ? 'client-detail-page' : ''}`}>
             <nav className='client-nav' aria-label='Navigation principale'>
+                <button className='client-profile' aria-label='Menu du profil' aria-expanded={profileOpen} onClick={() => setProfileOpen(!profileOpen)}>{user?.Name?.slice(0, 1) || '•'}</button>
+                <div><Link to='/client?view=search' aria-label='Rechercher' className='client-search-shortcut'>⌕</Link>{links.filter(([key]) => key !== 'search').map(([key, label]) => <Link key={key} to={`/client?view=${key}`} aria-current={!id && view === key ? 'page' : undefined}>{label}</Link>)}</div>
                 <Link to='/client' className='client-brand' aria-label='Accueil'>C</Link>
-                <div>{links.map(([key, label]) => <Link key={key} to={`/client?view=${key}`} aria-current={!id && view === key ? 'page' : undefined}>{label}</Link>)}</div>
-                <Link to='/client?view=settings' className='client-profile' aria-label='Paramètres'>{user?.Name?.slice(0, 1) || '•'}</Link>
+                {profileOpen && <div className='client-profile-menu' role='dialog' aria-label='Menu du profil'>
+                    <strong>{user?.Name}</strong><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><button onClick={Dashboard.logout}>Se déconnecter</button>
+                </div>}
             </nav>
             {actionError && <p role='alert' className='client-message'>{actionError}</p>}
             {error && <div className='client-message' role='alert'><p>Impossible de charger les médias.</p><button onClick={() => (id ? details.item.refetch() : media.refetch())}>Réessayer</button></div>}
@@ -180,7 +210,7 @@ function ClientView({ model }: ViewProps) {
 }
 
 function HeroView({ model }: ViewProps) {
-    const { hero, id, item, api, location, playItem, busy, details, image, play, updateState, setParams } = model;
+    const { hero, id, item, api, location, playItem, busy, details, image, play, updateState, setParams, heroItems, heroIndex, setHeroIndex, setHeroPaused } = model;
     if (!hero) return null;
     const homePlayable = hero.Type === 'Movie' ? hero : undefined;
     const playable = id ? playItem : homePlayable;
@@ -190,17 +220,19 @@ function HeroView({ model }: ViewProps) {
     let kind = 'FILM';
     if (hero.Type === 'Series') kind = 'SÉRIE';
     if (hero.Type === 'Episode') kind = hero.SeriesName || 'ÉPISODE';
-    return <section className={`client-hero${id ? ' client-detail' : ''}`}>
-        <img className='client-background' src={image(hero, true)} alt='' onError={e => { e.currentTarget.hidden = true; }} />
+    return <section className={`client-hero${id ? ' client-detail' : ' client-home-hero'}`} onPointerEnter={() => setHeroPaused(true)} onPointerLeave={() => setHeroPaused(false)} onFocus={() => setHeroPaused(true)} onBlur={event => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setHeroPaused(false);
+    }}>
+        <img key={hero.Id} className='client-background' src={image(hero, true)} alt='' onError={e => { e.currentTarget.hidden = true; }} />
         {id && <Link className='client-back' to={(location.state as ClientNavigationState | null)?.returnTo || '/client'} state={{ ...(location.state as ClientNavigationState | null)?.returnState, restoreFocus: true }}>‹ Retour</Link>}
-        <div className='client-hero-copy'><span className='client-eyebrow'>{kind}</span>
+        <div className='client-hero-copy'><span className='client-eyebrow'>{id ? kind : 'À LA UNE'}</span>
             {hero.ImageTags?.Logo ? <img className='client-title-logo' src={`${api?.basePath}/Items/${hero.Id}/Images/Logo?maxWidth=740&quality=90`} alt={hero.Name || ''} onError={e => {
                 e.currentTarget.hidden = true;
                 e.currentTarget.nextElementSibling?.removeAttribute('hidden');
             }} /> : null}
             <h1 hidden={!!hero.ImageTags?.Logo}>{hero.Name}</h1>
             <p className='client-meta'>{[hero.ProductionYear, ...(hero.Genres || []).slice(0, 2), hero.RunTimeTicks ? `${Math.round(hero.RunTimeTicks / 6e8)} min` : '', hero.CommunityRating ? `★ ${(hero.CommunityRating / 2).toFixed(1)}/5` : ''].filter(Boolean).join(' · ')}</p>
-            <p className='client-overview'>{hero.Overview}</p>
+            {id && <p className='client-overview'>{hero.Overview}</p>}
             <div className='client-actions'>
                 {playable && <button className='client-play' onClick={() => play(playable)}>▶ {playLabel}</button>}
                 {!id && <Link className='client-button' data-client-focus={`info-${hero.Id}`} to={`/client?id=${hero.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }}>ⓘ Plus d’infos</Link>}
@@ -209,6 +241,7 @@ function HeroView({ model }: ViewProps) {
             </div>
             {id && <Link className='client-original-link' to={`/details?id=${hero.Id}`}>Options et fiche Jellyfin ›</Link>}
         </div>
+        {!id && heroItems.length > 1 && <><div className='client-hero-dots' aria-label='Médias à la une'>{heroItems.map((entry, index) => <button key={entry.Id} aria-label={`Afficher ${entry.Name}`} aria-pressed={heroIndex % heroItems.length === index} onClick={() => setHeroIndex(index)} />)}</div><div className='client-hero-arrows'><button aria-label='Média précédent' onClick={() => setHeroIndex(index => (index + heroItems.length - 1) % heroItems.length)}>‹</button><button aria-label='Média suivant' onClick={() => setHeroIndex(index => index + 1)}>›</button></div></>}
         {id && item?.Type === 'Series' && <section className='client-episodes'><header><h2>Épisodes</h2><div role='group' aria-label='Saison'>{details.seasons.data?.map(s => <button key={s.Id} aria-pressed={details.selected === s.Id} onClick={() => setParams({ id, season: s.Id! }, { state: location.state })}>{s.IndexNumber === 0 ? 'Spéciaux' : `Saison ${s.IndexNumber}`}</button>)}</div></header>
             {details.episodes.isPending && !!details.selected && <p role='status'>Chargement des épisodes…</p>}
             {details.episodes.isError && <button onClick={() => details.episodes.refetch()}>Réessayer le chargement des épisodes</button>}
@@ -225,8 +258,7 @@ function ContentView({ model }: ViewProps) {
     if (id) return row('Dans le même esprit', details.similar.data);
     if (view === 'home') {
         return <>
-            {row('Continuer à regarder', media.data?.resume, true)}
-            {row('À suivre', media.data?.next, true)}
+            {row('Continuer à regarder', uniqueItems([...(media.data?.resume || []), ...(media.data?.next || [])]).filter((entry, index, all) => !entry.SeriesId || all.findIndex(other => other.SeriesId === entry.SeriesId) === index), true)}
             {row('Films récemment ajoutés', media.data?.movies)}
             {row('Séries récemment ajoutées', media.data?.series)}
             {media.data && !media.data.movies.length && !media.data.series.length && !media.data.resume.length && <p className='client-message'>Votre bibliothèque est vide pour le moment.</p>}
