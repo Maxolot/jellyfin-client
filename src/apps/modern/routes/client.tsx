@@ -3,7 +3,7 @@ import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import { getUserDataApi } from '@jellyfin/sdk/lib/utils/api/user-data-api';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useQueryClient } from '@tanstack/react-query';
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { type CSSProperties, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigationType, useSearchParams } from 'react-router-dom';
 
 import Page from 'components/Page';
@@ -14,6 +14,7 @@ import Dashboard from 'utils/dashboard';
 
 import HeroArtwork from '../features/client/HeroArtwork';
 import ClientIcon from '../features/client/ClientIcon';
+import useArtworkColor from '../features/client/useArtworkColor';
 import PlannedRating from '../features/client/PlannedRating';
 import HeroMetadata from '../features/client/HeroMetadata';
 import DetailExtras from '../features/client/DetailExtras';
@@ -26,9 +27,9 @@ import { useClientCollections, useClientDetails, useClientFilters, useClientMedi
 import '../features/client/client.scss';
 import '../features/client/prototype.scss';
 
-type Preferences = { glass: boolean, floating: boolean, detail: 'continuous' | 'fade' | 'immersive' };
+type Preferences = { glass: boolean, floating: boolean, chromatic: boolean, detail: 'continuous' | 'fade' | 'immersive' };
 type ClientNavigationState = { returnTo?: string, returnState?: ClientNavigationState | null, restoreFocus?: boolean };
-const defaults: Preferences = { glass: true, floating: false, detail: 'continuous' };
+const defaults: Preferences = { glass: true, floating: false, chromatic: false, detail: 'continuous' };
 const links = [['home', 'Accueil'], ['series', 'Séries'], ['films', 'Films'], ['recent', 'Nouveautés'], ['tonight', 'Ce soir'], ['search', 'Rechercher'], ['mine', 'Mon espace']];
 
 function useClientController() {
@@ -92,7 +93,7 @@ function useClientController() {
         try {
             const saved = JSON.parse(localStorage.getItem(prefKey) || '{}');
             setPreferences({ glass: typeof saved.glass === 'boolean' ? saved.glass : true,
-                floating: saved.floating === true,
+                floating: saved.floating === true, chromatic: saved.chromatic === true,
                 detail: ['continuous', 'fade', 'immersive'].includes(saved.detail) ? saved.detail : 'continuous' });
         } catch { setPreferences(defaults); }
     }, [prefKey]);
@@ -208,10 +209,11 @@ function useClientController() {
     const playItem = item?.Type === 'Series' ? details.next.data || details.episodes.data?.[0] : item;
     const homeHero = view === 'home' || discovery ? lead : undefined;
     const hero = id ? item : homeHero;
+    const accent = useArtworkColor(preferences.chromatic && hero ? image(hero, true) : undefined);
     const error = id ? details.item.isError : media.isError;
     return { api, user, params, location, setParams, view, id, search, offset, media, details, item, preferences, actionError, busy,
         searchInput, setSearchInput, genres, genre, sort, savePreference, image, play, updateState, cards, row, playItem, hero, error,
-        heroItems, heroIndex, setHeroIndex, setHeroPaused, profileOpen, setProfileOpen, profileButton, profileMenu, discovery, filters, audio };
+        heroItems, heroIndex, setHeroIndex, setHeroPaused, profileOpen, setProfileOpen, profileButton, profileMenu, discovery, filters, audio, accent };
 }
 
 type ClientModel = ReturnType<typeof useClientController>;
@@ -223,9 +225,9 @@ export default function Client() {
 }
 
 function ClientView({ model }: ViewProps) {
-    const { preferences, id, view, user, actionError, error, media, details, profileOpen, setProfileOpen, profileButton, profileMenu } = model;
+    const { preferences, id, view, user, actionError, error, media, details, profileOpen, setProfileOpen, profileButton, profileMenu, accent } = model;
     return <Page id='clientPage' title='Client' className='client-page' isBackButtonEnabled={false}>
-        <div className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} client-layout-${preferences.detail} ${id ? 'client-detail-page' : ''}`}>
+        <div className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} ${preferences.chromatic ? 'client-chromatic' : ''} client-layout-${preferences.detail} ${id ? 'client-detail-page' : ''}`} style={{ '--client-accent': accent } as CSSProperties}>
             <nav className='client-nav' aria-label='Navigation principale'>
                 <button ref={profileButton} className='client-profile' aria-label='Menu du profil' aria-expanded={profileOpen} onClick={() => setProfileOpen(!profileOpen)}>{user?.Name?.slice(0, 1) || '•'}</button>
                 <div><Link to='/client?view=search' aria-label='Rechercher' className='client-search-shortcut'><ClientIcon name='search' /></Link>{links.filter(([key]) => key !== 'search').map(([key, label]) => <Link key={key} to={`/client?view=${key}`} aria-current={!id && view === key ? 'page' : undefined}>{label}</Link>)}</div>
@@ -331,6 +333,7 @@ function SettingsView({ model }: ViewProps) {
     const { preferences, savePreference, user } = model;
     return <section className='client-settings'><h1>Personnaliser l’interface</h1>
         <h2>Thème</h2><div className='client-setting-options'>{[[true, 'Liquid Glass'], [false, 'Classique']].map(([key, label]) => <button key={String(key)} aria-pressed={preferences.glass === key} onClick={() => savePreference({ ...preferences, glass: key as boolean })}><InterfacePreview kind={key ? 'glass' : 'classic'} /><strong>{label}</strong></button>)}</div>
+        <label className='client-chromatic-option'><input type='checkbox' checked={preferences.chromatic} onChange={event => savePreference({ ...preferences, chromatic: event.target.checked })} /> Couleurs inspirées du média</label>
         <h2>Navigation</h2><div className='client-setting-options'>{[[false, 'Bandeau du thème'], [true, 'Boutons flottants']].map(([key, label]) => <button key={String(key)} aria-pressed={preferences.floating === key} onClick={() => savePreference({ ...preferences, floating: key as boolean })}><InterfacePreview kind={key ? 'floating' : 'grouped'} /><strong>{label}</strong></button>)}</div>
         <h2>Fond des fiches</h2><div className='client-setting-options'>{[['continuous', 'Fond continu'], ['fade', 'Fondu progressif'], ['immersive', 'Fiche immersive']].map(([key, label]) => <button key={key} aria-pressed={preferences.detail === key} onClick={() => savePreference({ ...preferences, detail: key as Preferences['detail'] })}><InterfacePreview kind={key as 'continuous' | 'fade' | 'immersive'} /><strong>{label}</strong></button>)}</div>
         <section className='client-preview-setting'><h2>Aperçus vidéo</h2><label><input type='checkbox' disabled /> Activer les extraits vidéo <small>À venir</small></label><p>Les images restent fixes tant que les aperçus ne sont pas disponibles.</p></section>

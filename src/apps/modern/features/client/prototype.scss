@@ -1810,4 +1810,28 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     display: block;
 }
 
+.client-interface .client-brand {
+    color: #e50914;
+    font-size: 34px;
+    font-weight: 900;
+}
+
+.client-chromatic.client-glass:not(.client-floating) .client-nav {
+    border-color: rgb(var(--client-accent) / 0.48);
+    background: linear-gradient(135deg, rgb(var(--client-accent) / 0.26), #ffffff05 60%), #1214197a;
+}
+
+.client-chromatic .client-actions .client-play {
+    background: linear-gradient(140deg, #ffffff24, rgb(var(--client-accent) / 0.18) 58%, #ffffff08), #0f131947;
+}
+
+.client-chromatic-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0 30px;
+    font-size: 13px;
+    color: #aab6c7;
+}
+
 /* stylelint-enable no-descending-specificity */
