@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-no-bind -- These controls belong to the current request form. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 import './seerr.scss';
@@ -9,7 +9,7 @@ import './seerr.scss';
 import Artwork from '../Artwork';
 import HeroArtwork from '../HeroArtwork';
 import ClientIcon from '../ClientIcon';
-import { externalIdentity, catalogueItem, canRequest, imageUrl, localMatch, mediaLabel, requestableSeasons, requestLabel,
+import { externalIdentity, catalogueItem, providerKey, canRequest, imageUrl, localMatch, mediaLabel, requestableSeasons, requestLabel,
     type ExternalMedia, type MediaRequest, type MediaType, type Quota, type Results, type SeerrIdentity } from './model';
 import { useLocalIdentities, useSeerrDetail } from './queries';
 import { useSeerr } from './SeerrContext';
@@ -171,6 +171,16 @@ export function RequestTracking() {
     const local = useLocalIdentities(seerr.connected);
     const query = useQuery({ queryKey: [...seerr.root, 'Requests', page, filter], enabled: seerr.connected,
         refetchInterval: 20000, retry: false, queryFn: ({ signal }) => seerr.call<Results<MediaRequest>>(`Api/request?take=12&skip=${page * 12}&sort=modified&filter=${filter}&requestedBy=${seerr.me.data!.id}`, signal) });
+    const refreshed = useRef('');
+    const cache = useQueryClient();
+    const missing = (query.data?.results || []).filter(entry => entry.status === 5 || entry.media.status === 5)
+        .filter(entry => !local.data?.some(item => providerKey(item) === `${entry.type || entry.media.mediaType || 'movie'}:${entry.media.tmdbId}`))
+        .map(entry => entry.media.tmdbId).sort((a, b) => (a || 0) - (b || 0)).join(',');
+    useEffect(() => {
+        if (!local.isSuccess || !missing || refreshed.current === missing) return;
+        refreshed.current = missing;
+        void cache.invalidateQueries({ queryKey: [...seerr.root, 'LocalIdentities'] });
+    }, [local.isSuccess, missing, cache, seerr.root]);
     if (!seerr.connected) return null;
     return <section className='client-request-tracking'><header><h2>Mes demandes</h2><label>Afficher <select aria-label='Filtrer mes demandes' value={filter} onChange={event => {
         setFilter(event.target.value);
