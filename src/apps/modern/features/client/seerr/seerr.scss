@@ -1,0 +1,156 @@
+.client-request-panel,
+.client-request-tracking {
+    margin: 32px var(--client-margin) 50px;
+    padding: 24px;
+    border: 1px solid #ffffff24;
+    border-radius: 22px;
+    background: #15181d88;
+    backdrop-filter: blur(24px);
+
+    header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    h2 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 500;
+    }
+
+    p {
+        color: #bbc1ca;
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+    fieldset {
+        min-width: 0;
+        margin: 20px 0;
+        padding: 0;
+        border: 0;
+    }
+
+    legend {
+        margin-bottom: 15px;
+        color: #b8c0ca;
+    }
+}
+
+.client-request-seasons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    button {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        min-width: 145px;
+        padding: 15px 18px;
+        border: 1px solid #ffffff30;
+        border-radius: 15px;
+        background: #ffffff06;
+        text-align: left;
+    }
+
+    [aria-pressed='true'] {
+        border-color: #fff;
+        background: #ffffff20;
+    }
+
+    small {
+        color: #b7bec8;
+    }
+}
+
+.client-request-confirm {
+    padding: 15px 0;
+
+    .client-button {
+        margin-left: 12px;
+    }
+}
+
+.client-request-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.client-tracked-request {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+    padding: 12px;
+    border-radius: 14px;
+    background: #ffffff08;
+
+    img {
+        flex: none;
+        width: 55px;
+        height: 80px;
+        border-radius: 6px;
+        object-fit: cover;
+    }
+
+    span {
+        flex: 1;
+        min-width: 0;
+    }
+
+    strong,
+    small {
+        display: block;
+        overflow-wrap: anywhere;
+    }
+
+    small {
+        margin-top: 10px;
+        color: #aeb8c5;
+        font-size: 12px;
+    }
+
+    svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+.client-external-badge {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    max-width: calc(100% - 16px);
+    padding: 7px 10px;
+    border: 1px solid #ffffff30;
+    border-radius: 20px;
+    background: #111820d9;
+    color: #fff;
+    font-size: 11px;
+}
+
+@media (max-width: 700px) {
+    .client-request-list {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .client-request-panel,
+    .client-request-tracking {
+        padding: 18px;
+    }
+
+    .client-request-tracking header {
+        align-items: start;
+        flex-direction: column;
+    }
+}
+
+.client-request-panel button:disabled {
+    opacity: 0.45;
+    cursor: default;
+}

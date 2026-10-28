@@ -30,7 +30,7 @@ import PlannedRating from '../features/client/PlannedRating';
 import HeroMetadata from '../features/client/HeroMetadata';
 import DetailExtras from '../features/client/DetailExtras';
 import InterfacePreview from '../features/client/InterfacePreview';
-import { RecentPage, TonightPage } from '../features/client/LocalDiscoveryPages';
+import { RecentPage } from '../features/client/LocalDiscoveryPages';
 import MediaRow from '../features/client/MediaRow';
 import { episodeLabel, progressPercent, uniqueItems } from '../features/client/model';
 import { clientRequest } from '../features/client/session';
@@ -41,6 +41,14 @@ import '../features/client/motion.scss';
 import '../features/client/previews.scss';
 
 type ClientNavigationState = { returnTo?: string, returnState?: ClientNavigationState | null, restoreFocus?: boolean };
+import TonightPage from '../features/client/TonightPage';
+import CollectionCard from '../features/client/CollectionCard';
+import AmbientBackdrop from '../features/client/AmbientBackdrop';
+import { SeerrProvider, useSeerr } from '../features/client/seerr/SeerrContext';
+import { useSeerrCatalogue } from '../features/client/seerr/queries';
+import { ExternalDetail, RequestPanel, RequestTracking, SeerrSettings } from '../features/client/seerr/SeerrViews';
+import { externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
+
 const links = [['home', 'Accueil'], ['series', 'Séries'], ['films', 'Films'], ['recent', 'Nouveautés'], ['tonight', 'Ce soir'], ['search', 'Rechercher'], ['mine', 'Mon espace']];
 
 function heroCandidates(discovery: boolean, data?: { items: BaseItemDto[]; movies: BaseItemDto[]; series: BaseItemDto[] }) {
@@ -48,8 +56,32 @@ function heroCandidates(discovery: boolean, data?: { items: BaseItemDto[]; movie
     return [...(data?.movies || []).slice(0, 3), ...(data?.series || []).slice(0, 2)];
 }
 
+function clientArtwork(basePath: string, i: BaseItemDto, backdrop = false, hero = false) {
+    if (isExternal(i)) {
+        const external = (i as CatalogueItem).Seerr;
+        return imageUrl(backdrop ? external?.backdropPath || external?.posterPath : external?.posterPath, backdrop);
+    }
+    let kind: 'poster' | 'backdrop' | 'hero' = 'poster';
+    if (backdrop) kind = 'backdrop';
+    if (hero) kind = 'hero';
+    return artworkUrl(basePath, i, kind);
+}
+
+function clientLogo(basePath: string, i: BaseItemDto) {
+    if (isExternal(i)) return undefined;
+    return i.ImageTags?.Logo || i.SeriesId ? artworkUrl(basePath, i, 'logo') : undefined;
+}
+
+function localDetailId(id: string) {
+    return isExternal({ Id: id }) ? '' : id;
+}
+function allowExternalCatalogue(view: string, selectors: string[]) {
+    return !selectors.some(Boolean) && ['home', 'films', 'series', 'search'].includes(view);
+}
+
 function useClientController() {
     const { api, user } = useApi();
+    const seerr = useSeerr();
     const { clientPreviews } = useWebConfig();
     const hasPreviews = !!api && !!user?.Id && Object.keys(clientPreviews?.[user.ServerId || ''] || {}).length > 0;
     const [params, setParams] = useSearchParams();
@@ -88,7 +120,10 @@ function useClientController() {
     const surface = useRef<HTMLDivElement>(null);
     const profileMenu = useRef<HTMLDivElement>(null);
     const media = useClientMedia(id || view === 'settings' ? 'disabled' : view, search, offset, { genre, sort, person, audio, collection });
-    const details = useClientDetails(id, season);
+    const remote = isExternal({ Id: id });
+    const allowCatalogue = allowExternalCatalogue(view, [id, collection, person, genre, audio]);
+    const catalogue = useSeerrCatalogue(view, search, allowCatalogue);
+    const details = useClientDetails(localDetailId(id), season);
     const item = details.item.data;
     useEffect(() => {
         const refresh = () => {
@@ -173,14 +208,11 @@ function useClientController() {
         if (!api || !user?.Id) return;
         storePreference(next);
     }
-    function image(i: BaseItemDto, backdrop = false, hero = false) {
-        let kind: 'poster' | 'backdrop' | 'hero' = 'poster';
-        if (backdrop) kind = 'backdrop';
-        if (hero) kind = 'hero';
-        return artworkUrl(api?.basePath || '', i, kind);
-    }
-    function logo(i: BaseItemDto) {
-        return i.ImageTags?.Logo || i.SeriesId ? artworkUrl(api?.basePath || '', i, 'logo') : undefined;
+    const image = (i: BaseItemDto, backdrop = false, hero = false) => clientArtwork(api?.basePath || '', i, backdrop, hero);
+    const logo = (i: BaseItemDto) => clientLogo(api?.basePath || '', i);
+    function releaseDetail() {
+        window.clearTimeout(prepareTimer.current);
+        setAmbient('');
     }
     function prepareDetail(i: BaseItemDto) {
         window.clearTimeout(prepareTimer.current);
@@ -192,7 +224,7 @@ function useClientController() {
     function warmDetail(i: BaseItemDto) {
         void preloadArtwork(image(i, true, true)).catch(() => undefined);
         const targetId = i.Type === 'Episode' ? i.SeriesId || i.Id : i.Id;
-        if (!targetId || !api || !user?.Id) return;
+        if (!targetId || !api || !user?.Id || isExternal(i)) return;
         void cache.prefetchQuery({
             queryKey: ['Client', api?.basePath, user?.Id, 'Detail', targetId],
             staleTime: 30000,
@@ -200,6 +232,10 @@ function useClientController() {
         });
     }
     async function play(i: BaseItemDto) {
+        if (isExternal(i)) {
+            setParams({ id: i.Id! }, { state: { returnTo: location.pathname + location.search, returnState: location.state } });
+            return;
+        }
         setActionError('');
         setPreviewSuspended(true);
         try {
@@ -232,11 +268,12 @@ function useClientController() {
                 <small>{i.Type === 'Episode' ? `${episodeLabel(i)} · ${i.Name}` : i.ProductionYear}</small></span>}
             {progressPercent(i) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(i)}%` }} /></span>}
             <span className='client-card-fallback'>{i.Name}</span>
+            {isExternal(i) && <span className='client-external-badge'>{mediaLabel((i as CatalogueItem).Seerr?.mediaInfo)}</span>}
         </Link>);
     }
     function row(title: string, items: BaseItemDto[] | undefined, horizontal = false) {
         if (!items?.length) return null;
-        return <MediaRow title={title} items={items} continuation={horizontal} image={image} logo={logo} onPrepare={prepareDetail} onPlay={play} onFavorite={target => updateState('favorite', target)} />;
+        return <MediaRow title={title} items={items} continuation={horizontal} image={image} logo={logo} onPrepare={prepareDetail} onRelease={releaseDetail} onPlay={play} onFavorite={target => updateState('favorite', target)} />;
     }
     const heroItems = heroCandidates(discovery, media.data);
     const lead = heroItems[heroIndex % Math.max(1, heroItems.length)];
@@ -265,13 +302,17 @@ function useClientController() {
     const error = id ? details.item.isError : media.isError;
     return { api, user, params, location, setParams, view, id, search, offset, media, details, item, preferences, actionError, busy,
         searchInput, setSearchInput, genres, genre, sort, savePreference, image, play, updateState, cards, row, playItem, hero, error,
-        heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent };
+        prepareDetail, releaseDetail, seerr, catalogue, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent };
 }
 
 type ClientModel = ReturnType<typeof useClientController>;
 type ViewProps = { readonly model: ClientModel };
 
 export default function Client() {
+    return <SeerrProvider><ClientSurface /></SeerrProvider>;
+}
+
+function ClientSurface() {
     const model = useClientController();
     useClientMotion(model.surface);
     return <ClientView model={model} />;
@@ -281,7 +322,7 @@ function ClientView({ model }: ViewProps) {
     const { preferences, id, view, user, actionError, error, media, details, profileOpen, setProfileOpen, profileButton, profileMenu, accent } = model;
     return <PreviewProvider surface={model.surface} enabled={preferences.previews} muted={preferences.previewMuted} suspended={model.previewSuspended} toggleMuted={() => model.savePreference({ ...preferences, previewMuted: !preferences.previewMuted })} onPlayingChange={model.setPreviewPlaying}><Page id='clientPage' title='Client' className='client-page' isBackButtonEnabled={false}>
         <div ref={model.surface} className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} ${preferences.chromatic ? 'client-chromatic' : ''} client-layout-${preferences.detail} ${id ? 'client-detail-page' : ''}`} style={{ '--client-accent': accent } as CSSProperties}>
-            {preferences.ambient && !id && <div className={`client-ambient${model.ambient ? ' is-active' : ''}`} aria-hidden='true'>{model.ambient && <HeroArtwork source={model.ambient} />}</div>}
+            {preferences.ambient && !id && <AmbientBackdrop source={model.ambient} />}
             <nav className='client-nav' aria-label='Navigation principale'>
                 <button ref={profileButton} className='client-profile' aria-label='Menu du profil' aria-expanded={profileOpen} onClick={() => setProfileOpen(!profileOpen)}>{user?.Name?.slice(0, 1) || '•'}</button>
                 <div><Link to='/client?view=search' aria-label='Rechercher' className='client-search-shortcut'><ClientIcon name='search' /></Link>{links.filter(([key]) => key !== 'search').map(([key, label]) => <Link key={key} to={`/client?view=${key}`} aria-current={!id && view === key ? 'page' : undefined}>{label}</Link>)}</div>
@@ -292,10 +333,11 @@ function ClientView({ model }: ViewProps) {
             </nav>
             {actionError && <p role='alert' className='client-message'>{actionError}</p>}
             {error && <div className='client-message' role='alert'><p>Impossible de charger les médias.</p><button onClick={() => (id ? details.item.refetch() : media.refetch())}>Réessayer</button></div>}
-            {(id ? details.item.isPending : view !== 'settings' && media.isPending) && <p className='client-message' role='status'>Chargement…</p>}
+            {(id ? !model.remote && details.item.isPending : view !== 'settings' && media.isPending) && <p className='client-message' role='status'>Chargement…</p>}
             <BrowseControls model={model} />
             {!id && media.isPending && (view === 'home' || model.discovery) && <div className='client-hero client-home-hero client-loading-surface' aria-hidden='true'><span /><span /><span /></div>}
             <HeroView model={model} />
+            {id && model.hero && externalIdentity(model.hero) && model.seerr.connected && <RequestPanel key={id} identity={externalIdentity(model.hero)!} />}
             <ContentView model={model} />
         </div>
     </Page></PreviewProvider>;
@@ -371,18 +413,21 @@ function EpisodesView({ model }: ViewProps) {
 
 function ContentView({ model }: ViewProps) {
     const { id, view, details, media, row, api, image } = model;
+    if (model.remote) return <ExternalDetail key={id} id={id} row={row} />;
     if (id) return details.item.data && api ? <DetailExtras item={details.item.data} basePath={api.basePath} similar={details.similar.data || []} image={image} /> : null;
     if (view === 'home') {
         return <>
             {row('Continuer à regarder', uniqueItems([...(media.data?.resume || []), ...(media.data?.next || [])]).filter((entry, index, all) => !entry.SeriesId || all.findIndex(other => other.SeriesId === entry.SeriesId) === index), true)}
             {row('Films récemment ajoutés', media.data?.movies)}
             {row('Séries récemment ajoutées', media.data?.series)}
+            {row('À découvrir', model.catalogue.items)}
+            {model.catalogue.isError && <p className='client-message'>Les découvertes sont temporairement indisponibles. Votre bibliothèque reste accessible.</p>}
             {media.data && !media.data.movies.length && !media.data.series.length && !media.data.resume.length && <p className='client-message'>Votre bibliothèque est vide pour le moment.</p>}
         </>;
     }
     if (view === 'settings') return <SettingsView model={model} />;
     if (view === 'recent') return <RecentPage items={media.data?.items || []} row={row} />;
-    if (view === 'tonight') return <TonightPage items={media.data?.items || []} genres={model.genres.data || []} row={row} />;
+    if (view === 'tonight') return <TonightPage items={media.data?.items || []} image={image} onPrepare={model.prepareDetail} onRelease={model.releaseDetail} />;
     if (model.discovery) return <DiscoveryView model={model} />;
     if (view === 'mine') return <PersonalView model={model} />;
     return <LibraryView model={model} />;
@@ -391,6 +436,7 @@ function SettingsView({ model }: ViewProps) {
     const { preferences, savePreference, user } = model;
     if (!model.api || !user?.Id) return <section className='client-settings'><h1>Personnaliser l’interface</h1><p role='status'>Chargement des préférences…</p></section>;
     return <section className='client-settings'><h1>Personnaliser l’interface</h1>
+        <SeerrSettings />
         <h2>Thème</h2><div className='client-setting-options'>{[[true, 'Liquid Glass'], [false, 'Classique']].map(([key, label]) => <button key={String(key)} aria-pressed={preferences.glass === key} onClick={() => savePreference({ ...preferences, glass: key as boolean })}><InterfacePreview kind={key ? 'glass' : 'classic'} /><strong>{label}</strong></button>)}</div>
         <label className='client-chromatic-option'><input type='checkbox' checked={preferences.chromatic} onChange={event => savePreference({ ...preferences, chromatic: event.target.checked })} /> Couleurs inspirées du média</label>
         <label className='client-chromatic-option'><input type='checkbox' checked={preferences.ambient} onChange={event => savePreference({ ...preferences, ambient: event.target.checked })} /> Fond immersif au survol</label>
@@ -423,7 +469,7 @@ function BrowseControls({ model }: ViewProps) {
 
 function DiscoveryView({ model }: ViewProps) {
     const { media, row, view, setParams } = model;
-    const items = media.data?.items || [];
+    const items = mixCatalogue(media.data?.items || [], model.catalogue.items);
     const used = new Set(items.slice(0, 12).map(entry => entry.Id || ''));
     const groups = [...new Set(items.flatMap(entry => entry.Genres || []))].map(genre => {
         const selected = items.filter(entry => entry.Genres?.includes(genre) && !used.has(entry.Id || '')).slice(0, 12);
@@ -449,7 +495,8 @@ function PersonalView({ model }: ViewProps) {
         <div className='client-personal-shortcuts'><button onClick={() => document.getElementById('client-favorites')?.scrollIntoView({ block: 'start' })}><strong>{media.data?.total || 0}</strong> Ma liste</button><button onClick={() => document.getElementById('client-resume')?.scrollIntoView({ block: 'start' })}><strong>{resume.length}</strong> Lectures à reprendre</button></div>
         {lead && <section className='client-personal-spotlight'><Artwork source={image(lead, true, true)} eager /><PreviewClip item={lead} surface='spotlight' /><div><small>ON CONTINUE ?</small><h2>{lead.SeriesName || lead.Name}</h2><p>{lead.Type === 'Episode' ? episodeLabel(lead) : 'Votre film vous attend'}</p><button className='client-play' onClick={() => play(lead)}><ClientIcon name='play' />Reprendre</button><Link className='client-button' to={`/client?id=${lead.SeriesId || lead.Id}`}>Voir la fiche</Link></div></section>}
         <div id='client-resume'>{row('Continuer à regarder', resume, true)}</div>
-        {!!collections.data?.length && <section className='client-personal-collections'><h2>Mes collections</h2><div>{collections.data.map(collection => <Link key={collection.Id} to={`/client?view=search&collection=${collection.Id}&collectionName=${encodeURIComponent(collection.Name || '')}`}><span className='client-collection-art'><Artwork source={image(collection)} /></span><strong>{collection.Name}</strong></Link>)}</div></section>}
+        {!!collections.data?.length && <section className='client-personal-collections'><h2>Mes collections</h2><div>{collections.data.map(collection => <CollectionCard key={collection.Id} collection={collection} image={image} />)}</div></section>}
+        <RequestTracking />
         <div className='client-personal-favorites' id='client-favorites'><header><h2>Ma liste</h2><button onClick={() => {
             const items = media.data?.items || [];
             // eslint-disable-next-line sonarjs/pseudo-random -- This only picks a visible favorite, not a security value.
@@ -479,8 +526,10 @@ function LibraryView({ model, embedded = false }: ViewProps & { readonly embedde
                 browse({ q: '' });
             }}>×</button>}<button>Rechercher</button></form>
         <div className='client-filter-options'><label>Genre <select value={genre} onChange={event => browse({ genre: event.target.value })}><option value=''>Tous les genres</option>{genres.data?.filter(entry => entry.Name).map(entry => <option key={entry.Id || entry.Name} value={entry.Name!}>{entry.Name}</option>)}</select></label><label>Trier <select value={sort} onChange={event => browse({ sort: event.target.value })}><option value='name'>Titre</option><option value='recent'>Ajouts récents</option></select></label><span className='client-result-count'>{media.data?.total || 0} titres</span></div>
-        <div className='client-grid'>{cards(media.data?.items || [])}</div>
-        {media.data?.items.length === 0 && <p>{view === 'mine' ? 'Ajoutez des films et des séries à votre liste depuis leurs fiches.' : 'Aucun résultat.'}</p>}
+        <div className='client-grid'>{cards(mixCatalogue(media.data?.items || [], !embedded && view === 'search' ? model.catalogue.items : []))}</div>
+        {!embedded && view === 'search' && model.catalogue.hasNextPage && <button className='client-button' disabled={model.catalogue.isFetchingNextPage} onClick={() => { void model.catalogue.fetchNextPage(); }}>Plus de découvertes</button>}
+        {!embedded && view === 'search' && model.catalogue.isError && <p>Les résultats externes sont temporairement indisponibles. <button onClick={() => { void model.catalogue.refetch(); }}>Réessayer</button></p>}
+        {media.data?.items.length === 0 && !model.catalogue.items.length && <p>{view === 'mine' ? 'Ajoutez des films et des séries à votre liste depuis leurs fiches.' : 'Aucun résultat.'}</p>}
         <div className='client-pagination'><button disabled={offset === 0} onClick={() => browse({ offset: String(Math.max(0, offset - 48)) }, true)}>Précédent</button><span>{media.data?.items.length ? offset + 1 : 0}–{offset + (media.data?.items.length || 0)} / {media.data?.total || 0}</span><button disabled={offset + 48 >= (media.data?.total || 0)} onClick={() => browse({ offset: String(offset + 48) }, true)}>Suivant</button></div>
     </section>;
 }

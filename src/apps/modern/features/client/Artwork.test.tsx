@@ -1,16 +1,20 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import Artwork from './Artwork';
 import HeroArtwork from './HeroArtwork';
 
 let container: HTMLDivElement;
 let root: Root;
+let animationFrames: FrameRequestCallback[];
 let finishDecode: () => void;
 const previousDecode = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'decode');
 
 beforeEach(() => {
+    animationFrames = [];
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => animationFrames.push(callback));
+    vi.stubGlobal('cancelAnimationFrame', () => undefined);
     Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -22,6 +26,7 @@ beforeEach(() => {
 afterEach(async () => {
     await act(async () => root.unmount());
     container.remove();
+    vi.unstubAllGlobals();
     if (previousDecode) Object.defineProperty(HTMLImageElement.prototype, 'decode', previousDecode);
     else Reflect.deleteProperty(HTMLImageElement.prototype, 'decode');
 });
@@ -31,6 +36,14 @@ async function load(image: HTMLImageElement) {
         image.dispatchEvent(new Event('load'));
     });
     await act(async () => finishDecode());
+    for (let count = 0; count < 2; count++) {
+        await act(async () => {
+            const callbacks = animationFrames.splice(0);
+            callbacks.forEach(callback => {
+                callback(0);
+            });
+        });
+    }
 }
 
 describe('decoded artwork transitions', () => {

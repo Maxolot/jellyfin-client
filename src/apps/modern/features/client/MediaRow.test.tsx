@@ -72,17 +72,36 @@ describe('prepared landscape handoff', () => {
         expect(card(0).classList.contains('active')).toBe(true);
         expect(card(0).classList.contains('has-backdrop')).toBe(true);
     });
-    it('keeps the previous card open until the latest requested image is ready', async () => {
+    it('closes the previous focus and only opens the latest requested image', async () => {
         await decode(0);
         await focus(0);
         await focus(1);
         await focus(2);
-        expect(card(0).classList.contains('active')).toBe(true);
+        expect(container.querySelector('.active')).toBeNull();
         await decode(1);
-        expect(card(0).classList.contains('active')).toBe(true);
+        expect(container.querySelector('.active')).toBeNull();
         await decode(2);
         expect(card(2).classList.contains('active')).toBe(true);
         expect(card(0).classList.contains('active')).toBe(false);
+    });
+    it('cancels pending expansion on pointer exit and does not reopen after late decode', async () => {
+        await focus(0);
+        await act(async () => {
+            const event = new Event('pointerout', { bubbles: true });
+            Object.defineProperty(event, 'pointerType', { value: 'mouse' });
+            card(0).dispatchEvent(event);
+        });
+        await decode(0);
+        expect(container.querySelector('.active')).toBeNull();
+    });
+    it('closes this row when another row claims selection', async () => {
+        await decode(0);
+        await focus(0);
+        expect(card(0).classList.contains('active')).toBe(true);
+        await act(async () => {
+            window.dispatchEvent(new CustomEvent('client-card-select', { detail: 'another-row' }));
+        });
+        expect(container.querySelector('.active')).toBeNull();
     });
     it('opens details on a second touch even while the landscape is pending', async () => {
         const link = card(1).querySelector<HTMLElement>('.client-card')!;

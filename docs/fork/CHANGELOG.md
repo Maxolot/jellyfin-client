@@ -1,5 +1,14 @@
 # Fork changelog
 
+## Unreleased — optional Seerr integration
+
+- Reuse Moonbase proxy sessions, with per-server/user opt-out and no client admin key.
+- Mix external search/discovery with provider-matched Jellyfin titles; preserve playback.
+- Integrate external details/recommendations, film and missing-season requests with
+  confirmation, rights/quota checks and personal request tracking.
+- Soften cached ambient artwork changes and close expanding cards on exit.
+- Restore the three-card Tonight fan and lazy collection member previews.
+
 ## Unreleased — visual parity PR
 
 - Prepare nearby landscapes before expansion and synchronize the decoded-image

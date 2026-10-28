@@ -52,5 +52,6 @@
     "chromecastPlayer/plugin",
     "stillWatching/plugin",
     "syncPlay/plugin"
-  ]
+  ],
+  "clientSeerr": true
 }

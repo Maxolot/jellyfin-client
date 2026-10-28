@@ -33,10 +33,10 @@ export function useClientMedia(view: string, search: string, offset: number, { g
             if (view === 'films' || view === 'tonight') types = [BaseItemKind.Movie];
             if (view === 'series') types = [BaseItemKind.Series];
             const common = { userId: user!.Id, recursive: true, parentId: collection || undefined, includeItemTypes: types,
-                audioLanguages: audio ? [audio] : undefined, genres: genre ? [genre] : undefined, fields: [ItemFields.Overview, ItemFields.Genres, ItemFields.DateCreated], imageTypeLimit: 1, enableUserData: true };
+                audioLanguages: audio ? [audio] : undefined, genres: genre ? [genre] : undefined, fields: [ItemFields.Overview, ItemFields.Genres, ItemFields.DateCreated, ItemFields.ProviderIds], imageTypeLimit: 1, enableUserData: true };
             const request = { signal };
             if (view !== 'home') {
-                const result = await library.getItems({ ...common, limit: 48, startIndex: offset,
+                const result = await library.getItems({ ...common, limit: view === 'tonight' ? 192 : 48, startIndex: offset,
                     personIds: person ? [person] : undefined, searchTerm: search || undefined, genres: genre ? [genre] : undefined, isFavorite: view === 'mine' ? true : undefined,
                     ...browseOrder(view, sort) }, request);
                 return { items: result.data.Items || [], total: result.data.TotalRecordCount || 0,

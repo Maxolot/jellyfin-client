@@ -36,7 +36,7 @@
     overflow: hidden;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.8s ease;
+    transition: opacity 1.4s ease-in-out;
 
     .client-background {
         inset: -5%;
@@ -44,7 +44,7 @@
         height: 110%;
         filter: blur(38px) saturate(0.8);
         opacity: 0;
-        transition: opacity 0.85s ease;
+        transition: opacity 1.5s ease-in-out;
     }
 
     .artwork-loaded {

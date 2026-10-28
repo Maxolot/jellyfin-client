@@ -19,5 +19,7 @@ export interface WebConfig {
     servers?: string[]
     plugins?: string[]
     /** Optional self-hosted short clips, scoped by Jellyfin server and item IDs. */
+    /** Disable optional Moonbase/Seerr discovery globally. */
+    clientSeerr?: boolean
     clientPreviews?: Record<string, Record<string, string>>
 }

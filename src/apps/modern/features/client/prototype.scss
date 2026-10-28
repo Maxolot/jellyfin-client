@@ -1835,3 +1835,33 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
 }
 
 /* stylelint-enable no-descending-specificity */
+
+.client-personal-collections .client-collection-stack {
+    position: relative;
+    width: 100px;
+    height: 90px;
+    overflow: visible;
+    background: none;
+
+    img {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 58px;
+        height: 82px;
+        border: 1px solid #ffffff30;
+        border-radius: 7px;
+        box-shadow: 0 5px 15px #0007;
+        transform: rotate(-8deg);
+    }
+
+    img:nth-child(2) {
+        left: 20px;
+        transform: rotate(0);
+    }
+
+    img:nth-child(3) {
+        left: 40px;
+        transform: rotate(8deg);
+    }
+}

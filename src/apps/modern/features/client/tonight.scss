@@ -1,0 +1,508 @@
+.client-tonight-table {
+    min-height: calc(100dvh - 160px);
+    padding: 25px var(--client-margin) 55px;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.client-tonight-table-head {
+    text-align: center;
+    max-width: 850px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+}
+
+.client-tonight-table-head h1 {
+    font-size: clamp(36px, 4vw, 55px);
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    margin: 0 0 24px;
+}
+
+.client-draw-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+}
+
+.client-draw-prompt {
+    width: min(620px, 100%);
+    border: 1px solid #ffffff2b;
+    background: linear-gradient(140deg, #ffffff0c, #ffffff02), #13171d70;
+    border-radius: 20px;
+    box-shadow: inset 0 1px 0 #ffffff26;
+    backdrop-filter: blur(24px);
+}
+
+.client-draw-prompt input {
+    padding: 17px 21px;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: #f1f3f6;
+    font: 16px Arial, Helvetica, sans-serif;
+    border-radius: 20px;
+    text-align: center;
+    outline-offset: 3px;
+}
+
+.client-draw-prompt input::placeholder {
+    color: #9ca4af;
+}
+
+.client-draw-controls {
+    display: flex;
+    gap: 9px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.client-draw-controls select {
+    color: #c6ccd4;
+    background: #151a2288;
+    border: 1px solid #ffffff26;
+    border-radius: 30px;
+    padding: 11px 18px;
+    font-size: 13px;
+    backdrop-filter: blur(20px);
+}
+
+.client-draw-controls .client-play {
+    font-size: 13px;
+    padding: 11px 19px;
+    border-radius: 30px;
+}
+
+.client-draw-stage {
+    position: relative;
+    min-height: 580px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 1600px;
+    padding: 45px 10px 70px;
+}
+
+.client-draw-orbit {
+    position: absolute;
+    width: 650px;
+    height: 200px;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 1px solid rgb(var(--client-accent)/0.12);
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgb(var(--client-accent)/0.09), transparent 70%);
+    filter: blur(0.3px);
+    pointer-events: none;
+}
+
+.client-draw-fan {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    perspective: 1600px;
+    position: relative;
+    width: 100%;
+}
+
+.client-tonight-result.client-draw-card {
+    position: relative;
+    display: block;
+    width: 250px;
+    flex: 0 0 250px;
+    aspect-ratio: 2/3;
+    gap: 0;
+    padding: 0;
+    border: 0;
+    margin: 0 -7px;
+    transform: translateY(var(--card-lift)) rotate(var(--card-angle));
+    transform-origin: 50% 130%;
+    z-index: 1;
+    outline: none;
+    animation: draw-deal 0.95s cubic-bezier(0.18, 0.8, 0.25, 1) both;
+    animation-delay: var(--deal-delay);
+    transition: transform 0.55s cubic-bezier(0.18, 0.85, 0.25, 1), filter 0.45s;
+}
+
+.client-draw-card .client-draw-shell {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    animation: draw-turn 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) both;
+    animation-delay: calc(var(--deal-delay) + 120ms);
+    border-radius: 18px;
+}
+
+.client-draw-back {
+    transform: rotateY(180deg);
+    display: grid;
+    place-items: center;
+    background: radial-gradient(ellipse at 30% 20%, rgb(var(--card-color)/0.4), transparent 65%), linear-gradient(135deg, #232d3b, #0b1019);
+}
+
+.client-draw-front {
+    background: #10151c;
+    transform: rotateY(0);
+}
+
+.client-draw-card .client-draw-front,
+.client-draw-card .client-draw-back {
+    position: absolute;
+    inset: 0;
+    border-radius: 18px;
+    backface-visibility: hidden;
+    overflow: hidden;
+    border: 1px solid #fff6;
+    box-shadow: 0 0 0 3px #151b2599, 0 22px 55px #000b, inset 0 1px 0 white;
+}
+
+.client-draw-back::before {
+    content: '';
+    position: absolute;
+    inset: 13px;
+    border: 1px solid #fff3;
+    border-radius: 12px;
+    box-shadow: inset 0 0 30px #ffffff08;
+}
+
+.client-draw-back span {
+    font-size: 70px;
+    color: #ffffff9c;
+    font-weight: 500;
+}
+
+.client-draw-open {
+    display: block;
+    position: absolute;
+    inset: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+}
+
+.client-draw-open img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+}
+
+.client-draw-reflection {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg, #ffffff21, transparent 35%, transparent 68%, #ffffff0c);
+    pointer-events: none;
+}
+
+.client-draw-front::after {
+    content: '';
+    position: absolute;
+    inset: 55% 0 0;
+    background: linear-gradient(transparent, #000a);
+    pointer-events: none;
+}
+
+.client-draw-duration {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 2;
+    padding: 5px 9px;
+    background: #11171bbd;
+    border: 1px solid #ffffff24;
+    border-radius: 8px;
+    color: #d7dce2;
+    font-size: 10px;
+    backdrop-filter: blur(15px);
+}
+
+.client-draw-dismiss {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    height: 28px;
+    width: 28px;
+    border-radius: 50%;
+    border: 1px solid #ffffff40;
+    z-index: 3;
+    background: #11171bbd;
+    font-size: 21px;
+    line-height: 1;
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.client-draw-actions {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 17px;
+    z-index: 4;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.client-draw-actions .client-play {
+    width: 100%;
+    font-size: 14px;
+    padding: 12px;
+    box-shadow: 0 5px 25px #0004;
+}
+
+.client-draw-card.selected,
+.client-draw-card:hover,
+.client-draw-card:focus-within {
+    z-index: 5;
+    transform: translateY(-38px) rotate(0deg) scale(1.07);
+    filter: drop-shadow(0 0 28px rgb(var(--card-color)/0.2));
+}
+
+.client-draw-card.selected .client-draw-front,
+.client-draw-card:focus-within .client-draw-front {
+    border-color: #ffffffd9;
+    box-shadow: 0 0 0 2px rgb(var(--card-color)/0.6), 0 0 45px rgb(var(--card-color)/0.25), 0 30px 70px #000b;
+}
+
+.client-draw-card.selected .client-draw-actions,
+.client-draw-card:hover .client-draw-actions,
+.client-draw-card:focus-within .client-draw-actions {
+    opacity: 1;
+    transform: none;
+}
+
+.client-draw-card.selected .client-draw-dismiss,
+.client-draw-card:hover .client-draw-dismiss,
+.client-draw-card:focus-within .client-draw-dismiss {
+    opacity: 1;
+}
+
+.client-draw-card .media-availability {
+    bottom: 12px;
+}
+
+.client-draw-card.selected .media-availability,
+.client-draw-card:focus-within .media-availability {
+    bottom: 75px;
+}
+
+.client-draw-empty {
+    text-align: center;
+    color: #aab3bf;
+}
+
+.client-draw-empty .soft {
+    margin-top: 20px;
+}
+
+@keyframes draw-deal {
+    0% {
+        opacity: 0;
+        transform: translateY(220px) rotate(0deg) scale(0.72);
+    }
+
+    45% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(var(--card-lift)) rotate(var(--card-angle));
+    }
+}
+
+@keyframes draw-turn {
+    0%,
+    20% {
+        transform: rotateY(180deg);
+    }
+
+    100% {
+        transform: rotateY(0deg);
+    }
+}
+
+@media (max-width: 900px) {
+    .client-tonight-result.client-draw-card {
+        width: 210px;
+        flex-basis: 210px;
+    }
+
+    .client-draw-stage {
+        min-height: 520px;
+    }
+
+    .client-draw-orbit {
+        width: 520px;
+    }
+}
+
+@media (max-width: 600px) {
+    .client-tonight-table {
+        padding-top: 10px;
+        padding-bottom: 35px;
+    }
+
+    .client-tonight-table-head h1 {
+        font-size: 35px;
+        margin-bottom: 17px;
+    }
+
+    .client-draw-prompt input {
+        font-size: 14px;
+        padding: 14px 16px;
+    }
+
+    .client-draw-controls {
+        gap: 6px;
+    }
+
+    .client-draw-controls select {
+        font-size: 11px;
+        padding: 10px 12px;
+    }
+
+    .client-draw-controls .client-play {
+        font-size: 11px;
+        padding: 10px 13px;
+    }
+
+    .client-draw-stage {
+        min-height: 355px;
+        padding: 35px 0 60px;
+    }
+
+    .client-tonight-result.client-draw-card {
+        width: 118px;
+        flex-basis: 118px;
+        margin: 0 -8px;
+        border-radius: 11px;
+    }
+
+    .client-draw-card .client-draw-shell,
+    .client-draw-card .client-draw-front,
+    .client-draw-card .client-draw-back {
+        border-radius: 11px;
+    }
+
+    .client-draw-card.selected,
+    .client-draw-card:hover,
+    .client-draw-card:focus-within {
+        transform: translateY(-20px) rotate(0deg) scale(1.12);
+    }
+
+    .client-draw-actions {
+        left: 8px;
+        right: 8px;
+        bottom: 10px;
+    }
+
+    .client-draw-actions .client-play {
+        padding: 8px;
+        font-size: 11px;
+        border-radius: 12px;
+    }
+
+    .client-draw-actions .client-play svg {
+        height: 15px;
+        width: 15px;
+    }
+
+    .client-draw-duration {
+        font-size: 8px;
+        left: 7px;
+        top: 7px;
+        padding: 4px 6px;
+    }
+
+    .client-draw-dismiss {
+        height: 23px;
+        width: 23px;
+        right: 5px;
+        top: 5px;
+        font-size: 17px;
+    }
+
+    .client-draw-orbit {
+        width: 290px;
+        height: 100px;
+        bottom: 30px;
+    }
+
+    .client-draw-card .media-availability {
+        right: 6px;
+        bottom: 7px;
+    }
+
+    .client-draw-card.selected .media-availability {
+        bottom: 53px;
+    }
+
+    .client-draw-back span {
+        font-size: 40px;
+    }
+}
+
+@media (hover: none) {
+    .client-draw-actions {
+        opacity: 1;
+        transform: none;
+    }
+
+    .client-draw-card .media-availability {
+        bottom: 65px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .client-tonight-result.client-draw-card,
+    .client-draw-card .client-draw-shell {
+        animation: none;
+    }
+
+    .client-draw-card .client-draw-shell {
+        transform: rotateY(0);
+    }
+
+    .client-draw-card,
+    .client-draw-actions {
+        transition: none;
+    }
+}
+
+.client-draw-available {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 8px;
+    border-radius: 20px;
+    background: #111820cf;
+    color: #fff;
+    font-size: 10px;
+    pointer-events: none;
+}
+
+.client-draw-available svg {
+    width: 14px;
+    height: 14px;
+}
+
+.client-draw-front .client-draw-open img {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.client-draw-front .client-draw-open .artwork-ready {
+    opacity: 1;
+}
