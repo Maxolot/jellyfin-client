@@ -4,9 +4,9 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 
 import ClientIcon from './ClientIcon';
 import { usePreviews } from './PreviewProvider';
-import { previewSource } from './previewSource';
+import { previewSource, type PreviewSurface } from './previewSource';
 
-type Props = { item: BaseItemDto; surface: 'hero' | 'detail' | 'card' | 'episode' | 'spotlight'; enabled?: boolean; soundControl?: boolean };
+type Props = { item: BaseItemDto; surface: PreviewSurface; enabled?: boolean; soundControl?: boolean };
 const priority = { hero: 0, spotlight: 1, detail: 5, card: 10, episode: 20 };
 
 export default function PreviewClip({ item, surface, enabled = true, soundControl = true }: Readonly<Props>) {
@@ -19,7 +19,7 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
     const [nearby, setNearby] = useState(false);
     const [started, setStarted] = useState(false);
     const [fading, setFading] = useState(false);
-    const source = preview ? previewSource(preview.sources, item, document.baseURI, surface !== 'episode') : undefined;
+    const source = preview ? previewSource(preview.sources, item, document.baseURI, surface !== 'episode', surface) : undefined;
     const key = `${surface}:${item.Id}:${source}`;
     const claim = preview?.claim;
     const release = preview?.release;

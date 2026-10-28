@@ -652,10 +652,8 @@
     border-radius: 10px;
 }
 
-.client-episode > span:not(.client-episode-play) {
-    right: 13px;
-    bottom: 12px;
-    left: 13px;
+.client-episode-caption {
+    padding: 15px 13px 12px;
 }
 
 .client-episode .client-episode-play {

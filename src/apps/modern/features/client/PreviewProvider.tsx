@@ -4,15 +4,16 @@ import React, { createContext, type PropsWithChildren, type RefObject, useCallba
 import { playbackManager } from 'components/playback/playbackmanager';
 import { useApi } from 'hooks/useApi';
 import { useWebConfig } from 'hooks/useWebConfig';
+import type { ClientPreviewSources } from 'types/webConfig';
 import Events from 'utils/events';
 
-const noSources: Record<string, string> = {};
+const noSources: ClientPreviewSources = {};
 type Owner = { id: string; priority: number; order: number };
 type PreviewContextValue = {
     enabled: boolean;
     muted: boolean;
     scope: string;
-    sources: Record<string, string>;
+    sources: ClientPreviewSources;
     selected?: string;
     completed: Set<string>;
     claim: (id: string, priority: number) => void;

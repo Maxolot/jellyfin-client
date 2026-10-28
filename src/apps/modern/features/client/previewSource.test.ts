@@ -3,6 +3,29 @@ import { describe, expect, it } from 'vitest';
 import { previewSource } from './previewSource';
 
 describe('optional short-clip sources', () => {
+    const variants = { film: { compact: './clips/film-480.mp4', full: './clips/film-1080.mp4' } };
+    it.each(['card', 'episode'] as const)('selects only the compact encode for %s', surface => {
+        expect(previewSource(variants, { Id: 'film' }, 'https://client.example.test/web/', false, surface))
+            .toBe('https://client.example.test/web/clips/film-480.mp4');
+    });
+    it.each(['hero', 'detail', 'spotlight'] as const)('selects only the full encode for %s', surface => {
+        expect(previewSource(variants, { Id: 'film' }, 'https://client.example.test/web/', true, surface))
+            .toBe('https://client.example.test/web/clips/film-1080.mp4');
+    });
+    it('uses the other configured encode when the preferred variant is absent or invalid', () => {
+        const base = 'https://client.example.test/';
+        expect(previewSource({ film: { full: '/full.mp4' } }, { Id: 'film' }, base, true, 'card')).toBe(base + 'full.mp4');
+        expect(previewSource({ film: { compact: '/small.mp4' } }, { Id: 'film' }, base)).toBe(base + 'small.mp4');
+        expect(previewSource({ film: { full: '/stream.m3u8', compact: '/small.mp4' } }, { Id: 'film' }, base)).toBe(base + 'small.mp4');
+        expect(previewSource({ film: { compact: 'file:///private.mp4', full: '/full.mp4' } }, { Id: 'film' }, base, true, 'card')).toBe(base + 'full.mp4');
+        expect(previewSource({ film: {} }, { Id: 'film' }, base)).toBeUndefined();
+    });
+    it('preserves series variant selection without borrowing a series scene for episodes', () => {
+        const sources = { series: variants.film };
+        const item = { Id: 'episode', SeriesId: 'series' };
+        expect(previewSource(sources, item, 'https://client.example.test/', true, 'card')).toContain('film-480.mp4');
+        expect(previewSource(sources, item, 'https://client.example.test/', false, 'episode')).toBeUndefined();
+    });
     it('resolves configured clips relative to the installation root', () => {
         expect(previewSource({ film: './client-previews/clip.mp4' }, { Id: 'film' }, 'https://client.example.test/web/'))
             .toBe('https://client.example.test/web/client-previews/clip.mp4');
