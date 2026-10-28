@@ -49,10 +49,10 @@ export function useSeerrCatalogue(view: string, search: string, enabled: boolean
     });
     return { ...query, items, local };
 }
-export function useSeerrDetail(type: MediaType | undefined, id: number | undefined) {
+export function useSeerrDetail(type: MediaType | undefined, id: number | undefined, poll = true) {
     const seerr = useSeerr();
     return useQuery({ queryKey: [...seerr.root, 'Detail', type, id], enabled: seerr.connected && !!type && !!id,
-        retry: false, staleTime: 15000, refetchInterval: 20000,
+        retry: false, staleTime: 15000, refetchInterval: poll ? 20000 : false,
         queryFn: async ({ signal }) => ({ ...await seerr.call<ExternalMedia>(`Api/${type}/${id}?language=fr`, signal), mediaType: type }) });
 }
 

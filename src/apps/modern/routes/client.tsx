@@ -45,7 +45,7 @@ import TonightPage from '../features/client/TonightPage';
 import CollectionCard from '../features/client/CollectionCard';
 import AmbientBackdrop from '../features/client/AmbientBackdrop';
 import { SeerrProvider, useSeerr } from '../features/client/seerr/SeerrContext';
-import { useSeerrCatalogue } from '../features/client/seerr/queries';
+import { useSeerrCatalogue, useSeerrDetail } from '../features/client/seerr/queries';
 import { ExternalDetail, RequestPanel, RequestTracking, SeerrSettings } from '../features/client/seerr/SeerrViews';
 import { externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
 
@@ -77,6 +77,24 @@ function localDetailId(id: string) {
 }
 function allowExternalCatalogue(view: string, selectors: string[]) {
     return !selectors.some(Boolean) && ['home', 'films', 'series', 'search'].includes(view);
+}
+
+function restoreClientNavigation(key: string, restoreFocus: boolean, id: string) {
+    try {
+        window.scrollTo(0, Number(sessionStorage.getItem(key)) || 0);
+    } catch {
+        window.scrollTo(0, 0);
+    }
+    try {
+        const savedFocus = sessionStorage.getItem(`${key}-focus`);
+        const target = restoreFocus ? Array.from(document.querySelectorAll<HTMLElement>('#clientPage [data-client-focus]'))
+            .find(element => savedFocus && element.getAttribute('data-client-focus') === savedFocus) : undefined;
+        (target || (id ? document.querySelector<HTMLElement>('#clientPage .client-back') : null))?.focus({ preventScroll: true });
+    } catch { /* Navigation remains usable when storage is unavailable. */ }
+}
+
+function clientPageReady(id: string, view: string, item: BaseItemDto | undefined, mediaReady: boolean, externalReady: boolean) {
+    return externalReady || (id ? !!item : view === 'settings' || mediaReady);
 }
 
 function useClientController() {
@@ -121,6 +139,8 @@ function useClientController() {
     const profileMenu = useRef<HTMLDivElement>(null);
     const media = useClientMedia(id || view === 'settings' ? 'disabled' : view, search, offset, { genre, sort, person, audio, collection });
     const remote = isExternal({ Id: id });
+    const remoteIdentity = externalIdentity({ Id: id });
+    const remoteDetails = useSeerrDetail(remoteIdentity?.type, remoteIdentity?.id, false);
     const allowCatalogue = allowExternalCatalogue(view, [id, collection, person, genre, audio]);
     const catalogue = useSeerrCatalogue(view, search, allowCatalogue);
     const details = useClientDetails(localDetailId(id), season);
@@ -163,21 +183,10 @@ function useClientController() {
     useEffect(() => {
         setActionError('');
     }, [params]);
-    const pageReady = id ? !!item : view === 'settings' || !!media.data;
+    const pageReady = clientPageReady(id, view, item, !!media.data, remoteDetails.isFetched);
     useLayoutEffect(() => {
-        if (!pageReady) return;
         const key = `${prefKey}-scroll-${params.toString()}`;
-        try {
-            window.scrollTo(0, Number(sessionStorage.getItem(key)) || 0);
-        } catch {
-            window.scrollTo(0, 0);
-        }
-        try {
-            const savedFocus = sessionStorage.getItem(`${key}-focus`);
-            const target = restoreFocus ? Array.from(document.querySelectorAll<HTMLElement>('#clientPage [data-client-focus]'))
-                .find(element => savedFocus && element.getAttribute('data-client-focus') === savedFocus) : undefined;
-            (target || (id ? document.querySelector<HTMLElement>('#clientPage .client-back') : null))?.focus({ preventScroll: true });
-        } catch { /* Navigation remains usable when storage is unavailable. */ }
+        if (pageReady) restoreClientNavigation(key, restoreFocus, id);
         const saveFocus = (event: FocusEvent) => {
             const target = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-client-focus]') : null;
             if (target?.dataset.clientFocus) {

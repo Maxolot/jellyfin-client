@@ -141,16 +141,18 @@ export function ExternalDetail({ id, row }: Readonly<{ id: string; row: (title: 
     const detail = useSeerrDetail(identity?.type, identity?.id);
     const local = useLocalIdentities(seerr.connected);
     const location = useLocation();
-    const back = (location.state as { returnTo?: string } | null)?.returnTo || '/client';
-    if (!seerr.connected) return <section className='client-settings'><Link to={back} state={{ restoreFocus: true }}>← Retour</Link><h1>Découvertes et demandes</h1><p>Activez la connexion aux demandes pour retrouver cette fiche.</p><SeerrSettings /></section>;
+    const navigation = location.state as { returnTo?: string; returnState?: object } | null;
+    const back = navigation?.returnTo || '/client';
+    const backState = { ...navigation?.returnState, restoreFocus: true };
+    if (!seerr.connected) return <section className='client-settings'><Link to={back} state={backState}>← Retour</Link><h1>Découvertes et demandes</h1><p>Activez la connexion aux demandes pour retrouver cette fiche.</p><SeerrSettings /></section>;
     if (!detail.data || !identity) {
-        return <section className='client-settings'><Link to={back} state={{ restoreFocus: true }}>← Retour</Link><p role='status'>{detail.isError ? 'La fiche ne peut pas être chargée.' : 'Chargement de la fiche…'}</p>{detail.isError && <button onClick={() => {
+        return <section className='client-settings'><Link to={back} state={backState}>← Retour</Link><p role='status'>{detail.isError ? 'La fiche ne peut pas être chargée.' : 'Chargement de la fiche…'}</p>{detail.isError && <button onClick={() => {
             void detail.refetch();
         }}>Réessayer</button>}</section>;
     }
     const data = detail.data;
     const match = localMatch(data, identity.type, local.data || []);
-    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><Link className='client-back' to={back} state={{ restoreFocus: true }}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{(data.releaseDate || data.firstAirDate || '').slice(0, 4)} · {data.genres?.map(genre => genre.name).join(' · ')}</p><p className='client-overview'>{data.overview}</p>{match && <Link className='client-play' to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}</div></section><RequestPanel key={id} identity={identity} localItem={match} /><ExternalRecommendations identity={identity} local={local.data || []} row={row} /></>;
+    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><Link className='client-back' to={back} state={backState}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{(data.releaseDate || data.firstAirDate || '').slice(0, 4)} · {data.genres?.map(genre => genre.name).join(' · ')}</p><p className='client-overview'>{data.overview}</p>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}</div></section><RequestPanel key={id} identity={identity} localItem={match} /><ExternalRecommendations identity={identity} local={local.data || []} row={row} /></>;
 }
 
 function ExternalRecommendations({ identity, local, row }: Readonly<{ identity: SeerrIdentity; local: BaseItemDto[]; row: (title: string, items: BaseItemDto[]) => React.ReactNode }>) {
@@ -163,12 +165,13 @@ function ExternalRecommendations({ identity, local, row }: Readonly<{ identity: 
 }
 
 function TrackedRequest({ entry, local }: { readonly entry: MediaRequest; readonly local: BaseItemDto[] }) {
+    const location = useLocation();
     const type = entry.type || entry.media.mediaType || 'movie';
     const detail = useSeerrDetail(type, entry.media.tmdbId);
     if (!entry.media.tmdbId) return null;
     const media: ExternalMedia = detail.data || { id: entry.media.tmdbId };
     const item = catalogueItem(media, type, local);
-    return <Link to={`/client?id=${item.Id}`} className='client-tracked-request'><Artwork source={imageUrl(media.posterPath)} /><span><strong>{media.title || media.name || 'Chargement du titre…'}</strong><small>{entry.seasons?.length ? `Saisons ${entry.seasons.map(season => season.seasonNumber).join(', ')} · ` : ''}{entry.is4k ? '4K · ' : ''}{entry.media.status === 4 ? 'Partiellement disponible' : requestLabel(entry.status)}</small></span><ClientIcon name='next' /></Link>;
+    return <Link to={`/client?id=${item.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }} className='client-tracked-request' data-client-focus={`request-${entry.id}`}><Artwork source={imageUrl(media.posterPath)} /><span><strong>{media.title || media.name || 'Chargement du titre…'}</strong><small>{entry.seasons?.length ? `Saisons ${entry.seasons.map(season => season.seasonNumber).join(', ')} · ` : ''}{entry.is4k ? '4K · ' : ''}{entry.media.status === 4 ? 'Partiellement disponible' : requestLabel(entry.status)}</small></span><ClientIcon name='next' /></Link>;
 }
 export function RequestTracking() {
     const seerr = useSeerr();
