@@ -57,7 +57,22 @@
 }
 
 .client-glass:not(.client-floating) .client-nav {
-    background-image: radial-gradient(ellipse at var(--glass-x, 30%) var(--glass-y, 0%), #ffffff24, transparent 62%), linear-gradient(145deg, #ffffff16, #ffffff03);
+    isolation: isolate;
+    border-color: #ffffff40;
+    border-radius: 28px;
+    background: linear-gradient(140deg, #ffffff1f, #ffffff04 40%, #ffffff0c), rgb(18 20 25 / 0.4);
+    box-shadow: 0 18px 60px #0005, inset 0 1px 0 #fff6, inset 0 -1px 0 #ffffff0d;
+    backdrop-filter: blur(28px) saturate(155%);
+}
+
+.client-glass:not(.client-floating) .client-nav::before {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(ellipse 360px 170px at var(--glass-x, 30%) var(--glass-y, 0%), #ffffff24, transparent 75%);
+    pointer-events: none;
+    content: '';
 }
 
 .client-liquid-dots {
@@ -236,6 +251,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .client-glass:not(.client-floating) .client-nav::before {
+        background: linear-gradient(140deg, #ffffff0e, transparent);
+    }
+
     #clientPage .client-interface *,
     #clientPage .client-interface *::before,
     #clientPage .client-interface *::after {

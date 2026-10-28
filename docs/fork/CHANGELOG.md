@@ -2,13 +2,17 @@
 
 ## Unreleased — visual parity PR
 
+- Prepare nearby landscapes before expansion and synchronize the decoded-image
+  crossfade; preserve rapid selection, failed-image fallback and second-tap navigation.
+- Match the reference glass navbar surface and localized pointer reflection.
+
 - Connect optional native short clips with shared mute, single ownership and a soft
   one-time return to artwork; keep private clips/registry outside distributable builds.
 - Preserve keyboard selection under a stationary pointer during card expansion.
 - Restore account-specific settings before enabling controls and compress static text.
 
 - Decode artwork before reveal, size it per surface and version image cache URLs;
-  warm the next hero/details and avoid loading collapsed-card landscapes.
+  warm the next hero/details and nearby collapsed-card landscapes.
 - Restore slow drift, liquid carousel markers, glass pointer reflection, entry and
   hover motion, immersive background preference and reduced-motion/offscreen handling.
 - Serialize rapid stream changes, preserve paused playback and cancel stale loads.

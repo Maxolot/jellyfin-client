@@ -8,10 +8,12 @@ type Props = {
     eager?: boolean;
     enabled?: boolean;
     onReady?: () => void;
+    onFailure?: () => void;
+    rootMargin?: string;
 };
 
 /** Reveal decoded pixels, rather than exposing a progressive JPEG as it arrives. */
-export default function Artwork({ source, className = '', alt = '', eager = false, enabled = true, onReady }: Readonly<Props>) {
+export default function Artwork({ source, className = '', alt = '', eager = false, enabled = true, onReady, onFailure, rootMargin = '600px 300px' }: Readonly<Props>) {
     const ref = useRef<HTMLImageElement>(null);
     const [nearby, setNearby] = useState(eager);
     const [decoded, setDecoded] = useState('');
@@ -27,10 +29,10 @@ export default function Artwork({ source, className = '', alt = '', eager = fals
                 setNearby(true);
                 observer.disconnect();
             }
-        }, { rootMargin: '600px 300px' });
+        }, { rootMargin });
         observer.observe(ref.current);
         return () => observer.disconnect();
-    }, [enabled, nearby]);
+    }, [enabled, nearby, rootMargin]);
     const requested = (enabled && (eager || nearby)) || decoded === source ? source : undefined;
     return <img ref={ref} className={`client-artwork ${className}${decoded === source ? ' artwork-ready' : ''}`} src={requested || undefined}
         alt={alt} decoding='async' hidden={failed === source} onLoad={async event => {
@@ -43,6 +45,9 @@ export default function Artwork({ source, className = '', alt = '', eager = fals
                     onReady?.();
                 }
             } catch { /* A superseded decode is expected during quick navigation. */ }
-        }} onError={() => setFailed(source)} />;
+        }} onError={() => {
+            setFailed(source);
+            onFailure?.();
+        }} />;
 }
 /* eslint-enable react/jsx-no-bind */
