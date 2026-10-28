@@ -18,6 +18,7 @@
     h2 {
         margin: 0;
         font-size: 24px;
+        font-weight: 700;
     }
 
     > div {
@@ -272,7 +273,7 @@
     }
 
     .client-row-heading h2 {
-        font-size: 19px;
+        font-size: 18px;
     }
 
     .client-row-info {
@@ -358,6 +359,17 @@
     box-shadow: none;
 }
 
+.client-nav > div a:not(.client-search-shortcut) {
+    font-size: 16px;
+}
+
+.client-hero .client-actions .client-play,
+.client-hero .client-actions > .client-button {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
 .client-floating .client-nav {
     border-color: transparent;
     background: transparent;
@@ -396,6 +408,7 @@
     .client-meta {
         font-size: 15px;
         font-weight: 600;
+        line-height: normal;
     }
 
     .client-eyebrow {
@@ -523,6 +536,21 @@
     min-height: calc(100svh - 118px);
     padding: 70px var(--client-margin) 30px;
 
+    h1 {
+        font-size: clamp(30px, 3.5vw, 49px);
+        font-weight: 600;
+        line-height: 1.08;
+        letter-spacing: -0.025em;
+    }
+
+    .client-actions .client-play {
+        font-size: 15px;
+    }
+
+    .client-actions > .client-button {
+        font-size: 13px;
+    }
+
     .client-title-logo {
         width: min(370px, 100%);
         height: 85px;
@@ -541,6 +569,7 @@
         margin-top: 18px;
         font-size: 13px;
         font-weight: 400;
+        line-height: 1.6;
     }
 
     .client-overview {
@@ -610,6 +639,10 @@
     margin-top: 10px;
 }
 
+.client-episodes h2 {
+    font-size: 21px;
+}
+
 .client-episodes header {
     gap: 24px;
     margin-bottom: 10px;
@@ -654,6 +687,10 @@
 
 .client-episode-caption {
     padding: 15px 13px 12px;
+
+    strong {
+        font-size: 14px;
+    }
 }
 
 .client-episode .client-episode-play {
@@ -960,12 +997,35 @@
 }
 
 @media (max-width: 900px) {
+    .client-detail .client-overview {
+        font-size: 14px;
+    }
+
     .client-related-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 }
 
+@media (max-width: 1100px) {
+    .client-nav > div a:not(.client-search-shortcut) {
+        font-size: 14px;
+    }
+}
+
 @media (max-width: 700px) {
+    .client-nav > div a:not(.client-search-shortcut) {
+        font-size: 11px;
+    }
+
+    .client-hero .client-actions .client-play,
+    .client-hero .client-actions > .client-button {
+        font-size: 13px;
+    }
+
+    .client-episode-caption strong {
+        font-size: 15px;
+    }
+
     .client-detail {
         min-height: 0;
         padding-top: 180px;
