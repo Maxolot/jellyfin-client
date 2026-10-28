@@ -47,10 +47,10 @@ function requestState({ data, identity, is4k, selected, permissions, quotaData, 
     const remaining = currentQuota?.remaining ?? Math.max(0, (currentQuota?.limit || 0) - (currentQuota?.used || 0));
     const cost = identity.type === 'movie' ? 1 : selected.length;
     const permitted = canRequest(permissions, identity.type, is4k);
-    const restricted = state === 6 || currentQuota?.restricted || (!!currentQuota?.limit && cost > remaining);
+    const restricted = currentQuota?.restricted || (!!currentQuota?.limit && cost > remaining);
     const filmRequested = identity.type === 'movie' && [2, 3, 5, 6].includes(state || 0);
     const validSelection = identity.type === 'movie' || (selected.length > 0 && selected.every(number => seasons.some(season => season.seasonNumber === number)));
-    const disabled = !permitted || !quotaReady || restricted || filmRequested || !validSelection || pending;
+    const disabled = state === 6 || !permitted || !quotaReady || restricted || filmRequested || !validSelection || pending;
     return { info, state, seasons, allSeasons, currentQuota, remaining, permitted, restricted, filmRequested, disabled };
 }
 

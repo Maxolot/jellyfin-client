@@ -114,8 +114,8 @@ export function requestableSeasons(detail: ExternalMedia, is4k = false) {
         if (!season.seasonNumber || season.episodeCount === 0) return false;
         const state = detail.mediaInfo?.seasons?.find(entry => entry.seasonNumber === season.seasonNumber);
         const status = is4k ? state?.status4k : state?.status;
-        const requested = detail.mediaInfo?.requests?.some(entry => !!entry.is4k === is4k && [1, 2, 5].includes(entry.status)
-            && entry.seasons?.some(part => part.seasonNumber === season.seasonNumber && [1, 2, 5].includes(part.status)));
-        return !requested && ![2, 3, 5].includes(status || 0);
+        const requested = detail.mediaInfo?.requests?.some(entry => !!entry.is4k === is4k && ![3, 5].includes(entry.status)
+            && entry.seasons?.some(part => part.seasonNumber === season.seasonNumber));
+        return !requested && ![2, 3, 4, 5, 6].includes(status || 0);
     });
 }

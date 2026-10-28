@@ -56,5 +56,6 @@ account in Moonfin first. An unavailable or expired integration never signs out 
 TMDb artwork is requested only for external discoveries; private clips remain separate.
 
 Requests use the server's default quality profile/root folder. The 4K switch is shown
-only with effective 4K rights. Seasons in active requests or already fully available
-are excluded; partial seasons can be completed. No iframe or dedicated Seerr tab.
+only with effective 4K rights. Seasons in active requests or already available/partial
+are excluded, matching the Seerr engine. Deleted seasons can be requested again;
+failed active requests stay visible and require server-side retry/administration. No iframe or dedicated Seerr tab.

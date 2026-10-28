@@ -28,7 +28,7 @@ describe('optional Seerr catalogue and request rules', () => {
     });
     it('only offers missing seasons and excludes specials and active requests', () => {
         expect(requestableSeasons({ id: 1, seasons: [0, 1, 2, 3, 4].map(seasonNumber => ({ id: seasonNumber, seasonNumber, name: String(seasonNumber) })),
-            mediaInfo: { seasons: [{ seasonNumber: 1, status: 5 }, { seasonNumber: 2, status: 4 }], requests: [{ id: 3, status: 2, is4k: false, media: {}, seasons: [{ seasonNumber: 3, status: 2 }] }] } }).map(s => s.seasonNumber)).toEqual([2, 4]);
+            mediaInfo: { seasons: [{ seasonNumber: 1, status: 5 }, { seasonNumber: 2, status: 4 }], requests: [{ id: 3, status: 2, is4k: false, media: {}, seasons: [{ seasonNumber: 3, status: 2 }] }] } }).map(s => s.seasonNumber)).toEqual([4]);
     });
     it('does not treat unrelated item IDs or invalid provider IDs as request identities', () => {
         expect(externalIdentity({ Id: 'seerr-movie-12' })).toEqual({ type: 'movie', id: 12 });
