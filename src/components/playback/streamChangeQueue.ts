@@ -1,5 +1,5 @@
-type Task = { run: () => Promise<void>; resolve: () => void; reject: (error: unknown) => void };
-type Queue = { pending?: Task };
+type Task = { key: string; run: () => Promise<void>; resolve: () => void; reject: (error: unknown) => void };
+type Queue = { pending: Task[] };
 const queues = new WeakMap<object, Queue>();
 
 async function drain(target: object, queue: Queue, task: Task) {
@@ -11,8 +11,7 @@ async function drain(target: object, queue: Queue, task: Task) {
         } catch (error) {
             current.reject(error);
         }
-        current = queue.pending;
-        queue.pending = undefined;
+        current = queue.pending.shift();
     }
     if (queues.get(target) === queue) queues.delete(target);
 }
@@ -20,22 +19,25 @@ async function drain(target: object, queue: Queue, task: Task) {
 export function cancelStreamChanges(target: object) {
     const queue = queues.get(target);
     if (queue) {
-        queue.pending?.resolve();
-        queue.pending = undefined;
+        queue.pending.forEach(task => {
+            task.resolve();
+        });
+        queue.pending = [];
         queues.delete(target);
     }
 }
 
-/** A media element can load one replacement at a time; pending choices use the latest. */
-export function queueStreamChange(target: object, run: () => Promise<void>): Promise<void> {
+/** A media element can load one replacement at a time; pending choices use the latest per setting. */
+export function queueStreamChange(target: object, run: () => Promise<void>, key = 'stream'): Promise<void> {
     return new Promise((resolve, reject) => {
-        const task = { run, resolve, reject };
+        const task = { key, run, resolve, reject };
         const queue = queues.get(target);
         if (queue) {
-            queue.pending?.resolve();
-            queue.pending = task;
+            const previous = queue.pending.findIndex(entry => entry.key === key);
+            if (previous >= 0) queue.pending.splice(previous, 1)[0].resolve();
+            queue.pending.push(task);
         } else {
-            const next: Queue = {};
+            const next: Queue = { pending: [] };
             queues.set(target, next);
             void drain(target, next, task);
         }

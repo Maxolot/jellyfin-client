@@ -1723,7 +1723,7 @@ export class PlaybackManager {
             return queueStreamChange(player, function () {
                 if (self._currentPlayer !== player || self.currentItem(player)?.Id !== itemId || (player.streamChangeGeneration || 0) !== generation) return Promise.resolve();
                 return replaceStream(player, ticks, params, startPaused, generation);
-            }).catch(function (error) {
+            }, Object.keys(params || {}).sort((a, b) => a.localeCompare(b)).join(',') || 'position').catch(function (error) {
                 if (self._currentPlayer !== player || (player.streamChangeGeneration || 0) !== generation) return;
                 data.isChangingStream = false;
                 onPlaybackError.call(player, error, { type: MediaError.SERVER_ERROR });

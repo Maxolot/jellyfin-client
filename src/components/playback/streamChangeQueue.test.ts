@@ -3,6 +3,29 @@ import { describe, expect, it } from 'vitest';
 import { cancelStreamChanges, queueStreamChange } from './streamChangeQueue';
 
 describe('stream replacement ordering', () => {
+    it('preserves independent subtitle and quality choices between audio changes', async () => {
+        const player = {};
+        const calls: string[] = [];
+        let finish!: () => void;
+        const first = queueStreamChange(player, () => new Promise<void>(resolve => {
+            finish = resolve;
+        }), 'audio');
+        const subtitle = queueStreamChange(player, async () => {
+            calls.push('subtitle');
+        }, 'subtitle');
+        const oldAudio = queueStreamChange(player, async () => {
+            calls.push('old-audio');
+        }, 'audio');
+        const quality = queueStreamChange(player, async () => {
+            calls.push('quality');
+        }, 'quality');
+        const audio = queueStreamChange(player, async () => {
+            calls.push('audio');
+        }, 'audio');
+        finish();
+        await Promise.all([first, subtitle, oldAudio, quality, audio]);
+        expect(calls).toEqual(['subtitle', 'quality', 'audio']);
+    });
     it('does not replace a loading media element and coalesces pending selections', async () => {
         const player = {};
         const calls: number[] = [];
