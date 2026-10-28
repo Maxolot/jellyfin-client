@@ -1799,31 +1799,6 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     color: #15191e;
 }
 
-.client-planned-rating {
-    display: flex;
-    align-items: center;
-    gap: 13px;
-    margin-top: 20px;
-    color: #a4adbb;
-    font-size: 11px;
-}
-
-.client-rating-stars {
-    display: flex;
-    gap: 10px;
-    color: #7e8a9b;
-}
-
-.client-rating-stars .client-icon {
-    width: 19px;
-    height: 19px;
-}
-
-.client-planned-rating small {
-    font-size: 10px;
-    color: #8692a2;
-}
-
 .client-preview-setting {
     max-width: 1080px;
     margin-bottom: 35px;

@@ -26,7 +26,8 @@ import useClientMotion from '../features/client/useClientMotion';
 import { artworkUrl, preloadArtwork } from '../features/client/artwork';
 import ClientIcon from '../features/client/ClientIcon';
 import useArtworkColor from '../features/client/useArtworkColor';
-import PlannedRating from '../features/client/PlannedRating';
+import PersonalRating from '../features/client/PersonalRating';
+import RatingsOverview from '../features/client/RatingsOverview';
 import HeroMetadata from '../features/client/HeroMetadata';
 import DetailExtras from '../features/client/DetailExtras';
 import InterfacePreview from '../features/client/InterfacePreview';
@@ -39,6 +40,7 @@ import '../features/client/client.scss';
 import '../features/client/prototype.scss';
 import '../features/client/motion.scss';
 import '../features/client/previews.scss';
+import '../features/client/ratings.scss';
 
 type ClientNavigationState = { returnTo?: string, returnState?: ClientNavigationState | null, restoreFocus?: boolean };
 import TonightPage from '../features/client/TonightPage';
@@ -380,7 +382,7 @@ function HeroCopyView({ model }: ViewProps) {
         <HeroMetadata item={hero} detailed={!!id} />
         {id && <><p className={`client-overview${synopsisExpanded ? ' expanded' : ''}`}>{hero.Overview}</p>{hero.Type === 'Series' && (hero.Overview?.length || 0) > 220 && <button className='client-synopsis-toggle' aria-expanded={synopsisExpanded} onClick={() => setSynopsisExpanded(!synopsisExpanded)}>{synopsisExpanded ? 'Réduire' : 'Lire la suite'}</button>}</>}
         <HeroActions model={model} />
-        {id && <PlannedRating />}
+        {id && <PersonalRating item={hero} />}
         {id && <Link className='client-original-link' to={`/details?id=${hero.Id}`}>Options et fiche Jellyfin ›</Link>}
     </div>;
 }
@@ -507,6 +509,7 @@ function PersonalView({ model }: ViewProps) {
         <div id='client-resume'>{row('Continuer à regarder', resume, true)}</div>
         {!!collections.data?.length && <section className='client-personal-collections'><h2>Mes collections</h2><div>{collections.data.map(collection => <CollectionCard key={collection.Id} collection={collection} image={image} />)}</div></section>}
         <RequestTracking />
+        <RatingsOverview />
         <div className='client-personal-favorites' id='client-favorites'><header><h2>Ma liste</h2><button onClick={() => {
             const items = media.data?.items || [];
             // eslint-disable-next-line sonarjs/pseudo-random -- This only picks a visible favorite, not a security value.
