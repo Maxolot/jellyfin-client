@@ -2,6 +2,12 @@
 
 ## Unreleased — visual parity PR
 
+- Decode artwork before reveal, size it per surface and version image cache URLs;
+  warm the next hero/details and avoid loading collapsed-card landscapes.
+- Restore slow drift, liquid carousel markers, glass pointer reflection, entry and
+  hover motion, immersive background preference and reduced-motion/offscreen handling.
+- Serialize rapid stream changes, preserve paused playback and cancel stale loads.
+
 - Port the validated prototype navigation, inset carousel and expanding poster rows.
 - Align detail/season/cast, discovery/library, search, recent/local-evening selection,
   personal area and interface previews with live Jellyfin data.
