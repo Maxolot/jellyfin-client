@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-no-bind -- Local controls for the three-card draw. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
-import React, { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type CSSProperties, type Dispatch, type RefObject, type SetStateAction, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 import Artwork from './Artwork';
@@ -45,46 +45,89 @@ function usePreparedDraw(selection: BaseItemDto[], seed: number, image: (item: B
     return draw;
 }
 
-export default function TonightPage({ items, image, onPrepare, onRelease }: Readonly<{ items: BaseItemDto[]; image: (item: BaseItemDto) => string; onPrepare: (item: BaseItemDto) => void; onRelease: () => void }>) {
-    const [mood, setMood] = useState('Évasion');
-    const [minutes, setMinutes] = useState(150);
-    const [prompt, setPrompt] = useState('');
-    const [applied, setApplied] = useState('');
-    const [excluded, setExcluded] = useState<string[]>([]);
-    const [previous, setPrevious] = useState<string[]>([]);
-    const [seed, setSeed] = useState(1);
+type Criteria = { mood: string; minutes: number; prompt: string };
+const initialCriteria: Criteria = { mood: 'Surprise', minutes: 0, prompt: '' };
+const durations = [[90, '1 h 30'], [120, '2 h'], [150, '2 h 30'], [0, 'Sans limite']] as const;
+type Props = { items: BaseItemDto[]; loading?: boolean; image: (item: BaseItemDto) => string; onPrepare: (item: BaseItemDto) => void; onRelease: () => void };
+
+function DrawFilters({ panel, criteria, draft, setDraft, canReset, onApply, onReset }: Readonly<{
+    panel: RefObject<HTMLDetailsElement>; criteria: Criteria; draft: Criteria; setDraft: Dispatch<SetStateAction<Criteria>>;
+    canReset: boolean; onApply: (event: React.FormEvent) => void; onReset: () => void;
+}>) {
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape closes the native disclosure from its focusable descendants.
+    return <details className='client-draw-refine' ref={panel} onToggle={event => {
+        if (event.currentTarget.open) setDraft(criteria);
+    }} onKeyDown={event => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            event.stopPropagation();
+            event.currentTarget.open = false;
+            event.currentTarget.querySelector('summary')?.focus();
+        }
+    }}><summary>Affiner <ClientIcon name='down' /></summary>
+        <form onSubmit={onApply}><span className='client-draw-filter-label'>Une ambiance</span>
+            <div className='client-draw-choices' role='group' aria-label='Ambiance'>{Object.keys(moods).map(name => <button type='button' key={name} aria-pressed={draft.mood === name} onClick={() => setDraft(value => ({ ...value, mood: name }))}>{name}</button>)}</div>
+            <span className='client-draw-filter-label'>Durée maximale</span>
+            <div className='client-draw-choices' role='group' aria-label='Durée maximale'>{durations.map(([minutes, label]) => <button type='button' key={minutes} aria-pressed={draft.minutes === minutes} onClick={() => setDraft(value => ({ ...value, minutes }))}>{label}</button>)}</div>
+            <label className='client-draw-keywords'>Des mots-clés, si vous avez une envie précise<input aria-label='Une envie pour ce soir' maxLength={80} placeholder='Aventure, espace, années 90…' value={draft.prompt} onChange={event => setDraft(value => ({ ...value, prompt: event.target.value }))} /></label>
+            <footer>{canReset && <button type='button' className='client-draw-reset' onClick={onReset}>Réinitialiser</button>}<button className='client-play'>Appliquer</button></footer>
+        </form>
+    </details>;
+}
+
+function DrawPoster({ item, index, image, onPrepare, onRelease, onDismiss }: Readonly<Omit<Props, 'items' | 'loading'> & { item: BaseItemDto; index: number; onDismiss: (id: string) => void }>) {
     const location = useLocation();
-    const selection = useMemo(() => tonightCandidates(items, mood, minutes, applied, excluded, previous, seed), [items, mood, minutes, applied, excluded, previous, seed]);
-    const draw = usePreparedDraw(selection, seed, image);
-    return <section className='client-tonight-table'><header className='client-tonight-table-head'><h1>Ce soir.</h1><form className='client-draw-form' onSubmit={event => {
-        event.preventDefault();
-        setApplied(prompt);
-        setPrevious(selection.map(item => item.Id || ''));
-        setSeed(value => value + 1);
-    }}><div className='client-draw-prompt'><input aria-label='Une envie pour ce soir' placeholder='Une envie particulière ?' value={prompt} onChange={event => setPrompt(event.target.value)} /></div><div className='client-draw-controls'><select aria-label='Ambiance' value={mood} onChange={event => {
-            setMood(event.target.value);
-            setPrevious([]);
-        }}>{Object.keys(moods).map(name => <option key={name}>{name}</option>)}</select><select aria-label='Temps disponible' value={minutes} onChange={event => {
-            setMinutes(Number(event.target.value));
-            setPrevious([]);
-        }}>{[[90, '1 h 30'], [120, '2 h'], [150, '2 h 30'], [0, 'Sans limite']].map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><button className='client-play'>Tirer trois cartes</button></div></form></header>
-    <div className='client-draw-stage' aria-live='polite'>{draw.items.length ? <><div className='client-draw-orbit' aria-hidden='true' /><div className='client-draw-fan'>{draw.items.map((item, index) => <article key={`${draw.seed}-${item.Id}`} className='client-tonight-result client-draw-card' style={{ '--card-angle': `${[-9, 0, 9][index]}deg`, '--card-lift': `${index === 1 ? -20 : 16}px`, '--deal-delay': `${index * 140}ms`, '--card-color': '150 160 180' } as CSSProperties} onAnimationEnd={event => {
-        if (event.animationName === 'draw-deal') event.currentTarget.style.animation = 'none';
-    }} onPointerEnter={() => onPrepare(item)} onPointerLeave={onRelease} onFocus={() => onPrepare(item)} onBlur={event => {
+    const minutes = Math.round((item.RunTimeTicks || 0) / 6e8);
+    const metadata = [item.ProductionYear, minutes ? `${minutes} min` : '', item.Genres?.[0]].filter(Boolean).join(' · ');
+    return <article className='client-tonight-result client-draw-card' style={{ '--draw-order': index } as CSSProperties} onPointerEnter={() => onPrepare(item)} onPointerLeave={onRelease} onFocus={() => onPrepare(item)} onBlur={event => {
         if (!event.currentTarget.contains(event.relatedTarget)) onRelease();
-    }}><div className='client-draw-shell'><div className='client-draw-back' aria-hidden='true'><span>C</span></div><div className='client-draw-front'><Link onKeyDown={event => {
+    }}><Link className='client-draw-open' to={`/client?id=${item.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }} aria-label={`Voir ${item.Name}`} onKeyDown={event => {
             if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
             event.preventDefault();
             const list = event.currentTarget.closest('article')?.parentElement?.querySelectorAll<HTMLElement>('.client-draw-open');
-            list?.[Math.max(0, Math.min(draw.items.length - 1, index + (event.key === 'ArrowRight' ? 1 : -1)))].focus();
-        }} className='client-draw-open' to={`/client?id=${item.Id}`} state={{ returnTo: location.pathname + location.search }} aria-label={`Voir ${item.Name}`}><Artwork source={image(item)} eager /><span className='client-draw-reflection' /></Link><span className='client-draw-duration'>{Math.round((item.RunTimeTicks || 0) / 6e8)} min</span><span className='client-draw-available'><ClientIcon name='check' /> Disponible</span><button className='client-draw-dismiss' aria-label={`Ne plus proposer ${item.Name}`} onClick={() => {
-            setExcluded(values => [...values, item.Id || '']);
-            setSeed(value => value + 1);
-        }}>×</button></div></div></article>)}</div></> : <div className='client-draw-empty'><p>{selection.length ? 'Préparation du tirage…' : 'Aucun film pour ce créneau.'}</p><button className='client-button' onClick={() => {
-        setMinutes(0);
+            list?.[Math.max(0, Math.min((list?.length || 1) - 1, index + (event.key === 'ArrowRight' ? 1 : -1)))].focus();
+        }}><span className='client-draw-poster'><Artwork source={image(item)} eager /></span><span className='client-draw-caption'><strong>{item.Name}</strong><small>{metadata}</small></span></Link>
+        <button className='client-draw-dismiss' aria-label={`Ne plus proposer ${item.Name}`} onClick={() => onDismiss(item.Id || '')}><ClientIcon name='close' /></button>
+    </article>;
+}
+
+export default function TonightPage({ items, loading = false, image, onPrepare, onRelease }: Readonly<Props>) {
+    const [criteria, setCriteria] = useState(initialCriteria);
+    const [draft, setDraft] = useState(initialCriteria);
+    const [excluded, setExcluded] = useState<string[]>([]);
+    const [previous, setPrevious] = useState<string[]>([]);
+    const [seed, setSeed] = useState(1);
+    const panel = useRef<HTMLDetailsElement>(null);
+    const selection = useMemo(() => tonightCandidates(items, criteria.mood, criteria.minutes, criteria.prompt, excluded, previous, seed), [items, criteria, excluded, previous, seed]);
+    const draw = usePreparedDraw(selection, seed, image);
+    const pending = loading || draw.seed !== seed;
+    const refined = criteria.mood !== 'Surprise' || criteria.minutes !== 0 || !!criteria.prompt;
+    const description = refined ? [criteria.mood === 'Surprise' ? '' : criteria.mood, criteria.minutes ? `Jusqu’à ${criteria.minutes} min` : '', criteria.prompt].filter(Boolean).join(' · ') : 'Trois films de votre bibliothèque.';
+    function reroll() {
+        setPrevious(selection.map(item => item.Id || ''));
+        setSeed(value => value + 1);
+    }
+    function reset() {
+        setCriteria(initialCriteria);
+        setDraft(initialCriteria);
         setExcluded([]);
         setPrevious([]);
-    }}>Élargir le tirage</button></div>}</div>
+        setSeed(value => value + 1);
+        if (panel.current) panel.current.open = false;
+    }
+    return <section className='client-tonight-table'><header className='client-tonight-table-head'><div><h1>Ce soir</h1><p title={description}>{description}</p></div>
+        <div className='client-tonight-actions'><button className='client-draw-reroll' disabled={pending || !draw.items.length} onClick={reroll}><ClientIcon name='refresh' />{pending ? 'Préparation…' : 'Autres idées'}</button>
+            <DrawFilters panel={panel} criteria={criteria} draft={draft} setDraft={setDraft} canReset={refined || !!excluded.length} onReset={reset} onApply={event => {
+                event.preventDefault();
+                setCriteria(draft);
+                reroll();
+                if (panel.current) panel.current.open = false;
+            }} />
+        </div></header>
+    <div className='client-draw-stage' aria-live='polite' aria-busy={pending}>{draw.items.length ? <div className='client-draw-fan'>{draw.items.map((item, index) => <DrawPoster key={`${draw.seed}-${item.Id}`} item={item} index={index} image={image} onPrepare={onPrepare} onRelease={onRelease} onDismiss={id => {
+        setExcluded(values => [...values, id]);
+        setSeed(value => value + 1);
+    }} />)}</div> : <div className='client-draw-empty'><p role='status'>{pending ? 'Préparation des affiches…' : 'Aucun film pour ces critères.'}</p>{!pending && (refined || !!excluded.length) && <button className='client-button' onClick={reset}>Élargir le choix</button>}</div>}</div>
     </section>;
 }
 /* eslint-enable react/jsx-no-bind */

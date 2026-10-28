@@ -1,508 +1,319 @@
 .client-tonight-table {
-    min-height: calc(100dvh - 160px);
-    padding: 25px var(--client-margin) 55px;
-    overflow: hidden;
+    --draw-poster-height: clamp(220px, calc(100svh - 350px), 560px);
+    --draw-gap: 24px;
+    --draw-width: calc(var(--draw-poster-height) * 2 + var(--draw-gap) * 2);
+
+    padding: 20px var(--client-margin) 28px;
     isolation: isolate;
 }
 
 .client-tonight-table-head {
-    text-align: center;
-    max-width: 850px;
-    margin: 0 auto;
     position: relative;
     z-index: 2;
-}
-
-.client-tonight-table-head h1 {
-    font-size: clamp(36px, 4vw, 55px);
-    font-weight: 600;
-    letter-spacing: -0.04em;
-    margin: 0 0 24px;
-}
-
-.client-draw-form {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: center;
-}
-
-.client-draw-prompt {
-    width: min(620px, 100%);
-    border: 1px solid #ffffff2b;
-    background: linear-gradient(140deg, #ffffff0c, #ffffff02), #13171d70;
-    border-radius: 20px;
-    box-shadow: inset 0 1px 0 #ffffff26;
-    backdrop-filter: blur(24px);
-}
-
-.client-draw-prompt input {
-    padding: 17px 21px;
     width: 100%;
+    max-width: var(--draw-width);
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin: 0 auto 24px;
+
+    > div:first-child {
+        min-width: 0;
+    }
+
+    p {
+        overflow: hidden;
+        margin: 8px 0 0;
+        color: #a7a9b0;
+        font-size: 14px;
+        line-height: 1.4;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+.client-tonight-table .client-tonight-table-head h1 {
+    margin: 0;
+    font-size: clamp(32px, 3vw, 44px);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+}
+
+.client-tonight-actions {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 12px;
+}
+
+.client-tonight-table .client-draw-reroll {
+    display: inline-flex;
+    min-width: 148px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: 11px 18px;
+    border: 0;
+    border-radius: 99px;
+    background: #f3f3f5;
+    color: #171717;
+    font-size: 14px;
+    font-weight: 600;
+
+    &:disabled {
+        opacity: 0.65;
+    }
+}
+
+.client-draw-refine {
+    position: relative;
+
+    summary {
+        display: flex;
+        min-height: 44px;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 4px 8px 12px;
+        color: #c5c7cd;
+        font-size: 13px;
+        list-style: none;
+        cursor: pointer;
+    }
+
+    summary::-webkit-details-marker {
+        display: none;
+    }
+
+    > form {
+        position: absolute;
+        z-index: 5;
+        top: calc(100% + 12px);
+        right: 0;
+        width: min(390px, calc(100vw - var(--client-margin) * 2));
+        max-height: calc(100svh - 180px);
+        padding: 22px;
+        overflow-y: auto;
+        border: 1px solid #ffffff30;
+        border-radius: 16px;
+        background: #17181c;
+        box-shadow: 0 18px 60px #0009;
+    }
+
+    footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 15px;
+        margin-top: 22px;
+    }
+}
+
+.client-draw-filter-label,
+.client-draw-keywords {
+    display: block;
+    margin: 0 0 12px;
+    color: #b9bbc3;
+    font-size: 12px;
+}
+
+.client-draw-choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 22px;
+}
+
+.client-tonight-table .client-draw-choices button {
+    padding: 8px 12px;
+    border: 1px solid #ffffff35;
+    border-radius: 99px;
+    background: transparent;
+    color: #c9cbd1;
+    font-size: 12px;
+
+    &[aria-pressed='true'] {
+        border-color: white;
+        background: white;
+        color: #171717;
+    }
+}
+
+.client-tonight-table .client-draw-keywords input {
+    width: 100%;
+    margin-top: 10px;
+    padding: 11px 12px;
+    border: 1px solid #ffffff40;
+    border-radius: 8px;
+    background: #ffffff06;
+    color: white;
+    font-size: 14px;
+}
+
+.client-tonight-table .client-draw-reset {
+    padding: 8px 0;
     border: 0;
     background: transparent;
-    color: #f1f3f6;
-    font: 16px Arial, Helvetica, sans-serif;
-    border-radius: 20px;
-    text-align: center;
-    outline-offset: 3px;
-}
-
-.client-draw-prompt input::placeholder {
-    color: #9ca4af;
-}
-
-.client-draw-controls {
-    display: flex;
-    gap: 9px;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.client-draw-controls select {
-    color: #c6ccd4;
-    background: #151a2288;
-    border: 1px solid #ffffff26;
-    border-radius: 30px;
-    padding: 11px 18px;
-    font-size: 13px;
-    backdrop-filter: blur(20px);
-}
-
-.client-draw-controls .client-play {
-    font-size: 13px;
-    padding: 11px 19px;
-    border-radius: 30px;
+    color: #b5b7bf;
+    font-size: 12px;
 }
 
 .client-draw-stage {
     position: relative;
-    min-height: 580px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    perspective: 1600px;
-    padding: 45px 10px 70px;
-}
-
-.client-draw-orbit {
-    position: absolute;
-    width: 650px;
-    height: 200px;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 1px solid rgb(var(--client-accent)/0.12);
-    border-radius: 50%;
-    background: radial-gradient(ellipse, rgb(var(--client-accent)/0.09), transparent 70%);
-    filter: blur(0.3px);
-    pointer-events: none;
+    z-index: 1;
 }
 
 .client-draw-fan {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0;
-    perspective: 1600px;
-    position: relative;
+    display: grid;
     width: 100%;
+    max-width: var(--draw-width);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    gap: var(--draw-gap);
+    margin: 0 auto;
 }
 
 .client-tonight-result.client-draw-card {
     position: relative;
-    display: block;
-    width: 250px;
-    flex: 0 0 250px;
-    aspect-ratio: 2/3;
-    gap: 0;
-    padding: 0;
-    border: 0;
-    margin: 0 -7px;
-    transform: translateY(var(--card-lift)) rotate(var(--card-angle));
-    transform-origin: 50% 130%;
-    z-index: 1;
-    outline: none;
-    animation: draw-deal 0.95s cubic-bezier(0.18, 0.8, 0.25, 1) both;
-    animation-delay: var(--deal-delay);
-    transition: transform 0.55s cubic-bezier(0.18, 0.85, 0.25, 1), filter 0.45s;
-}
-
-.client-draw-card .client-draw-shell {
-    position: absolute;
-    inset: 0;
-    transform-style: preserve-3d;
-    animation: draw-turn 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) both;
-    animation-delay: calc(var(--deal-delay) + 120ms);
-    border-radius: 18px;
-}
-
-.client-draw-back {
-    transform: rotateY(180deg);
-    display: grid;
-    place-items: center;
-    background: radial-gradient(ellipse at 30% 20%, rgb(var(--card-color)/0.4), transparent 65%), linear-gradient(135deg, #232d3b, #0b1019);
-}
-
-.client-draw-front {
-    background: #10151c;
-    transform: rotateY(0);
-}
-
-.client-draw-card .client-draw-front,
-.client-draw-card .client-draw-back {
-    position: absolute;
-    inset: 0;
-    border-radius: 18px;
-    backface-visibility: hidden;
-    overflow: hidden;
-    border: 1px solid #fff6;
-    box-shadow: 0 0 0 3px #151b2599, 0 22px 55px #000b, inset 0 1px 0 white;
-}
-
-.client-draw-back::before {
-    content: '';
-    position: absolute;
-    inset: 13px;
-    border: 1px solid #fff3;
-    border-radius: 12px;
-    box-shadow: inset 0 0 30px #ffffff08;
-}
-
-.client-draw-back span {
-    font-size: 70px;
-    color: #ffffff9c;
-    font-weight: 500;
+    min-width: 0;
+    margin: 0;
+    animation: draw-appear 0.4s ease both;
+    animation-delay: calc(var(--draw-order) * 60ms);
 }
 
 .client-draw-open {
     display: block;
-    position: absolute;
-    inset: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: inherit;
+    border-radius: 12px;
+    outline-offset: 5px;
 }
 
-.client-draw-open img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: inherit;
-}
-
-.client-draw-reflection {
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(135deg, #ffffff21, transparent 35%, transparent 68%, #ffffff0c);
-    pointer-events: none;
-}
-
-.client-draw-front::after {
-    content: '';
-    position: absolute;
-    inset: 55% 0 0;
-    background: linear-gradient(transparent, #000a);
-    pointer-events: none;
-}
-
-.client-draw-duration {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    z-index: 2;
-    padding: 5px 9px;
-    background: #11171bbd;
+.client-draw-poster {
+    position: relative;
+    display: block;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
     border: 1px solid #ffffff24;
-    border-radius: 8px;
-    color: #d7dce2;
-    font-size: 10px;
-    backdrop-filter: blur(15px);
+    border-radius: 12px;
+    background: #17191e;
+    transition: border-color 0.25s, box-shadow 0.25s;
+
+    img {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 }
 
-.client-draw-dismiss {
+.client-draw-open:hover .client-draw-poster,
+.client-draw-open:focus-visible .client-draw-poster {
+    border-color: #ffffffe0;
+    box-shadow: 0 10px 35px #0008;
+}
+
+.client-draw-caption {
+    display: block;
+    margin-top: 12px;
+
+    strong {
+        display: -webkit-box;
+        min-height: 2.6em;
+        overflow: hidden;
+        font-size: 15px;
+        font-weight: 500;
+        line-height: 1.3;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    small {
+        display: block;
+        overflow: hidden;
+        margin-top: 5px;
+        color: #a3a6af;
+        font-size: 12px;
+        line-height: 1.4;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+.client-tonight-table .client-draw-dismiss {
     position: absolute;
     top: 10px;
     right: 10px;
-    height: 28px;
-    width: 28px;
+    display: grid;
+    width: 32px;
+    height: 32px;
+    place-items: center;
+    padding: 7px;
+    border: 1px solid #ffffff50;
     border-radius: 50%;
-    border: 1px solid #ffffff40;
-    z-index: 3;
-    background: #11171bbd;
-    font-size: 21px;
-    line-height: 1;
-    color: #fff;
+    background: #151515bb;
+    color: white;
     opacity: 0;
     transition: opacity 0.2s;
 }
 
-.client-draw-actions {
-    position: absolute;
-    left: 16px;
-    right: 16px;
-    bottom: 17px;
-    z-index: 4;
-    opacity: 0;
-    transform: translateY(10px);
-    transition: opacity 0.3s, transform 0.3s;
-}
-
-.client-draw-actions .client-play {
-    width: 100%;
-    font-size: 14px;
-    padding: 12px;
-    box-shadow: 0 5px 25px #0004;
-}
-
-.client-draw-card.selected,
-.client-draw-card:hover,
-.client-draw-card:focus-within {
-    z-index: 5;
-    transform: translateY(-38px) rotate(0deg) scale(1.07);
-    filter: drop-shadow(0 0 28px rgb(var(--card-color)/0.2));
-}
-
-.client-draw-card.selected .client-draw-front,
-.client-draw-card:focus-within .client-draw-front {
-    border-color: #ffffffd9;
-    box-shadow: 0 0 0 2px rgb(var(--card-color)/0.6), 0 0 45px rgb(var(--card-color)/0.25), 0 30px 70px #000b;
-}
-
-.client-draw-card.selected .client-draw-actions,
-.client-draw-card:hover .client-draw-actions,
-.client-draw-card:focus-within .client-draw-actions {
-    opacity: 1;
-    transform: none;
-}
-
-.client-draw-card.selected .client-draw-dismiss,
 .client-draw-card:hover .client-draw-dismiss,
 .client-draw-card:focus-within .client-draw-dismiss {
     opacity: 1;
 }
 
-.client-draw-card .media-availability {
-    bottom: 12px;
-}
-
-.client-draw-card.selected .media-availability,
-.client-draw-card:focus-within .media-availability {
-    bottom: 75px;
-}
-
 .client-draw-empty {
+    padding: 75px 0;
+    color: #aeb1bb;
     text-align: center;
-    color: #aab3bf;
 }
 
-.client-draw-empty .soft {
-    margin-top: 20px;
-}
-
-@keyframes draw-deal {
-    0% {
-        opacity: 0;
-        transform: translateY(220px) rotate(0deg) scale(0.72);
-    }
-
-    45% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 1;
-        transform: translateY(var(--card-lift)) rotate(var(--card-angle));
-    }
-}
-
-@keyframes draw-turn {
-    0%,
-    20% {
-        transform: rotateY(180deg);
-    }
-
-    100% {
-        transform: rotateY(0deg);
-    }
-}
-
-@media (max-width: 900px) {
-    .client-tonight-result.client-draw-card {
-        width: 210px;
-        flex-basis: 210px;
-    }
-
-    .client-draw-stage {
-        min-height: 520px;
-    }
-
-    .client-draw-orbit {
-        width: 520px;
-    }
+@keyframes draw-appear {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 @media (max-width: 600px) {
     .client-tonight-table {
-        padding-top: 10px;
-        padding-bottom: 35px;
+        --draw-gap: 12px;
+
+        padding-top: 16px;
     }
 
-    .client-tonight-table-head h1 {
-        font-size: 35px;
-        margin-bottom: 17px;
+    .client-tonight-table-head {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        margin-bottom: 20px;
     }
 
-    .client-draw-prompt input {
-        font-size: 14px;
-        padding: 14px 16px;
+    .client-tonight-actions {
+        justify-content: space-between;
     }
 
-    .client-draw-controls {
-        gap: 6px;
-    }
+    .client-draw-caption {
+        margin-top: 10px;
 
-    .client-draw-controls select {
-        font-size: 11px;
-        padding: 10px 12px;
-    }
-
-    .client-draw-controls .client-play {
-        font-size: 11px;
-        padding: 10px 13px;
-    }
-
-    .client-draw-stage {
-        min-height: 355px;
-        padding: 35px 0 60px;
-    }
-
-    .client-tonight-result.client-draw-card {
-        width: 118px;
-        flex-basis: 118px;
-        margin: 0 -8px;
-        border-radius: 11px;
-    }
-
-    .client-draw-card .client-draw-shell,
-    .client-draw-card .client-draw-front,
-    .client-draw-card .client-draw-back {
-        border-radius: 11px;
-    }
-
-    .client-draw-card.selected,
-    .client-draw-card:hover,
-    .client-draw-card:focus-within {
-        transform: translateY(-20px) rotate(0deg) scale(1.12);
-    }
-
-    .client-draw-actions {
-        left: 8px;
-        right: 8px;
-        bottom: 10px;
-    }
-
-    .client-draw-actions .client-play {
-        padding: 8px;
-        font-size: 11px;
-        border-radius: 12px;
-    }
-
-    .client-draw-actions .client-play svg {
-        height: 15px;
-        width: 15px;
-    }
-
-    .client-draw-duration {
-        font-size: 8px;
-        left: 7px;
-        top: 7px;
-        padding: 4px 6px;
-    }
-
-    .client-draw-dismiss {
-        height: 23px;
-        width: 23px;
-        right: 5px;
-        top: 5px;
-        font-size: 17px;
-    }
-
-    .client-draw-orbit {
-        width: 290px;
-        height: 100px;
-        bottom: 30px;
-    }
-
-    .client-draw-card .media-availability {
-        right: 6px;
-        bottom: 7px;
-    }
-
-    .client-draw-card.selected .media-availability {
-        bottom: 53px;
-    }
-
-    .client-draw-back span {
-        font-size: 40px;
+        strong { font-size: 13px; }
+        small { font-size: 11px; }
     }
 }
 
 @media (hover: none) {
-    .client-draw-actions {
+    .client-tonight-table .client-draw-dismiss {
+        width: 44px;
+        height: 44px;
+        padding: 12px;
         opacity: 1;
-        transform: none;
-    }
-
-    .client-draw-card .media-availability {
-        bottom: 65px;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .client-tonight-result.client-draw-card,
-    .client-draw-card .client-draw-shell {
+    .client-draw-card {
         animation: none;
     }
 
-    .client-draw-card .client-draw-shell {
-        transform: rotateY(0);
-    }
-
-    .client-draw-card,
-    .client-draw-actions {
+    .client-draw-poster {
         transition: none;
     }
-}
-
-.client-draw-available {
-    position: absolute;
-    right: 12px;
-    bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 6px 8px;
-    border-radius: 20px;
-    background: #111820cf;
-    color: #fff;
-    font-size: 10px;
-    pointer-events: none;
-}
-
-.client-draw-available svg {
-    width: 14px;
-    height: 14px;
-}
-
-.client-draw-front .client-draw-open img {
-    opacity: 0;
-    transition: opacity 0.5s ease;
-}
-
-.client-draw-front .client-draw-open .artwork-ready {
-    opacity: 1;
 }

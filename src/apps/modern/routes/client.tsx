@@ -43,6 +43,7 @@ import '../features/client/motion.scss';
 import '../features/client/previews.scss';
 import '../features/client/ratings.scss';
 import '../features/client/heroBackground.scss';
+import '../features/client/headerAlignment.scss';
 
 type ClientNavigationState = { returnTo?: string, returnState?: ClientNavigationState | null, restoreFocus?: boolean };
 import TonightPage from '../features/client/TonightPage';
@@ -102,6 +103,10 @@ function clientPageReady(id: string, view: string, item: BaseItemDto | undefined
     return externalReady || (id ? !!item : view === 'settings' || mediaReady);
 }
 
+function clientBrowseInput(view: string, search: string, filters: Parameters<typeof useClientMedia>[3]) {
+    return ['mine', 'tonight'].includes(view) ? { search: '', filters: {} } : { search, filters };
+}
+
 function useClientController() {
     const { api, user } = useApi();
     const seerr = useSeerr();
@@ -123,7 +128,7 @@ function useClientController() {
     const audio = params.get('audio') || '';
     const collection = params.get('collection') || '';
     const sort = params.get('sort') === 'recent' ? 'recent' : 'name';
-    const filters = useClientFilters(view);
+    const filters = useClientFilters(['mine', 'tonight'].includes(view) ? 'disabled' : view);
     const genres = { ...filters, data: filters.data?.Genres };
     const cache = useQueryClient();
     const prefKey = `client-interface-${api?.basePath}-${user?.Id}`;
@@ -142,7 +147,8 @@ function useClientController() {
     const profileButton = useRef<HTMLButtonElement>(null);
     const surface = useRef<HTMLDivElement>(null);
     const profileMenu = useRef<HTMLDivElement>(null);
-    const media = useClientMedia(id || view === 'settings' ? 'disabled' : view, search, offset, { genre, sort, person, audio, collection });
+    const browseInput = clientBrowseInput(view, search, { genre, sort, person, audio, collection });
+    const media = useClientMedia(id || view === 'settings' ? 'disabled' : view, browseInput.search, offset, browseInput.filters);
     const remote = isExternal({ Id: id });
     const remoteIdentity = externalIdentity({ Id: id });
     const remoteDetails = useSeerrDetail(remoteIdentity?.type, remoteIdentity?.id, false);
@@ -337,9 +343,9 @@ function ClientView({ model }: ViewProps) {
     return <PreviewProvider surface={model.surface} enabled={preferences.previews} muted={preferences.previewMuted} suspended={model.previewSuspended} toggleMuted={() => model.savePreference({ ...preferences, previewMuted: !preferences.previewMuted })} onPlayingChange={model.setPreviewPlaying}><Page id='clientPage' title='Client' className='client-page' isBackButtonEnabled={false}>
         <div ref={model.surface} className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} ${preferences.chromatic ? 'client-chromatic' : ''} ${preferences.hero === 'background' ? 'client-hero-background' : ''} client-layout-${preferences.detail} ${id ? 'client-detail-page' : ''}`} style={{ '--client-accent': accent } as CSSProperties}>
             {preferences.ambient && !id && <AmbientBackdrop source={model.ambient} />}
-            <nav className='client-nav' aria-label='Navigation principale'>
+            <nav className='client-nav' data-alignment={preferences.headerAlignment} aria-label='Navigation principale'>
                 <button ref={profileButton} className='client-profile' aria-label='Menu du profil' aria-expanded={profileOpen} onClick={() => setProfileOpen(!profileOpen)}>{user?.Name?.slice(0, 1) || '•'}</button>
-                <div><Link to='/client?view=search' aria-label='Rechercher' className='client-search-shortcut'><ClientIcon name='search' /></Link>{links.filter(([key]) => key !== 'search').map(([key, label]) => <Link key={key} to={`/client?view=${key}`} aria-current={!id && view === key ? 'page' : undefined}>{label}</Link>)}</div>
+                <div className='client-nav-links'><Link to='/client?view=search' aria-label='Rechercher' className='client-search-shortcut'><ClientIcon name='search' /></Link>{links.filter(([key]) => key !== 'search').map(([key, label]) => <Link key={key} to={`/client?view=${key}`} aria-current={!id && view === key ? 'page' : undefined}>{label}</Link>)}</div>
                 <Link to='/client' className='client-brand' aria-label='Accueil'>C</Link>
                 {profileOpen && <div ref={profileMenu} className='client-profile-menu' role='dialog' aria-label='Menu du profil'>
                     <strong>{user?.Name}</strong><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><button onClick={Dashboard.logout}>Se déconnecter</button>
@@ -443,7 +449,7 @@ function ContentView({ model }: ViewProps) {
     }
     if (view === 'settings') return <SettingsView model={model} />;
     if (view === 'recent') return <RecentPage items={media.data?.items || []} row={row} />;
-    if (view === 'tonight') return <TonightPage items={media.data?.items || []} image={image} onPrepare={model.prepareDetail} onRelease={model.releaseDetail} />;
+    if (view === 'tonight') return <TonightPage items={media.data?.items || []} loading={media.isPending} image={item => artworkUrl(model.api?.basePath || '', item, 'draw')} onPrepare={model.prepareDetail} onRelease={model.releaseDetail} />;
     if (model.discovery) return <DiscoveryView model={model} />;
     if (view === 'mine') return <PersonalView model={model} />;
     return <LibraryView model={model} />;
@@ -459,6 +465,7 @@ function SettingsView({ model }: ViewProps) {
         <label className='client-chromatic-option'><input type='checkbox' checked={preferences.hoverDescriptions} onChange={event => savePreference({ ...preferences, hoverDescriptions: event.target.checked })} /> Descriptions au survol entre les sections</label>
         <h2>Visuel principal</h2><div className='client-setting-options'>{[['framed', 'Encadré'], ['background', 'Fond plein écran']].map(([key, label]) => <button key={key} aria-pressed={preferences.hero === key} onClick={() => savePreference({ ...preferences, hero: key as Preferences['hero'] })}><InterfacePreview kind={key === 'background' ? 'hero-background' : 'hero-framed'} /><strong>{label}</strong></button>)}</div>
         <h2>Navigation</h2><div className='client-setting-options'>{[[false, 'Bandeau du thème'], [true, 'Boutons flottants']].map(([key, label]) => <button key={String(key)} aria-pressed={preferences.floating === key} onClick={() => savePreference({ ...preferences, floating: key as boolean })}><InterfacePreview kind={key ? 'floating' : 'grouped'} /><strong>{label}</strong></button>)}</div>
+        <h3>Alignement des boutons</h3><div className='client-setting-options'>{[['left', 'À gauche'], ['center', 'Au centre'], ['right', 'À droite']].map(([key, label]) => <button key={key} aria-pressed={preferences.headerAlignment === key} onClick={() => savePreference({ ...preferences, headerAlignment: key as Preferences['headerAlignment'] })}><InterfacePreview kind={`nav-${key}` as 'nav-left' | 'nav-center' | 'nav-right'} /><strong>{label}</strong></button>)}</div>
         <h2>Fond des fiches</h2><div className='client-setting-options'>{[['continuous', 'Fond continu'], ['fade', 'Fondu progressif'], ['immersive', 'Fiche immersive']].map(([key, label]) => <button key={key} aria-pressed={preferences.detail === key} onClick={() => savePreference({ ...preferences, detail: key as Preferences['detail'] })}><InterfacePreview kind={key as 'continuous' | 'fade' | 'immersive'} /><strong>{label}</strong></button>)}</div>
         <section className='client-preview-setting'><h2>Aperçus vidéo</h2><label><input type='checkbox' disabled={!model.hasPreviews} checked={model.hasPreviews && preferences.previews} onChange={event => savePreference({ ...preferences, previews: event.target.checked })} /> Activer les extraits vidéo {!model.hasPreviews && <small>Aucun extrait configuré</small>}</label><label><input type='checkbox' disabled={!model.hasPreviews || !preferences.previews} checked={!preferences.previewMuted} onChange={event => savePreference({ ...preferences, previewMuted: !event.target.checked })} /> Activer le son des aperçus</label><p>Chaque extrait se joue une fois, puis revient doucement à l’affiche. Le son est partagé entre les aperçus.</p></section>
         <Link className='client-button client-settings-link' to={`/mypreferencesmenu?userId=${user?.Id || ''}`}>Compte et réglages de lecture Jellyfin ›</Link>
@@ -504,7 +511,7 @@ function DiscoveryView({ model }: ViewProps) {
 }
 
 function PersonalView({ model }: ViewProps) {
-    const { user, media, row, image, play, params, setParams } = model;
+    const { user, media, row, image, play } = model;
     const home = useClientMedia('home', '', 0);
     const collections = useClientCollections(true);
     const resume = home.data?.resume || [];
@@ -516,12 +523,7 @@ function PersonalView({ model }: ViewProps) {
         {!!collections.data?.length && <section className='client-personal-collections'><h2>Mes collections</h2><div>{collections.data.map(collection => <CollectionCard key={collection.Id} collection={collection} image={image} />)}</div></section>}
         <RequestTracking />
         <RatingsOverview />
-        <div className='client-personal-favorites' id='client-favorites'><header><h2>Ma liste</h2><button onClick={() => {
-            const items = media.data?.items || [];
-            // eslint-disable-next-line sonarjs/pseudo-random -- This only picks a visible favorite, not a security value.
-            const choice = items[Math.floor(Math.random() * items.length)];
-            if (choice?.Id) setParams({ id: choice.Id }, { state: { returnTo: `/client?${params.toString()}` } });
-        }} disabled={!media.data?.items.length}>Surprenez-moi ↗</button></header><LibraryView model={model} embedded /></div>
+        <div className='client-personal-favorites' id='client-favorites'><header><h2>Ma liste</h2></header><LibraryView model={model} embedded /></div>
     </div>;
 }
 
@@ -550,14 +552,14 @@ function LibraryView({ model, embedded = false }: ViewProps & { readonly embedde
     }
     return <section className={`client-library${view === 'search' ? ' client-search-page' : ''}${embedded ? ' embedded' : ''}`}>
         {!embedded && <header className='client-library-heading'><h1>{params.get('collectionName') || params.get('personName') || links.find(([key]) => key === view)?.[1] || 'Bibliothèque'}</h1>{view === 'search' && <p>Un titre, une envie de cinéma : trouvez votre prochaine séance.</p>}</header>}
-        <form onSubmit={event => {
+        {!embedded && <><form onSubmit={event => {
             event.preventDefault();
             browse({ q: searchInput });
         }}><ClientIcon name='search' /><input type='search' aria-label='Rechercher un film ou une série' placeholder='Titre d’un film ou d’une série' value={searchInput} onChange={event => setSearchInput(event.target.value)} />{searchInput && <button type='button' aria-label='Effacer la recherche' onClick={() => {
                 setSearchInput('');
                 browse({ q: '' });
             }}>×</button>}<button>Rechercher</button></form>
-        <div className='client-filter-options'><label>Genre <select value={genre} onChange={event => browse({ genre: event.target.value })}><option value=''>Tous les genres</option>{genres.data?.filter(entry => entry.Name).map(entry => <option key={entry.Id || entry.Name} value={entry.Name!}>{entry.Name}</option>)}</select></label><label>Trier <select value={sort} onChange={event => browse({ sort: event.target.value })}><option value='name'>Titre</option><option value='recent'>Ajouts récents</option></select></label><SearchResultCount model={model} embedded={embedded} count={shown.length} /></div>
+        <div className='client-filter-options'><label>Genre <select value={genre} onChange={event => browse({ genre: event.target.value })}><option value=''>Tous les genres</option>{genres.data?.filter(entry => entry.Name).map(entry => <option key={entry.Id || entry.Name} value={entry.Name!}>{entry.Name}</option>)}</select></label><label>Trier <select value={sort} onChange={event => browse({ sort: event.target.value })}><option value='name'>Titre</option><option value='recent'>Ajouts récents</option></select></label><SearchResultCount model={model} embedded={embedded} count={shown.length} /></div></>}
         <div className='client-grid'>{cards(shown)}</div>
         {externalPending && <p role='status'>Recherche dans les découvertes…</p>}
         {!embedded && view === 'search' && model.catalogue.hasNextPage && <button className='client-button' disabled={model.catalogue.isFetchingNextPage} onClick={() => { void model.catalogue.fetchNextPage(); }}>Plus de découvertes</button>}

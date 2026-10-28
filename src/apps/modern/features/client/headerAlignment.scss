@@ -1,0 +1,24 @@
+.client-nav .client-nav-links {
+    flex: 1;
+    min-width: 0;
+
+    // Empty spacers collapse when links overflow, keeping the first link reachable.
+    &::before,
+    &::after {
+        flex: 1 0 0;
+        content: '';
+    }
+}
+
+.client-nav[data-alignment='left'] .client-nav-links::before,
+.client-nav[data-alignment='right'] .client-nav-links::after {
+    flex-grow: 0;
+}
+
+.preview-nav-left .preview-header i {
+    margin-right: 0;
+}
+
+.preview-nav-right .preview-header em {
+    margin-left: 0;
+}

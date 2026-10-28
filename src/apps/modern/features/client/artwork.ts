@@ -1,6 +1,6 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 
-type ArtworkKind = 'poster' | 'backdrop' | 'hero' | 'episode' | 'logo' | 'portrait';
+type ArtworkKind = 'poster' | 'draw' | 'backdrop' | 'hero' | 'episode' | 'logo' | 'portrait';
 const widths = [320, 480, 640, 960, 1280, 1920, 2560, 3200, 3840];
 
 function primaryIdentity(item: BaseItemDto) {
@@ -31,6 +31,7 @@ function artworkWidth(kind: ArtworkKind) {
     const gridPoster = (viewport - margin * 2 - 18 * (columns - 1)) / columns;
     const sizes = {
         hero: viewport, backdrop: Math.min(694, viewport - 40), episode: 340,
+        draw: Math.min(374, Math.max(1, (viewport - margin * 2 - 48) / 3)),
         logo: Math.min(580, viewport * 0.75), portrait: 118,
         poster: Math.max(gridPoster, 180, Math.min(234, viewport * 0.15))
     };

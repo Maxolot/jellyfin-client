@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 export type Preferences = {
     glass: boolean;
     floating: boolean;
+    headerAlignment: 'left' | 'center' | 'right';
     chromatic: boolean;
     ambient: boolean;
     hoverDescriptions: boolean;
@@ -11,7 +12,7 @@ export type Preferences = {
     previewMuted: boolean;
     detail: 'continuous' | 'fade' | 'immersive';
 };
-const defaults: Preferences = { glass: true, floating: false, chromatic: false, ambient: true, hoverDescriptions: true, hero: 'framed', previews: true, previewMuted: true, detail: 'continuous' };
+const defaults: Preferences = { glass: true, floating: false, headerAlignment: 'center', chromatic: false, ambient: true, hoverDescriptions: true, hero: 'framed', previews: true, previewMuted: true, detail: 'continuous' };
 
 export function readInterfacePreferences(key: string): Preferences {
     try {
@@ -19,6 +20,7 @@ export function readInterfacePreferences(key: string): Preferences {
         return {
             glass: typeof saved.glass === 'boolean' ? saved.glass : true,
             floating: saved.floating === true, chromatic: saved.chromatic === true,
+            headerAlignment: ['left', 'center', 'right'].includes(saved.headerAlignment) ? saved.headerAlignment : 'center',
             ambient: saved.ambient !== false, previews: saved.previews !== false,
             hoverDescriptions: saved.hoverDescriptions !== false,
             hero: saved.hero === 'background' ? 'background' : 'framed',
