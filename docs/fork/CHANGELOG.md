@@ -2,6 +2,11 @@
 
 ## Unreleased — visual parity PR
 
+- Connect optional native short clips with shared mute, single ownership and a soft
+  one-time return to artwork; keep private clips/registry outside distributable builds.
+- Preserve keyboard selection under a stationary pointer during card expansion.
+- Restore account-specific settings before enabling controls and compress static text.
+
 - Decode artwork before reveal, size it per surface and version image cache URLs;
   warm the next hero/details and avoid loading collapsed-card landscapes.
 - Restore slow drift, liquid carousel markers, glass pointer reflection, entry and
@@ -13,7 +18,7 @@
   personal area and interface previews with live Jellyfin data.
 - Preserve row glow, keyboard/touch interaction and nested navigation; style the
   inherited player without replacing its playback mechanisms.
-- Clearly prepare unavailable personal-rating/offline/preview visuals without
+- Clearly prepare unavailable personal-rating/offline/collection-editing visuals without
   simulated server state. No Seerr integration or private demo assets.
 
 ## client-v0.1.0-alpha.3

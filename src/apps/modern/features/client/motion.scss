@@ -114,6 +114,10 @@
     transition: opacity 0.32s ease;
 }
 
+.client-artwork:not(.artwork-ready) {
+    visibility: hidden;
+}
+
 .client-artwork.artwork-ready {
     opacity: 1;
 }
@@ -126,7 +130,7 @@
     transition: opacity 0.3s ease, background-color 0.5s ease;
 }
 
-.client-media-card.active:not(.has-backdrop) .client-card-poster {
+.client-media-card.active:not(.has-backdrop) .client-card-poster.artwork-ready {
     opacity: 1;
 }
 
@@ -135,9 +139,16 @@
     opacity: 0;
 }
 
-.client-title-logo:not(.artwork-ready),
-.client-title-logo.artwork-ready + .client-title-fallback {
+.client-title-logo:not(.artwork-ready) {
     display: none;
+}
+
+.client-title-logo.artwork-ready + .client-title-fallback {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
 }
 
 .client-expanded-title img:not(.artwork-ready) + strong {

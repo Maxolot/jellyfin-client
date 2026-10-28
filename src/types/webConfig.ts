@@ -18,4 +18,6 @@ export interface WebConfig {
     menuLinks?: MenuLink[]
     servers?: string[]
     plugins?: string[]
+    /** Optional self-hosted short clips, scoped by Jellyfin server and item IDs. */
+    clientPreviews?: Record<string, Record<string, string>>
 }

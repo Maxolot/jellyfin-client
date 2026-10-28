@@ -2,6 +2,8 @@ import React from 'react';
 
 const paths = {
     play: 'M8 5v14l11-7Z',
+    volume: 'M11 5 6 9H2v6h4l5 4ZM15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14',
+    muted: 'M11 5 6 9H2v6h4l5 4ZM16 9l6 6M16 15l6-6',
     star: 'm12 3 2.8 5.7 6.3.9-4.6 4.4 1.1 6.3-5.6-3-5.6 3 1.1-6.3L2.9 9.6l6.3-.9Z',
     download: 'M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5',
     collection: 'M8 3H3v13h5M8 7h13v14H8ZM14.5 11v6M11.5 14h6',

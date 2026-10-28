@@ -3,6 +3,12 @@ import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 type ArtworkKind = 'poster' | 'backdrop' | 'hero' | 'episode' | 'logo' | 'portrait';
 const widths = [320, 480, 640, 960, 1280, 1920, 2560, 3200, 3840];
 
+function primaryIdentity(item: BaseItemDto) {
+    if (!item.ImageTags?.Primary && item.ImageTags?.Thumb) return { id: item.Id, tag: item.ImageTags.Thumb, type: 'Thumb' };
+    if (!item.ImageTags?.Primary && item.BackdropImageTags?.length) return { id: item.Id, tag: item.BackdropImageTags[0], type: 'Backdrop/0' };
+    return { id: item.Id, tag: item.ImageTags?.Primary, type: 'Primary' };
+}
+
 function imageIdentity(item: BaseItemDto, kind: ArtworkKind) {
     if (kind === 'backdrop' || kind === 'hero') {
         return {
@@ -12,15 +18,21 @@ function imageIdentity(item: BaseItemDto, kind: ArtworkKind) {
     }
     if (kind === 'logo') return { id: item.ImageTags?.Logo ? item.Id : item.SeriesId, tag: item.ImageTags?.Logo, type: 'Logo' };
     if (item.Type === 'Episode' && kind !== 'episode') return { id: item.SeriesId || item.Id, tag: item.SeriesPrimaryImageTag, type: 'Primary' };
-    return { id: item.Id, tag: item.ImageTags?.Primary, type: 'Primary' };
+    return primaryIdentity(item);
 }
 
 function artworkWidth(kind: ArtworkKind) {
     const viewport = typeof window === 'undefined' ? 1440 : window.innerWidth;
     const density = typeof window === 'undefined' ? 1 : Math.min(2, window.devicePixelRatio || 1);
+    const margin = Math.max(20, Math.min(80, viewport * 0.04));
+    let columns = 6;
+    if (viewport <= 1000) columns = 4;
+    if (viewport <= 700) columns = 3;
+    const gridPoster = (viewport - margin * 2 - 18 * (columns - 1)) / columns;
     const sizes = {
         hero: viewport, backdrop: Math.min(694, viewport - 40), episode: 340,
-        logo: 400, portrait: 118, poster: Math.max(180, Math.min(234, viewport * 0.15))
+        logo: Math.min(580, viewport * 0.75), portrait: 118,
+        poster: Math.max(gridPoster, 180, Math.min(234, viewport * 0.15))
     };
     return widths.find(value => value >= sizes[kind] * density) || 3840;
 }
@@ -41,6 +53,7 @@ export function preloadArtwork(source: string) {
     if (existing) return existing;
     const image = new Image();
     image.decoding = 'async';
+    image.setAttribute('fetchpriority', 'low');
     const pending = new Promise<void>((resolve, reject) => {
         image.onload = () => {
             const decoded = typeof image.decode === 'function' ? image.decode() : Promise.resolve();

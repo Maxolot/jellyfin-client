@@ -6,6 +6,7 @@ import ResizeObserver from 'resize-observer-polyfill';
 
 import ClientIcon from './ClientIcon';
 import Artwork from './Artwork';
+import PreviewClip from './PreviewClip';
 import FavoriteAction from './FavoriteAction';
 import useArtworkColor from './useArtworkColor';
 
@@ -31,6 +32,7 @@ export default function MediaRow({ title, items, continuation, image, logo, onPr
     const [active, setActive] = useState(-1);
     const strip = useRef<HTMLDivElement>(null);
     const touchOpens = useRef(false);
+    const pointer = useRef<{ x: number; y: number }>();
     const location = useLocation();
     const item = items[active];
     const color = useArtworkColor(item ? image(item, true) : undefined);
@@ -74,11 +76,14 @@ export default function MediaRow({ title, items, continuation, image, logo, onPr
                 move(active + (event.key === 'ArrowRight' ? 1 : -1));
             }
             if (event.key === 'Escape') setActive(-1);
-        }}>{items.map((media, index) => <article className={`client-media-card${active === index ? ' active' : ''}${readyBackdrops[media.Id || ''] ? ' has-backdrop' : ''}`} key={media.Id} onPointerEnter={event => {
-                if (event.pointerType !== 'touch') {
-                    setActive(index);
-                    onPrepare(media);
-                }
+        }}>{items.map((media, index) => <article className={`client-media-card${active === index ? ' active' : ''}${readyBackdrops[media.Id || ''] ? ' has-backdrop' : ''}`} key={media.Id} onPointerMove={event => {
+            // Layout-driven pointer entry must not steal a keyboard selection.
+                if (event.pointerType === 'touch') return;
+                if (pointer.current?.x === event.clientX && pointer.current?.y === event.clientY) return;
+                pointer.current = { x: event.clientX, y: event.clientY };
+                if (active === index) return;
+                setActive(index);
+                onPrepare(media);
             }} onFocus={() => {
                 if (!touchOpens.current) {
                     setActive(index);
@@ -100,6 +105,7 @@ export default function MediaRow({ title, items, continuation, image, logo, onPr
                     {continuation && <span className='client-continue-label'>{media.Type === 'Episode' ? episodeLabel(media) : continuationLabel(media)}</span>}
                     {progressPercent(media) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(media)}%` }} /></span>}
                 </Link>
+                <PreviewClip item={media} surface='card' enabled={active === index} />
                 <span className='client-availability' aria-label='Disponible dans votre bibliothèque'><ClientIcon name='check' /><span>Disponible</span></span>
                 <div className='client-card-actions'>
                     <button className='client-card-play' aria-label={`Lire ${media.Name}`} onClick={() => { void onPlay(media); }}><ClientIcon name='play' /></button>

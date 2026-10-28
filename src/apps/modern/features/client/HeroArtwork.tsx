@@ -28,7 +28,7 @@ export default function HeroArtwork({ source }: { readonly source: string }) {
     function failed(frameSource: string) {
         setFrames(previous => previous.length > 1 ? previous.filter(entry => entry.source !== frameSource) : [{ source: frameSource, visible: true, failed: true }]);
     }
-    return <>{frames.map(frame => <img key={frame.source} className={`client-background${frame.visible ? ' artwork-loaded' : ''}`} src={frame.source} alt='' decoding='async' hidden={frame.failed} onLoad={event => {
+    return <>{frames.map(frame => <img key={frame.source} ref={element => element?.setAttribute('fetchpriority', 'high')} className={`client-background${frame.visible ? ' artwork-loaded' : ''}`} src={frame.source} alt='' decoding='async' hidden={frame.failed} onLoad={event => {
         void loaded(frame.source, event.currentTarget);
     }} onError={() => failed(frame.source)} />)}</>;
 }

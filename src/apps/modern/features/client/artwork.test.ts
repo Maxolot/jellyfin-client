@@ -6,6 +6,13 @@ const base = 'https://media.example.test';
 afterEach(() => vi.unstubAllGlobals());
 
 describe('versioned, usage-sized artwork', () => {
+    it('retains sufficient poster and logo resolution on high-density 4K layouts', () => {
+        vi.stubGlobal('window', { innerWidth: 3840, devicePixelRatio: 2 });
+        const poster = new URL(artworkUrl(base, { Id: 'film' }));
+        const logo = new URL(artworkUrl(base, { Id: 'film', ImageTags: { Logo: 'logo' } }, 'logo'));
+        expect(Number(poster.searchParams.get('maxWidth'))).toBeGreaterThanOrEqual(1200);
+        expect(Number(logo.searchParams.get('maxWidth'))).toBeGreaterThanOrEqual(1160);
+    });
     it('uses series posters for episodes and episode stills for episode cards', () => {
         const episode = { Id: 'episode', Type: 'Episode' as const, SeriesId: 'series', SeriesPrimaryImageTag: 'series-version', ImageTags: { Primary: 'episode-version' } };
         expect(artworkUrl(base, episode)).toContain('/Items/series/Images/Primary?');
@@ -30,5 +37,10 @@ describe('versioned, usage-sized artwork', () => {
         expect(artworkUrl('', { Id: 'film' })).toBe('');
         expect(artworkUrl(base, {})).toBe('');
         expect(artworkUrl(base, { Id: 'film', ImageTags: { Primary: 'v1' } })).toBe(artworkUrl(base, { Id: 'film', ImageTags: { Primary: 'v1' } }));
+    });
+    it('uses existing thumbs or backdrops when a poster is missing', () => {
+        expect(artworkUrl(base, { Id: 'film', ImageTags: { Thumb: 'thumb' } })).toContain('/Images/Thumb?');
+        expect(artworkUrl(base, { Id: 'film', BackdropImageTags: ['backdrop'] })).toContain('/Images/Backdrop/0?');
+        expect(artworkUrl(base, { Id: 'film', ImageTags: { Primary: 'poster', Thumb: 'thumb' } })).toContain('/Images/Primary?');
     });
 });
