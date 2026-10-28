@@ -5,22 +5,22 @@ connected Jellyfin server. Jellyfin remains the only required service. No Seerr
 administrator key, password, cookie, private hostname or media asset is bundled.
 API contracts are independently implemented; upstream plugin code is not copied.
 
-## Acceptance and delivery checklist
+## Supported flows and release checks
 
-- [x] Missing/disabled/unreachable proxy leaves all local browsing and playback working.
-- [x] Existing per-user proxy session works without another login; reconnect can use
+- Missing/disabled/unreachable proxy leaves all local browsing and playback working.
+- Existing per-user proxy session works without another login; reconnect can use
   the plugin passwordless Quick Connect capability where supported.
-- [x] Optional global configuration and per-server/user opt-out stop external queries.
-- [x] Search/discovery combine local and external media, matching provider IDs and
+- Optional global configuration and per-server/user opt-out stop external queries.
+- Search/discovery combine local and external media, matching provider IDs and
   media type rather than display names; available matches retain real playback IDs.
-- [x] Integrated external detail and local partial-series detail allow film/season
+- Integrated external detail and local partial-series detail allow film/season
   requests, explicit confirmation, rights/quotas, duplicate and failure handling.
-- [x] Personal request tracking shows pending/approved/partial/available/declined/failed,
+- Personal request tracking shows pending/approved/partial/available/declined/failed,
   refreshes from server state and links back to the same media detail.
-- [x] Session expiration affects Seerr alone; account changes isolate queries/state.
-- [ ] Types/lint/tests/build and browser acceptance cover enabled/disabled cases,
+- Session expiration affects Seerr alone; account changes isolate queries/state.
+- Types/lint/tests/build and browser acceptance cover enabled/disabled cases,
   film and season requests, persisted server responses, failures and keyboard/mobile.
-- [ ] Forgejo PR, exact archived build, review deployment and operational notes updated.
+- Forgejo PR, exact archived build, review deployment and operational notes updated.
 
 No dedicated Seerr navigation tab is decided. Request actions live in media details;
 tracking lives in the personal area. Quality defaults remain server controlled;
@@ -34,7 +34,7 @@ Implemented and checked in Chromium/Firefox: 1.5s decoded-image ambient fade, on
 expanded card and closure on exit/focus departure, prepared three-card Tonight draw
 with re-roll/exclusion/keyboard/mobile and lazy member-artwork stacks for collections.
 
-## Evidence and remaining acceptance
+## Validation approach
 
 Live authenticated proxy GETs: status, identity/permissions, catalogue/search, film
 and series details, quotas and personal requests. Browser confirmation stops before
@@ -49,7 +49,8 @@ request. Both stayed pending, survived browser reload and appeared in personal t
 No Radarr/Sonarr was configured and no production configuration/database was copied.
 Local-library fixtures were empty to match that isolated engine; actual proxy session
 and real-library identity matching are checked separately.
-Exact CI archive and deployed-browser acceptance remain required before delivery.
+Release acceptance includes the exact CI archive and deployed-browser checks; results
+are recorded in the associated Forgejo review, tied to its source commit.
 
 `clientSeerr: false` in runtime config disables the integration globally. Otherwise
 the checkbox in Settings stores an opt-out per Jellyfin server/user. Existing Moonbase
@@ -66,3 +67,9 @@ failed active requests stay visible and require server-side retry/administration
 Jellyfin availability takes precedence over stale Seerr scanners: local films cannot
 be requested again in standard quality, and physical local seasons are compared with
 expected episode counts before offering missing seasons.214unit tests pass.
+
+A live20s refresh test changed request state only in the isolated engine database,
+from pending to processing to available. The client updated without reload, refreshed
+its local identity index and replaced the external link with the matched local link.
+The local fixture gained one synthetic item at the availability transition; this
+checks reconciliation, not actual downloading/import or codec support.
