@@ -12,25 +12,32 @@ import { useApi } from 'hooks/useApi';
 import { uniqueItems } from './model';
 import { clientRequest } from './session';
 
-export function useClientMedia(view: string, search: string, offset: number, genre = '', sort = 'name', person = '', audio = '') {
+function browseOrder(view: string, sort: string) {
+    if (view === 'tonight') return { sortBy: [ItemSortBy.Random], sortOrder: [SortOrder.Ascending] };
+    if (sort === 'recent' || view === 'recent') return { sortBy: [ItemSortBy.DateCreated], sortOrder: [SortOrder.Descending] };
+    return { sortBy: [ItemSortBy.SortName], sortOrder: [SortOrder.Ascending] };
+}
+
+type BrowseFilters = { genre?: string; sort?: string; person?: string; audio?: string; collection?: string };
+
+export function useClientMedia(view: string, search: string, offset: number, { genre = '', sort = 'name', person = '', audio = '', collection = '' }: BrowseFilters = {}) {
     const { api, user } = useApi();
     return useQuery({
-        queryKey: ['Client', api?.basePath, user?.Id, 'Browse', view, search, offset, genre, sort, person, audio],
+        queryKey: ['Client', api?.basePath, user?.Id, 'Browse', view, search, offset, genre, sort, person, audio, collection],
         staleTime: 0,
         enabled: !!api && !!user?.Id && view !== 'disabled',
         queryFn: ({ signal }) => clientRequest(async () => {
             const library = getLibraryApi(api!);
             let types = [BaseItemKind.Movie, BaseItemKind.Series];
-            if (view === 'films') types = [BaseItemKind.Movie];
+            if (view === 'films' || view === 'tonight') types = [BaseItemKind.Movie];
             if (view === 'series') types = [BaseItemKind.Series];
-            const common = { userId: user!.Id, recursive: true, includeItemTypes: types,
-                audioLanguages: audio ? [audio] : undefined, genres: genre ? [genre] : undefined, fields: [ItemFields.Overview, ItemFields.Genres], imageTypeLimit: 1, enableUserData: true };
+            const common = { userId: user!.Id, recursive: true, parentId: collection || undefined, includeItemTypes: types,
+                audioLanguages: audio ? [audio] : undefined, genres: genre ? [genre] : undefined, fields: [ItemFields.Overview, ItemFields.Genres, ItemFields.DateCreated], imageTypeLimit: 1, enableUserData: true };
             const request = { signal };
             if (view !== 'home') {
                 const result = await library.getItems({ ...common, limit: 48, startIndex: offset,
                     personIds: person ? [person] : undefined, searchTerm: search || undefined, genres: genre ? [genre] : undefined, isFavorite: view === 'mine' ? true : undefined,
-                    sortBy: [sort === 'recent' ? ItemSortBy.DateCreated : ItemSortBy.SortName],
-                    sortOrder: [sort === 'recent' ? SortOrder.Descending : SortOrder.Ascending] }, request);
+                    ...browseOrder(view, sort) }, request);
                 return { items: result.data.Items || [], total: result.data.TotalRecordCount || 0,
                     resume: [], next: [], movies: [], series: [] };
             }
@@ -91,13 +98,22 @@ export function useClientFilters(view: string) {
     const { api, user } = useApi();
     return useQuery({
         queryKey: ['Client', api?.basePath, user?.Id, 'Genres', view],
-        enabled: !!api && !!user?.Id && ['home', 'films', 'series', 'search', 'mine'].includes(view),
+        enabled: !!api && !!user?.Id && ['home', 'films', 'series', 'search', 'mine', 'tonight'].includes(view),
         queryFn: ({ signal }) => clientRequest(async () => {
             let types = [BaseItemKind.Movie, BaseItemKind.Series];
-            if (view === 'films') types = [BaseItemKind.Movie];
+            if (view === 'films' || view === 'tonight') types = [BaseItemKind.Movie];
             if (view === 'series') types = [BaseItemKind.Series];
             return (await getFilterApi(api!).getQueryFilters({ userId: user!.Id,
                 includeItemTypes: types, recursive: true }, { signal })).data;
         })
+    });
+}
+
+export function useClientCollections(enabled: boolean) {
+    const { api, user } = useApi();
+    return useQuery({
+        queryKey: ['Client', api?.basePath, user?.Id, 'Collections'],
+        enabled: enabled && !!api && !!user?.Id,
+        queryFn: ({ signal }) => clientRequest(async () => (await getLibraryApi(api!).getItems({ userId: user!.Id, includeItemTypes: [BaseItemKind.BoxSet], recursive: true, limit: 30, imageTypeLimit: 1 }, { signal })).data.Items || [])
     });
 }

@@ -37,3 +37,26 @@ Return navigation preserves the focused card separately from scroll. New detail
 pages focus the Back link; explicit return and browser history restore the saved
 card without moving the restored scroll. Nested recommendations carry their parent
 return state so returning through several details reaches the original search/list.
+
+
+## Prototype visual layer
+
+The visual PR adds MediaRow, HeroArtwork, HeroMetadata, DetailExtras and scoped
+prototype.scss. All UI remains React-based; no prototype DOM-wrapper stack is copied.
+HeroArtwork retains one previous image until the next loads and finishes fading.
+The row's media glow is a sibling of the horizontal scroller; resize/scroll observers
+keep it aligned without a permanent animation loop. Canvas sampling is optional and
+falls back to neutral when CORS disallows it. Existing resize-observer-polyfill is used.
+
+Discovery groups are composed from a bounded48-item server selection; complete
+library pagination remains available. Recent additions use DateCreated; local-evening
+selection uses the server genre and a duration limit within that selection. These
+surfaces do not claim external trends, AI recommendations or release calendars.
+Existing Jellyfin BoxSet collections are read-only and open through parentId queries.
+Parent-series favorites load only when an episode card is expanded, then reuse the
+same per-server/user detail cache and mutation invalidation.
+
+Native account/playback preferences remain available. The player theme is scoped to
+videoOsdPage with the selected interface theme; actual controls and media engine are
+unchanged. Planned personal stars, collection editing, offline and preview visuals
+are explicitly unavailable, not locally simulated or presented as server persistence.

@@ -1,8 +1,9 @@
 /* eslint-disable react/jsx-no-bind -- View-local closures do not cross memoized component boundaries. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import { getUserDataApi } from '@jellyfin/sdk/lib/utils/api/user-data-api';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { useQueryClient } from '@tanstack/react-query';
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigationType, useSearchParams } from 'react-router-dom';
 
 import Page from 'components/Page';
@@ -11,26 +12,30 @@ import { useApi } from 'hooks/useApi';
 import type { ItemDto } from 'types/base/models/item-dto';
 import Dashboard from 'utils/dashboard';
 
+import HeroArtwork from '../features/client/HeroArtwork';
 import ClientIcon from '../features/client/ClientIcon';
-import FilmFinish from '../features/client/FilmFinish';
+import PlannedRating from '../features/client/PlannedRating';
+import HeroMetadata from '../features/client/HeroMetadata';
 import DetailExtras from '../features/client/DetailExtras';
 import InterfacePreview from '../features/client/InterfacePreview';
+import { RecentPage, TonightPage } from '../features/client/LocalDiscoveryPages';
 import MediaRow from '../features/client/MediaRow';
 import { episodeLabel, progressPercent, uniqueItems } from '../features/client/model';
 import { clientRequest } from '../features/client/session';
-import { useClientDetails, useClientFilters, useClientMedia } from '../features/client/useClientMedia';
+import { useClientCollections, useClientDetails, useClientFilters, useClientMedia } from '../features/client/useClientMedia';
 import '../features/client/client.scss';
 import '../features/client/prototype.scss';
 
 type Preferences = { glass: boolean, floating: boolean, detail: 'continuous' | 'fade' | 'immersive' };
 type ClientNavigationState = { returnTo?: string, returnState?: ClientNavigationState | null, restoreFocus?: boolean };
 const defaults: Preferences = { glass: true, floating: false, detail: 'continuous' };
-const links = [['home', 'Accueil'], ['series', 'Séries'], ['films', 'Films'], ['search', 'Rechercher'], ['mine', 'Mon espace']];
+const links = [['home', 'Accueil'], ['series', 'Séries'], ['films', 'Films'], ['recent', 'Nouveautés'], ['tonight', 'Ce soir'], ['search', 'Rechercher'], ['mine', 'Mon espace']];
 
 function useClientController() {
     const { api, user } = useApi();
     const [params, setParams] = useSearchParams();
     const location = useLocation();
+    const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
     const restoreFocus = useNavigationType() === 'POP' || (location.state as ClientNavigationState | null)?.restoreFocus === true;
     const view = params.get('view') || 'home';
     const discovery = (view === 'films' || view === 'series') && params.get('mode') !== 'library';
@@ -42,6 +47,7 @@ function useClientController() {
     const genre = params.get('genre') || '';
     const person = params.get('person') || '';
     const audio = params.get('audio') || '';
+    const collection = params.get('collection') || '';
     const sort = params.get('sort') === 'recent' ? 'recent' : 'name';
     const filters = useClientFilters(view);
     const genres = { ...filters, data: filters.data?.Genres };
@@ -53,7 +59,9 @@ function useClientController() {
     const [heroIndex, setHeroIndex] = useState(0);
     const [heroPaused, setHeroPaused] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
-    const media = useClientMedia(id || view === 'settings' ? 'disabled' : view, search, offset, genre, sort, person, audio);
+    const profileButton = useRef<HTMLButtonElement>(null);
+    const profileMenu = useRef<HTMLDivElement>(null);
+    const media = useClientMedia(id || view === 'settings' ? 'disabled' : view, search, offset, { genre, sort, person, audio, collection });
     const details = useClientDetails(id, season);
     const item = details.item.data;
     const prefKey = `client-interface-${api?.basePath}-${user?.Id}`;
@@ -61,10 +69,23 @@ function useClientController() {
     useEffect(() => {
         if (!profileOpen) return;
         const close = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') setProfileOpen(false);
+            if (event.key === 'Escape') {
+                setProfileOpen(false);
+                profileButton.current?.focus();
+            }
         };
+        const outside = (event: Event) => {
+            if (event.target instanceof Node && !profileMenu.current?.contains(event.target) && !profileButton.current?.contains(event.target)) setProfileOpen(false);
+        };
+        profileMenu.current?.querySelector<HTMLElement>('a, button')?.focus();
         document.addEventListener('keydown', close);
-        return () => document.removeEventListener('keydown', close);
+        document.addEventListener('pointerdown', outside);
+        document.addEventListener('focusin', outside);
+        return () => {
+            document.removeEventListener('keydown', close);
+            document.removeEventListener('pointerdown', outside);
+            document.removeEventListener('focusin', outside);
+        };
     }, [profileOpen]);
 
     useEffect(() => {
@@ -177,20 +198,20 @@ function useClientController() {
     const heroItems = discovery ? (media.data?.items || []).slice(0, 5) : [...(media.data?.movies || []).slice(0, 3), ...(media.data?.series || []).slice(0, 2)];
     const lead = heroItems[heroIndex % Math.max(1, heroItems.length)];
     useEffect(() => {
-        if (!(view === 'home' || discovery) || id || heroPaused || heroItems.length < 2 || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (!(view === 'home' || discovery) || id || heroPaused || heroItems.length < 2 || reducedMotion) return;
         const timer = window.setInterval(() => {
             const rect = document.querySelector('.client-home-hero')?.getBoundingClientRect();
             if (!document.hidden && rect && rect.bottom > 0 && rect.top < window.innerHeight) setHeroIndex(index => index + 1);
         }, 8000);
         return () => window.clearInterval(timer);
-    }, [view, discovery, id, heroPaused, heroItems.length]);
+    }, [view, discovery, id, heroPaused, heroItems.length, reducedMotion]);
     const playItem = item?.Type === 'Series' ? details.next.data || details.episodes.data?.[0] : item;
     const homeHero = view === 'home' || discovery ? lead : undefined;
     const hero = id ? item : homeHero;
     const error = id ? details.item.isError : media.isError;
     return { api, user, params, location, setParams, view, id, search, offset, media, details, item, preferences, actionError, busy,
         searchInput, setSearchInput, genres, genre, sort, savePreference, image, play, updateState, cards, row, playItem, hero, error,
-        heroItems, heroIndex, setHeroIndex, setHeroPaused, profileOpen, setProfileOpen, discovery, filters, audio };
+        heroItems, heroIndex, setHeroIndex, setHeroPaused, profileOpen, setProfileOpen, profileButton, profileMenu, discovery, filters, audio };
 }
 
 type ClientModel = ReturnType<typeof useClientController>;
@@ -202,14 +223,14 @@ export default function Client() {
 }
 
 function ClientView({ model }: ViewProps) {
-    const { preferences, id, view, user, actionError, error, media, details, profileOpen, setProfileOpen } = model;
+    const { preferences, id, view, user, actionError, error, media, details, profileOpen, setProfileOpen, profileButton, profileMenu } = model;
     return <Page id='clientPage' title='Client' className='client-page' isBackButtonEnabled={false}>
         <div className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} client-layout-${preferences.detail} ${id ? 'client-detail-page' : ''}`}>
             <nav className='client-nav' aria-label='Navigation principale'>
-                <button className='client-profile' aria-label='Menu du profil' aria-expanded={profileOpen} onClick={() => setProfileOpen(!profileOpen)}>{user?.Name?.slice(0, 1) || '•'}</button>
+                <button ref={profileButton} className='client-profile' aria-label='Menu du profil' aria-expanded={profileOpen} onClick={() => setProfileOpen(!profileOpen)}>{user?.Name?.slice(0, 1) || '•'}</button>
                 <div><Link to='/client?view=search' aria-label='Rechercher' className='client-search-shortcut'><ClientIcon name='search' /></Link>{links.filter(([key]) => key !== 'search').map(([key, label]) => <Link key={key} to={`/client?view=${key}`} aria-current={!id && view === key ? 'page' : undefined}>{label}</Link>)}</div>
                 <Link to='/client' className='client-brand' aria-label='Accueil'>C</Link>
-                {profileOpen && <div className='client-profile-menu' role='dialog' aria-label='Menu du profil'>
+                {profileOpen && <div ref={profileMenu} className='client-profile-menu' role='dialog' aria-label='Menu du profil'>
                     <strong>{user?.Name}</strong><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><button onClick={Dashboard.logout}>Se déconnecter</button>
                 </div>}
             </nav>
@@ -229,7 +250,7 @@ function HeroView({ model }: ViewProps) {
     return <section className={`client-hero${id ? ' client-detail' : ' client-home-hero'}${hero.Type === 'Series' && id ? ' client-series-detail' : ''}`} onPointerEnter={() => setHeroPaused(true)} onPointerLeave={() => setHeroPaused(false)} onFocus={() => setHeroPaused(true)} onBlur={event => {
         if (!event.currentTarget.contains(event.relatedTarget)) setHeroPaused(false);
     }}>
-        <img key={hero.Id} className='client-background' src={image(hero, true)} alt='' onError={e => { e.currentTarget.hidden = true; }} />
+        <HeroArtwork source={image(hero, true)} />
         {id && <div className='client-detail-atmosphere' style={{ backgroundImage: `url("${image(hero, true)}")` }} aria-hidden='true' />}
         {id && <Link className='client-back' to={(location.state as ClientNavigationState | null)?.returnTo || '/client'} state={{ ...(location.state as ClientNavigationState | null)?.returnState, restoreFocus: true }}><ClientIcon name='back' />Retour</Link>}
         <HeroCopyView model={model} />
@@ -243,17 +264,16 @@ function HeroCopyView({ model }: ViewProps) {
     const [synopsisExpanded, setSynopsisExpanded] = useState(false);
     useEffect(() => setSynopsisExpanded(false), [hero?.Id]);
     if (!hero) return null;
-    const kind = hero.Type === 'Movie' ? 'Film' : 'Série';
     return <div className='client-hero-copy'><span className='client-eyebrow'>{id ? '✓ Disponible' : 'À LA UNE'}</span>
         {hero.ImageTags?.Logo ? <img className='client-title-logo' src={`${api?.basePath}/Items/${hero.Id}/Images/Logo?maxWidth=740&quality=90`} alt={hero.Name || ''} onError={e => {
             e.currentTarget.hidden = true;
             e.currentTarget.nextElementSibling?.removeAttribute('hidden');
         }} /> : null}
         <h1 hidden={!!hero.ImageTags?.Logo}>{hero.Name}</h1>
-        <p className='client-meta'>{[kind, hero.ProductionYear, ...(hero.Genres || []).slice(0, 2), hero.RunTimeTicks ? `${Math.round(hero.RunTimeTicks / 6e8)} min` : '', hero.CommunityRating ? `★ ${(hero.CommunityRating / 2).toFixed(1)}/5` : ''].filter(Boolean).join(' · ')}</p>
-        {id && hero.Type === 'Movie' && <FilmFinish ticks={hero.RunTimeTicks} />}
-        {id && <><p className={`client-overview${synopsisExpanded ? ' expanded' : ''}`}>{hero.Overview}</p>{(hero.Overview?.length || 0) > 220 && <button className='client-synopsis-toggle' aria-expanded={synopsisExpanded} onClick={() => setSynopsisExpanded(!synopsisExpanded)}>{synopsisExpanded ? 'Réduire' : 'Lire la suite'}</button>}</>}
+        <HeroMetadata item={hero} detailed={!!id} />
+        {id && <><p className={`client-overview${synopsisExpanded ? ' expanded' : ''}`}>{hero.Overview}</p>{hero.Type === 'Series' && (hero.Overview?.length || 0) > 220 && <button className='client-synopsis-toggle' aria-expanded={synopsisExpanded} onClick={() => setSynopsisExpanded(!synopsisExpanded)}>{synopsisExpanded ? 'Réduire' : 'Lire la suite'}</button>}</>}
         <HeroActions model={model} />
+        {id && <PlannedRating />}
         {id && <Link className='client-original-link' to={`/details?id=${hero.Id}`}>Options et fiche Jellyfin ›</Link>}
     </div>;
 }
@@ -270,7 +290,9 @@ function HeroActions({ model }: ViewProps) {
         {playable && <button className='client-play' onClick={() => play(playable)}><ClientIcon name='play' />{playLabel}</button>}
         {!id && <Link className='client-button' data-client-focus={`info-${hero.Id}`} to={`/client?id=${hero.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }}><ClientIcon name='info' />Plus d’infos</Link>}
         {id && <><button className='client-button client-action-circle' aria-label={item?.UserData?.IsFavorite ? 'Retirer de ma liste' : 'Ajouter à ma liste'} title={item?.UserData?.IsFavorite ? 'Retirer de ma liste' : 'Ajouter à ma liste'} disabled={busy} aria-pressed={!!item?.UserData?.IsFavorite} onClick={() => updateState('favorite')}><ClientIcon name={item?.UserData?.IsFavorite ? 'check' : 'plus'} /></button>
-            <button className='client-button client-action-circle' aria-label={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} title={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} disabled={busy} aria-pressed={!!item?.UserData?.Played} onClick={() => updateState('played')}><ClientIcon name={item?.UserData?.Played ? 'check' : 'eye'} /></button></>}
+            <button className='client-button client-action-circle' aria-label={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} title={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} disabled={busy} aria-pressed={!!item?.UserData?.Played} onClick={() => updateState('played')}><ClientIcon name={item?.UserData?.Played ? 'check' : 'eye'} /></button>
+            <button className='client-button client-action-circle' disabled aria-label='Ajouter à une collection : à venir' title='Ajout aux collections à venir'><ClientIcon name='collection' /></button>
+            <button className='client-button client-action-circle' disabled aria-label='Téléchargement : à venir' title='Téléchargement hors ligne à venir'><ClientIcon name='download' /></button></>}
     </div>;
 }
 
@@ -299,6 +321,8 @@ function ContentView({ model }: ViewProps) {
         </>;
     }
     if (view === 'settings') return <SettingsView model={model} />;
+    if (view === 'recent') return <RecentPage items={media.data?.items || []} row={row} />;
+    if (view === 'tonight') return <TonightPage items={media.data?.items || []} genres={model.genres.data || []} row={row} />;
     if (model.discovery) return <DiscoveryView model={model} />;
     if (view === 'mine') return <PersonalView model={model} />;
     return <LibraryView model={model} />;
@@ -309,6 +333,7 @@ function SettingsView({ model }: ViewProps) {
         <h2>Thème</h2><div className='client-setting-options'>{[[true, 'Liquid Glass'], [false, 'Classique']].map(([key, label]) => <button key={String(key)} aria-pressed={preferences.glass === key} onClick={() => savePreference({ ...preferences, glass: key as boolean })}><InterfacePreview kind={key ? 'glass' : 'classic'} /><strong>{label}</strong></button>)}</div>
         <h2>Navigation</h2><div className='client-setting-options'>{[[false, 'Bandeau du thème'], [true, 'Boutons flottants']].map(([key, label]) => <button key={String(key)} aria-pressed={preferences.floating === key} onClick={() => savePreference({ ...preferences, floating: key as boolean })}><InterfacePreview kind={key ? 'floating' : 'grouped'} /><strong>{label}</strong></button>)}</div>
         <h2>Fond des fiches</h2><div className='client-setting-options'>{[['continuous', 'Fond continu'], ['fade', 'Fondu progressif'], ['immersive', 'Fiche immersive']].map(([key, label]) => <button key={key} aria-pressed={preferences.detail === key} onClick={() => savePreference({ ...preferences, detail: key as Preferences['detail'] })}><InterfacePreview kind={key as 'continuous' | 'fade' | 'immersive'} /><strong>{label}</strong></button>)}</div>
+        <section className='client-preview-setting'><h2>Aperçus vidéo</h2><label><input type='checkbox' disabled /> Activer les extraits vidéo <small>À venir</small></label><p>Les images restent fixes tant que les aperçus ne sont pas disponibles.</p></section>
         <Link className='client-button client-settings-link' to={`/mypreferencesmenu?userId=${user?.Id || ''}`}>Compte et réglages de lecture Jellyfin ›</Link>
         <button className='client-logout' onClick={Dashboard.logout}>Se déconnecter</button>
     </section>;
@@ -354,12 +379,14 @@ function DiscoveryView({ model }: ViewProps) {
 function PersonalView({ model }: ViewProps) {
     const { user, media, row, image, play, params, setParams } = model;
     const home = useClientMedia('home', '', 0);
+    const collections = useClientCollections(true);
     const resume = home.data?.resume || [];
     const lead = resume[0];
     return <div className='client-personal'><header className='client-personal-identity'><span>{user?.Name?.slice(0, 1)}</span><div><h1>Mon espace</h1><p>{user?.Name}, retrouvez vos envies et vos prochaines séances.</p></div></header>
         <div className='client-personal-shortcuts'><button onClick={() => document.getElementById('client-favorites')?.scrollIntoView({ block: 'start' })}><strong>{media.data?.total || 0}</strong> Ma liste</button><button onClick={() => document.getElementById('client-resume')?.scrollIntoView({ block: 'start' })}><strong>{resume.length}</strong> Lectures à reprendre</button></div>
         {lead && <section className='client-personal-spotlight'><img src={image(lead, true)} alt='' /><div><small>ON CONTINUE ?</small><h2>{lead.SeriesName || lead.Name}</h2><p>{lead.Type === 'Episode' ? episodeLabel(lead) : 'Votre film vous attend'}</p><button className='client-play' onClick={() => play(lead)}><ClientIcon name='play' />Reprendre</button><Link className='client-button' to={`/client?id=${lead.SeriesId || lead.Id}`}>Voir la fiche</Link></div></section>}
         <div id='client-resume'>{row('Continuer à regarder', resume, true)}</div>
+        {!!collections.data?.length && <section className='client-personal-collections'><h2>Mes collections</h2><div>{collections.data.map(collection => <Link key={collection.Id} to={`/client?view=search&collection=${collection.Id}&collectionName=${encodeURIComponent(collection.Name || '')}`}><span className='client-collection-art'><img src={image(collection)} alt='' loading='lazy' onError={event => { event.currentTarget.hidden = true; }} /></span><strong>{collection.Name}</strong></Link>)}</div></section>}
         <div className='client-personal-favorites' id='client-favorites'><header><h2>Ma liste</h2><button onClick={() => {
             const items = media.data?.items || [];
             // eslint-disable-next-line sonarjs/pseudo-random -- This only picks a visible favorite, not a security value.
@@ -380,7 +407,7 @@ function LibraryView({ model, embedded = false }: ViewProps & { readonly embedde
         setParams(next);
     }
     return <section className={`client-library${view === 'search' ? ' client-search-page' : ''}${embedded ? ' embedded' : ''}`}>
-        {!embedded && <header className='client-library-heading'><h1>{params.get('personName') || links.find(([key]) => key === view)?.[1] || 'Bibliothèque'}</h1>{view === 'search' && <p>Un titre, une envie de cinéma : trouvez votre prochaine séance.</p>}</header>}
+        {!embedded && <header className='client-library-heading'><h1>{params.get('collectionName') || params.get('personName') || links.find(([key]) => key === view)?.[1] || 'Bibliothèque'}</h1>{view === 'search' && <p>Un titre, une envie de cinéma : trouvez votre prochaine séance.</p>}</header>}
         <form onSubmit={event => {
             event.preventDefault();
             browse({ q: searchInput });

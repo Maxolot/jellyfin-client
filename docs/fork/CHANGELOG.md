@@ -1,5 +1,15 @@
 # Fork changelog
 
+## Unreleased — visual parity PR
+
+- Port the validated prototype navigation, inset carousel and expanding poster rows.
+- Align detail/season/cast, discovery/library, search, recent/local-evening selection,
+  personal area and interface previews with live Jellyfin data.
+- Preserve row glow, keyboard/touch interaction and nested navigation; style the
+  inherited player without replacing its playback mechanisms.
+- Clearly prepare unavailable personal-rating/offline/preview visuals without
+  simulated server state. No Seerr integration or private demo assets.
+
 ## client-v0.1.0-alpha.3
 
 - Restore keyboard focus to the selected media card when returning from details.

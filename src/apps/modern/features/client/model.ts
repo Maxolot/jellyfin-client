@@ -21,3 +21,10 @@ export function progressPercent(item: BaseItemDto): number {
         Math.max(0, Math.min(100, (item.UserData?.PlaybackPositionTicks || 0) / duration * 100)) :
         0;
 }
+
+export function runtimeLabel(ticks?: number | null): string {
+    if (!ticks) return '';
+    const minutes = Math.round(ticks / 6e8);
+    const hours = Math.floor(minutes / 60);
+    return hours ? `${hours} h ${String(minutes % 60).padStart(2, '0')}` : `${minutes} min`;
+}
