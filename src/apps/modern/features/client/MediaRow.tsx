@@ -18,6 +18,7 @@ type Props = {
     title: string;
     items: BaseItemDto[];
     continuation?: boolean;
+    showDescription?: boolean;
     image: (item: BaseItemDto, backdrop?: boolean) => string;
     logo: (item: BaseItemDto) => string | undefined;
     onPrepare: (item: BaseItemDto) => void;
@@ -30,7 +31,7 @@ function continuationLabel(item: BaseItemDto) {
     return progressPercent(item) > 0 ? 'Reprendre' : 'À suivre';
 }
 
-export default function MediaRow({ title, items, continuation, image, logo, onPrepare, onRelease, onPlay, onFavorite }: Readonly<Props>) {
+export default function MediaRow({ title, items, continuation, showDescription = true, image, logo, onPrepare, onRelease, onPlay, onFavorite }: Readonly<Props>) {
     const [readyBackdrops, setReadyBackdrops] = useState<Partial<Record<string, boolean>>>({});
     const preparedSources = useRef<Partial<Record<string, boolean>>>({});
     const [active, setActive] = useState(-1);
@@ -156,7 +157,7 @@ export default function MediaRow({ title, items, continuation, image, logo, onPr
                     </div>
                 </article>;
             })}</div>
-        <div className='client-row-info' aria-live='polite'>{item && <><h3>{item.SeriesName || item.Name}</h3><span>{[item.Type === 'Episode' ? episodeLabel(item) : item.ProductionYear, ...(item.Genres || []).slice(0, 2)].filter(Boolean).join(' · ')}</span><p>{item.Overview}</p></>}</div>
+        {showDescription && <div className='client-row-info' aria-live='polite'>{item && <><h3>{item.SeriesName || item.Name}</h3><span>{[item.Type === 'Episode' ? episodeLabel(item) : item.ProductionYear, ...(item.Genres || []).slice(0, 2)].filter(Boolean).join(' · ')}</span><p>{item.Overview}</p></>}</div>}
     </section>;
 }
 
