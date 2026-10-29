@@ -8,11 +8,20 @@ export type Preferences = {
     ambient: boolean;
     hoverDescriptions: boolean;
     hero: 'framed' | 'background';
+    detailTreatment: 'progressive' | 'cinema' | 'clear';
+    detailBlur: number;
+    detailShade: number;
+    detailWidth: number;
+    heroFade: number;
     previews: boolean;
     previewMuted: boolean;
     detail: 'continuous' | 'fade' | 'immersive';
 };
-const defaults: Preferences = { glass: true, floating: false, headerAlignment: 'center', chromatic: false, ambient: true, hoverDescriptions: true, hero: 'framed', previews: true, previewMuted: true, detail: 'continuous' };
+const defaults: Preferences = { detailTreatment: 'progressive', detailBlur: 24, detailShade: 75, detailWidth: 58, heroFade: 45, glass: true, floating: false, headerAlignment: 'center', chromatic: false, ambient: true, hoverDescriptions: true, hero: 'framed', previews: true, previewMuted: true, detail: 'continuous' };
+
+function bounded(value: unknown, fallback: number, min: number, max: number) {
+    return typeof value === 'number' && Number.isFinite(value) ? Math.max(min, Math.min(max, value)) : fallback;
+}
 
 export function readInterfacePreferences(key: string): Preferences {
     try {
@@ -24,6 +33,11 @@ export function readInterfacePreferences(key: string): Preferences {
             ambient: saved.ambient !== false, previews: saved.previews !== false,
             hoverDescriptions: saved.hoverDescriptions !== false,
             hero: saved.hero === 'background' ? 'background' : 'framed',
+            detailTreatment: ['progressive', 'cinema', 'clear'].includes(saved.detailTreatment) ? saved.detailTreatment : 'progressive',
+            detailBlur: bounded(saved.detailBlur, 24, 0, 48),
+            detailShade: bounded(saved.detailShade, 75, 0, 95),
+            detailWidth: bounded(saved.detailWidth, 58, 35, 85),
+            heroFade: bounded(saved.heroFade, 45, 20, 70),
             previewMuted: saved.previewMuted !== false,
             detail: ['continuous', 'fade', 'immersive'].includes(saved.detail) ? saved.detail : 'continuous'
         };
