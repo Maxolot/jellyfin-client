@@ -1,0 +1,49 @@
+.client-jellyfin-features {
+    > section { margin: 40px 0; }
+
+    p {
+        max-width: 720px;
+        color: #b7bcc7;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+}
+
+.client-native-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    max-width: 900px;
+    gap: 12px;
+
+    a {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 20px;
+        border: 1px solid #ffffff20;
+        border-radius: 12px;
+        background: #ffffff04;
+        color: #f4f4f5;
+        text-decoration: none;
+        transition: background 0.2s;
+
+        &:hover { background: #ffffff0c; }
+    }
+
+    strong { font-size: 15px; }
+
+    small {
+        color: #b7bcc7;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+}
+
+.client-native-control {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 20px 0;
+
+    p { margin: 6px 0 0; }
+}
