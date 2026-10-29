@@ -15,7 +15,6 @@ import type { ItemDto } from 'types/base/models/item-dto';
 import Dashboard from 'utils/dashboard';
 import Events from 'utils/events';
 
-import JellyfinFeatures from '../features/client/JellyfinFeatures';
 import HeroArtwork from '../features/client/HeroArtwork';
 import PreviewProvider from '../features/client/PreviewProvider';
 import PreviewClip from '../features/client/PreviewClip';
@@ -102,7 +101,7 @@ function restoreClientNavigation(key: string, restoreFocus: boolean, id: string)
 }
 
 function clientPageReady(id: string, view: string, item: BaseItemDto | undefined, mediaReady: boolean, externalReady: boolean) {
-    return externalReady || (id ? !!item : ['settings', 'features'].includes(view) || mediaReady);
+    return externalReady || (id ? !!item : view === 'settings' || mediaReady);
 }
 
 function clientBrowseInput(view: string, search: string, filters: Parameters<typeof useClientMedia>[3]) {
@@ -150,7 +149,7 @@ function useClientController() {
     const surface = useRef<HTMLDivElement>(null);
     const profileMenu = useRef<HTMLDivElement>(null);
     const browseInput = clientBrowseInput(view, search, { genre, sort, person, audio, collection });
-    const media = useClientMedia(id || ['settings', 'features'].includes(view) ? 'disabled' : view, browseInput.search, offset, browseInput.filters);
+    const media = useClientMedia(id || view === 'settings' ? 'disabled' : view, browseInput.search, offset, browseInput.filters);
     const remote = isExternal({ Id: id });
     const remoteIdentity = externalIdentity({ Id: id });
     const remoteDetails = useSeerrDetail(remoteIdentity?.type, remoteIdentity?.id, false);
@@ -350,12 +349,12 @@ function ClientView({ model }: ViewProps) {
                 <div className='client-nav-links'><Link to='/client?view=search' aria-label='Rechercher' className='client-search-shortcut'><ClientIcon name='search' /></Link>{links.filter(([key]) => key !== 'search').map(([key, label]) => <Link key={key} to={`/client?view=${key}`} aria-current={!id && view === key ? 'page' : undefined}>{label}</Link>)}</div>
                 <Link to='/client' className='client-brand' aria-label='Accueil'>C</Link>
                 {profileOpen && <div ref={profileMenu} className='client-profile-menu' role='dialog' aria-label='Menu du profil'>
-                    <strong>{user?.Name}</strong><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=features' onClick={() => setProfileOpen(false)}>Fonctions Jellyfin</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><button onClick={Dashboard.logout}>Se déconnecter</button>
+                    <strong>{user?.Name}</strong><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><button onClick={Dashboard.logout}>Se déconnecter</button>
                 </div>}
             </nav>
             {actionError && <p role='alert' className='client-message'>{actionError}</p>}
             {error && <div className='client-message' role='alert'><p>Impossible de charger les médias.</p><button onClick={() => (id ? details.item.refetch() : media.refetch())}>Réessayer</button></div>}
-            {(id ? !model.remote && details.item.isPending : !['settings', 'features'].includes(view) && media.isPending) && <p className='client-message' role='status'>Chargement…</p>}
+            {(id ? !model.remote && details.item.isPending : view !== 'settings' && media.isPending) && <p className='client-message' role='status'>Chargement…</p>}
             <BrowseControls model={model} />
             {!id && media.isPending && (view === 'home' || model.discovery) && <div className='client-hero client-home-hero client-loading-surface' aria-hidden='true'><span /><span /><span /></div>}
             <HeroView model={model} />
@@ -449,7 +448,6 @@ function ContentView({ model }: ViewProps) {
             {media.data && !media.data.movies.length && !media.data.series.length && !media.data.resume.length && <p className='client-message'>Votre bibliothèque est vide pour le moment.</p>}
         </>;
     }
-    if (view === 'features') return <JellyfinFeatures />;
     if (view === 'settings') return <SettingsView model={model} />;
     if (view === 'recent') return <RecentPage items={media.data?.items || []} row={row} />;
     if (view === 'tonight') return <TonightPage items={media.data?.items || []} loading={media.isPending} image={item => artworkUrl(model.api?.basePath || '', item, 'draw')} onPrepare={model.prepareDetail} onRelease={model.releaseDetail} />;
