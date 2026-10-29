@@ -166,33 +166,91 @@
 }
 
 .client-draw-fan {
-    display: grid;
+    display: flex;
     width: 100%;
     max-width: var(--draw-width);
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    align-items: start;
-    gap: var(--draw-gap);
+    align-items: center;
+    justify-content: center;
     margin: 0 auto;
+    padding: 26px 24px 30px;
+    perspective: 1600px;
 }
 
 .client-tonight-result.client-draw-card {
     position: relative;
+    z-index: 1;
+    flex: 0 1 calc(var(--draw-poster-height) * 0.666667);
     min-width: 0;
-    margin: 0;
-    animation: draw-appear 0.4s ease both;
-    animation-delay: calc(var(--draw-order) * 60ms);
+    aspect-ratio: 2 / 3;
+    margin: 0 -7px;
+    animation: draw-deal 0.85s cubic-bezier(0.18, 0.8, 0.25, 1) both;
+    animation-delay: calc(var(--draw-order) * 130ms);
+    transform: translateY(var(--card-lift)) rotate(var(--card-angle));
+    transform-origin: 50% 130%;
+    transition: transform 0.4s ease;
+}
+
+.client-draw-card .client-draw-shell {
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    animation: draw-turn 0.75s ease both;
+    animation-delay: calc(var(--draw-order) * 130ms + 100ms);
+    transform-style: preserve-3d;
+}
+
+.client-draw-front,
+.client-draw-back {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    backface-visibility: hidden;
+}
+
+.client-draw-front {
+    background: #17191e;
+    transform: rotateY(0);
+}
+
+.client-draw-back {
+    display: grid;
+    place-items: center;
+    border: 1px solid #ffffff50;
+    background: radial-gradient(ellipse at 30% 20%, #ffffff14, transparent 65%), linear-gradient(135deg, #24262f, #0c0e13);
+    transform: rotateY(180deg);
+
+    &::before {
+        position: absolute;
+        inset: 12px;
+        border: 1px solid #ffffff30;
+        border-radius: 8px;
+        content: '';
+    }
+
+    span {
+        color: #ffffffa0;
+        font-size: clamp(24px, 5vw, 64px);
+    }
+}
+
+.client-draw-card:hover,
+.client-draw-card:focus-within {
+    z-index: 3;
+    transform: translateY(-22px) rotate(0) scale(1.025);
 }
 
 .client-draw-open {
     display: block;
+    height: 100%;
     border-radius: 12px;
-    outline-offset: 5px;
+    outline-offset: -3px;
 }
 
 .client-draw-poster {
     position: relative;
     display: block;
-    aspect-ratio: 2 / 3;
+    height: 100%;
     overflow: hidden;
     border: 1px solid #ffffff24;
     border-radius: 12px;
@@ -211,33 +269,6 @@
 .client-draw-open:focus-visible .client-draw-poster {
     border-color: #ffffffe0;
     box-shadow: 0 10px 35px #0008;
-}
-
-.client-draw-caption {
-    display: block;
-    margin-top: 12px;
-
-    strong {
-        display: -webkit-box;
-        min-height: 2.6em;
-        overflow: hidden;
-        font-size: 15px;
-        font-weight: 500;
-        line-height: 1.3;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-    }
-
-    small {
-        display: block;
-        overflow: hidden;
-        margin-top: 5px;
-        color: #a3a6af;
-        font-size: 12px;
-        line-height: 1.4;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
 }
 
 .client-tonight-table .client-draw-dismiss {
@@ -268,9 +299,30 @@
     text-align: center;
 }
 
-@keyframes draw-appear {
-    from { opacity: 0; }
-    to { opacity: 1; }
+@keyframes draw-deal {
+    from {
+        opacity: 0;
+        transform: translateY(70px) rotate(0) scale(0.85);
+    }
+    45% { opacity: 1; }
+
+    to {
+        opacity: 1;
+        transform: translateY(var(--card-lift)) rotate(var(--card-angle));
+    }
+}
+
+@keyframes draw-turn {
+    0%,
+    20% { transform: rotateY(180deg); }
+    to { transform: rotateY(0); }
+}
+
+@media (max-width: 1100px) {
+    .client-draw-fan {
+        padding-right: 8vw;
+        padding-left: 8vw;
+    }
 }
 
 @media (max-width: 600px) {
@@ -290,13 +342,6 @@
     .client-tonight-actions {
         justify-content: space-between;
     }
-
-    .client-draw-caption {
-        margin-top: 10px;
-
-        strong { font-size: 13px; }
-        small { font-size: 11px; }
-    }
 }
 
 @media (hover: none) {
@@ -309,8 +354,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .client-draw-card {
+    .client-tonight-result.client-draw-card,
+    .client-draw-card .client-draw-shell {
         animation: none;
+        transition: none;
     }
 
     .client-draw-poster {

@@ -7,6 +7,7 @@ import { Link, useLocation } from 'react-router-dom';
 import './seerr.scss';
 
 import Artwork from '../Artwork';
+import ClientDialog from '../ClientDialog';
 import HeroArtwork from '../HeroArtwork';
 import ClientIcon from '../ClientIcon';
 import { withLocalAvailability, externalIdentity, catalogueItem, providerKey, canRequest, imageUrl, localMatch, mediaLabel, requestableSeasons, requestLabel,
@@ -71,6 +72,13 @@ function QuotaNotice({ label, loaded, restricted, error, onRetry }: Readonly<{ l
 
 function RequestHistory({ entries }: { readonly entries: MediaRequest[] }) {
     return <div className='client-request-history'>{entries.map(entry => <p key={entry.id}>{entry.is4k ? '4K · ' : ''}{entry.seasons?.length ? `Saisons ${entry.seasons.map(season => season.seasonNumber).join(', ')} · ` : ''}{requestLabel(entry.status)}</p>)}</div>;
+}
+
+export function AvailabilityAction({ identity: supplied, localItem }: Readonly<{ identity?: SeerrIdentity; localItem?: BaseItemDto }>) {
+    const seerr = useSeerr();
+    const identity = supplied || (localItem && externalIdentity(localItem));
+    if (!seerr.connected || !identity) return null;
+    return <ClientDialog key={`${identity.type}-${identity.id}`} label='Disponibilité' title='Disponibilité et demandes' subtitle={localItem?.Name || ''} buttonClassName='client-button client-availability-action'><RequestPanel identity={identity} localItem={localItem} /></ClientDialog>;
 }
 
 export function RequestPanel({ identity, localItem }: Readonly<{ identity: SeerrIdentity; localItem?: BaseItemDto }>) {
@@ -152,7 +160,7 @@ export function ExternalDetail({ id, row }: Readonly<{ id: string; row: (title: 
     }
     const data = detail.data;
     const match = localMatch(data, identity.type, local.data || []);
-    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><Link className='client-back' to={back} state={backState}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{(data.releaseDate || data.firstAirDate || '').slice(0, 4)} · {data.genres?.map(genre => genre.name).join(' · ')}</p><p className='client-overview'>{data.overview}</p>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}</div></section><RequestPanel key={id} identity={identity} localItem={match} /><ExternalRecommendations identity={identity} local={local.data || []} row={row} /></>;
+    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><Link className='client-back' to={back} state={backState}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{(data.releaseDate || data.firstAirDate || '').slice(0, 4)} · {data.genres?.map(genre => genre.name).join(' · ')}</p><p className='client-overview'>{data.overview}</p><div className='client-actions'>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}<AvailabilityAction identity={identity} localItem={match} /></div></div></section><ExternalRecommendations identity={identity} local={local.data || []} row={row} /></>;
 }
 
 function ExternalRecommendations({ identity, local, row }: Readonly<{ identity: SeerrIdentity; local: BaseItemDto[]; row: (title: string, items: BaseItemDto[]) => React.ReactNode }>) {

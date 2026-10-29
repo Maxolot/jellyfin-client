@@ -30,7 +30,7 @@ import useArtworkColor from '../features/client/useArtworkColor';
 import PersonalRating from '../features/client/PersonalRating';
 import RatingsOverview from '../features/client/RatingsOverview';
 import HeroMetadata from '../features/client/HeroMetadata';
-import DetailExtras from '../features/client/DetailExtras';
+import DetailExtras, { CastAction } from '../features/client/DetailExtras';
 import InterfacePreview from '../features/client/InterfacePreview';
 import { RecentPage } from '../features/client/LocalDiscoveryPages';
 import MediaRow from '../features/client/MediaRow';
@@ -51,7 +51,7 @@ import CollectionCard from '../features/client/CollectionCard';
 import AmbientBackdrop from '../features/client/AmbientBackdrop';
 import { SeerrProvider, useSeerr } from '../features/client/seerr/SeerrContext';
 import { useSeerrCatalogue, useSeerrDetail } from '../features/client/seerr/queries';
-import { ExternalDetail, RequestPanel, RequestTracking, SeerrSettings } from '../features/client/seerr/SeerrViews';
+import { AvailabilityAction, ExternalDetail, RequestTracking, SeerrSettings } from '../features/client/seerr/SeerrViews';
 import { externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
 
 const links = [['home', 'Accueil'], ['series', 'Séries'], ['films', 'Films'], ['recent', 'Nouveautés'], ['tonight', 'Ce soir'], ['search', 'Rechercher'], ['mine', 'Mon espace']];
@@ -357,7 +357,6 @@ function ClientView({ model }: ViewProps) {
             <BrowseControls model={model} />
             {!id && media.isPending && (view === 'home' || model.discovery) && <div className='client-hero client-home-hero client-loading-surface' aria-hidden='true'><span /><span /><span /></div>}
             <HeroView model={model} />
-            {id && model.hero && externalIdentity(model.hero) && model.seerr.connected && <RequestPanel key={id} identity={externalIdentity(model.hero)!} localItem={model.hero} />}
             <ContentView model={model} />
         </div>
     </Page></PreviewProvider>;
@@ -393,7 +392,7 @@ function HeroCopyView({ model }: ViewProps) {
         {id && <><p className={`client-overview${synopsisExpanded ? ' expanded' : ''}`}>{hero.Overview}</p>{hero.Type === 'Series' && (hero.Overview?.length || 0) > 220 && <button className='client-synopsis-toggle' aria-expanded={synopsisExpanded} onClick={() => setSynopsisExpanded(!synopsisExpanded)}>{synopsisExpanded ? 'Réduire' : 'Lire la suite'}</button>}</>}
         <HeroActions model={model} />
         {id && <PersonalRating item={hero} />}
-        {id && <Link className='client-original-link' to={`/details?id=${hero.Id}`}>Options et fiche Jellyfin ›</Link>}
+        {id && <div className='client-detail-links'><CastAction key={hero.Id} item={hero} basePath={api?.basePath || ''} /><Link className='client-original-link' to={`/details?id=${hero.Id}`}>Options et fiche Jellyfin ›</Link></div>}
     </div>;
 }
 
@@ -407,6 +406,7 @@ function HeroActions({ model }: ViewProps) {
     if (playable?.Type === 'Episode') playLabel = episodeLabel(playable);
     return <div className='client-actions'>
         {playable && <button className='client-play' onClick={() => play(playable)}><ClientIcon name='play' />{playLabel}</button>}
+        {id && <AvailabilityAction key={hero.Id} localItem={hero} />}
         {!id && <Link className='client-button' data-client-focus={`info-${hero.Id}`} to={`/client?id=${hero.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }}><ClientIcon name='info' />Plus d’infos</Link>}
         {id && <><button className='client-button client-action-circle' aria-label={item?.UserData?.IsFavorite ? 'Retirer de ma liste' : 'Ajouter à ma liste'} title={item?.UserData?.IsFavorite ? 'Retirer de ma liste' : 'Ajouter à ma liste'} disabled={busy} aria-pressed={!!item?.UserData?.IsFavorite} onClick={() => updateState('favorite')}><ClientIcon name={item?.UserData?.IsFavorite ? 'check' : 'plus'} /></button>
             <button className='client-button client-action-circle' aria-label={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} title={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} disabled={busy} aria-pressed={!!item?.UserData?.Played} onClick={() => updateState('played')}><ClientIcon name={item?.UserData?.Played ? 'check' : 'eye'} /></button>
@@ -436,7 +436,7 @@ function EpisodesView({ model }: ViewProps) {
 function ContentView({ model }: ViewProps) {
     const { id, view, details, media, row, api, image } = model;
     if (model.remote) return <ExternalDetail key={id} id={id} row={row} />;
-    if (id) return details.item.data && api ? <DetailExtras item={details.item.data} basePath={api.basePath} similar={details.similar.data || []} image={image} /> : null;
+    if (id) return details.item.data && api ? <DetailExtras similar={details.similar.data || []} image={image} /> : null;
     if (view === 'home') {
         return <>
             {row('Continuer à regarder', uniqueItems([...(media.data?.resume || []), ...(media.data?.next || [])]).filter((entry, index, all) => !entry.SeriesId || all.findIndex(other => other.SeriesId === entry.SeriesId) === index), true)}

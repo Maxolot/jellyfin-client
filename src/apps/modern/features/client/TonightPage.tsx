@@ -75,20 +75,20 @@ function DrawFilters({ panel, criteria, draft, setDraft, canReset, onApply, onRe
     </details>;
 }
 
-function DrawPoster({ item, index, image, onPrepare, onRelease, onDismiss }: Readonly<Omit<Props, 'items' | 'loading'> & { item: BaseItemDto; index: number; onDismiss: (id: string) => void }>) {
+function DrawPoster({ item, index, count, image, onPrepare, onRelease, onDismiss }: Readonly<Omit<Props, 'items' | 'loading'> & { item: BaseItemDto; index: number; count: number; onDismiss: (id: string) => void }>) {
     const location = useLocation();
-    const minutes = Math.round((item.RunTimeTicks || 0) / 6e8);
-    const metadata = [item.ProductionYear, minutes ? `${minutes} min` : '', item.Genres?.[0]].filter(Boolean).join(' · ');
-    return <article className='client-tonight-result client-draw-card' style={{ '--draw-order': index } as CSSProperties} onPointerEnter={() => onPrepare(item)} onPointerLeave={onRelease} onFocus={() => onPrepare(item)} onBlur={event => {
+    return <article className='client-tonight-result client-draw-card' style={{ '--draw-order': index, '--card-angle': `${(index - (count - 1) / 2) * 9}deg`, '--card-lift': `${index === Math.floor(count / 2) ? -16 : 12}px` } as CSSProperties} onAnimationEnd={event => {
+        if (event.animationName === 'draw-deal') event.currentTarget.style.animation = 'none';
+    }} onPointerEnter={() => onPrepare(item)} onPointerLeave={onRelease} onFocus={() => onPrepare(item)} onBlur={event => {
         if (!event.currentTarget.contains(event.relatedTarget)) onRelease();
-    }}><Link className='client-draw-open' to={`/client?id=${item.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }} aria-label={`Voir ${item.Name}`} onKeyDown={event => {
+    }}><div className='client-draw-shell'><div className='client-draw-back' aria-hidden='true'><span>C</span></div><div className='client-draw-front'><Link className='client-draw-open' to={`/client?id=${item.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }} aria-label={`Voir ${item.Name}`} onKeyDown={event => {
             if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
             event.preventDefault();
             const list = event.currentTarget.closest('article')?.parentElement?.querySelectorAll<HTMLElement>('.client-draw-open');
             list?.[Math.max(0, Math.min((list?.length || 1) - 1, index + (event.key === 'ArrowRight' ? 1 : -1)))].focus();
-        }}><span className='client-draw-poster'><Artwork source={image(item)} eager /></span><span className='client-draw-caption'><strong>{item.Name}</strong><small>{metadata}</small></span></Link>
+        }}><span className='client-draw-poster'><Artwork source={image(item)} eager /></span></Link>
         <button className='client-draw-dismiss' aria-label={`Ne plus proposer ${item.Name}`} onClick={() => onDismiss(item.Id || '')}><ClientIcon name='close' /></button>
-    </article>;
+        </div></div></article>;
 }
 
 export default function TonightPage({ items, loading = false, image, onPrepare, onRelease }: Readonly<Props>) {
@@ -124,7 +124,7 @@ export default function TonightPage({ items, loading = false, image, onPrepare, 
                 if (panel.current) panel.current.open = false;
             }} />
         </div></header>
-    <div className='client-draw-stage' aria-live='polite' aria-busy={pending}>{draw.items.length ? <div className='client-draw-fan'>{draw.items.map((item, index) => <DrawPoster key={`${draw.seed}-${item.Id}`} item={item} index={index} image={image} onPrepare={onPrepare} onRelease={onRelease} onDismiss={id => {
+    <div className='client-draw-stage' aria-live='polite' aria-busy={pending}>{draw.items.length ? <div className='client-draw-fan'>{draw.items.map((item, index) => <DrawPoster key={`${draw.seed}-${item.Id}`} item={item} index={index} count={draw.items.length} image={image} onPrepare={onPrepare} onRelease={onRelease} onDismiss={id => {
         setExcluded(values => [...values, id]);
         setSeed(value => value + 1);
     }} />)}</div> : <div className='client-draw-empty'><p role='status'>{pending ? 'Préparation des affiches…' : 'Aucun film pour ces critères.'}</p>{!pending && (refined || !!excluded.length) && <button className='client-button' onClick={reset}>Élargir le choix</button>}</div>}</div>
