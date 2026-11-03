@@ -1,34 +1,4 @@
 /* Motion only animates opacity and transforms, except the intentional card expansion. */
-.client-loading-surface {
-    gap: 20px;
-
-    span {
-        z-index: 1;
-        width: 32%;
-        height: 18px;
-        border-radius: 8px;
-        background: #ffffff0a;
-    }
-
-    span:first-child {
-        width: 44%;
-        height: 70px;
-    }
-
-    &::after {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(100deg, transparent, #ffffff04, transparent);
-        animation: client-loading-sheen 2s ease-in-out infinite;
-        content: '';
-    }
-}
-
-@keyframes client-loading-sheen {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(100%); }
-}
-
 .client-ambient {
     position: fixed;
     z-index: -1;

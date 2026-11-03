@@ -4,6 +4,7 @@ import React, { type CSSProperties, type Dispatch, type RefObject, type SetState
 import { Link, useLocation } from 'react-router-dom';
 
 import Artwork from './Artwork';
+import ClientSkeleton from './ClientSkeleton';
 import ClientIcon from './ClientIcon';
 import { preloadArtwork } from './artwork';
 import './tonight.scss';
@@ -115,6 +116,7 @@ export default function TonightPage({ items, loading = false, image, onPrepare, 
         setSeed(value => value + 1);
         if (panel.current) panel.current.open = false;
     }
+    const emptyDraw = pending ? <ClientSkeleton layout='draw' count={3} contained label='Préparation des affiches…' /> : <div className='client-draw-empty'><p role='status'>Aucun film pour ces critères.</p>{(refined || !!excluded.length) && <button className='client-button' onClick={reset}>Élargir le choix</button>}</div>;
     return <section className='client-tonight-table'><header className='client-tonight-table-head'><div><h1>Ce soir</h1><p title={description}>{description}</p></div>
         <div className='client-tonight-actions'><button className='client-draw-reroll' disabled={pending || !draw.items.length} onClick={reroll}><ClientIcon name='refresh' />{pending ? 'Préparation…' : 'Autres idées'}</button>
             <DrawFilters panel={panel} criteria={criteria} draft={draft} setDraft={setDraft} canReset={refined || !!excluded.length} onReset={reset} onApply={event => {
@@ -127,7 +129,7 @@ export default function TonightPage({ items, loading = false, image, onPrepare, 
     <div className='client-draw-stage' aria-live='polite' aria-busy={pending}>{draw.items.length ? <div className='client-draw-fan'>{draw.items.map((item, index) => <DrawPoster key={`${draw.seed}-${item.Id}`} item={item} index={index} count={draw.items.length} image={image} onPrepare={onPrepare} onRelease={onRelease} onDismiss={id => {
         setExcluded(values => [...values, id]);
         setSeed(value => value + 1);
-    }} />)}</div> : <div className='client-draw-empty'><p role='status'>{pending ? 'Préparation des affiches…' : 'Aucun film pour ces critères.'}</p>{!pending && (refined || !!excluded.length) && <button className='client-button' onClick={reset}>Élargir le choix</button>}</div>}</div>
+    }} />)}</div> : emptyDraw}</div>
     </section>;
 }
 /* eslint-enable react/jsx-no-bind */

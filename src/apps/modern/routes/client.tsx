@@ -16,6 +16,7 @@ import Dashboard from 'utils/dashboard';
 import Events from 'utils/events';
 
 import HeroArtwork from '../features/client/HeroArtwork';
+import ClientSkeleton from '../features/client/ClientSkeleton';
 import PreviewProvider from '../features/client/PreviewProvider';
 import PreviewClip from '../features/client/PreviewClip';
 import { type Preferences, useInterfacePreferences } from '../features/client/interfacePreferences';
@@ -361,9 +362,9 @@ function ClientView({ model }: ViewProps) {
             </nav>
             {actionError && <p role='alert' className='client-message'>{actionError}</p>}
             {error && <div className='client-message' role='alert'><p>Impossible de charger les médias.</p><button onClick={() => (id ? details.item.refetch() : media.refetch())}>Réessayer</button></div>}
-            {(id ? !model.remote && details.item.isPending : view !== 'settings' && media.isPending) && <p className='client-message' role='status'>Chargement…</p>}
+            {id && !model.remote && details.item.isPending && <ClientSkeleton layout='detail' label='Chargement de la fiche…' />}
             <BrowseControls model={model} />
-            {!id && media.isPending && (view === 'home' || model.discovery) && <div className='client-hero client-home-hero client-loading-surface' aria-hidden='true'><span /><span /><span /></div>}
+            {!id && media.isPending && (view === 'home' || model.discovery) && <ClientSkeleton layout='hero' label='Chargement de la sélection…' />}
             <HeroView model={model} />
             <ContentView model={model} />
         </div>
@@ -430,7 +431,7 @@ function EpisodesView({ model }: ViewProps) {
     const [activeEpisode, setActiveEpisode] = useState('');
     if (!id || item?.Type !== 'Series') return null;
     return <section className='client-episodes'><header><h2>Épisodes</h2><div role='group' aria-label='Saison'>{details.seasons.data?.map(s => <button key={s.Id} aria-pressed={details.selected === s.Id} onClick={() => setParams({ id, season: s.Id! }, { state: location.state })}><strong>{s.IndexNumber === 0 ? 'Spéciaux' : `Saison ${s.IndexNumber}`}</strong><small>{s.ChildCount ? `${s.ChildCount} épisodes` : 'Voir les épisodes'}</small></button>)}</div></header>
-        {details.episodes.isPending && !!details.selected && <p role='status'>Chargement des épisodes…</p>}
+        {(details.seasons.isPending || (details.episodes.isPending && !!details.selected)) && <ClientSkeleton layout='episodes' count={4} contained label='Chargement des épisodes…' />}
         {details.episodes.isError && <button onClick={() => details.episodes.refetch()}>Réessayer le chargement des épisodes</button>}
         <div className='client-strip'>{details.episodes.data?.map(e => <button className='client-episode' key={e.Id} onPointerEnter={() => setActiveEpisode(e.Id || '')} onPointerLeave={event => {
             if (!event.currentTarget.contains(document.activeElement)) setActiveEpisode('');
@@ -463,6 +464,7 @@ function ContentView({ model }: ViewProps) {
             {row('À découvrir', picks)}
             {row('Ajouts récents', recent)}
             {row('Tendances', trends)}
+            {model.catalogue.loading && !trends.length && <ClientSkeleton layout='row' label='Chargement des tendances…' />}
             {model.catalogue.isError && <p className='client-message'>Les tendances sont temporairement indisponibles. Votre bibliothèque reste accessible.</p>}
             <UpcomingRow items={model.upcoming.items.filter(({ item }) => !used.has(item.Id || ''))} />
             {media.data && !media.data.movies.length && !media.data.series.length && !media.data.resume.length && <p className='client-message'>Votre bibliothèque est vide pour le moment.</p>}
@@ -477,7 +479,7 @@ function ContentView({ model }: ViewProps) {
 }
 function SettingsView({ model }: ViewProps) {
     const { preferences, savePreference, user } = model;
-    if (!model.api || !user?.Id) return <section className='client-settings'><h1>Personnaliser l’interface</h1><p role='status'>Chargement des préférences…</p></section>;
+    if (!model.api || !user?.Id) return <section className='client-settings'><h1>Personnaliser l’interface</h1><ClientSkeleton layout='settings' contained count={3} label='Chargement des préférences…' /></section>;
     return <section className='client-settings'><h1>Personnaliser l’interface</h1>
         <SeerrSettings />
         <h2>Thème</h2><div className='client-setting-options'>{[[true, 'Liquid Glass'], [false, 'Classique']].map(([key, label]) => <button key={String(key)} aria-pressed={preferences.glass === key} onClick={() => savePreference({ ...preferences, glass: key as boolean })}><InterfacePreview kind={key ? 'glass' : 'classic'} /><strong>{label}</strong></button>)}</div>
@@ -528,6 +530,7 @@ function DiscoveryView({ model }: ViewProps) {
         return row(genre, selected);
     }).filter(Boolean).slice(0, 4);
     return <div className='client-discovery'>{row(view === 'films' ? 'À découvrir dans vos films' : 'À découvrir dans vos séries', items.slice(0, 12))}{row('À découvrir aussi', model.catalogue.items.filter(entry => !used.has(entry.Id || '')))}{groups}
+        {model.catalogue.loading && !model.catalogue.items.length && <ClientSkeleton layout='row' label='Chargement des découvertes…' />}
         {media.isSuccess && items.length === 0 && model.catalogue.items.length === 0 && !model.catalogue.loading && <p className='client-message'>Aucun titre pour cette sélection.</p>}
         <button className='client-explore-library' onClick={() => setParams({ view, mode: 'library' })}>Explorer toute la bibliothèque ›</button>
     </div>;
@@ -540,7 +543,9 @@ function PersonalView({ model }: ViewProps) {
     const resume = home.data?.resume || [];
     const lead = resume[0];
     return <div className='client-personal'><header className='client-personal-identity'><span>{user?.Name?.slice(0, 1)}</span><div><h1>Mon espace</h1><p>{user?.Name}, retrouvez vos envies et vos prochaines séances.</p></div></header>
-        <div className='client-personal-shortcuts'><button onClick={() => document.getElementById('client-favorites')?.scrollIntoView({ block: 'start' })}><strong>{media.data?.total || 0}</strong> Ma liste</button><button onClick={() => document.getElementById('client-resume')?.scrollIntoView({ block: 'start' })}><strong>{resume.length}</strong> Lectures à reprendre</button></div>
+        <div className='client-personal-shortcuts'><button onClick={() => document.getElementById('client-favorites')?.scrollIntoView({ block: 'start' })}><strong>{media.isPending ? <span className='client-skeleton-count' aria-hidden='true' /> : media.data?.total || 0}</strong> Ma liste</button><button onClick={() => document.getElementById('client-resume')?.scrollIntoView({ block: 'start' })}><strong>{home.isPending ? <span className='client-skeleton-count' aria-hidden='true' /> : resume.length}</strong> Lectures à reprendre</button></div>
+        {home.isPending && <ClientSkeleton layout='episodes' contained count={3} label='Chargement des reprises…' />}
+        {collections.isPending && <ClientSkeleton layout='row' contained label='Chargement des collections…' />}
         {lead && <section className='client-personal-spotlight'><Artwork source={image(lead, true, true)} eager /><PreviewClip item={lead} surface='spotlight' /><div><small>ON CONTINUE ?</small><h2>{lead.SeriesName || lead.Name}</h2><p>{lead.Type === 'Episode' ? episodeLabel(lead) : 'Votre film vous attend'}</p><button className='client-play' onClick={() => play(lead)}><ClientIcon name='play' />Reprendre</button><Link className='client-button' to={`/client?id=${lead.SeriesId || lead.Id}`}>Voir la fiche</Link></div></section>}
         <div id='client-resume'>{row('Continuer à regarder', resume, true)}</div>
         {!!collections.data?.length && <section className='client-personal-collections'><h2>Mes collections</h2><div>{collections.data.map(collection => <CollectionCard key={collection.Id} collection={collection} image={image} />)}</div></section>}
@@ -551,6 +556,7 @@ function PersonalView({ model }: ViewProps) {
 }
 
 function SearchResultCount({ model, embedded, count }: ViewProps & { readonly embedded: boolean; readonly count: number }) {
+    if (model.media.isPending) return <span className='client-result-count' aria-busy='true'><span className='client-skeleton-count' aria-hidden='true' /><span className='client-loading-label'>Chargement du nombre de titres…</span></span>;
     if (model.view === 'search' && model.seerr.connected && !embedded) return <span className='client-result-count'>{count} titres affichés</span>;
     return <span className='client-result-count'>{model.media.data?.total || 0} titres</span>;
 }
@@ -583,8 +589,9 @@ function LibraryView({ model, embedded = false }: ViewProps & { readonly embedde
                 browse({ q: '' });
             }}>×</button>}<button>Rechercher</button></form>
         <div className='client-filter-options'><label>Genre <select value={genre} onChange={event => browse({ genre: event.target.value })}><option value=''>Tous les genres</option>{genres.data?.filter(entry => entry.Name).map(entry => <option key={entry.Id || entry.Name} value={entry.Name!}>{entry.Name}</option>)}</select></label><label>Trier <select value={sort} onChange={event => browse({ sort: event.target.value })}><option value='name'>Titre</option><option value='recent'>Ajouts récents</option></select></label><SearchResultCount model={model} embedded={embedded} count={shown.length} /></div></>}
+        {media.isPending && <ClientSkeleton layout='grid' count={12} contained label='Chargement des titres…' />}
         <div className='client-grid'>{cards(shown)}</div>
-        {externalPending && <p role='status'>Recherche dans les découvertes…</p>}
+        {externalPending && <ClientSkeleton layout='row' contained label='Recherche dans les découvertes…' />}
         {!embedded && view === 'search' && model.catalogue.hasNextPage && <button className='client-button' disabled={model.catalogue.isFetchingNextPage} onClick={() => { void model.catalogue.fetchNextPage(); }}>Plus de découvertes</button>}
         {!embedded && view === 'search' && model.catalogue.isError && <p>Les résultats externes sont temporairement indisponibles. <button onClick={() => { void model.catalogue.refetch(); }}>Réessayer</button></p>}
         {media.data?.items.length === 0 && !model.catalogue.items.length && !externalPending && <p>{view === 'mine' ? 'Ajoutez des films et des séries à votre liste depuis leurs fiches.' : 'Aucun résultat.'}</p>}
