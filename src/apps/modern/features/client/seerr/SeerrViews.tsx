@@ -8,6 +8,7 @@ import './seerr.scss';
 
 import Artwork from '../Artwork';
 import ClientDialog from '../ClientDialog';
+import DetailExtras from '../DetailExtras';
 import HeroArtwork from '../HeroArtwork';
 import ClientIcon from '../ClientIcon';
 import { withLocalAvailability, externalIdentity, catalogueItem, providerKey, canRequest, imageUrl, localMatch, mediaLabel, requestableSeasons, requestLabel,
@@ -143,7 +144,7 @@ function RequestForm({ identity, data }: Readonly<{ identity: SeerrIdentity; dat
     </section>;
 }
 
-export function ExternalDetail({ id, row }: Readonly<{ id: string; row: (title: string, items: BaseItemDto[]) => React.ReactNode }>) {
+export function ExternalDetail({ id, row, image }: Readonly<{ id: string; row: (title: string, items: BaseItemDto[]) => React.ReactNode; image: (item: BaseItemDto, backdrop?: boolean) => string }>) {
     const identity = externalIdentity({ Id: id });
     const seerr = useSeerr();
     const detail = useSeerrDetail(identity?.type, identity?.id);
@@ -160,15 +161,20 @@ export function ExternalDetail({ id, row }: Readonly<{ id: string; row: (title: 
     }
     const data = detail.data;
     const match = localMatch(data, identity.type, local.data || []);
-    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><div className='client-detail-readability' aria-hidden='true' /><Link className='client-back' to={back} state={backState}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{(data.releaseDate || data.firstAirDate || '').slice(0, 4)} · {data.genres?.map(genre => genre.name).join(' · ')}</p><p className='client-overview'>{data.overview}</p><div className='client-actions'>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}<AvailabilityAction identity={identity} localItem={match} /></div></div></section><ExternalRecommendations identity={identity} local={local.data || []} row={row} /></>;
+    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><div className='client-detail-readability' aria-hidden='true' /><Link className='client-back' to={back} state={backState}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{(data.releaseDate || data.firstAirDate || '').slice(0, 4)} · {data.genres?.map(genre => genre.name).join(' · ')}</p><p className='client-overview'>{data.overview}</p><div className='client-actions'>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}<AvailabilityAction identity={identity} localItem={match} /></div></div></section><ExternalRecommendations identity={identity} local={local.data || []} row={row} data={data} image={image} /></>;
 }
 
-function ExternalRecommendations({ identity, local, row }: Readonly<{ identity: SeerrIdentity; local: BaseItemDto[]; row: (title: string, items: BaseItemDto[]) => React.ReactNode }>) {
+function ExternalRecommendations({ identity, local, row, data, image }: Readonly<{ identity: SeerrIdentity; local: BaseItemDto[]; row: (title: string, items: BaseItemDto[]) => React.ReactNode; data: ExternalMedia; image: (item: BaseItemDto, backdrop?: boolean) => string }>) {
     const seerr = useSeerr();
     const query = useQuery({ queryKey: [...seerr.root, 'Recommendations', identity.type, identity.id],
         enabled: seerr.connected, retry: false, staleTime: 300000,
         queryFn: ({ signal }) => seerr.call<Results<ExternalMedia>>(`Api/${identity.type}/${identity.id}/recommendations?language=fr&page=1`, signal) });
     const items = (query.data?.results || []).map(media => catalogueItem(media, identity.type, local));
+    const item = catalogueItem(data, identity.type, local);
+    if (identity.type === 'movie') {
+        item.ProviderIds = { ...item.ProviderIds, TmdbCollection: data.collection ? String(data.collection.id) : '' };
+        return <DetailExtras item={item} similar={items} image={image} />;
+    }
     return <>{row('Dans le même esprit', items)}</>;
 }
 

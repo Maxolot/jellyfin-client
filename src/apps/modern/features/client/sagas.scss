@@ -41,6 +41,7 @@
 .client-saga-strip {
     --saga-height: clamp(210px, 19vw, 275px);
 
+    position: relative;
     display: flex;
     gap: 14px;
     margin: 0 -4px;
@@ -62,7 +63,7 @@
     transition: flex-basis 0.55s var(--client-ease, ease);
 
     &.active {
-        flex-basis: calc(var(--saga-height) * 1.7778);
+        flex-basis: min(calc(var(--saga-height) * 1.7778), 100%);
         box-shadow: 0 0 0 2px #ffffffe0;
     }
 
@@ -83,7 +84,7 @@
 }
 
 .client-saga-card .client-saga-backdrop.artwork-ready,
-.client-saga-card.active .client-saga-poster {
+.client-saga-card.active.backdrop-ready .client-saga-poster {
     opacity: 0;
 }
 
@@ -165,14 +166,37 @@
     display: block;
 }
 
-// « Dans le même esprit » tient sur une seule ligne : les rangées suivantes de la grille sont masquées.
-.client-related-grid {
-    grid-auto-rows: 0;
-    row-gap: 0 !important;
-    overflow: hidden;
+// Une seule ligne défilante, sans masquer des liens encore accessibles au clavier.
+.client-detail-recommendations .client-related-grid {
+    grid-auto-columns: calc((100% - 80px) / 6);
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    padding: 4px 2px 14px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+}
+
+@media (max-width: 900px) {
+    .client-detail-recommendations .client-related-grid {
+        grid-auto-columns: calc((100% - 48px) / 4);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .client-saga-card,
+    .client-saga-card .client-saga-poster,
+    .client-saga-card .client-saga-backdrop,
+    .client-saga-shade,
+    .client-saga-caption {
+        transition: none;
+    }
 }
 
 @media (max-width: 700px) {
+    .client-detail-recommendations .client-related-grid {
+        grid-auto-columns: calc((100% - 20px) / 3);
+    }
+
     .client-saga-strip {
         --saga-height: 190px;
 

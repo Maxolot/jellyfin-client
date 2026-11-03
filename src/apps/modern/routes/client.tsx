@@ -439,7 +439,7 @@ function EpisodesView({ model }: ViewProps) {
 
 function ContentView({ model }: ViewProps) {
     const { id, view, details, media, row, api, image } = model;
-    if (model.remote) return <ExternalDetail key={id} id={id} row={row} />;
+    if (model.remote) return <ExternalDetail key={id} id={id} row={row} image={image} />;
     if (id) return details.item.data && api ? <DetailExtras item={details.item.data} similar={details.similar.data || []} image={image} /> : null;
     if (view === 'home') {
         return <>
