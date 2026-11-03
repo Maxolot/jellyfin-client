@@ -16,7 +16,7 @@ export default function UpcomingRow({ items }: Readonly<{ items: Upcoming[] }>) 
     const location = useLocation();
     if (!items.length) return null;
     return <section className='client-row client-upcoming' aria-label='Bientôt à découvrir'>
-        <h2>Bientôt à découvrir</h2>
+        <header className='client-row-heading'><h2>Bientôt à découvrir</h2></header>
         <div className='client-upcoming-strip'>{items.map(({ date, item }) => {
             const poster = imageUrl(item.Seerr?.posterPath).replace('/w500/', '/w780/');
             const status = isExternal(item) ? mediaLabel(item.Seerr?.mediaInfo) : 'Disponible';
