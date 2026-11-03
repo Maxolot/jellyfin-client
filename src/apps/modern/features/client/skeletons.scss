@@ -69,8 +69,11 @@
 
 .client-skeleton-items {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 16px;
+}
+
+.client-skeleton-items:not(.client-grid) {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 .client-skeleton-cover {
@@ -169,17 +172,12 @@
 }
 
 @media (max-width: 1000px) {
-    .client-skeleton-grid .client-skeleton-items {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
     .client-skeleton-row .client-skeleton-items {
         grid-auto-columns: calc((100% - 48px) / 4);
     }
 }
 
 @media (max-width: 700px) {
-    .client-skeleton-grid .client-skeleton-items,
     .client-skeleton-request .client-skeleton-items {
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 10px;
@@ -227,4 +225,8 @@
     width: 72px;
     height: 12px;
     vertical-align: middle;
+}
+
+.client-skeleton-grid .client-skeleton-items.client-grid {
+    margin: 0;
 }

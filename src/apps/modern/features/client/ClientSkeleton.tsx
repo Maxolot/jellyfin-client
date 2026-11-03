@@ -15,7 +15,7 @@ export default function ClientSkeleton({ layout = 'row', label = 'Chargement…'
         <div className='client-skeleton-shapes' aria-hidden='true'>
             {hero ? <div className='client-skeleton-copy'><span className='client-skeleton-bar short' /><span className='client-skeleton-bar title' /><span className='client-skeleton-bar' /><span className='client-skeleton-bar' /><span className='client-skeleton-bar medium' /><div className='client-skeleton-buttons'><span /><span /></div></div> : <>
                 {['row', 'episodes', 'request', 'settings'].includes(layout) && <span className='client-skeleton-bar heading' />}
-                <div className='client-skeleton-items'>{Array.from({ length: count }, (_, index) => <div className='client-skeleton-item' key={`placeholder-${index}`}><span className='client-skeleton-cover' />{['episodes', 'list', 'request', 'settings'].includes(layout) && <div className='client-skeleton-lines'><span className='client-skeleton-bar medium' /><span className='client-skeleton-bar short' /></div>}</div>)}</div>
+                <div className={`client-skeleton-items${layout === 'grid' ? ' client-grid' : ''}`}>{Array.from({ length: count }, (_, index) => <div className='client-skeleton-item' key={`placeholder-${index}`}><span className='client-skeleton-cover' />{['episodes', 'list', 'request', 'settings'].includes(layout) && <div className='client-skeleton-lines'><span className='client-skeleton-bar medium' /><span className='client-skeleton-bar short' /></div>}</div>)}</div>
             </>}
         </div>
     </div>;
