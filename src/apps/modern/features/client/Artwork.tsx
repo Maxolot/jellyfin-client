@@ -1,6 +1,8 @@
 /* eslint-disable react/jsx-no-bind -- Decoding belongs to the individual image lifecycle. */
 import React, { useEffect, useRef, useState } from 'react';
 
+import { ImageSkeleton } from './ClientSkeleton';
+
 type Props = {
     source: string;
     className?: string;
@@ -34,7 +36,8 @@ export default function Artwork({ source, className = '', alt = '', eager = fals
         return () => observer.disconnect();
     }, [enabled, nearby, rootMargin]);
     const requested = (enabled && (eager || nearby)) || decoded === source ? source : undefined;
-    return <img ref={ref} className={`client-artwork ${className}${decoded === source ? ' artwork-ready' : ''}`} src={requested || undefined}
+    const pending = !!requested && decoded !== source && failed !== source && !className.includes('logo');
+    return <>{pending && <ImageSkeleton />}<img ref={ref} className={`client-artwork ${className}${decoded === source ? ' artwork-ready' : ''}`} src={requested || undefined}
         alt={alt} decoding='async' hidden={failed === source} onLoad={async event => {
             const element = event.currentTarget;
             const loadedSource = source;
@@ -48,6 +51,6 @@ export default function Artwork({ source, className = '', alt = '', eager = fals
         }} onError={() => {
             setFailed(source);
             onFailure?.();
-        }} />;
+        }} /></>;
 }
 /* eslint-enable react/jsx-no-bind */

@@ -27,7 +27,8 @@ export function proxyClient(api: Pick<Api, 'basePath' | 'accessToken' | 'axiosIn
             'Api/discover/movies/upcoming', 'Api/discover/tv/upcoming', 'Api/genres/movie', 'Api/genres/tv'];
         const detail = /^Api\/(movie|tv|request)\/\d+(\/(recommendations|similar))?$/.test(route);
         const quota = /^Api\/user\/\d+\/quota$/.test(route);
-        if (path.includes('#') || (!simple.includes(route) && !detail && !quota)
+        const collection = /^Api\/collection\/\d+$/.test(route);
+        if (path.includes('#') || (!simple.includes(route) && !detail && !quota && !collection)
             || (body !== undefined && !['Login', 'Api/request'].includes(route))) throw new Error('Unsupported Seerr route');
         try {
             const response = await api.axiosInstance.request<T>({

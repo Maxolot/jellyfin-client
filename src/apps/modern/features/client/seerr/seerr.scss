@@ -21,6 +21,16 @@
         font-weight: 500;
     }
 
+    .client-request-status {
+        flex: none;
+        padding: 7px 12px;
+        border: 1px solid #ffffff30;
+        border-radius: 999px;
+        background: #ffffff0d;
+        color: #e8ecf1;
+        font-size: 12px;
+    }
+
     p {
         color: #bbc1ca;
         font-size: 13px;
@@ -48,30 +58,170 @@
     button {
         display: flex;
         flex-direction: column;
-        gap: 9px;
+        gap: 10px;
         min-width: 145px;
-        padding: 15px 18px;
-        border: 1px solid #ffffff30;
-        border-radius: 15px;
-        background: #ffffff06;
+        padding: 15px;
+        border: 1px solid #ffffff28;
+        border-radius: 12px;
+        background: #ffffff05;
+        color: #fff;
         text-align: left;
+        transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    strong {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 14px;
+        font-weight: 500;
     }
 
     [aria-pressed='true'] {
-        border-color: #fff;
-        background: #ffffff20;
+        border-color: #f0f3f6;
+        background: #ffffff14;
     }
 
     small {
-        color: #b7bec8;
+        color: #a4afc0;
+        font-size: 12px;
+    }
+}
+
+// Coche ronde des saisons : vide au repos, pleine quand la saison est choisie.
+.client-request-check {
+    display: grid;
+    width: 18px;
+    height: 18px;
+    flex: none;
+    place-items: center;
+    border: 1.5px solid #ffffff60;
+    border-radius: 50%;
+    transition: background 0.2s ease, border-color 0.2s ease;
+
+    [aria-pressed='true'] &::after {
+        width: 5px;
+        height: 9px;
+        margin-top: -2px;
+        border: solid #101217;
+        border-width: 0 2px 2px 0;
+        content: '';
+        transform: rotate(45deg);
+    }
+
+    [aria-pressed='true'] & {
+        border-color: #fff;
+        background: #fff;
+    }
+}
+
+// Interrupteur maison : remplace la case à cocher native de la version 4K.
+.client-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+    padding: 6px 0;
+    border: 0;
+    background: none;
+    color: #e8ecf1;
+    font-size: 14px;
+
+    > i {
+        position: relative;
+        width: 42px;
+        height: 24px;
+        flex: none;
+        border: 1px solid #ffffff38;
+        border-radius: 999px;
+        background: #ffffff14;
+        transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    > i::after {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #d9dde3;
+        box-shadow: 0 1px 3px #0006;
+        content: '';
+        transition: transform 0.22s ease, background 0.2s ease;
+    }
+
+    &[aria-checked='true'] > i {
+        border-color: #fff;
+        background: #fff;
+    }
+
+    &[aria-checked='true'] > i::after {
+        background: #101217;
+        transform: translateX(18px);
+    }
+
+    &:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 4px;
+    }
+}
+
+.client-text-button {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #fff;
+    font-size: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.client-request-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: -4px 0 22px;
+
+    button {
+        padding: 9px 15px;
+        border: 1px solid #ffffff28;
+        border-radius: 999px;
+        background: none;
+        color: #d7dce3;
+        font-size: 12px;
+    }
+
+    [aria-pressed='true'] {
+        border-color: #e1e7f0;
+        background: #ffffff15;
+        color: #fff;
     }
 }
 
 .client-request-confirm {
-    padding: 15px 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #ffffff1b;
 
-    .client-button {
-        margin-left: 12px;
+    p {
+        flex: 1 1 100%;
+        margin: 0;
+    }
+
+    p + p {
+        margin-bottom: 6px;
+        color: #8793a6;
+        font-size: 12px;
+    }
+
+    :is(.client-play, .client-button) {
+        border-radius: 999px;
     }
 }
 

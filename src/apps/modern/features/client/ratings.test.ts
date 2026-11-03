@@ -22,6 +22,11 @@ describe('native personal scores', () => {
         expect(endpoints.updateItemUserData).toHaveBeenCalledWith({ userId: 'user-a', itemId: 'movie-a', updateUserItemDataDto: { Rating: 8 } });
         expect(endpoints.deleteUserItemRating).not.toHaveBeenCalled();
     });
+    it('stores half stars as whole Jellyfin points', async () => {
+        endpoints.updateItemUserData.mockResolvedValue({ data: { Rating: 7 } });
+        await savePersonalStars(api, 'user-a', 'movie-a', 3.5);
+        expect(endpoints.updateItemUserData).toHaveBeenCalledWith({ userId: 'user-a', itemId: 'movie-a', updateUserItemDataDto: { Rating: 7 } });
+    });
     it('clears through the rating-only delete endpoint', async () => {
         endpoints.deleteUserItemRating.mockResolvedValue({ data: { Rating: null } });
         await savePersonalStars(api, 'user-a', 'series-a', null);
@@ -29,7 +34,7 @@ describe('native personal scores', () => {
         expect(endpoints.updateItemUserData).not.toHaveBeenCalled();
     });
     it('rejects invalid writes before contacting Jellyfin', async () => {
-        for (const value of [0, -1, 2.5, 6, NaN]) await expect(savePersonalStars(api, 'user-a', 'movie-a', value)).rejects.toThrow();
+        for (const value of [0, -1, 2.25, 6, NaN]) await expect(savePersonalStars(api, 'user-a', 'movie-a', value)).rejects.toThrow();
         expect(endpoints.updateItemUserData).not.toHaveBeenCalled();
     });
     it('filters by personal score and orders by score then name, without mutating its input', () => {

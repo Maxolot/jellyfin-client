@@ -41,7 +41,8 @@ export async function loadRatedItems(api: Api, userId: string, signal?: AbortSig
 
 /** Do not use updateUserItemRating: that endpoint accepts a boolean thumbs-up. */
 export async function savePersonalStars(api: Api, userId: string, itemId: string, stars: number | null) {
-    if (stars !== null && (!Number.isInteger(stars) || stars < 1 || stars > 5)) throw new Error('Invalid personal score');
+    // Half stars map to whole Jellyfin points (3.5 stars = 7/10).
+    if (stars !== null && (!Number.isInteger(stars * 2) || stars < 0.5 || stars > 5)) throw new Error('Invalid personal score');
     const request = { userId, itemId };
     const endpoint = getUserDataApi(api);
     const result = stars === null ? await endpoint.deleteUserItemRating(request) :
