@@ -40,21 +40,25 @@ export function useClientMedia(view: string, search: string, offset: number, { g
                     personIds: person ? [person] : undefined, searchTerm: search || undefined, genres: genre ? [genre] : undefined, isFavorite: view === 'mine' ? true : undefined,
                     ...browseOrder(view, sort) }, request);
                 return { items: result.data.Items || [], total: result.data.TotalRecordCount || 0,
-                    resume: [], next: [], movies: [], series: [] };
+                    resume: [], next: [], movies: [], series: [], picks: [] };
             }
-            const [resume, next, movies, series] = await Promise.all([
+            const [resume, next, movies, series, picks] = await Promise.all([
                 library.getResumeItems({ userId: user!.Id, limit: 12,
                     includeItemTypes: [BaseItemKind.Movie, BaseItemKind.Episode], fields: common.fields }, request),
                 getShowApi(api!).getNextUp({ userId: user!.Id, limit: 12, fields: common.fields }, request),
                 library.getItems({ ...common, includeItemTypes: [BaseItemKind.Movie], limit: 20,
                     sortBy: [ItemSortBy.DateCreated], sortOrder: [SortOrder.Descending] }, request),
                 library.getItems({ ...common, includeItemTypes: [BaseItemKind.Series], limit: 20,
-                    sortBy: [ItemSortBy.DateCreated], sortOrder: [SortOrder.Descending] }, request)
+                    sortBy: [ItemSortBy.DateCreated], sortOrder: [SortOrder.Descending] }, request),
+                // Unwatched, best rated titles feed the « À découvrir » selection, as in the mockup.
+                library.getItems({ ...common, isPlayed: false, limit: 40,
+                    sortBy: [ItemSortBy.CommunityRating, ItemSortBy.Random], sortOrder: [SortOrder.Descending] }, request)
             ]);
             const continuing = uniqueItems(resume.data.Items || []);
             return { items: [], total: 0, resume: continuing,
                 next: uniqueItems(next.data.Items || [], continuing),
-                movies: uniqueItems(movies.data.Items || [], continuing), series: uniqueItems(series.data.Items || []) };
+                movies: uniqueItems(movies.data.Items || [], continuing), series: uniqueItems(series.data.Items || []),
+                picks: uniqueItems(picks.data.Items || [], continuing) };
         })
     });
 }

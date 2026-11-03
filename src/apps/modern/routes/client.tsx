@@ -41,6 +41,7 @@ import { useClientCollections, useClientDetails, useClientFilters, useClientMedi
 import '../features/client/client.scss';
 import '../features/client/prototype.scss';
 import '../features/client/motion.scss';
+import '../features/client/sagas.scss';
 import '../features/client/previews.scss';
 import '../features/client/ratings.scss';
 import '../features/client/heroBackground.scss';
@@ -52,11 +53,16 @@ import TonightPage from '../features/client/TonightPage';
 import CollectionCard from '../features/client/CollectionCard';
 import AmbientBackdrop from '../features/client/AmbientBackdrop';
 import { SeerrProvider, useSeerr } from '../features/client/seerr/SeerrContext';
-import { useSeerrCatalogue, useSeerrDetail } from '../features/client/seerr/queries';
+import { useSeerrCatalogue, useSeerrDetail, useSeerrUpcoming } from '../features/client/seerr/queries';
+import UpcomingRow from '../features/client/UpcomingRow';
 import { AvailabilityAction, ExternalDetail, RequestTracking, SeerrSettings } from '../features/client/seerr/SeerrViews';
 import { externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
 
 const links = [['home', 'Accueil'], ['series', 'Séries'], ['films', 'Films'], ['recent', 'Nouveautés'], ['tonight', 'Ce soir'], ['search', 'Rechercher'], ['mine', 'Mon espace']];
+
+function plainHome(view: string, filters: (string | undefined)[]) {
+    return view === 'home' && !filters.some(Boolean);
+}
 
 function heroCandidates(discovery: boolean, data?: { items: BaseItemDto[]; movies: BaseItemDto[]; series: BaseItemDto[] }) {
     if (discovery) return (data?.items || []).slice(0, 5);
@@ -156,6 +162,7 @@ function useClientController() {
     const remoteDetails = useSeerrDetail(remoteIdentity?.type, remoteIdentity?.id, false);
     const allowCatalogue = allowExternalCatalogue(view, [id, collection, person, audio], params.get('mode'));
     const catalogue = useSeerrCatalogue(view, search, allowCatalogue, genre);
+    const upcoming = useSeerrUpcoming(plainHome(view, [id, genre, audio]));
     const details = useClientDetails(localDetailId(id), season);
     const item = details.item.data;
     useEffect(() => {
@@ -324,7 +331,7 @@ function useClientController() {
     const error = id ? details.item.isError : media.isError;
     return { api, user, params, location, setParams, view, id, search, offset, media, details, item, preferences, actionError, busy,
         searchInput, setSearchInput, genres, genre, sort, savePreference, image, play, updateState, cards, row, playItem, hero, error,
-        prepareDetail, releaseDetail, seerr, catalogue, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent };
+        prepareDetail, releaseDetail, seerr, catalogue, upcoming, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent };
 }
 
 type ClientModel = ReturnType<typeof useClientController>;
@@ -439,16 +446,27 @@ function EpisodesView({ model }: ViewProps) {
 
 function ContentView({ model }: ViewProps) {
     const { id, view, details, media, row, api, image } = model;
-    if (model.remote) return <ExternalDetail key={id} id={id} row={row} />;
-    if (id) return details.item.data && api ? <DetailExtras similar={details.similar.data || []} image={image} /> : null;
+    if (model.remote) return <ExternalDetail key={id} id={id} row={row} image={image} />;
+    if (id) return details.item.data && api ? <DetailExtras item={details.item.data} similar={details.similar.data || []} image={image} /> : null;
     if (view === 'home') {
+        // Ordre de la maquette : reprise, sélection, ajouts récents, tendances, puis sorties à venir ; chaque titre n'apparaît qu'une fois.
+        const continuing = uniqueItems([...(media.data?.resume || []), ...(media.data?.next || [])]).filter((entry, index, all) => !entry.SeriesId || all.findIndex(other => other.SeriesId === entry.SeriesId) === index);
+        const used = new Set([...model.heroItems, ...continuing].map(entry => entry.SeriesId || entry.Id || ''));
+        const take = (items: BaseItemDto[], limit: number) => items.filter(entry => !used.has(entry.Id || '')).slice(0, limit).map(entry => {
+            used.add(entry.Id || '');
+            return entry;
+        });
+        const picks = take(media.data?.picks || [], 12);
+        const recent = take([...(media.data?.movies || []), ...(media.data?.series || [])].sort((a, b) => String(b.DateCreated || '').localeCompare(String(a.DateCreated || ''))), 16);
+        const trends = take(model.catalogue.items, 20);
         return <>
-            {row('Continuer à regarder', uniqueItems([...(media.data?.resume || []), ...(media.data?.next || [])]).filter((entry, index, all) => !entry.SeriesId || all.findIndex(other => other.SeriesId === entry.SeriesId) === index), true)}
-            {row('Films récemment ajoutés', media.data?.movies)}
-            {row('Séries récemment ajoutées', media.data?.series)}
-            {row('À découvrir', model.catalogue.items)}
-            {model.catalogue.loading && !model.catalogue.items.length && <ClientSkeleton layout='row' label='Chargement des découvertes…' />}
-            {model.catalogue.isError && <p className='client-message'>Les découvertes sont temporairement indisponibles. Votre bibliothèque reste accessible.</p>}
+            {row('Continuer à regarder', continuing, true)}
+            {row('À découvrir', picks)}
+            {row('Ajouts récents', recent)}
+            {row('Tendances', trends)}
+            {model.catalogue.loading && !trends.length && <ClientSkeleton layout='row' label='Chargement des tendances…' />}
+            {model.catalogue.isError && <p className='client-message'>Les tendances sont temporairement indisponibles. Votre bibliothèque reste accessible.</p>}
+            <UpcomingRow items={model.upcoming.items.filter(({ item }) => !used.has(item.Id || ''))} />
             {media.data && !media.data.movies.length && !media.data.series.length && !media.data.resume.length && <p className='client-message'>Votre bibliothèque est vide pour le moment.</p>}
         </>;
     }

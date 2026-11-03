@@ -259,3 +259,100 @@
         transform: none;
     }
 }
+
+// « Bientôt à découvrir » : grandes affiches 2:3 de la maquette, hauteur bornée selon l'écran.
+.client-upcoming {
+    --release-height: clamp(420px, 34vw, 560px);
+}
+
+.client-upcoming-strip {
+    display: flex;
+    gap: 20px;
+    padding: 5px var(--client-margin) 20px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: var(--client-margin);
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+}
+
+.client-upcoming-card {
+    position: relative;
+    flex: 0 0 calc(var(--release-height) * 2 / 3);
+    height: var(--release-height);
+    overflow: hidden;
+    border-radius: 12px;
+    background: #1a1d22;
+    color: #fff;
+    scroll-snap-align: start;
+
+    .client-artwork {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .client-card-fallback {
+        position: absolute;
+        inset: auto 18px 50%;
+        text-align: center;
+    }
+
+    .client-artwork.artwork-ready ~ .client-card-fallback {
+        display: none;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 3px;
+    }
+}
+
+.client-upcoming-shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, #000d, transparent 38%);
+}
+
+.client-upcoming-date {
+    position: absolute;
+    top: 17px;
+    left: 18px;
+    padding: 7px 10px;
+    border-radius: 999px;
+    background: #111b;
+    font-size: 11px;
+    font-weight: 600;
+    backdrop-filter: blur(8px);
+}
+
+.client-upcoming-kind {
+    position: absolute;
+    right: 20px;
+    bottom: 18px;
+    left: 20px;
+    color: #e1e4e9;
+    font-size: 12px;
+}
+
+@media (max-width: 1100px) {
+    .client-upcoming {
+        --release-height: 450px;
+    }
+}
+
+@media (max-width: 600px) {
+    .client-upcoming {
+        --release-height: 390px;
+    }
+
+    .client-upcoming-strip {
+        gap: 14px;
+    }
+
+    .client-upcoming-card {
+        border-radius: 9px;
+    }
+}

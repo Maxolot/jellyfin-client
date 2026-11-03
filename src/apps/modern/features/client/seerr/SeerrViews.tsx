@@ -8,6 +8,7 @@ import './seerr.scss';
 
 import Artwork from '../Artwork';
 import ClientDialog from '../ClientDialog';
+import DetailExtras from '../DetailExtras';
 import ClientSkeleton from '../ClientSkeleton';
 import HeroArtwork from '../HeroArtwork';
 import ClientIcon from '../ClientIcon';
@@ -63,13 +64,15 @@ function SeasonPicker({ data, is4k, selected, disabled, toggle }: Readonly<{ dat
         const seasonInfo = data.mediaInfo?.seasons?.find(entry => entry.seasonNumber === season.seasonNumber);
         let label = mediaLabel({ status: is4k ? seasonInfo?.status4k : seasonInfo?.status });
         if (!available && label === 'À demander') label = season.episodeCount === 0 ? 'À venir' : 'Déjà demandée';
-        return <button type='button' key={season.seasonNumber} disabled={!available} aria-pressed={selected.includes(season.seasonNumber)} onClick={() => toggle(season.seasonNumber)}><strong>Saison {season.seasonNumber}</strong><small>{label}</small></button>;
+        return <button type='button' key={season.seasonNumber} disabled={!available} aria-pressed={selected.includes(season.seasonNumber)} onClick={() => toggle(season.seasonNumber)}><strong>Saison {season.seasonNumber}<i className='client-request-check' aria-hidden='true' /></strong><small>{label}</small></button>;
     })}</div></fieldset>;
 }
 
 function QuotaNotice({ label, loaded, restricted, error, onRetry }: Readonly<{ label: string; loaded: boolean; restricted: boolean; error: boolean; onRetry: () => void }>) {
-    return <>{loaded && <p className='client-request-quota'>{label}</p>}{restricted && <p role='status'>Votre quota ne permet pas cette sélection.</p>}{error && <p role='alert'>Impossible de vérifier le quota. <button onClick={onRetry}>Réessayer</button></p>}</>;
+    return <>{loaded && <p className='client-request-quota'>{label}</p>}{restricted && <p role='status'>Votre quota ne permet pas cette sélection.</p>}{error && <p role='alert'>Impossible de vérifier le quota. <button className='client-text-button' onClick={onRetry}>Réessayer</button></p>}</>;
 }
+
+const REQUEST_FILTERS = [['all', 'Toutes'], ['pending', 'En attente'], ['processing', 'En préparation'], ['available', 'Disponibles'], ['failed', 'Échecs']] as const;
 
 function RequestHistory({ entries }: { readonly entries: MediaRequest[] }) {
     return <div className='client-request-history'>{entries.map(entry => <p key={entry.id}>{entry.is4k ? '4K · ' : ''}{entry.seasons?.length ? `Saisons ${entry.seasons.map(season => season.seasonNumber).join(', ')} · ` : ''}{requestLabel(entry.status)}</p>)}</div>;
@@ -89,12 +92,12 @@ export function RequestPanel({ identity, localItem }: Readonly<{ identity: Seerr
     if (!seerr.connected) return null;
     if (detail.isPending || (localItem?.Type === 'Series' && localSeasons.isPending)) return <section className='client-request-panel'><ClientSkeleton layout='request' count={6} contained label='Chargement des disponibilités…' /></section>;
     if (!detail.data) {
-        return <section className='client-request-panel'><p>Les disponibilités ne peuvent pas être vérifiées.</p><button onClick={() => {
+        return <section className='client-request-panel'><p>Les disponibilités ne peuvent pas être vérifiées.</p><button className='client-button' onClick={() => {
             void detail.refetch();
         }}>Réessayer</button></section>;
     }
     if (localItem?.Type === 'Series' && localSeasons.isError) {
-        return <section className='client-request-panel'><p>Les saisons présentes dans Jellyfin ne peuvent pas être vérifiées.</p><button onClick={() => {
+        return <section className='client-request-panel'><p>Les saisons présentes dans Jellyfin ne peuvent pas être vérifiées.</p><button className='client-button' onClick={() => {
             void localSeasons.refetch();
         }}>Réessayer</button></section>;
     }
@@ -128,8 +131,8 @@ function RequestForm({ identity, data }: Readonly<{ identity: SeerrIdentity; dat
     const { info, state, currentQuota, remaining, permitted, restricted, filmRequested, disabled } = requestState({ data, identity, is4k, selected, permissions: seerr.permissions, quotaData: quota.data, quotaReady: quota.isSuccess, pending: mutation.isPending });
     const quotaUnit = identity.type === 'tv' ? 'saison(s)' : 'film(s)';
     const quotaLabel = currentQuota?.limit ? `${remaining} ${quotaUnit} restant(s) dans votre quota` : 'Aucune limite de demandes pour votre compte';
-    return <section className='client-request-panel' aria-label='Disponibilité et demandes'><header><h2>{identity.type === 'tv' ? 'Saisons et demandes' : 'Disponibilité'}</h2><span>{mediaLabel({ status: state })}</span></header>
-        {canRequest(seerr.permissions, identity.type, true) && <label className='client-request-quality'><input type='checkbox' checked={is4k} disabled={mutation.isPending} onChange={event => set4k(event.target.checked)} /> Version 4K</label>}
+    return <section className='client-request-panel' aria-label='Disponibilité et demandes'><header><h2>{identity.type === 'tv' ? 'Saisons et demandes' : 'Disponibilité'}</h2><span className='client-request-status'>{mediaLabel({ status: state })}</span></header>
+        {canRequest(seerr.permissions, identity.type, true) && <button type='button' role='switch' className='client-switch client-request-quality' aria-checked={is4k} disabled={mutation.isPending} onClick={() => set4k(!is4k)}><i aria-hidden='true' />Version 4K</button>}
         {identity.type === 'tv' && <SeasonPicker data={data} is4k={is4k} selected={selected} disabled={mutation.isPending || !permitted} toggle={number => {
             setConfirm(false);
             setSelected(previous => previous.includes(number) ? previous.filter(value => value !== number) : [...previous, number]);
@@ -144,7 +147,7 @@ function RequestForm({ identity, data }: Readonly<{ identity: SeerrIdentity; dat
     </section>;
 }
 
-export function ExternalDetail({ id, row }: Readonly<{ id: string; row: (title: string, items: BaseItemDto[]) => React.ReactNode }>) {
+export function ExternalDetail({ id, row, image }: Readonly<{ id: string; row: (title: string, items: BaseItemDto[]) => React.ReactNode; image: (item: BaseItemDto, backdrop?: boolean) => string }>) {
     const identity = externalIdentity({ Id: id });
     const seerr = useSeerr();
     const detail = useSeerrDetail(identity?.type, identity?.id);
@@ -156,21 +159,26 @@ export function ExternalDetail({ id, row }: Readonly<{ id: string; row: (title: 
     if (!seerr.connected) return <section className='client-settings'><Link to={back} state={backState}>← Retour</Link><h1>Découvertes et demandes</h1><p>Activez la connexion aux demandes pour retrouver cette fiche.</p><SeerrSettings /></section>;
     if (detail.isPending) return <section className='client-detail-pending'><Link className='client-back' to={back} state={backState}>← Retour</Link><ClientSkeleton layout='detail' label='Chargement de la fiche…' /></section>;
     if (!detail.data || !identity) {
-        return <section className='client-settings'><Link to={back} state={backState}>← Retour</Link><p role='status'>{detail.isError ? 'La fiche ne peut pas être chargée.' : 'Chargement de la fiche…'}</p>{detail.isError && <button onClick={() => {
+        return <section className='client-settings'><Link to={back} state={backState}>← Retour</Link><p role='status'>{detail.isError ? 'La fiche ne peut pas être chargée.' : 'Chargement de la fiche…'}</p>{detail.isError && <button className='client-button' onClick={() => {
             void detail.refetch();
         }}>Réessayer</button>}</section>;
     }
     const data = detail.data;
     const match = localMatch(data, identity.type, local.data || []);
-    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><div className='client-detail-readability' aria-hidden='true' /><Link className='client-back' to={back} state={backState}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{(data.releaseDate || data.firstAirDate || '').slice(0, 4)} · {data.genres?.map(genre => genre.name).join(' · ')}</p><p className='client-overview'>{data.overview}</p><div className='client-actions'>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}<AvailabilityAction identity={identity} localItem={match} /></div></div></section><ExternalRecommendations identity={identity} local={local.data || []} row={row} /></>;
+    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><div className='client-detail-readability' aria-hidden='true' /><Link className='client-back' to={back} state={backState}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{(data.releaseDate || data.firstAirDate || '').slice(0, 4)} · {data.genres?.map(genre => genre.name).join(' · ')}</p><p className='client-overview'>{data.overview}</p><div className='client-actions'>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}<AvailabilityAction identity={identity} localItem={match} /></div></div></section><ExternalRecommendations identity={identity} local={local.data || []} row={row} data={data} image={image} /></>;
 }
 
-function ExternalRecommendations({ identity, local, row }: Readonly<{ identity: SeerrIdentity; local: BaseItemDto[]; row: (title: string, items: BaseItemDto[]) => React.ReactNode }>) {
+function ExternalRecommendations({ identity, local, row, data, image }: Readonly<{ identity: SeerrIdentity; local: BaseItemDto[]; row: (title: string, items: BaseItemDto[]) => React.ReactNode; data: ExternalMedia; image: (item: BaseItemDto, backdrop?: boolean) => string }>) {
     const seerr = useSeerr();
     const query = useQuery({ queryKey: [...seerr.root, 'Recommendations', identity.type, identity.id],
         enabled: seerr.connected, retry: false, staleTime: 300000,
         queryFn: ({ signal }) => seerr.call<Results<ExternalMedia>>(`Api/${identity.type}/${identity.id}/recommendations?language=fr&page=1`, signal) });
     const items = (query.data?.results || []).map(media => catalogueItem(media, identity.type, local));
+    const item = catalogueItem(data, identity.type, local);
+    if (identity.type === 'movie') {
+        item.ProviderIds = { ...item.ProviderIds, TmdbCollection: data.collection ? String(data.collection.id) : '' };
+        return <><DetailExtras item={item} similar={items} image={image} />{query.isPending && <ClientSkeleton layout='row' label='Chargement des titres associés…' />}</>;
+    }
     return <>{query.isPending && <ClientSkeleton layout='row' label='Chargement des titres associés…' />}{row('Dans le même esprit', items)}</>;
 }
 
@@ -201,16 +209,17 @@ export function RequestTracking() {
         void cache.invalidateQueries({ queryKey: [...seerr.root, 'LocalIdentities'] });
     }, [local.isSuccess, missing, cache, seerr.root]);
     if (!seerr.connected) return null;
-    return <section className='client-request-tracking'><header><h2>Mes demandes</h2><label>Afficher <select aria-label='Filtrer mes demandes' value={filter} onChange={event => {
-        setFilter(event.target.value);
-        setPage(0);
-    }}><option value='all'>Toutes</option><option value='pending'>En attente</option><option value='processing'>En préparation</option><option value='available'>Disponibles</option><option value='failed'>Échecs</option></select></label></header>
-    {query.isPending && <ClientSkeleton layout='list' count={3} contained label='Chargement de vos demandes…' />}{query.isError && <p role='alert'>Les demandes ne peuvent pas être chargées. <button onClick={() => {
-        void query.refetch();
-    }}>Réessayer</button></p>}
-    <div className='client-request-list'>{query.data?.results.map(entry => <TrackedRequest key={entry.id} entry={entry} local={local.data || []} />)}</div>
-    {query.data?.results.length === 0 && <p>Aucune demande dans cette sélection.</p>}
-    <div className='client-pagination'><button disabled={!page} onClick={() => setPage(value => value - 1)}>Précédent</button><span>Page {page + 1}</span><button disabled={!query.data || (page + 1) * 12 >= (query.data.pageInfo?.results || 0)} onClick={() => setPage(value => value + 1)}>Suivant</button></div>
+    return <section className='client-request-tracking'><header><h2>Mes demandes</h2></header>
+        <div className='client-request-filters' role='group' aria-label='Filtrer mes demandes'>{REQUEST_FILTERS.map(([value, label]) => <button key={value} type='button' aria-pressed={filter === value} onClick={() => {
+            setFilter(value);
+            setPage(0);
+        }}>{label}</button>)}</div>
+        {query.isPending && <ClientSkeleton layout='list' count={3} contained label='Chargement de vos demandes…' />}{query.isError && <p role='alert'>Les demandes ne peuvent pas être chargées. <button className='client-text-button' onClick={() => {
+            void query.refetch();
+        }}>Réessayer</button></p>}
+        <div className='client-request-list'>{query.data?.results.map(entry => <TrackedRequest key={entry.id} entry={entry} local={local.data || []} />)}</div>
+        {query.data?.results.length === 0 && <p>Aucune demande dans cette sélection.</p>}
+        <div className='client-pagination'><button className='client-button' disabled={!page} onClick={() => setPage(value => value - 1)}>Précédent</button><span>Page {page + 1}</span><button className='client-button' disabled={!query.data || (page + 1) * 12 >= (query.data.pageInfo?.results || 0)} onClick={() => setPage(value => value + 1)}>Suivant</button></div>
     </section>;
 }
 
