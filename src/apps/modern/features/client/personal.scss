@@ -61,7 +61,16 @@ button.client-stat {
     background: #ffffff14;
 }
 
-/* The preview video is positioned: keep the title and actions above it. */
+/* The preview video is positioned: keep a readable shade and the actions above it. */
+.client-personal-spotlight::after {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    background: linear-gradient(90deg, #0a0d13e6 0%, #0a0d13a6 40%, #0a0d1300 75%);
+    content: '';
+    pointer-events: none;
+}
+
 .client-personal-spotlight > div {
     position: relative;
     z-index: 1;
