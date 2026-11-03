@@ -4,8 +4,9 @@ import { Link, useLocation } from 'react-router-dom';
 
 import Artwork from './Artwork';
 import ClientDialog from './ClientDialog';
+import SagaSection from './SagaSection';
 
-type Props = { similar: BaseItemDto[]; image: (item: BaseItemDto, backdrop?: boolean) => string };
+type Props = { item: BaseItemDto; similar: BaseItemDto[]; image: (item: BaseItemDto, backdrop?: boolean) => string };
 
 export function CastAction({ item, basePath }: Readonly<{ item: BaseItemDto; basePath: string }>) {
     const people = (item.People || []).filter(person => person.Id);
@@ -21,9 +22,10 @@ export function CastAction({ item, basePath }: Readonly<{ item: BaseItemDto; bas
     return <ClientDialog label='Voir la distribution' title='Distribution et réalisation' subtitle={item.Name || ''} buttonClassName='client-cast-action'>{close => <div className='client-cast-grid'>{people.map(person => personCard(person, close))}</div>}</ClientDialog>;
 }
 
-export default function DetailExtras({ similar, image }: Readonly<Props>) {
+export default function DetailExtras({ item, similar, image }: Readonly<Props>) {
     const location = useLocation();
     return <div className='client-detail-extras'>
+        <SagaSection item={item} image={image} />
         {similar.length > 0 && <section className='client-detail-recommendations'><h2>Dans le même esprit</h2><div className='client-related-grid'>{similar.map(media => <Link key={media.Id} className='client-card' data-client-focus={media.Id} to={`/client?id=${media.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }} aria-label={media.Name || ''}>
             <Artwork source={image(media)} /><span className='client-card-fallback'>{media.Name}</span>
         </Link>)}</div></section>}
