@@ -4,7 +4,7 @@ import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
 import { getUserDataApi } from '@jellyfin/sdk/lib/utils/api/user-data-api';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useQueryClient } from '@tanstack/react-query';
-import React, { type CSSProperties, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { type CSSProperties, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigationType, useSearchParams } from 'react-router-dom';
 
 import Page from 'components/Page';
@@ -19,7 +19,7 @@ import HeroArtwork from '../features/client/HeroArtwork';
 import PreviewProvider from '../features/client/PreviewProvider';
 import PreviewClip from '../features/client/PreviewClip';
 import { type Preferences, useInterfacePreferences } from '../features/client/interfacePreferences';
-import HeroPagination from '../features/client/HeroPagination';
+import HeroPagination, { type MarkerPosition } from '../features/client/HeroPagination';
 import useLoadedHero from '../features/client/useLoadedHero';
 import Artwork from '../features/client/Artwork';
 import useClientMotion from '../features/client/useClientMotion';
@@ -366,6 +366,7 @@ function ClientView({ model }: ViewProps) {
 function HeroView({ model }: ViewProps) {
     const { hero, id, location, image, heroItems, setHeroIndex, setHeroPaused, preferences } = model;
     const region = useRef<HTMLElement>(null);
+    const marker = useRef<MarkerPosition | null>(null);
     useHeroBackground(region, !id && preferences.hero === 'background', !!hero);
     if (!hero) return null;
     return <section ref={region} className={`client-hero${id ? ' client-detail' : ' client-home-hero'}${hero.Type === 'Series' && id ? ' client-series-detail' : ''}`} onPointerEnter={() => setHeroPaused(true)} onPointerLeave={() => setHeroPaused(false)} onFocus={() => setHeroPaused(true)} onBlur={event => {
@@ -375,13 +376,13 @@ function HeroView({ model }: ViewProps) {
         <PreviewClip key={hero.Id} item={hero} surface={id ? 'detail' : 'hero'} />
         {id && <div className='client-detail-readability' aria-hidden='true' />}
         {id && <Link className='client-back' to={(location.state as ClientNavigationState | null)?.returnTo || '/client'} state={{ ...(location.state as ClientNavigationState | null)?.returnState, restoreFocus: true }}><ClientIcon name='back' />Retour</Link>}
-        <HeroCopyView key={hero.Id} model={model} />
-        {!id && heroItems.length > 1 && <><HeroPagination items={heroItems} index={Math.max(0, heroItems.findIndex(entry => entry.Id === hero.Id))} select={setHeroIndex} /><div className='client-hero-arrows'><button aria-label='Média précédent' onClick={() => setHeroIndex(index => (index + heroItems.length - 1) % heroItems.length)}><ClientIcon name='back' /></button><button aria-label='Média suivant' onClick={() => setHeroIndex(index => index + 1)}><ClientIcon name='next' /></button></div></>}
+        <HeroCopyView key={hero.Id} model={model} dots={!id && heroItems.length > 1 ? <HeroPagination items={heroItems} index={Math.max(0, heroItems.findIndex(entry => entry.Id === hero.Id))} select={setHeroIndex} position={marker} /> : null} />
+        {!id && heroItems.length > 1 && <div className='client-hero-arrows'><button aria-label='Média précédent' onClick={() => setHeroIndex(index => (index + heroItems.length - 1) % heroItems.length)}><ClientIcon name='back' /></button><button aria-label='Média suivant' onClick={() => setHeroIndex(index => index + 1)}><ClientIcon name='next' /></button></div>}
         <EpisodesView model={model} />
     </section>;
 }
 
-function HeroCopyView({ model }: ViewProps) {
+function HeroCopyView({ model, dots }: ViewProps & { dots: ReactNode }) {
     const { hero, id, api } = model;
     const [synopsisExpanded, setSynopsisExpanded] = useState(false);
     useEffect(() => setSynopsisExpanded(false), [hero?.Id]);
@@ -391,13 +392,13 @@ function HeroCopyView({ model }: ViewProps) {
         <h1 className={hero.ImageTags?.Logo ? 'client-title-fallback' : undefined}>{hero.Name}</h1>
         <HeroMetadata item={hero} detailed={!!id} />
         {id && <><p className={`client-overview${synopsisExpanded ? ' expanded' : ''}`}>{hero.Overview}</p>{hero.Type === 'Series' && (hero.Overview?.length || 0) > 220 && <button className='client-synopsis-toggle' aria-expanded={synopsisExpanded} onClick={() => setSynopsisExpanded(!synopsisExpanded)}>{synopsisExpanded ? 'Réduire' : 'Lire la suite'}</button>}</>}
-        <HeroActions model={model} />
+        <HeroActions model={model} dots={dots} />
         {id && <PersonalRating item={hero} />}
         {id && <div className='client-detail-links'><CastAction key={hero.Id} item={hero} basePath={api?.basePath || ''} /><Link className='client-original-link' to={`/details?id=${hero.Id}`}>Options et fiche Jellyfin ›</Link></div>}
     </div>;
 }
 
-function HeroActions({ model }: ViewProps) {
+function HeroActions({ model, dots }: ViewProps & { dots: ReactNode }) {
     const { hero, id, item, location, playItem, busy, play, updateState } = model;
     if (!hero) return null;
     const homePlayable = hero.Type === 'Movie' ? hero : undefined;
@@ -413,6 +414,7 @@ function HeroActions({ model }: ViewProps) {
             <button className='client-button client-action-circle' aria-label={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} title={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} disabled={busy} aria-pressed={!!item?.UserData?.Played} onClick={() => updateState('played')}><ClientIcon name={item?.UserData?.Played ? 'check' : 'eye'} /></button>
             <button className='client-button client-action-circle' disabled aria-label='Ajouter à une collection : à venir' title='Ajout aux collections à venir'><ClientIcon name='collection' /></button>
             <button className='client-button client-action-circle' disabled aria-label='Téléchargement : à venir' title='Téléchargement hors ligne à venir'><ClientIcon name='download' /></button></>}
+        {dots}
     </div>;
 }
 

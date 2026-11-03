@@ -437,28 +437,6 @@
     font-size: 26px;
 }
 
-.client-hero-dots {
-    position: absolute;
-    bottom: 58px;
-    left: min(46%, 570px);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.client-hero-dots button {
-    width: 8px;
-    height: 8px;
-    padding: 0;
-    border: 0;
-    border-radius: 50%;
-    background: #ffffff50;
-}
-
-.client-hero-dots [aria-pressed='true'] {
-    background: #fff;
-}
-
 .client-glass .client-actions :is(.client-play, .client-button) {
     border: 1px solid #ffffff57;
     background: linear-gradient(140deg, #ffffff24, #ffffff08), #0f131947;
@@ -506,12 +484,6 @@
 
     .client-home-hero .client-hero-copy {
         max-width: 100%;
-    }
-
-    .client-hero-dots {
-        top: 25px;
-        bottom: auto;
-        left: 22px;
     }
 
     .client-hero-arrows {
