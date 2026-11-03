@@ -30,6 +30,8 @@ import ClientIcon from '../features/client/ClientIcon';
 import useArtworkColor from '../features/client/useArtworkColor';
 import PersonalRating from '../features/client/PersonalRating';
 import RatingsOverview from '../features/client/RatingsOverview';
+import { GenreTaste, PersonalStatsBand } from '../features/client/PersonalOverview';
+import { usePersonalStats, useViewingHistory } from '../features/client/usePersonalStats';
 import HeroMetadata from '../features/client/HeroMetadata';
 import DetailExtras, { CastAction } from '../features/client/DetailExtras';
 import InterfacePreview from '../features/client/InterfacePreview';
@@ -537,21 +539,31 @@ function DiscoveryView({ model }: ViewProps) {
 }
 
 function PersonalView({ model }: ViewProps) {
-    const { user, media, row, image, play } = model;
+    const { user, media, row, image, play, seerr } = model;
     const home = useClientMedia('home', '', 0);
     const collections = useClientCollections(true);
+    const stats = usePersonalStats();
+    const history = useViewingHistory();
     const resume = home.data?.resume || [];
     const lead = resume[0];
-    return <div className='client-personal'><header className='client-personal-identity'><span>{user?.Name?.slice(0, 1)}</span><div><h1>Mon espace</h1><p>{user?.Name}, retrouvez vos envies et vos prochaines séances.</p></div></header>
-        <div className='client-personal-shortcuts'><button onClick={() => document.getElementById('client-favorites')?.scrollIntoView({ block: 'start' })}><strong>{media.isPending ? <span className='client-skeleton-count' aria-hidden='true' /> : media.data?.total || 0}</strong> Ma liste</button><button onClick={() => document.getElementById('client-resume')?.scrollIntoView({ block: 'start' })}><strong>{home.isPending ? <span className='client-skeleton-count' aria-hidden='true' /> : resume.length}</strong> Lectures à reprendre</button></div>
+    const watched = (stats.data?.movies || 0) + (stats.data?.episodes || 0);
+    return <div className='client-personal'>
+        <header className='client-personal-identity'><span aria-hidden='true'>{user?.Name?.slice(0, 1)}</span><div><h1>Mon espace</h1>
+            <p>{user?.Name}{watched ? ` · ${watched.toLocaleString('fr-FR')} visionnages dans votre historique` : ', retrouvez vos envies et vos prochaines séances.'}</p></div></header>
+        <PersonalStatsBand stats={stats.data} pending={stats.isPending} favorites={media.data?.total || 0} favoritesPending={media.isPending} />
         {home.isPending && <ClientSkeleton layout='episodes' contained count={3} label='Chargement des reprises…' />}
-        {collections.isPending && <ClientSkeleton layout='row' contained label='Chargement des collections…' />}
-        {lead && <section className='client-personal-spotlight'><Artwork source={image(lead, true, true)} eager /><PreviewClip item={lead} surface='spotlight' /><div><small>ON CONTINUE ?</small><h2>{lead.SeriesName || lead.Name}</h2><p>{lead.Type === 'Episode' ? episodeLabel(lead) : 'Votre film vous attend'}</p><button className='client-play' onClick={() => play(lead)}><ClientIcon name='play' />Reprendre</button><Link className='client-button' to={`/client?id=${lead.SeriesId || lead.Id}`}>Voir la fiche</Link></div></section>}
-        <div id='client-resume'>{row('Continuer à regarder', resume, true)}</div>
-        {!!collections.data?.length && <section className='client-personal-collections'><h2>Mes collections</h2><div>{collections.data.map(collection => <CollectionCard key={collection.Id} collection={collection} image={image} />)}</div></section>}
-        <RequestTracking />
-        <RatingsOverview />
+        {lead && <section className='client-personal-spotlight'><Artwork source={image(lead, true, true)} eager /><PreviewClip item={lead} surface='spotlight' /><div><small>ON CONTINUE ?</small><h2>{lead.SeriesName || lead.Name}</h2><p>{lead.Type === 'Episode' ? `${episodeLabel(lead)} · ${lead.Name}` : 'Votre film vous attend'}</p>
+            {progressPercent(lead) > 0 && <span className='client-spotlight-progress' aria-label={`Vu à ${Math.round(progressPercent(lead))} %`}><i style={{ width: `${progressPercent(lead)}%` }} /></span>}
+            <button className='client-play' onClick={() => play(lead)}><ClientIcon name='play' />Reprendre</button><Link className='client-button' to={`/client?id=${lead.SeriesId || lead.Id}`}>Voir la fiche</Link></div></section>}
+        <div id='client-resume'>{row('Continuer à regarder', resume.slice(1), true)}</div>
         <div className='client-personal-favorites' id='client-favorites'><header><h2>Ma liste</h2></header><LibraryView model={model} embedded /></div>
+        {row('Vus récemment', history.data)}
+        {(!!stats.data?.genres.length || !!collections.data?.length) && <div className='client-personal-columns'>
+            <GenreTaste stats={stats.data} />
+            {!!collections.data?.length && <section className='client-personal-panel client-personal-collections'><h2>Mes collections</h2><div>{collections.data.map(collection => <CollectionCard key={collection.Id} collection={collection} image={image} />)}</div></section>}
+        </div>}
+        <RatingsOverview />
+        {seerr.connected && <div id='client-requests' className='client-personal-requests'><RequestTracking /></div>}
     </div>;
 }
 
