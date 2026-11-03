@@ -8,6 +8,7 @@ import { getShowApi } from '@jellyfin/sdk/lib/utils/api/show-api';
 import { useQuery } from '@tanstack/react-query';
 
 import { useApi } from 'hooks/useApi';
+import * as userSettings from 'scripts/settings/userSettings';
 
 import { uniqueItems } from './model';
 import { clientRequest } from './session';
@@ -16,6 +17,13 @@ function browseOrder(view: string, sort: string) {
     if (view === 'tonight') return { sortBy: [ItemSortBy.Random], sortOrder: [SortOrder.Ascending] };
     if (sort === 'recent' || view === 'recent') return { sortBy: [ItemSortBy.DateCreated], sortOrder: [SortOrder.Descending] };
     return { sortBy: [ItemSortBy.SortName], sortOrder: [SortOrder.Ascending] };
+}
+
+// « Continuer à regarder » follows the same device preferences as Jellyfin's own Next Up section.
+function nextUpOptions() {
+    const days = userSettings.maxDaysForNextUp();
+    return { enableRewatching: !!userSettings.enableRewatchingInNextUp(),
+        nextUpDateCutoff: days > 0 ? new Date(Date.now() - days * 864e5).toISOString() : undefined };
 }
 
 type BrowseFilters = { genre?: string; sort?: string; person?: string; audio?: string; collection?: string };
@@ -42,14 +50,15 @@ export function useClientMedia(view: string, search: string, offset: number, { g
                 return { items: result.data.Items || [], total: result.data.TotalRecordCount || 0,
                     resume: [], next: [], movies: [], series: [], picks: [] };
             }
+            // Account option: watched titles can be left out of recent additions.
+            const latest = { ...common, isPlayed: user!.Configuration?.HidePlayedInLatest ? false : undefined,
+                sortBy: [ItemSortBy.DateCreated], sortOrder: [SortOrder.Descending] };
             const [resume, next, movies, series, picks] = await Promise.all([
                 library.getResumeItems({ userId: user!.Id, limit: 12,
                     includeItemTypes: [BaseItemKind.Movie, BaseItemKind.Episode], fields: common.fields }, request),
-                getShowApi(api!).getNextUp({ userId: user!.Id, limit: 12, fields: common.fields }, request),
-                library.getItems({ ...common, includeItemTypes: [BaseItemKind.Movie], limit: 20,
-                    sortBy: [ItemSortBy.DateCreated], sortOrder: [SortOrder.Descending] }, request),
-                library.getItems({ ...common, includeItemTypes: [BaseItemKind.Series], limit: 20,
-                    sortBy: [ItemSortBy.DateCreated], sortOrder: [SortOrder.Descending] }, request),
+                getShowApi(api!).getNextUp({ userId: user!.Id, limit: 12, fields: common.fields, ...nextUpOptions() }, request),
+                library.getItems({ ...latest, includeItemTypes: [BaseItemKind.Movie], limit: 20 }, request),
+                library.getItems({ ...latest, includeItemTypes: [BaseItemKind.Series], limit: 20 }, request),
                 // Unwatched, best rated titles feed the « À découvrir » selection, as in the mockup.
                 library.getItems({ ...common, isPlayed: false, limit: 40,
                     sortBy: [ItemSortBy.CommunityRating, ItemSortBy.Random], sortOrder: [SortOrder.Descending] }, request)
