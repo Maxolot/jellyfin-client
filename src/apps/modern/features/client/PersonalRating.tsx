@@ -9,6 +9,11 @@ import ClientIcon from './ClientIcon';
 import { personalStars, ratedItems, savePersonalStars } from './ratings';
 import { clientRequest } from './session';
 
+function pointedStars(event: React.MouseEvent<HTMLElement>, value: number) {
+    const box = event.currentTarget.getBoundingClientRect();
+    return event.clientX - box.left < box.width / 2 ? value - 0.5 : value;
+}
+
 function RatingControl({ item }: { readonly item: BaseItemDto }) {
     const { api, user } = useApi();
     const cache = useQueryClient();
@@ -44,11 +49,18 @@ function RatingControl({ item }: { readonly item: BaseItemDto }) {
     }
     return <div className='client-personal-rating'>
         <div className='client-rating-control'><span>Votre avis</span>
-            <div className='client-rating-stars' role='group' aria-label='Votre note sur cinq étoiles' onPointerLeave={() => setHovered(undefined)} onBlur={event => {
+            <div className='client-rating-stars' role='group' aria-label='Votre note sur cinq étoiles, demi-étoiles possibles' onPointerLeave={() => setHovered(undefined)} onBlur={event => {
                 if (!event.currentTarget.contains(event.relatedTarget)) setFocused(undefined);
-            }}>{[1, 2, 3, 4, 5].map(value => <button key={value} className='client-rating-star' aria-label={`Noter ${value} sur 5`} aria-pressed={stars === value} disabled={mutation.isPending} onPointerEnter={event => {
-                    if (event.pointerType !== 'touch') setHovered(value);
-                }} onFocus={() => setFocused(value)} onClick={() => { void save(value); }}>
+            }}>{[1, 2, 3, 4, 5].map(value => <button key={value} className='client-rating-star' aria-label={`Noter ${value} sur 5`} aria-pressed={stars !== null && Math.ceil(stars) === value} disabled={mutation.isPending} onPointerMove={event => {
+                    if (event.pointerType !== 'touch') setHovered(pointedStars(event, value));
+                }} onFocus={() => setFocused(value)} onClick={event => {
+                    // Pointer: the left half gives a half star. Keyboard: pressing the chosen star again halves it.
+                    let target = value;
+                    if (event.detail > 0) target = pointedStars(event, value);
+                    else if (stars === value) target = value - 0.5;
+                    setFocused(undefined);
+                    void save(target);
+                }}>
                     <ClientIcon name='star' /><span className='client-rating-fill' style={{ clipPath: `inset(0 ${100 - Math.max(0, Math.min(1, preview - value + 1)) * 100}% 0 0)` }}><ClientIcon name='star' /></span>
                 </button>)}</div>
             <span className='client-rating-value' aria-live='polite'>{stars === null ? 'Non noté' : `${stars.toLocaleString('fr-FR', { maximumFractionDigits: 1 })}/5`}</span>
