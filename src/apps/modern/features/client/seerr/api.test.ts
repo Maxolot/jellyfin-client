@@ -19,6 +19,14 @@ describe('authenticated Moonbase transport', () => {
             method: 'GET', headers: expect.objectContaining({ Authorization: 'MediaBrowser Token="test-user-session"' })
         }));
     });
+    it('allows collection reads but rejects writes and invalid collection identifiers', async () => {
+        const { send, proxy } = client();
+        send.mockResolvedValue({ status: 200, data: { id: 42, parts: [] } });
+        await expect(proxy.call('Api/collection/42?language=fr')).resolves.toMatchObject({ id: 42 });
+        await expect(proxy.call('Api/collection/42', undefined, {})).rejects.toThrow('Unsupported');
+        await expect(proxy.call('Api/collection/../settings')).rejects.toThrow('Unsupported');
+        expect(send).toHaveBeenCalledTimes(1);
+    });
     it('degrades to absent integration only for an unsupported proxy', async () => {
         const { send, proxy } = client();
         send.mockRejectedValue({ isAxiosError: true, response: { status: 404 } });

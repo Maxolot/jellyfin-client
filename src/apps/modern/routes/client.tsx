@@ -40,6 +40,7 @@ import { useClientCollections, useClientDetails, useClientFilters, useClientMedi
 import '../features/client/client.scss';
 import '../features/client/prototype.scss';
 import '../features/client/motion.scss';
+import '../features/client/sagas.scss';
 import '../features/client/previews.scss';
 import '../features/client/ratings.scss';
 import '../features/client/heroBackground.scss';
@@ -444,8 +445,8 @@ function EpisodesView({ model }: ViewProps) {
 
 function ContentView({ model }: ViewProps) {
     const { id, view, details, media, row, api, image } = model;
-    if (model.remote) return <ExternalDetail key={id} id={id} row={row} />;
-    if (id) return details.item.data && api ? <DetailExtras similar={details.similar.data || []} image={image} /> : null;
+    if (model.remote) return <ExternalDetail key={id} id={id} row={row} image={image} />;
+    if (id) return details.item.data && api ? <DetailExtras item={details.item.data} similar={details.similar.data || []} image={image} /> : null;
     if (view === 'home') {
         // Ordre de la maquette : reprise, sélection, ajouts récents, tendances, puis sorties à venir ; chaque titre n'apparaît qu'une fois.
         const continuing = uniqueItems([...(media.data?.resume || []), ...(media.data?.next || [])]).filter((entry, index, all) => !entry.SeriesId || all.findIndex(other => other.SeriesId === entry.SeriesId) === index);
