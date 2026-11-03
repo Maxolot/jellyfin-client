@@ -85,3 +85,24 @@ export function useLocalSeasons(item?: BaseItemDto) {
         queryFn: async ({ signal }) => (await getShowApi(api!).getSeasons({ seriesId: item!.Id!, userId: user!.Id,
             fields: [ItemFields.ChildCount] }, { signal })).data.Items || [] });
 }
+
+// « Bientôt à découvrir » : films et séries annoncés dans les 60 prochains jours, du plus proche au plus lointain.
+export function useSeerrUpcoming(enabled: boolean) {
+    const seerr = useSeerr();
+    const local = useLocalIdentities(enabled && seerr.connected);
+    const query = useQuery({ queryKey: [...seerr.root, 'Upcoming'], enabled: enabled && seerr.connected,
+        retry: false, staleTime: 3600000, queryFn: async ({ signal }) => {
+            const [movies, series] = await Promise.all(['movies', 'tv'].map(path =>
+                seerr.call<Results<ExternalMedia>>(`Api/discover/${path}/upcoming?language=fr&page=1`, signal)));
+            return [...movies.results.map(entry => ({ ...entry, mediaType: 'movie' as const })),
+                ...series.results.map(entry => ({ ...entry, mediaType: 'tv' as const }))];
+        } });
+    const today = new Date().toISOString().slice(0, 10);
+    const limit = new Date(Date.now() + 60 * 86400000).toISOString().slice(0, 10);
+    const items = (query.data || []).map(entry => ({ date: entry.releaseDate || entry.firstAirDate || '', entry }))
+        .filter(({ date, entry }) => date >= today && date <= limit && entry.posterPath)
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(0, 16)
+        .map(({ date, entry }) => ({ date, item: catalogueItem(entry, entry.mediaType === 'tv' ? 'tv' : 'movie', local.data || []) }));
+    return { items, loading: query.isFetching };
+}
