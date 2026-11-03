@@ -65,7 +65,9 @@ describe('film saga details', () => {
     });
     it('waits for library identities before showing the remote availability count', async () => {
         let resolve!: (value: unknown) => void;
-        state.getItems.mockReturnValue(new Promise(done => { resolve = done; }));
+        state.getItems.mockReturnValue(new Promise(done => {
+            resolve = done;
+        }));
         await render();
         expect(container.querySelector('.client-saga')).toBeNull();
         await act(async () => resolve({ data: { Items: [sequel] } }));
