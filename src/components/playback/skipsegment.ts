@@ -1,3 +1,4 @@
+import { customVideoPresentation } from 'components/playback/customVideoPresentation';
 import { PlaybackManager } from './playbackmanager';
 import { TICKS_PER_MILLISECOND, TICKS_PER_SECOND } from 'constants/time';
 import type { MediaSegmentDto } from '@jellyfin/sdk/lib/generated-client/models/media-segment-dto';
@@ -149,6 +150,7 @@ class SkipSegment extends PlaybackSubscriber {
     }
 
     onPromptSkip(e: Event, segment: MediaSegmentDto) {
+        if (customVideoPresentation.active) return;
         if (this.player && segment.EndTicks != null
             && segment.EndTicks >= this.playbackManager.currentItem(this.player).RunTimeTicks
             && this.playbackManager.getNextItem()
