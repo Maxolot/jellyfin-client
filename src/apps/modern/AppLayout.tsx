@@ -23,7 +23,7 @@ export const Component = () => {
     const { user } = useApi();
     const location = useLocation();
 
-    const isClientPage = ['/client', '/home'].includes(location.pathname);
+    const isClientPage = ['/client', '/home', '/video'].includes(location.pathname);
     const isMediumScreen = useMediaQuery((t: Theme) => t.breakpoints.up('md'));
     const isDrawerAvailable = isDrawerPath(location.pathname) && Boolean(user) && !isMediumScreen;
     const isDrawerOpen = isDrawerActive && isDrawerAvailable;

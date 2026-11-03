@@ -1,3 +1,4 @@
+import PlayerSettings from '../features/client/player/PlayerSettings';
 /* eslint-disable react/jsx-no-bind -- View-local closures do not cross memoized component boundaries. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
@@ -483,6 +484,7 @@ function SettingsView({ model }: ViewProps) {
     const { preferences, savePreference, user } = model;
     if (!model.api || !user?.Id) return <section className='client-settings'><h1>Personnaliser l’interface</h1><ClientSkeleton layout='settings' contained count={3} label='Chargement des préférences…' /></section>;
     return <section className='client-settings'><h1>Personnaliser l’interface</h1>
+        <PlayerSettings />
         <SeerrSettings />
         <h2>Thème</h2><div className='client-setting-options'>{[[true, 'Liquid Glass'], [false, 'Classique']].map(([key, label]) => <button key={String(key)} aria-pressed={preferences.glass === key} onClick={() => savePreference({ ...preferences, glass: key as boolean })}><InterfacePreview kind={key ? 'glass' : 'classic'} /><strong>{label}</strong></button>)}</div>
         <label className='client-chromatic-option'><input type='checkbox' checked={preferences.chromatic} onChange={event => savePreference({ ...preferences, chromatic: event.target.checked })} /> Couleurs inspirées du média</label>

@@ -1,3 +1,4 @@
+import { customVideoPresentation } from './customVideoPresentation';
 import { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-item-kind';
 import { ItemFields } from '@jellyfin/sdk/lib/generated-client/models/item-fields';
 import { ItemFilter } from '@jellyfin/sdk/lib/generated-client/models/item-filter';
@@ -3569,7 +3570,7 @@ export class PlaybackManager {
 
             const errorOccurred = displayErrorCode && typeof (displayErrorCode) === 'string';
 
-            const nextItem = self._playNextAfterEnded && !errorOccurred ? self._playQueueManager.getNextItemInfo() : null;
+            const nextItem = self._playNextAfterEnded && !errorOccurred && (!customVideoPresentation.active || customVideoPresentation.autoNext) ? self._playQueueManager.getNextItemInfo() : null;
 
             const nextMediaType = (nextItem ? nextItem.item.MediaType : null);
 
@@ -3612,12 +3613,12 @@ export class PlaybackManager {
             }
 
             if (errorOccurred) {
-                showPlaybackInfoErrorMessage(self, 'PlaybackError' + displayErrorCode);
+                if (!customVideoPresentation.active) showPlaybackInfoErrorMessage(self, 'PlaybackError' + displayErrorCode);
             } else if (newPlayer) {
                 const apiClient = ServerConnections.getApiClient(nextItem.item.ServerId);
 
                 apiClient.getCurrentUser().then(function (user) {
-                    if (user.Configuration.EnableNextEpisodeAutoPlay || nextMediaType !== MediaType.Video) {
+                    if ((customVideoPresentation.active ? customVideoPresentation.autoNext : user.Configuration.EnableNextEpisodeAutoPlay) || nextMediaType !== MediaType.Video) {
                         self.nextTrack();
 
                         if (newPlayer !== player) {

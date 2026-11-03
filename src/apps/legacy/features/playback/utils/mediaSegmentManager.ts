@@ -1,3 +1,4 @@
+import { customVideoPresentation } from 'components/playback/customVideoPresentation';
 import type { Api } from '@jellyfin/sdk/lib/api';
 import type { MediaSegmentDto } from '@jellyfin/sdk/lib/generated-client/models/media-segment-dto';
 import { MediaSegmentType } from '@jellyfin/sdk/lib/generated-client/models/media-segment-type';
@@ -121,6 +122,7 @@ class MediaSegmentManager extends PlaybackSubscriber {
     }
 
     onPlayerTimeUpdate() {
+        if (customVideoPresentation.active) return;
         if (this.hasSegments && this.mediaSegments.length) {
             const time = this.playbackManager.currentTime(this.player) * TICKS_PER_MILLISECOND;
             const currentSegmentDetails = findCurrentSegment(this.mediaSegments, time, this.lastSegmentIndex);
