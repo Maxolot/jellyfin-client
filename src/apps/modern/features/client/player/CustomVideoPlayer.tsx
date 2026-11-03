@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import type { BaseItemDto, MediaSegmentDto, MediaStream } from '@jellyfin/sdk/lib/generated-client';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
 import { getMediaSegmentApi } from '@jellyfin/sdk/lib/utils/api/media-segment-api';
+import { useQueryClient } from '@tanstack/react-query';
 import Page from 'components/Page';
 import { playbackManager } from 'components/playback/playbackmanager';
 import { customVideoPresentation } from 'components/playback/customVideoPresentation';
@@ -38,6 +39,7 @@ function PlayerGlyph({ name }: Readonly<{ name: string }>) {
 export default function CustomVideoPlayer() {
     const { api, user, __legacyApiClient__: client } = useApi();
     const navigate = useNavigate();
+    const cache = useQueryClient();
     const snapshot = usePlaybackSnapshot();
     const [preferences, savePreferences] = usePlayerPreferences(playerPreferenceKey(api?.basePath || '', user?.Id || ''));
     const [visible, setVisible] = useState(true);
@@ -57,8 +59,8 @@ export default function CustomVideoPlayer() {
     const lifecycle = useRef<object>();
     const skipped = useRef(new Set<string>());
     const lastTouch = useRef({ time: 0, side: 0 });
-    const latest = useRef({ preferences, snapshot, panel });
-    latest.current = { preferences, snapshot, panel };
+    const latest = useRef({ preferences, snapshot, panel, cache, server: api?.basePath, userId: user?.Id });
+    latest.current = { preferences, snapshot, panel, cache, server: api?.basePath, userId: user?.Id };
     const itemId = snapshot?.item?.Id || '';
     const item = details?.id === itemId ? details.item : snapshot?.item;
     const segments = details?.id === itemId ? details.segments : [];
@@ -108,6 +110,12 @@ export default function CustomVideoPlayer() {
         setBackdropTransparency(TRANSPARENCY_LEVEL.Full);
         shell.enableFullscreen();
         const onStop = (_event: PlaybackEvent, info: PlaybackStopInfo) => {
+            const identity = latest.current;
+            if (identity.server && identity.userId) {
+                const stoppedItem = info.state.NowPlayingItem;
+                if (stoppedItem?.Id) identity.cache.removeQueries({ queryKey: ['Client', identity.server, identity.userId, 'Detail', stoppedItem.Id], exact: true });
+                void identity.cache.invalidateQueries({ queryKey: ['Client', identity.server, identity.userId] });
+            }
             if (info.nextMediaType !== 'Video' && !leaving.current) {
                 setEnded(true);
                 setVisible(true);

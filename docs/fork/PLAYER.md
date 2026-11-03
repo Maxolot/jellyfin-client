@@ -53,6 +53,8 @@ promise of a particular resolution. Browser/mobile emulation does not replace
 physical-device validation on iOS, TV or a remote-control receiver.
 
 The player samples engine state twice a second and cleans up listeners and timers.
+Stopping playback invalidates account-scoped library data and discards the stopped
+item detail cache so an immediate return/reload cannot resume from a stale position.
 Leaving the route stops video playback; StrictMode's effect rehearsal does not.
 The session presentation flag avoids duplicate legacy segment UI and keeps natural
 end/queue handling in the playback engine.
