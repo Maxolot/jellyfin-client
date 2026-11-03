@@ -19,6 +19,7 @@
     }
 }
 
+.client-skeleton-count,
 .client-skeleton-bar,
 .client-skeleton-cover,
 .client-skeleton-buttons > span,
@@ -197,7 +198,8 @@
 @media (prefers-reduced-motion: reduce) {
     .client-skeleton *,
     .client-skeleton *::after,
-    .client-image-skeleton::after {
+    .client-image-skeleton::after,
+    .client-skeleton-count::after {
         animation: none;
     }
 }
@@ -218,4 +220,11 @@
 
 .client-detail-pending {
     position: relative;
+}
+
+.client-skeleton-count {
+    display: inline-block;
+    width: 72px;
+    height: 12px;
+    vertical-align: middle;
 }
