@@ -8,6 +8,7 @@ import './seerr.scss';
 
 import Artwork from '../Artwork';
 import ClientDialog from '../ClientDialog';
+import ClientSkeleton from '../ClientSkeleton';
 import HeroArtwork from '../HeroArtwork';
 import ClientIcon from '../ClientIcon';
 import { withLocalAvailability, externalIdentity, catalogueItem, providerKey, canRequest, imageUrl, localMatch, mediaLabel, requestableSeasons, requestLabel,
@@ -86,7 +87,7 @@ export function RequestPanel({ identity, localItem }: Readonly<{ identity: Seerr
     const detail = useSeerrDetail(identity.type, identity.id);
     const localSeasons = useLocalSeasons(localItem);
     if (!seerr.connected) return null;
-    if (detail.isPending || (localItem?.Type === 'Series' && localSeasons.isPending)) return <section className='client-request-panel' role='status'>Chargement des disponibilités…</section>;
+    if (detail.isPending || (localItem?.Type === 'Series' && localSeasons.isPending)) return <section className='client-request-panel'><ClientSkeleton layout='request' count={6} contained label='Chargement des disponibilités…' /></section>;
     if (!detail.data) {
         return <section className='client-request-panel'><p>Les disponibilités ne peuvent pas être vérifiées.</p><button onClick={() => {
             void detail.refetch();
@@ -153,6 +154,7 @@ export function ExternalDetail({ id, row }: Readonly<{ id: string; row: (title: 
     const back = navigation?.returnTo || '/client';
     const backState = { ...navigation?.returnState, restoreFocus: true };
     if (!seerr.connected) return <section className='client-settings'><Link to={back} state={backState}>← Retour</Link><h1>Découvertes et demandes</h1><p>Activez la connexion aux demandes pour retrouver cette fiche.</p><SeerrSettings /></section>;
+    if (detail.isPending) return <section className='client-detail-pending'><Link className='client-back' to={back} state={backState}>← Retour</Link><ClientSkeleton layout='detail' label='Chargement de la fiche…' /></section>;
     if (!detail.data || !identity) {
         return <section className='client-settings'><Link to={back} state={backState}>← Retour</Link><p role='status'>{detail.isError ? 'La fiche ne peut pas être chargée.' : 'Chargement de la fiche…'}</p>{detail.isError && <button onClick={() => {
             void detail.refetch();
@@ -169,7 +171,7 @@ function ExternalRecommendations({ identity, local, row }: Readonly<{ identity: 
         enabled: seerr.connected, retry: false, staleTime: 300000,
         queryFn: ({ signal }) => seerr.call<Results<ExternalMedia>>(`Api/${identity.type}/${identity.id}/recommendations?language=fr&page=1`, signal) });
     const items = (query.data?.results || []).map(media => catalogueItem(media, identity.type, local));
-    return <>{row('Dans le même esprit', items)}</>;
+    return <>{query.isPending && <ClientSkeleton layout='row' label='Chargement des titres associés…' />}{row('Dans le même esprit', items)}</>;
 }
 
 function TrackedRequest({ entry, local }: { readonly entry: MediaRequest; readonly local: BaseItemDto[] }) {
@@ -203,7 +205,7 @@ export function RequestTracking() {
         setFilter(event.target.value);
         setPage(0);
     }}><option value='all'>Toutes</option><option value='pending'>En attente</option><option value='processing'>En préparation</option><option value='available'>Disponibles</option><option value='failed'>Échecs</option></select></label></header>
-    {query.isPending && <p role='status'>Chargement de vos demandes…</p>}{query.isError && <p role='alert'>Les demandes ne peuvent pas être chargées. <button onClick={() => {
+    {query.isPending && <ClientSkeleton layout='list' count={3} contained label='Chargement de vos demandes…' />}{query.isError && <p role='alert'>Les demandes ne peuvent pas être chargées. <button onClick={() => {
         void query.refetch();
     }}>Réessayer</button></p>}
     <div className='client-request-list'>{query.data?.results.map(entry => <TrackedRequest key={entry.id} entry={entry} local={local.data || []} />)}</div>

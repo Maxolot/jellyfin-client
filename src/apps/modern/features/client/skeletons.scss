@@ -1,0 +1,221 @@
+.client-loading-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.client-skeleton {
+    min-width: 0;
+    margin: 28px var(--client-margin);
+    pointer-events: none;
+
+    &.contained {
+        margin: 20px 0;
+    }
+}
+
+.client-skeleton-bar,
+.client-skeleton-cover,
+.client-skeleton-buttons > span,
+.client-image-skeleton {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: 7px;
+    background: #ffffff0a;
+
+    &::after {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(100deg, transparent 20%, #ffffff0a 50%, transparent 80%);
+        content: '';
+        transform: translateX(-100%);
+        animation: client-skeleton-shimmer 2s ease-in-out infinite;
+    }
+}
+
+.client-skeleton-bar {
+    width: 100%;
+    height: 13px;
+    margin-bottom: 12px;
+
+    &.short {
+        width: 30%;
+    }
+
+    &.medium {
+        width: 65%;
+    }
+
+    &.heading {
+        width: 200px;
+        max-width: 60%;
+        height: 22px;
+        margin-bottom: 22px;
+    }
+
+    &.title {
+        width: 80%;
+        height: clamp(36px, 4vw, 58px);
+        margin: 24px 0;
+    }
+}
+
+.client-skeleton-items {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.client-skeleton-cover {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    border-radius: 10px;
+}
+
+.client-skeleton-hero,
+.client-skeleton-detail {
+    background: linear-gradient(110deg, #131419, #0c0d11 70%);
+
+    .client-skeleton-shapes {
+        width: 100%;
+    }
+}
+
+.client-skeleton-copy {
+    width: min(500px, 55%);
+}
+
+.client-skeleton-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+
+    > span {
+        width: 120px;
+        height: 44px;
+        border-radius: 24px;
+    }
+}
+
+.client-skeleton-row .client-skeleton-items,
+.client-skeleton-episodes .client-skeleton-items {
+    grid-auto-columns: calc((100% - 80px) / 6);
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    overflow: hidden;
+}
+
+.client-skeleton-episodes .client-skeleton-items {
+    grid-auto-columns: min(340px, 75vw);
+}
+
+.client-skeleton-episodes .client-skeleton-cover {
+    aspect-ratio: 16 / 9;
+}
+
+.client-skeleton-lines {
+    padding-top: 16px;
+}
+
+.client-skeleton-list .client-skeleton-items,
+.client-skeleton-settings .client-skeleton-items {
+    grid-template-columns: 1fr;
+    gap: 18px;
+}
+
+.client-skeleton-request .client-skeleton-items {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.client-skeleton-request .client-skeleton-cover,
+.client-skeleton-settings .client-skeleton-cover {
+    height: 48px;
+    aspect-ratio: auto;
+}
+
+.client-skeleton-list .client-skeleton-item {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+
+    .client-skeleton-cover {
+        flex: 0 0 62px;
+    }
+
+    .client-skeleton-lines {
+        flex: 1;
+    }
+}
+
+.client-image-skeleton {
+    position: absolute;
+    z-index: -2;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+@keyframes client-skeleton-shimmer {
+    to {
+        transform: translateX(100%);
+    }
+}
+
+@media (max-width: 1000px) {
+    .client-skeleton-grid .client-skeleton-items {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .client-skeleton-row .client-skeleton-items {
+        grid-auto-columns: calc((100% - 48px) / 4);
+    }
+}
+
+@media (max-width: 700px) {
+    .client-skeleton-grid .client-skeleton-items,
+    .client-skeleton-request .client-skeleton-items {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .client-skeleton-row .client-skeleton-items {
+        grid-auto-columns: calc((100% - 20px) / 3);
+        gap: 10px;
+    }
+
+    .client-skeleton-copy {
+        width: 90%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .client-skeleton *,
+    .client-skeleton *::after,
+    .client-image-skeleton::after {
+        animation: none;
+    }
+}
+
+.client-skeleton.client-skeleton-detail {
+    margin: 0;
+}
+
+.client-skeleton.client-skeleton-draw.contained {
+    max-width: 740px;
+    margin: 20px auto;
+
+    .client-skeleton-items {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 24px;
+    }
+}
+
+.client-detail-pending {
+    position: relative;
+}
