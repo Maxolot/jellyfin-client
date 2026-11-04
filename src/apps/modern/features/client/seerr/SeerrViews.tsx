@@ -17,6 +17,7 @@ import { withLocalAvailability, externalIdentity, catalogueItem, providerKey, ca
 import { useLocalIdentities, useLocalSeasons, useSeerrDetail } from './queries';
 import { useSeerr } from './SeerrContext';
 import SeerrSetup from './SeerrSetup';
+import MovieSources from './MovieSources';
 
 export function SeerrSettings() {
     const seerr = useSeerr();
@@ -134,6 +135,7 @@ function RequestForm({ identity, data }: Readonly<{ identity: SeerrIdentity; dat
     const quotaUnit = identity.type === 'tv' ? 'saison(s)' : 'film(s)';
     const quotaLabel = currentQuota?.limit ? `${remaining} ${quotaUnit} restant(s) dans votre quota` : 'Aucune limite de demandes pour votre compte';
     return <section className='client-request-panel' aria-label='Disponibilité et demandes'><header><h2>{identity.type === 'tv' ? 'Saisons et demandes' : 'Disponibilité'}</h2><span className='client-request-status'>{mediaLabel({ status: state })}</span></header>
+        {identity.type === 'movie' && <MovieSources key={data.imdbId || data.externalIds?.imdbId || identity.id} imdbId={data.imdbId || data.externalIds?.imdbId} />}
         {canRequest(seerr.permissions, identity.type, true) && <button type='button' role='switch' className='client-switch client-request-quality' aria-checked={is4k} disabled={mutation.isPending} onClick={() => set4k(!is4k)}><i aria-hidden='true' />Version 4K</button>}
         {identity.type === 'tv' && <SeasonPicker data={data} is4k={is4k} selected={selected} disabled={mutation.isPending || !permitted} toggle={number => {
             setConfirm(false);

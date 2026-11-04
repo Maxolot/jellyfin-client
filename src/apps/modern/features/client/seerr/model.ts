@@ -26,6 +26,7 @@ export type ExternalMedia = {
     id: number;
     mediaType?: MediaType | 'person';
     title?: string;
+    imdbId?: string;
     name?: string;
     overview?: string;
     posterPath?: string;
