@@ -6,7 +6,7 @@ import { ImageSkeleton } from './ClientSkeleton';
 type Frame = { source: string; visible: boolean; failed?: boolean };
 
 /** Keep the previous artwork until its replacement has loaded and finished fading. */
-export default function HeroArtwork({ source, fadeMs = 900 }: { readonly source: string; readonly fadeMs?: number }) {
+export default function HeroArtwork({ source, fadeMs = 900, fullBackground = false }: { readonly source: string; readonly fadeMs?: number; readonly fullBackground?: boolean }) {
     const scheduled = useRef(new Set<number>());
     const disposed = useRef(false);
     useEffect(() => {
@@ -54,8 +54,9 @@ export default function HeroArtwork({ source, fadeMs = 900 }: { readonly source:
     function failed(frameSource: string) {
         setFrames(previous => previous.length > 1 ? previous.filter(entry => entry.source !== frameSource) : [{ source: frameSource, visible: true, failed: true }]);
     }
-    return <>{source && !frames.some(frame => frame.visible || frame.failed) && <ImageSkeleton />}{frames.map(frame => <img key={frame.source} ref={element => element?.setAttribute('fetchpriority', 'high')} className={`client-background${frame.visible ? ' artwork-loaded' : ''}`} src={frame.source} alt='' decoding='async' hidden={frame.failed} onLoad={event => {
+    const artwork = <>{source && !frames.some(frame => frame.visible || frame.failed) && <ImageSkeleton />}{frames.map(frame => <img key={frame.source} ref={element => element?.setAttribute('fetchpriority', 'high')} className={`client-background${frame.visible ? ' artwork-loaded' : ''}`} src={frame.source} alt='' decoding='async' hidden={frame.failed} onLoad={event => {
         void loaded(frame.source, event.currentTarget);
     }} onError={() => failed(frame.source)} />)}</>;
+    return fullBackground ? <div className='client-hero-image-layer'>{artwork}</div> : artwork;
 }
 /* eslint-enable react/jsx-no-bind */
