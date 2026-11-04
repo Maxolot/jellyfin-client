@@ -52,6 +52,22 @@ and real-library identity matching are checked separately.
 Release acceptance includes the exact CI archive and deployed-browser checks; results
 are recorded in the associated Forgejo review, tied to its source commit.
 
+## Server setup from the client
+
+An administrator can do the whole setup in Settings → Demandes, without the dashboard:
+
+1. Install: appends the plugin's official catalogue to the server repositories (existing
+   entries are kept) and installs Moonbase through Jellyfin's package API.
+2. Restart: explicit confirmation, active playback count shown, then waits for the plugin
+   to report `Active`.
+3. Connect: stores the Seerr address in the plugin configuration (`SeerrEnabled`, `SeerrUrl`,
+   `EnableSettingsSync`), every other plugin setting preserved, then tests the sign-in.
+
+Moonbase stays a separate third-party plugin. No Seerr key is involved: the address must be
+reachable from the Jellyfin server, Quick Connect must be enabled and Seerr must accept
+Jellyfin sign-ins. Other accounts link themselves on their next visit. Non-administrators
+never see this section.
+
 `clientSeerr: false` in runtime config disables the integration globally. Otherwise
 the checkbox in Settings stores an opt-out per Jellyfin server/user. Existing Moonbase
 sessions are reused. When a configured proxy reports an unlinked session, one

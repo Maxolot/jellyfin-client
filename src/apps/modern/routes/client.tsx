@@ -1,5 +1,5 @@
 import PlayerSettings from '../features/client/player/PlayerSettings';
-import { DeviceSettings, LanguageSettings, LibrarySettings, ProfileSettings, SubtitleSettings } from '../features/client/account/AccountSettings';
+import { DeviceSettings, LanguageSettings, LibrarySettings, ProfileSettings, QuickConnectMenuItem, SubtitleSettings } from '../features/client/account/AccountSettings';
 /* eslint-disable react/jsx-no-bind -- View-local closures do not cross memoized component boundaries. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
@@ -361,7 +361,7 @@ function ClientView({ model }: ViewProps) {
                 <div className='client-nav-links'><Link to='/client?view=search' aria-label='Rechercher' className='client-search-shortcut'><ClientIcon name='search' /></Link>{links.filter(([key]) => key !== 'search').map(([key, label]) => <Link key={key} to={`/client?view=${key}`} aria-current={!id && view === key ? 'page' : undefined}>{label}</Link>)}</div>
                 <Link to='/client' className='client-brand' aria-label='Accueil'>C</Link>
                 {profileOpen && <div ref={profileMenu} className='client-profile-menu' role='dialog' aria-label='Menu du profil'>
-                    <strong>{user?.Name}</strong><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><button onClick={Dashboard.logout}>Se déconnecter</button>
+                    <strong>{user?.Name}</strong><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><QuickConnectMenuItem /><button onClick={Dashboard.logout}>Se déconnecter</button>
                 </div>}
             </nav>
             {actionError && <p role='alert' className='client-message'>{actionError}</p>}
