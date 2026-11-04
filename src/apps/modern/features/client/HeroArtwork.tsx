@@ -6,7 +6,7 @@ import { ImageSkeleton } from './ClientSkeleton';
 type Frame = { source: string; visible: boolean; failed?: boolean };
 
 /** Keep the previous artwork until its replacement has loaded and finished fading. */
-export default function HeroArtwork({ source, fadeMs = 900, backfill = false }: { readonly source: string; readonly fadeMs?: number; readonly backfill?: boolean }) {
+export default function HeroArtwork({ source, fadeMs = 900 }: { readonly source: string; readonly fadeMs?: number }) {
     const scheduled = useRef(new Set<number>());
     const disposed = useRef(false);
     useEffect(() => {
@@ -54,11 +54,8 @@ export default function HeroArtwork({ source, fadeMs = 900, backfill = false }: 
     function failed(frameSource: string) {
         setFrames(previous => previous.length > 1 ? previous.filter(entry => entry.source !== frameSource) : [{ source: frameSource, visible: true, failed: true }]);
     }
-    return <>{source && !frames.some(frame => frame.visible || frame.failed) && <ImageSkeleton />}{frames.map(frame => <React.Fragment key={frame.source}>
-        {backfill && <img className={`client-background-backfill${frame.visible ? ' artwork-loaded' : ''}`} src={frame.source} alt='' aria-hidden='true' decoding='async' hidden={frame.failed} />}
-        <img ref={element => element?.setAttribute('fetchpriority', 'high')} className={`client-background${frame.visible ? ' artwork-loaded' : ''}`} src={frame.source} alt='' decoding='async' hidden={frame.failed} onLoad={event => {
-            void loaded(frame.source, event.currentTarget);
-        }} onError={() => failed(frame.source)} />
-    </React.Fragment>)}</>;
+    return <>{source && !frames.some(frame => frame.visible || frame.failed) && <ImageSkeleton />}{frames.map(frame => <img key={frame.source} ref={element => element?.setAttribute('fetchpriority', 'high')} className={`client-background${frame.visible ? ' artwork-loaded' : ''}`} src={frame.source} alt='' decoding='async' hidden={frame.failed} onLoad={event => {
+        void loaded(frame.source, event.currentTarget);
+    }} onError={() => failed(frame.source)} />)}</>;
 }
 /* eslint-enable react/jsx-no-bind */
