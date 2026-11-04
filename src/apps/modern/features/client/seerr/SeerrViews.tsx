@@ -16,6 +16,7 @@ import { withLocalAvailability, externalIdentity, catalogueItem, providerKey, ca
     type ExternalMedia, type MediaRequest, type MediaType, type Quota, type Results, type SeerrIdentity } from './model';
 import { useLocalIdentities, useLocalSeasons, useSeerrDetail } from './queries';
 import { useSeerr } from './SeerrContext';
+import SeerrSetup from './SeerrSetup';
 
 export function SeerrSettings() {
     const seerr = useSeerr();
@@ -38,6 +39,7 @@ export function SeerrSettings() {
             } finally { setBusy(false); }
         }}>{busy ? 'Connexion…' : 'Vérifier la connexion'}</button>}
         {error && <p role='alert'>{error}</p>}
+        <SeerrSetup />
     </section>;
 }
 

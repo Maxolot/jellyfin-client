@@ -304,3 +304,17 @@
     opacity: 0.45;
     cursor: default;
 }
+
+.client-seerr-setup {
+    margin-top: 28px;
+
+    code {
+        overflow-wrap: anywhere;
+    }
+
+    .client-account-quickconnect input {
+        display: block;
+        width: min(100%, 420px);
+        margin-top: 8px;
+    }
+}
