@@ -2,6 +2,9 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import React, { useEffect, useId, useRef, useState } from 'react';
 
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useServerPreview } from './previews/provider';
+import { compactPreview } from './previews/model';
 import ClientIcon from './ClientIcon';
 import { usePreviews } from './PreviewProvider';
 import { previewSource, type PreviewSurface } from './previewSource';
@@ -9,6 +12,7 @@ import { previewSource, type PreviewSurface } from './previewSource';
 type Props = { item: BaseItemDto; surface: PreviewSurface; enabled?: boolean; soundControl?: boolean };
 const priority = { hero: 0, spotlight: 1, detail: 5, card: 10, episode: 20 };
 
+// eslint-disable-next-line sonarjs/cognitive-complexity -- Source ownership combines static and optional server-backed previews.
 export default function PreviewClip({ item, surface, enabled = true, soundControl = true }: Readonly<Props>) {
     const preview = usePreviews();
     const generatedId = useId();
@@ -19,14 +23,16 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
     const [nearby, setNearby] = useState(false);
     const [started, setStarted] = useState(false);
     const [fading, setFading] = useState(false);
-    const source = preview ? previewSource(preview.sources, item, document.baseURI, surface !== 'episode', surface) : undefined;
-    const key = `${surface}:${item.Id}:${source}`;
+    const staticSource = preview ? previewSource(preview.sources, item, document.baseURI, surface !== 'episode', surface) : undefined;
+    const key = `${surface}:${item.Id}`;
+    const small = useMediaQuery('(max-width: 700px)');
+    const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
     const claim = preview?.claim;
     const release = preview?.release;
     const report = preview?.report;
     const completed = preview?.completed;
     const mute = preview?.mute;
-    const available = !!source && enabled && !!preview?.enabled;
+    const available = (!!staticSource || !!preview?.serverAvailable) && enabled && !!preview?.enabled;
     useEffect(() => {
         if (!available || !region.current || !('IntersectionObserver' in window)) return;
         const observer = new IntersectionObserver(entries => setNearby(entries.some(entry => entry.isIntersecting)), { threshold: 0.1 });
@@ -39,6 +45,19 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         return () => release?.(owner);
     }, [available, nearby, claim, release, owner, surface]);
     const active = available && nearby && preview?.selected === owner;
+    const [resolve, setResolve] = useState(false);
+    useEffect(() => {
+        setResolve(false);
+        if (!active || completed?.has(key)) return;
+        const timer = window.setTimeout(() => setResolve(true), 600);
+        return () => window.clearTimeout(timer);
+    }, [active, completed, key]);
+    const server = useServerPreview(item, surface, active && resolve && !!preview?.serverAvailable && !completed?.has(key));
+    let source = staticSource;
+    if (preview?.serverAvailable) {
+        if (server.data?.state === 'ready') source = compactPreview(surface, small, saveData) ? server.data.compact || server.data.full : server.data.full || server.data.compact;
+        else if (server.isPending || server.data?.state === 'pending') source = undefined;
+    }
     useEffect(() => {
         setStarted(false);
         setVisible(false);
@@ -78,6 +97,10 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
             if (!disposed && !element.ended && remaining > 0) frame = requestAnimationFrame(fadeVolume);
         };
         const progress = () => {
+            if (element.currentTime >= 30) {
+                finish();
+                return;
+            }
             if (!fadeStarted && Number.isFinite(element.duration) && element.duration - element.currentTime <= 0.8) {
                 fadeStarted = true;
                 setFading(true);
@@ -87,7 +110,7 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         const ready = () => setVisible(true);
         const metadata = () => {
             // A preview registry cannot silently turn a whole film into an autoplay source.
-            if (!Number.isFinite(element.duration) || element.duration > 30) finish();
+            if (!Number.isFinite(element.duration) || element.duration > 30.5) finish();
         };
         element.addEventListener('playing', ready);
         element.addEventListener('loadedmetadata', metadata);
@@ -120,9 +143,9 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
             element.load();
         };
     }, [started, source, key, completed, owner, report, mute]);
-    if (!source || !preview) return null;
+    if (!available || !preview) return null;
     return <><span ref={region} className={`client-preview-media${visible && !fading ? ' is-playing' : ''}${fading ? ' is-fading' : ''}`} aria-hidden='true'>
-        {started && <video ref={video} src={source} muted playsInline preload='none' />}
+        {started && source && <video key={source} ref={video} src={source} muted playsInline preload='none' crossOrigin='anonymous' />}
     </span>{soundControl && visible && !fading && <button className={`client-preview-sound client-preview-sound-${surface}`} aria-label={preview.muted ? 'Activer le son des aperçus' : 'Couper le son des aperçus'} aria-pressed={!preview.muted} onClick={event => {
         event.preventDefault();
         event.stopPropagation();
