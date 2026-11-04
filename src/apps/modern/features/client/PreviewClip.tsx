@@ -5,6 +5,7 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useServerPreview } from './previews/provider';
 import { compactPreview } from './previews/model';
+import { detectLetterbox, letterboxTransform } from './previews/letterbox';
 import ClientIcon from './ClientIcon';
 import { usePreviews } from './PreviewProvider';
 import { previewSource, type PreviewSurface } from './previewSource';
@@ -79,6 +80,40 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         let finishTimer = 0;
         let fadeStarted = false;
         let finishing = false;
+        let frameTimer = 0;
+        let checks = 0;
+        let lastBars: { top: number; bottom: number } | undefined;
+        let stable = 0;
+        let measured: { top: number; bottom: number } | undefined;
+        const canvas = surface === 'hero' ? document.createElement('canvas') : undefined;
+        if (canvas) {
+            canvas.width = 160;
+            canvas.height = 90;
+        }
+        const applyFraming = () => {
+            if (!measured || !element.parentElement) return;
+            const bounds = element.parentElement.getBoundingClientRect();
+            element.style.transform = letterboxTransform(element.videoWidth, element.videoHeight, bounds.width, bounds.height, measured);
+        };
+        const measureBars = () => {
+            if (disposed || !playback.owns(element, lease) || !canvas || !element.videoWidth || checks++ >= 8) return;
+            try {
+                const context = canvas.getContext('2d', { willReadFrequently: true });
+                if (!context) return;
+                context.drawImage(element, 0, 0, canvas.width, canvas.height);
+                const bars = detectLetterbox(context.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height);
+                if (bars && lastBars && Math.abs(bars.top - lastBars.top) < 0.025 && Math.abs(bars.bottom - lastBars.bottom) < 0.025) stable++;
+                else stable = 0;
+                lastBars = bars;
+                if (bars && stable >= 2) {
+                    measured = bars;
+                    applyFraming();
+                    return;
+                }
+                frameTimer = window.setTimeout(measureBars, 250);
+            } catch { /* Cross-origin or unreadable video keeps the normal cover framing. */ }
+        };
+        window.addEventListener('resize', applyFraming);
         report?.(owner, true);
         const finish = () => {
             if (finishing || disposed || !playback.owns(element, lease)) return;
@@ -115,6 +150,7 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
                 return;
             }
             setVisible(true);
+            if (surface === 'hero' && !frameTimer && !measured) frameTimer = window.setTimeout(measureBars, 100);
         };
         const metadata = () => {
             // A preview registry cannot silently turn a whole film into an autoplay source.
@@ -144,6 +180,9 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
             disposed = true;
             report?.(owner, false);
             window.clearTimeout(finishTimer);
+            window.clearTimeout(frameTimer);
+            window.removeEventListener('resize', applyFraming);
+            element.style.transform = '';
             cancelAnimationFrame(frame);
             element.removeEventListener('playing', ready);
             element.removeEventListener('loadedmetadata', metadata);
@@ -152,7 +191,7 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
             element.removeEventListener('error', finish);
             playback.release(element, lease);
         };
-    }, [active, started, source, key, completed, owner, report, mute, playback]);
+    }, [active, started, source, key, completed, owner, report, mute, playback, surface]);
     if (!available || !preview) return null;
     return <><span ref={region} className={`client-preview-media${visible && !fading ? ' is-playing' : ''}${fading ? ' is-fading' : ''}`} aria-hidden='true'>
         {active && started && source && <video key={source} ref={video} src={source} muted playsInline preload='none' crossOrigin='anonymous' />}
