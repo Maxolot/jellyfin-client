@@ -6,12 +6,14 @@ import { useApi } from 'hooks/useApi';
 import { useWebConfig } from 'hooks/useWebConfig';
 import type { ClientPreviewSources } from 'types/webConfig';
 import Events from 'utils/events';
+import { PreviewPlayback } from './previews/playback';
 
 const noSources: ClientPreviewSources = {};
 type Owner = { id: string; priority: number; order: number };
 type PreviewContextValue = {
     enabled: boolean;
     serverAvailable: boolean;
+    playback: PreviewPlayback;
     muted: boolean;
     scope: string;
     sources: ClientPreviewSources;
@@ -49,6 +51,7 @@ export default function PreviewProvider({ children, surface, serverAvailable, en
     const scope = `${user?.ServerId || ''}/${user?.Id || ''}`;
     const completion = useMemo(() => ({ scope, items: new Set<string>() }), [scope]);
     const completed = completion.items;
+    const playback = useMemo(() => new PreviewPlayback(), []);
     const order = useRef(0);
     const muting = useRef({ muted, toggleMuted });
     useEffect(() => {
@@ -100,6 +103,6 @@ export default function PreviewProvider({ children, surface, serverAvailable, en
     }, [busy, onPlayingChange]);
     const selected = [...owners].sort((a, b) => a.priority - b.priority || a.order - b.order).pop()?.id;
     const active = enabled && !hidden && !reduced && !suspended && !realPlayback && !dialogOpen;
-    const value = useMemo(() => ({ enabled: active, serverAvailable, muted, scope, sources, selected, completed, claim, release, report, toggleMuted, mute }), [active, serverAvailable, muted, scope, sources, selected, completed, claim, release, report, toggleMuted, mute]);
+    const value = useMemo(() => ({ enabled: active, serverAvailable, playback, muted, scope, sources, selected, completed, claim, release, report, toggleMuted, mute }), [active, serverAvailable, playback, muted, scope, sources, selected, completed, claim, release, report, toggleMuted, mute]);
     return <PreviewContext.Provider value={value}>{children}</PreviewContext.Provider>;
 }

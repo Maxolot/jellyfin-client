@@ -20,7 +20,7 @@ import Events from 'utils/events';
 
 import HeroArtwork from '../features/client/HeroArtwork';
 import ClientSkeleton from '../features/client/ClientSkeleton';
-import PreviewProvider from '../features/client/PreviewProvider';
+import PreviewProvider, { usePreviews } from '../features/client/PreviewProvider';
 import PreviewClip from '../features/client/PreviewClip';
 import { type Preferences, useInterfacePreferences } from '../features/client/interfacePreferences';
 import HeroPagination, { type MarkerPosition } from '../features/client/HeroPagination';
@@ -383,17 +383,26 @@ function HeroView({ model }: ViewProps) {
     const { hero, id, location, image, heroItems, setHeroIndex, setHeroPaused, preferences } = model;
     const region = useRef<HTMLElement>(null);
     const marker = useRef<MarkerPosition | null>(null);
+    const previews = usePreviews();
     useHeroBackground(region, !id && preferences.hero === 'background', !!hero);
     if (!hero) return null;
+    function selectHero(index: number) {
+        previews?.playback.stop();
+        setHeroIndex(index);
+    }
+    function advanceHero(delta: number) {
+        previews?.playback.stop();
+        setHeroIndex(index => (index + heroItems.length + delta) % heroItems.length);
+    }
     return <section ref={region} className={`client-hero${id ? ' client-detail' : ' client-home-hero'}${hero.Type === 'Series' && id ? ' client-series-detail' : ''}`} onPointerEnter={() => setHeroPaused(true)} onPointerLeave={() => setHeroPaused(false)} onFocus={() => setHeroPaused(true)} onBlur={event => {
         if (!event.currentTarget.contains(event.relatedTarget)) setHeroPaused(false);
     }}>
         <HeroArtwork source={image(hero, true, true)} />
-        <PreviewClip key={hero.Id} item={hero} surface={id ? 'detail' : 'hero'} />
+        <PreviewClip item={hero} surface={id ? 'detail' : 'hero'} />
         {id && <div className='client-detail-readability' aria-hidden='true' />}
         {id && <Link className='client-back' to={(location.state as ClientNavigationState | null)?.returnTo || '/client'} state={{ ...(location.state as ClientNavigationState | null)?.returnState, restoreFocus: true }}><ClientIcon name='back' />Retour</Link>}
-        <HeroCopyView key={hero.Id} model={model} dots={!id && heroItems.length > 1 ? <HeroPagination items={heroItems} index={Math.max(0, heroItems.findIndex(entry => entry.Id === hero.Id))} select={setHeroIndex} position={marker} /> : null} />
-        {!id && heroItems.length > 1 && <div className='client-hero-arrows'><button aria-label='Média précédent' onClick={() => setHeroIndex(index => (index + heroItems.length - 1) % heroItems.length)}><ClientIcon name='back' /></button><button aria-label='Média suivant' onClick={() => setHeroIndex(index => index + 1)}><ClientIcon name='next' /></button></div>}
+        <HeroCopyView key={hero.Id} model={model} dots={!id && heroItems.length > 1 ? <HeroPagination items={heroItems} index={Math.max(0, heroItems.findIndex(entry => entry.Id === hero.Id))} select={selectHero} position={marker} /> : null} />
+        {!id && heroItems.length > 1 && <div className='client-hero-arrows'><button aria-label='Média précédent' onClick={() => advanceHero(-1)}><ClientIcon name='back' /></button><button aria-label='Média suivant' onClick={() => advanceHero(1)}><ClientIcon name='next' /></button></div>}
         <EpisodesView model={model} />
     </section>;
 }

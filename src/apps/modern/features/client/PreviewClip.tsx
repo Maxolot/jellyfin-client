@@ -32,6 +32,7 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
     const report = preview?.report;
     const completed = preview?.completed;
     const mute = preview?.mute;
+    const playback = preview?.playback;
     const available = (!!staticSource || !!preview?.serverAvailable) && enabled && !!preview?.enabled;
     useEffect(() => {
         if (!available || !region.current || !('IntersectionObserver' in window)) return;
@@ -71,7 +72,8 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
     }, [preview?.muted, started]);
     useEffect(() => {
         const element = video.current;
-        if (!started || !element || !source) return;
+        if (!active || !started || !element || !source || !playback) return;
+        const lease = playback.acquire(element);
         let disposed = false;
         let frame = 0;
         let finishTimer = 0;
@@ -79,7 +81,7 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         let finishing = false;
         report?.(owner, true);
         const finish = () => {
-            if (finishing) return;
+            if (finishing || disposed || !playback.owns(element, lease)) return;
             finishing = true;
             element.pause();
             completed?.add(key);
@@ -107,7 +109,13 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
                 frame = requestAnimationFrame(fadeVolume);
             }
         };
-        const ready = () => setVisible(true);
+        const ready = () => {
+            if (disposed || !playback.owns(element, lease)) {
+                playback.release(element, lease);
+                return;
+            }
+            setVisible(true);
+        };
         const metadata = () => {
             // A preview registry cannot silently turn a whole film into an autoplay source.
             if (!Number.isFinite(element.duration) || element.duration > 30.5) finish();
@@ -117,13 +125,17 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         element.addEventListener('timeupdate', progress);
         element.addEventListener('ended', finish);
         element.addEventListener('error', finish);
-        void element.play().catch(error => {
-            if (disposed) return;
+        void element.play().then(() => {
+            if (disposed || !playback.owns(element, lease)) playback.release(element, lease);
+        }).catch(error => {
+            if (disposed || !playback.owns(element, lease)) return;
             if (error?.name === 'NotAllowedError') {
                 element.muted = true;
                 mute?.();
-                return element.play().catch(() => {
-                    if (!disposed) finish();
+                return element.play().then(() => {
+                    if (disposed || !playback.owns(element, lease)) playback.release(element, lease);
+                }).catch(() => {
+                    if (!disposed && playback.owns(element, lease)) finish();
                 });
             }
             finish();
@@ -138,14 +150,12 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
             element.removeEventListener('timeupdate', progress);
             element.removeEventListener('ended', finish);
             element.removeEventListener('error', finish);
-            element.pause();
-            element.removeAttribute('src');
-            element.load();
+            playback.release(element, lease);
         };
-    }, [started, source, key, completed, owner, report, mute]);
+    }, [active, started, source, key, completed, owner, report, mute, playback]);
     if (!available || !preview) return null;
     return <><span ref={region} className={`client-preview-media${visible && !fading ? ' is-playing' : ''}${fading ? ' is-fading' : ''}`} aria-hidden='true'>
-        {started && source && <video key={source} ref={video} src={source} muted playsInline preload='none' crossOrigin='anonymous' />}
+        {active && started && source && <video key={source} ref={video} src={source} muted playsInline preload='none' crossOrigin='anonymous' />}
     </span>{soundControl && visible && !fading && <button className={`client-preview-sound client-preview-sound-${surface}`} aria-label={preview.muted ? 'Activer le son des aperçus' : 'Couper le son des aperçus'} aria-pressed={!preview.muted} onClick={event => {
         event.preventDefault();
         event.stopPropagation();
