@@ -19,6 +19,8 @@ See the [changelog](docs/fork/CHANGELOG.md).
 - [Build and run](docs/fork/DEVELOPMENT.md)
 - [Upstream baseline](docs/fork/UPSTREAM.md)
 - [Roadmap and acceptance criteria](docs/fork/ROADMAP.md)
+- [Video feature coverage](docs/fork/FEATURE-COVERAGE.md)
+- [Branches and integration](docs/fork/BRANCHING.md)
 - [Contributing to this fork](docs/fork/CONTRIBUTING.md)
 - [Release history](docs/fork/CHANGELOG.md)
 

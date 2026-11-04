@@ -1,3 +1,4 @@
+import { customVideoPresentation } from './customVideoPresentation';
 import { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-item-kind';
 import { ItemFields } from '@jellyfin/sdk/lib/generated-client/models/item-fields';
 import { ItemFilter } from '@jellyfin/sdk/lib/generated-client/models/item-filter';
@@ -15,6 +16,7 @@ import appSettings from '../../scripts/settings/appSettings';
 import itemHelper from '../itemHelper';
 import { pluginManager } from '../pluginManager';
 import PlayQueueManager from './playqueuemanager';
+import { cancelStreamChanges, queueStreamChange } from './streamChangeQueue';
 import * as userSettings from '../../scripts/settings/userSettings';
 import globalize from '../../lib/globalize';
 import loading from '../loading/loading';
@@ -1715,6 +1717,21 @@ export class PlaybackManager {
                 return;
             }
 
+            const itemId = self.currentItem(player)?.Id;
+            const data = getPlayerData(player);
+            const startPaused = data.isChangingStream ? data.streamInfo.startPaused : player.paused();
+            const generation = player.streamChangeGeneration || 0;
+            return queueStreamChange(player, function () {
+                if (self._currentPlayer !== player || self.currentItem(player)?.Id !== itemId || (player.streamChangeGeneration || 0) !== generation) return Promise.resolve();
+                return replaceStream(player, ticks, params, startPaused, generation);
+            }, Object.keys(params || {}).sort((a, b) => a.localeCompare(b)).join(',') || 'position').catch(function (error) {
+                if (self._currentPlayer !== player || (player.streamChangeGeneration || 0) !== generation) return;
+                data.isChangingStream = false;
+                onPlaybackError.call(player, error, { type: MediaError.SERVER_ERROR });
+            });
+        }
+
+        function replaceStream(player, ticks, params, startPaused, generation) {
             params = params || {};
 
             const liveStreamId = getPlayerData(player).streamInfo.liveStreamId;
@@ -1724,7 +1741,7 @@ export class PlaybackManager {
 
             const currentItem = self.currentItem(player);
 
-            player.getDeviceProfile(currentItem, {
+            return player.getDeviceProfile(currentItem, {
                 isRetry: params.EnableDirectPlay === false
             }).then(function (deviceProfile) {
                 const audioStreamIndex = params.AudioStreamIndex == null ? getPlayerData(player).audioStreamIndex : params.AudioStreamIndex;
@@ -1754,7 +1771,8 @@ export class PlaybackManager {
                     allowAudioStreamCopy: params.AllowAudioStreamCopy
                 };
 
-                getPlaybackInfo(player, apiClient, currentItem, deviceProfile, currentMediaSource.Id, liveStreamId, options).then(function (result) {
+                return getPlaybackInfo(player, apiClient, currentItem, deviceProfile, currentMediaSource.Id, liveStreamId, options).then(function (result) {
+                    if (self._currentPlayer !== player || self.currentItem(player)?.Id !== currentItem.Id || (player.streamChangeGeneration || 0) !== generation) return;
                     if (validatePlaybackInfoResult(self, result)) {
                         // Changing streams requests only the active source; keep the version availability flag.
                         result.MediaSources[0].hasAlternateVersions = currentMediaSource.hasAlternateVersions;
@@ -1764,6 +1782,8 @@ export class PlaybackManager {
                         streamInfo.fullscreen = currentPlayOptions.fullscreen;
                         streamInfo.lastMediaInfoQuery = lastMediaInfoQuery;
                         streamInfo.resetSubtitleOffset = false;
+                        streamInfo.startPaused = startPaused;
+                        streamInfo.changeGeneration = generation;
 
                         if (!streamInfo.url) {
                             cancelPlayback();
@@ -1776,7 +1796,7 @@ export class PlaybackManager {
                         getPlayerData(player).audioStreamIndex = audioStreamIndex;
                         getPlayerData(player).maxStreamingBitrate = maxBitrate;
 
-                        changeStreamToUrl(apiClient, player, playSessionId, streamInfo);
+                        return changeStreamToUrl(apiClient, player, playSessionId, streamInfo);
                     }
                 });
             });
@@ -1788,15 +1808,16 @@ export class PlaybackManager {
             playerData.isChangingStream = true;
 
             if (playerData.streamInfo && playSessionId) {
-                apiClient.stopActiveEncodings(playSessionId).then(function () {
+                return apiClient.stopActiveEncodings(playSessionId).then(function () {
+                    if (self._currentPlayer !== player || (player.streamChangeGeneration || 0) !== streamInfo.changeGeneration) return;
                     // Stop the first transcoding afterwards because the player may still send requests to the original url
                     const afterSetSrc = function () {
-                        apiClient.stopActiveEncodings(playSessionId);
+                        return apiClient.stopActiveEncodings(playSessionId);
                     };
-                    setSrcIntoPlayer(apiClient, player, streamInfo).then(afterSetSrc, afterSetSrc);
+                    return setSrcIntoPlayer(apiClient, player, streamInfo).then(afterSetSrc, afterSetSrc);
                 });
             } else {
-                setSrcIntoPlayer(apiClient, player, streamInfo);
+                return setSrcIntoPlayer(apiClient, player, streamInfo);
             }
         }
 
@@ -1806,12 +1827,14 @@ export class PlaybackManager {
             playerData.streamInfo = streamInfo;
 
             return player.play(streamInfo).then(function () {
+                if (playerData.streamInfo !== streamInfo || (player.streamChangeGeneration || 0) !== streamInfo.changeGeneration) return;
                 playerData.isChangingStream = false;
                 streamInfo.started = true;
                 streamInfo.ended = false;
 
                 sendProgressUpdate(player, 'timeupdate');
             }, function (e) {
+                if (playerData.streamInfo !== streamInfo || (player.streamChangeGeneration || 0) !== streamInfo.changeGeneration) return;
                 playerData.isChangingStream = false;
 
                 onPlaybackError.call(player, e, {
@@ -3547,7 +3570,7 @@ export class PlaybackManager {
 
             const errorOccurred = displayErrorCode && typeof (displayErrorCode) === 'string';
 
-            const nextItem = self._playNextAfterEnded && !errorOccurred ? self._playQueueManager.getNextItemInfo() : null;
+            const nextItem = self._playNextAfterEnded && !errorOccurred && (!customVideoPresentation.active || customVideoPresentation.autoNext) ? self._playQueueManager.getNextItemInfo() : null;
 
             const nextMediaType = (nextItem ? nextItem.item.MediaType : null);
 
@@ -3590,12 +3613,12 @@ export class PlaybackManager {
             }
 
             if (errorOccurred) {
-                showPlaybackInfoErrorMessage(self, 'PlaybackError' + displayErrorCode);
+                if (!customVideoPresentation.active) showPlaybackInfoErrorMessage(self, 'PlaybackError' + displayErrorCode);
             } else if (newPlayer) {
                 const apiClient = ServerConnections.getApiClient(nextItem.item.ServerId);
 
                 apiClient.getCurrentUser().then(function (user) {
-                    if (user.Configuration.EnableNextEpisodeAutoPlay || nextMediaType !== MediaType.Video) {
+                    if ((customVideoPresentation.active ? customVideoPresentation.autoNext : user.Configuration.EnableNextEpisodeAutoPlay) || nextMediaType !== MediaType.Video) {
                         self.nextTrack();
 
                         if (newPlayer !== player) {
@@ -3612,6 +3635,8 @@ export class PlaybackManager {
         }
 
         function onPlaybackChanging(activePlayer, newPlayer, newItem) {
+            activePlayer.streamChangeGeneration = (activePlayer.streamChangeGeneration || 0) + 1;
+            cancelStreamChanges(activePlayer);
             const state = self.getPlayerState(activePlayer);
 
             const serverId = self.currentItem(activePlayer).ServerId;
@@ -4067,6 +4092,9 @@ export class PlaybackManager {
     stop(player) {
         player = player || this._currentPlayer;
         if (player) {
+            player.streamChangeGeneration = (player.streamChangeGeneration || 0) + 1;
+            player.isChangingStream = false;
+            cancelStreamChanges(player);
             if (enableLocalPlaylistManagement(player)) {
                 this._playNextAfterEnded = false;
             }

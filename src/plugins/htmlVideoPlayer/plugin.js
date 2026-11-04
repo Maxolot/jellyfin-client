@@ -517,7 +517,17 @@ export class HtmlVideoPlayer {
         this.#applyAspectRatio(options.aspectRatio || this.getAspectRatio());
 
         await this.updateVideoUrl(options);
-        return this.setCurrentSrc(elem, options);
+        // Replacing a paused stream must not resume playback or emit a burst of audio.
+        const wasMuted = elem.muted;
+        if (options.startPaused) elem.muted = true;
+        try {
+            await this.setCurrentSrc(elem, options);
+        } finally {
+            if (options.startPaused) {
+                elem.pause();
+                elem.muted = wasMuted;
+            }
+        }
     }
 
     /**

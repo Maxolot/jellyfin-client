@@ -1,0 +1,103 @@
+.client-detail-dialog {
+    position: fixed;
+    inset: 0;
+    width: min(840px, calc(100vw - 32px));
+    max-height: calc(100svh - 48px);
+    margin: auto;
+    padding: 0;
+    overflow-y: auto;
+    border: 1px solid #ffffff30;
+    border-radius: 18px;
+    background: #17181c;
+    color: #f3f3f5;
+
+    &::backdrop {
+        background: #000b;
+        backdrop-filter: blur(6px);
+    }
+
+    > header {
+        position: sticky;
+        z-index: 2;
+        top: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 22px;
+        border-bottom: 1px solid #ffffff18;
+        background: #17181c;
+    }
+
+    h2 {
+        margin: 4px 0 0;
+        font-size: clamp(20px, 3vw, 26px);
+        font-weight: 600;
+    }
+
+    small { color: #b5b7bf; }
+
+    > header > button {
+        display: grid;
+        width: 44px;
+        height: 44px;
+        flex-shrink: 0;
+        place-items: center;
+        padding: 12px;
+        border: 0;
+        border-radius: 50%;
+        background: #ffffff12;
+        color: white;
+    }
+
+    .client-request-panel {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: none;
+    }
+
+    .client-cast-grid {
+        margin: 0;
+        padding: 0;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    }
+
+    .client-person-portrait {
+        height: auto;
+        aspect-ratio: 3 / 4;
+    }
+}
+
+.client-detail-dialog-body { padding: 22px; }
+
+.client-actions .client-availability-action {
+    min-height: 44px;
+    padding: 11px 13px;
+    font-size: 13px;
+}
+
+.client-detail-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 20px;
+    margin-top: 16px;
+
+    .client-original-link { margin-top: 0; }
+}
+
+.client-detail-links .client-cast-action {
+    min-height: 32px;
+    padding: 4px 0;
+    border: 0;
+    background: none;
+    color: #d3d4d9;
+    font-size: 12px;
+
+    &:hover {
+        color: white;
+        text-decoration: underline;
+    }
+}

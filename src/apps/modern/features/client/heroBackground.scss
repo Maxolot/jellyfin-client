@@ -1,0 +1,63 @@
+.client-hero-background .client-browse-controls {
+    position: relative;
+    z-index: 2;
+}
+
+.client-hero-background .client-home-hero {
+    height: calc(100svh - var(--client-hero-offset, 0px));
+    min-height: 480px;
+    margin: 0 0 28px;
+    padding: 60px var(--client-margin) 70px;
+    overflow: visible;
+    overflow-x: clip;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+
+    .client-background,
+    > .client-preview-media,
+    &::before {
+        top: calc(-1 * var(--client-hero-offset, 0px));
+        height: calc(100% + var(--client-hero-offset, 0px));
+        border-radius: 0;
+    }
+
+    &::before {
+        background: linear-gradient(0deg, #090a0d, transparent 52%), linear-gradient(90deg, #090a0d80, transparent 70%), linear-gradient(180deg, #090a0d88, transparent 30%);
+    }
+
+    > .client-preview-sound {
+        top: auto;
+        right: var(--client-margin);
+        bottom: 105px;
+    }
+
+    .client-hero-arrows {
+        right: var(--client-margin);
+    }
+}
+
+.preview-hero-framed {
+    background: #11141b;
+
+    &::before {
+        position: absolute;
+        inset: 45px 12px 10px;
+        border: 1px solid #ffffff50;
+        border-radius: 12px;
+        background: radial-gradient(ellipse at 80% 28%, #7093a8, transparent 40%), linear-gradient(130deg, #10151e, #23414e 65%, #17202e);
+        content: '';
+    }
+}
+
+.preview-hero-background .preview-header {
+    z-index: 1;
+}
+
+@media (max-width: 700px) {
+    .client-hero-background .client-home-hero {
+        min-height: 500px;
+        padding-top: 75px;
+        padding-bottom: 50px;
+    }
+}

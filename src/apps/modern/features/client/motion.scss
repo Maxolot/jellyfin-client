@@ -1,0 +1,358 @@
+/* Motion only animates opacity and transforms, except the intentional card expansion. */
+.client-ambient {
+    position: fixed;
+    z-index: -1;
+    inset: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1.4s ease-in-out;
+
+    .client-background {
+        inset: -5%;
+        width: 110%;
+        height: 110%;
+        filter: blur(38px) saturate(0.8);
+        opacity: 0;
+        transition: opacity 1.5s ease-in-out;
+    }
+
+    .artwork-loaded {
+        opacity: 0.2;
+    }
+}
+
+.client-ambient.is-active {
+    opacity: 1;
+}
+
+.client-glass:not(.client-floating) .client-nav {
+    isolation: isolate;
+    border-color: #ffffff40;
+    border-radius: 28px;
+    background: linear-gradient(140deg, #ffffff1f, #ffffff04 40%, #ffffff0c), rgb(18 20 25 / 0.4);
+    box-shadow: 0 18px 60px #0005, inset 0 1px 0 #fff6, inset 0 -1px 0 #ffffff0d;
+    backdrop-filter: blur(28px) saturate(155%);
+}
+
+.client-glass:not(.client-floating) .client-nav::before {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(ellipse 360px 170px at var(--glass-x, 30%) var(--glass-y, 0%), #ffffff24, transparent 75%);
+    pointer-events: none;
+    content: '';
+}
+
+.client-liquid-dots {
+    position: relative;
+    display: flex;
+    flex-shrink: 0;
+    gap: 0;
+    width: calc(var(--dot-count) * 28px);
+    height: 32px;
+    margin-left: 10px;
+    isolation: isolate;
+
+    button {
+        position: relative;
+        z-index: 2;
+        flex: 0 0 28px;
+        width: 28px;
+        height: 32px;
+        padding: 0;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    button::after {
+        position: absolute;
+        top: 12px;
+        left: 10px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #ffffff45;
+        box-shadow: inset 0 1px 1px #fff3;
+        content: '';
+        transition: background 0.2s ease;
+    }
+
+    button:hover::after {
+        background: #ffffff75;
+    }
+}
+
+@media (max-width: 700px) {
+    .client-liquid-dots {
+        margin-left: 0;
+    }
+}
+
+// The fluid drop replaces the active dot; the gooey filter merges head, neck and tail as in the mockup.
+.client-liquid-marker {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    width: 100%;
+    height: 32px;
+    overflow: visible;
+    filter: drop-shadow(0 1px 3px #0004);
+    pointer-events: none;
+
+    .marker-fluid {
+        fill: #f2f4f6;
+    }
+
+    .marker-glint {
+        fill: #fff;
+        opacity: 0.65;
+    }
+}
+
+.client-artwork {
+    opacity: 0;
+    transition: opacity 0.32s ease;
+}
+
+.client-artwork:not(.artwork-ready) {
+    visibility: hidden;
+}
+
+.client-artwork.artwork-ready {
+    opacity: 1;
+}
+
+.client-artwork[hidden] {
+    display: none;
+}
+
+.client-section-glow {
+    transition: opacity 0.3s ease, background-color 0.5s ease;
+}
+
+.client-media-card.active:not(.has-backdrop) .client-card-poster.artwork-ready {
+    opacity: 1;
+}
+
+.client-media-card:not(.active) .client-card-backdrop,
+.client-media-card.active:not(.has-backdrop) .client-card-backdrop {
+    opacity: 0;
+}
+
+.client-title-logo:not(.artwork-ready) {
+    display: none;
+}
+
+.client-title-logo.artwork-ready + .client-title-fallback {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+}
+
+.client-expanded-title img:not(.artwork-ready) + strong {
+    display: block;
+}
+
+.client-home-hero .client-background.artwork-loaded {
+    animation: client-artwork-drift 18s ease-out both;
+    animation-play-state: paused;
+}
+
+.client-home-hero.client-motion-visible .client-background.artwork-loaded {
+    animation-play-state: running;
+}
+
+.client-interface[data-motion-paused='true'] .client-home-hero .client-background {
+    animation-play-state: paused;
+}
+
+// Copy and buttons enter per slide; the carousel dots stay put so the drop can flow between slides.
+.client-hero-copy > :not(.client-actions),
+.client-hero-copy > .client-actions > :not(.client-hero-dots) {
+    animation: client-copy-enter 0.5s var(--client-ease) both;
+}
+
+.client-reveal-pending {
+    opacity: 0;
+    transform: translateY(18px);
+}
+
+.client-reveal-enter {
+    animation: client-section-enter 0.48s var(--client-ease) both;
+}
+
+.client-profile-menu,
+.client-cast-dialog[open] {
+    animation: client-copy-enter 0.22s var(--client-ease) both;
+}
+
+.client-interface button,
+.client-interface .client-button,
+.client-interface .client-person,
+.client-interface .client-nav a {
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.client-interface button:active,
+.client-interface .client-button:active {
+    transform: scale(0.97);
+}
+
+.client-person:hover {
+    transform: translateY(-4px);
+}
+
+.client-episodes header button[aria-pressed='true'] {
+    box-shadow: inset 0 0 0 1px #ffffff65;
+}
+
+@keyframes client-artwork-drift {
+    from { transform: scale(1.015); }
+    to { transform: scale(1.065); }
+}
+
+@keyframes client-copy-enter {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes client-section-enter {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .client-glass:not(.client-floating) .client-nav::before {
+        background: linear-gradient(140deg, #ffffff0e, transparent);
+    }
+
+    #clientPage .client-interface *,
+    #clientPage .client-interface *::before,
+    #clientPage .client-interface *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+    }
+
+    .client-reveal-pending {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+// « Bientôt à découvrir » : grandes affiches 2:3 de la maquette, hauteur bornée selon l'écran.
+.client-upcoming {
+    --release-height: clamp(420px, 34vw, 560px);
+}
+
+.client-upcoming-strip {
+    display: flex;
+    gap: 20px;
+    padding: 5px var(--client-margin) 20px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: var(--client-margin);
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+}
+
+.client-upcoming-card {
+    position: relative;
+    flex: 0 0 calc(var(--release-height) * 2 / 3);
+    height: var(--release-height);
+    overflow: hidden;
+    border-radius: 12px;
+    background: #1a1d22;
+    color: #fff;
+    scroll-snap-align: start;
+
+    .client-artwork {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .client-card-fallback {
+        position: absolute;
+        inset: auto 18px 50%;
+        text-align: center;
+    }
+
+    .client-artwork.artwork-ready ~ .client-card-fallback {
+        display: none;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 3px;
+    }
+}
+
+.client-upcoming-shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, #000d, transparent 38%);
+}
+
+.client-upcoming-date {
+    position: absolute;
+    top: 17px;
+    left: 18px;
+    padding: 7px 10px;
+    border-radius: 999px;
+    background: #111b;
+    font-size: 11px;
+    font-weight: 600;
+    backdrop-filter: blur(8px);
+}
+
+.client-upcoming-kind {
+    position: absolute;
+    right: 20px;
+    bottom: 18px;
+    left: 20px;
+    color: #e1e4e9;
+    font-size: 12px;
+}
+
+@media (max-width: 1100px) {
+    .client-upcoming {
+        --release-height: 450px;
+    }
+}
+
+@media (max-width: 600px) {
+    .client-upcoming {
+        --release-height: 390px;
+    }
+
+    .client-upcoming-strip {
+        gap: 14px;
+    }
+
+    .client-upcoming-card {
+        border-radius: 9px;
+    }
+}

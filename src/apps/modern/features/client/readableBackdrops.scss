@@ -1,0 +1,70 @@
+.client-hero-background .client-home-hero {
+    clip-path: inset(calc(-1 * var(--client-hero-offset, 0px)) 0 0);
+
+    .client-background,
+    > .client-preview-media {
+        mask-image: linear-gradient(to top, transparent, black var(--hero-fade, 45%));
+        transform-origin: 50% 0;
+    }
+}
+
+.client-detail .client-detail-readability {
+    position: absolute;
+    z-index: 0;
+    inset: -118px 0 0;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgb(9 10 13 / var(--detail-shade)) 0%, rgb(9 10 13 / var(--detail-shade)) 25%, transparent var(--detail-width));
+
+    &::before {
+        position: absolute;
+        inset: 0;
+        backdrop-filter: blur(var(--detail-blur));
+        mask-image: linear-gradient(90deg, black, black 22%, transparent var(--detail-width));
+        content: '';
+    }
+}
+
+.client-treatment-cinema .client-detail-readability {
+    background: linear-gradient(90deg, rgb(9 10 13 / var(--detail-shade)) 0%, rgb(9 10 13 / var(--detail-shade)) 35%, transparent var(--detail-width));
+}
+
+.client-treatment-cinema .client-detail-readability::before,
+.client-treatment-clear .client-detail-readability::before {
+    display: none;
+}
+
+.client-treatment-clear .client-detail-readability { background: none; }
+
+.client-detail .client-hero-copy { text-shadow: 0 2px 12px #0008; }
+
+.client-backdrop-settings {
+    display: grid;
+    max-width: 680px;
+    gap: 24px;
+    margin: 28px 0;
+
+    label {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        font-size: 14px;
+    }
+
+    output { color: #b9bdc6; }
+
+    input {
+        width: 100%;
+        grid-column: 1 / -1;
+        accent-color: white;
+    }
+}
+
+@media (max-width: 700px) {
+    .client-detail .client-detail-readability {
+        background: linear-gradient(0deg, rgb(9 10 13 / var(--detail-shade)), transparent 95%);
+
+        &::before { mask-image: linear-gradient(0deg, black, transparent 95%); }
+    }
+
+    .client-treatment-clear .client-detail-readability { background: none; }
+}

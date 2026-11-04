@@ -11,6 +11,10 @@ export interface MenuLink {
     url: string
 }
 
+/** Alternative encodes of the same approved scene, not different source scenes. */
+export type ClientPreviewSource = string | { compact?: string; full?: string };
+export type ClientPreviewSources = Record<string, ClientPreviewSource>;
+
 export interface WebConfig {
     includeCorsCredentials?: boolean
     multiserver?: boolean
@@ -18,4 +22,8 @@ export interface WebConfig {
     menuLinks?: MenuLink[]
     servers?: string[]
     plugins?: string[]
+    /** Disable optional Moonbase/Seerr discovery globally. */
+    clientSeerr?: boolean
+    /** Optional self-hosted short clips, scoped by Jellyfin server and item IDs. */
+    clientPreviews?: Record<string, ClientPreviewSources>
 }

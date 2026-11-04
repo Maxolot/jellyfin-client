@@ -1,5 +1,39 @@
 # Fork changelog
 
+## Unreleased — optional Seerr integration
+
+- Reuse Moonbase proxy sessions, with per-server/user opt-out and no client admin key.
+- Mix external search/discovery with provider-matched Jellyfin titles; preserve playback.
+- Integrate external details/recommendations, film and missing-season requests with
+  confirmation, rights/quota checks and personal request tracking.
+- Soften cached ambient artwork changes and close expanding cards on exit.
+- Restore the three-card Tonight fan and lazy collection member previews.
+
+## Unreleased — visual parity PR
+
+- Prepare nearby landscapes before expansion and synchronize the decoded-image
+  crossfade; preserve rapid selection, failed-image fallback and second-tap navigation.
+- Match the reference glass navbar surface and localized pointer reflection.
+
+- Connect optional native short clips with shared mute, single ownership and a soft
+  one-time return to artwork; keep private clips/registry outside distributable builds.
+- Preserve keyboard selection under a stationary pointer during card expansion.
+- Restore account-specific settings before enabling controls and compress static text.
+
+- Decode artwork before reveal, size it per surface and version image cache URLs;
+  warm the next hero/details and nearby collapsed-card landscapes.
+- Restore slow drift, liquid carousel markers, glass pointer reflection, entry and
+  hover motion, immersive background preference and reduced-motion/offscreen handling.
+- Serialize rapid stream changes, preserve paused playback and cancel stale loads.
+
+- Port the validated prototype navigation, inset carousel and expanding poster rows.
+- Align detail/season/cast, discovery/library, search, recent/local-evening selection,
+  personal area and interface previews with live Jellyfin data.
+- Preserve row glow, keyboard/touch interaction and nested navigation; style the
+  inherited player without replacing its playback mechanisms.
+- Clearly prepare unavailable personal-rating/offline/collection-editing visuals without
+  simulated server state. No Seerr integration or private demo assets.
+
 ## client-v0.1.0-alpha.3
 
 - Restore keyboard focus to the selected media card when returning from details.

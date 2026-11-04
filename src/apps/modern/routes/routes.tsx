@@ -25,7 +25,7 @@ export const APP_ROUTES: RouteObject[] = [
                     ...ASYNC_USER_ROUTES.map(toAsyncPageRoute),
                     ...LEGACY_USER_ROUTES.map(toViewManagerPageRoute),
 
-                    // The video page is special since it combines new controls with the legacy view
+                    // Client video presentation reuses the retained playback engine.
                     {
                         path: 'video',
                         Component: VideoPage

@@ -1,0 +1,129 @@
+.client-personal-rating {
+    margin-top: 17px;
+    color: #a4adbb;
+    font-size: 12px;
+
+    > small {
+        display: block;
+        margin-top: 7px;
+    }
+}
+
+.client-rating-control {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 13px;
+}
+
+.client-rating-stars {
+    display: flex;
+    gap: 0;
+    color: #8e929a;
+}
+
+.client-rating-fill {
+    position: absolute;
+    inset: 8px;
+    color: #f4f4f5;
+    pointer-events: none;
+
+    .client-icon {
+        fill: currentColor;
+    }
+}
+
+.client-interface .client-rating-star {
+    position: relative;
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    padding: 8px;
+    border: 0;
+    background: transparent;
+    color: #c8c9cd;
+
+    .client-icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    &:focus-visible {
+        outline: 2px solid white;
+        outline-offset: 1px;
+    }
+}
+
+.client-rating-value {
+    min-width: 42px;
+    color: #ddd;
+}
+
+.client-interface .client-rating-clear {
+    padding: 7px 0;
+    border: 0;
+    background: transparent;
+    color: #b9bdc6;
+    font-size: 11px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.client-rated-section {
+    margin: 38px 0;
+
+    > header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+
+    h2 {
+        margin: 0;
+        font-size: 24px;
+    }
+
+    select {
+        padding: 9px 12px;
+        border: 1px solid #ffffff40;
+        border-radius: 8px;
+        background: #191919;
+    }
+
+    > p {
+        color: #b5b7bd;
+        line-height: 1.5;
+    }
+}
+
+.client-rated-card {
+    position: relative;
+}
+
+.client-personal-score {
+    position: absolute;
+    right: 8px;
+    bottom: 10px;
+    padding: 6px 9px;
+    border: 1px solid #ffffff30;
+    border-radius: 20px;
+    background: #141414d9;
+    color: white;
+    font-size: 12px;
+}
+
+@media (pointer: coarse) {
+    .client-interface .client-rating-star {
+        width: 44px;
+        height: 44px;
+        padding: 12px;
+    }
+
+    .client-rating-fill {
+        inset: 12px;
+    }
+}
