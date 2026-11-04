@@ -35,35 +35,33 @@ describe('film source availability', () => {
     it('hides the integration when the plugin is absent', async () => {
         state.request.mockRejectedValue(new Error('missing'));
         await render();
-        expect(container.querySelector('button')).toBeNull();
+        expect(container.querySelector('[role="status"]')).toBeNull();
     });
-    it('only searches on demand and reports a found result', async () => {
+    it('automatically checks the film and shows an accessible indicator', async () => {
         state.request.mockResolvedValueOnce({ data: { Enabled: true } }).mockResolvedValueOnce({ data: { Found: true } });
         await render();
-        expect(state.request).toHaveBeenCalledTimes(1);
-        await act(async () => container.querySelector('button')!.click());
         await flush();
         expect(state.request).toHaveBeenCalledTimes(2);
         expect(state.request.mock.calls[1][0].url).toContain('/MovieSources/Movies/tt1234567');
-        expect(container.textContent).toContain('Sources trouvées');
+        expect(container.querySelector('[role="status"]')?.getAttribute('aria-label')).toContain('Sources trouvées');
+        expect(container.querySelector('button')?.getAttribute('aria-expanded')).toBe('false');
     });
-    it('reports an empty response cautiously and allows requests', async () => {
+    it('reports an empty response cautiously', async () => {
         state.request.mockResolvedValueOnce({ data: { Enabled: true } }).mockResolvedValueOnce({ data: { Found: false } });
         await render();
-        await act(async () => container.querySelector('button')!.click());
         await flush();
-        expect(container.textContent).toContain('Certains indexeurs peuvent être indisponibles');
+        expect(container.querySelector('[role="status"]')?.getAttribute('aria-label')).toContain('indexeurs peuvent être indisponibles');
     });
     it('reports errors without claiming the film is unavailable', async () => {
         state.request.mockResolvedValueOnce({ data: { Enabled: true } }).mockRejectedValueOnce(new Error('timeout'));
         await render();
-        await act(async () => container.querySelector('button')!.click());
         await flush();
-        expect(container.textContent).toContain('Vérification indisponible');
+        expect(container.querySelector('[role="status"]')?.getAttribute('aria-label')).toContain('Vérification des sources indisponible');
     });
-    it('does not allow searches without a movie identifier', async () => {
+    it('does not search without a valid movie identifier', async () => {
         state.request.mockResolvedValueOnce({ data: { Enabled: true } });
         await render('');
-        expect(container.querySelector('button')!.disabled).toBe(true);
+        expect(state.request).toHaveBeenCalledTimes(1);
+        expect(container.querySelector('[role="status"]')?.getAttribute('aria-label')).toContain('indisponible');
     });
 });

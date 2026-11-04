@@ -318,3 +318,67 @@
         margin-top: 8px;
     }
 }
+
+.client-movie-source-tooltip {
+    position: absolute;
+    z-index: 20;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    width: max-content;
+    max-width: min(280px, 70vw);
+    padding: 9px 12px;
+    color: white;
+    background: #202020;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.35;
+    text-align: left;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%);
+}
+
+.client-movie-source-indicator {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    color: #ddd;
+    background: rgb(20 20 20 / 72%);
+    border: 1px solid rgb(255 255 255 / 32%);
+    border-radius: 50%;
+
+    &.is-found {
+        color: #91e6ab;
+    }
+
+    &.is-empty {
+        color: #f1cc7b;
+    }
+
+    &.is-pending {
+        color: #ddd;
+    }
+
+    .client-icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    &:focus-visible {
+        outline: 2px solid white;
+        outline-offset: 3px;
+    }
+
+    &:hover .client-movie-source-tooltip,
+    &[aria-expanded="true"] .client-movie-source-tooltip,
+    &:focus-visible .client-movie-source-tooltip {
+        opacity: 1;
+        visibility: visible;
+    }
+}
