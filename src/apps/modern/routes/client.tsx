@@ -52,6 +52,7 @@ import '../features/client/ratings.scss';
 import '../features/client/heroBackground.scss';
 import '../features/client/headerAlignment.scss';
 import '../features/client/readableBackdrops.scss';
+import '../features/client/heroFraming.scss';
 
 type ClientNavigationState = { returnTo?: string, returnState?: ClientNavigationState | null, restoreFocus?: boolean };
 import TonightPage from '../features/client/TonightPage';
@@ -388,7 +389,7 @@ function HeroView({ model }: ViewProps) {
     return <section ref={region} className={`client-hero${id ? ' client-detail' : ' client-home-hero'}${hero.Type === 'Series' && id ? ' client-series-detail' : ''}`} onPointerEnter={() => setHeroPaused(true)} onPointerLeave={() => setHeroPaused(false)} onFocus={() => setHeroPaused(true)} onBlur={event => {
         if (!event.currentTarget.contains(event.relatedTarget)) setHeroPaused(false);
     }}>
-        <HeroArtwork source={image(hero, true, true)} />
+        <HeroArtwork source={image(hero, true, true)} backfill={!id} />
         <PreviewClip key={hero.Id} item={hero} surface={id ? 'detail' : 'hero'} />
         {id && <div className='client-detail-readability' aria-hidden='true' />}
         {id && <Link className='client-back' to={(location.state as ClientNavigationState | null)?.returnTo || '/client'} state={{ ...(location.state as ClientNavigationState | null)?.returnState, restoreFocus: true }}><ClientIcon name='back' />Retour</Link>}

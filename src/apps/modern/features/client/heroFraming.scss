@@ -1,0 +1,46 @@
+/* Keep the complete artwork and excerpt visible in the space below navigation. */
+.client-home-hero {
+    > .client-background-backfill {
+        position: absolute;
+        z-index: -3;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: blur(24px) brightness(0.35);
+        opacity: 0;
+        transition: opacity 0.85s ease;
+        pointer-events: none;
+    }
+
+    > .client-background-backfill.artwork-loaded { opacity: 1; }
+
+    > .client-background {
+        object-fit: contain;
+        object-position: center top;
+    }
+
+    > .client-background.artwork-loaded { animation: none; }
+
+    > .client-preview-media video {
+        object-fit: contain;
+        object-position: center top;
+    }
+}
+
+.client-hero-background .client-home-hero {
+    > .client-background-backfill {
+        top: calc(-1 * var(--client-hero-offset, 0px));
+        height: calc(100% + var(--client-hero-offset, 0px));
+    }
+
+    > .client-background,
+    > .client-preview-media {
+        top: 0;
+        height: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .client-home-hero > .client-background-backfill { transition: none; }
+}

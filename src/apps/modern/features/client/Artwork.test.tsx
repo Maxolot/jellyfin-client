@@ -86,6 +86,16 @@ describe('decoded artwork transitions', () => {
         });
         expect(container.querySelector('.artwork-loaded')!.getAttribute('src')).toBe('/first.jpg');
     });
+    it('keeps the blurred hero fill synchronized with the decoded image', async () => {
+        await act(async () => root.render(<HeroArtwork source='/first.jpg' backfill />));
+        const main = container.querySelector<HTMLImageElement>('.client-background')!;
+        const fill = container.querySelector<HTMLImageElement>('.client-background-backfill')!;
+        expect(fill.classList.contains('artwork-loaded')).toBe(false);
+        await load(main);
+        expect(fill.classList.contains('artwork-loaded')).toBe(true);
+        await act(async () => root.render(<HeroArtwork source='/second.jpg' backfill />));
+        expect(container.querySelector('.client-background-backfill.artwork-loaded')?.getAttribute('src')).toBe('/first.jpg');
+    });
     it('returning to the visible hero does not duplicate its image', async () => {
         await act(async () => root.render(<HeroArtwork source='/first.jpg' />));
         await load(container.querySelector('img')!);
