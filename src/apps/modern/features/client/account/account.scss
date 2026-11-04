@@ -1,0 +1,177 @@
+/* Account, language and device settings share the player settings field layout. */
+.client-account-section {
+    margin-bottom: 2.4em;
+
+    > header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.4em 1em;
+        margin-bottom: 1em;
+
+        h2 {
+            margin: 0;
+        }
+    }
+}
+
+.client-account-scope {
+    color: #8c98aa;
+    font-size: 12px;
+}
+
+.client-account-check {
+    align-items: flex-start !important;
+    flex-wrap: nowrap !important;
+
+    input {
+        margin-top: 0.2em;
+    }
+
+    span {
+        display: grid;
+        min-width: 0;
+        flex: 1;
+        gap: 0.25em;
+    }
+
+    small {
+        color: #9aa5b5;
+        font-size: 12px;
+        line-height: 1.45;
+    }
+}
+
+.client-account-status {
+    min-height: 1.4em;
+    margin: 0.6em 0 0;
+    color: #9aa5b5;
+    font-size: 12px;
+
+    &.error {
+        color: #ff8a8a;
+    }
+}
+
+.client-account-modes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+    gap: 10px;
+    margin: 1.2em 0;
+    padding: 0;
+    border: 0;
+
+    legend {
+        margin-bottom: 0.8em;
+        font-size: 15px;
+    }
+
+    .client-settings & button {
+        display: grid;
+        align-content: start;
+        justify-content: stretch;
+        gap: 0.4em;
+        padding: 14px 16px;
+        border-radius: 14px;
+        text-align: left;
+    }
+
+    small {
+        font-size: 12px;
+        line-height: 1.45;
+        opacity: 0.8;
+    }
+}
+
+.client-account-advanced {
+    margin-top: 1.4em;
+
+    summary {
+        margin-bottom: 1em;
+        color: #c3cbd7;
+        cursor: pointer;
+    }
+}
+
+.client-account-avatar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 20px;
+
+    > img,
+    > span {
+        display: grid;
+        width: 88px;
+        height: 88px;
+        flex: none;
+        place-items: center;
+        border-radius: 22px;
+        background: #c6323b;
+        font-size: 36px;
+        object-fit: cover;
+    }
+
+    strong {
+        display: block;
+        margin-bottom: 10px;
+        font-size: 18px;
+        font-weight: 500;
+    }
+}
+
+.client-account-password,
+.client-account-quickconnect {
+    input {
+        width: min(100%, 320px);
+        padding: 10px 12px;
+        border: 1px solid #ffffff40;
+        border-radius: 8px;
+        background: #191919;
+        color: #f2f4f7;
+        font: inherit;
+    }
+
+    > .client-account-status {
+        grid-column: 1 / -1;
+    }
+}
+
+.client-settings-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 20px 0 30px;
+    padding-bottom: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    .client-settings & a {
+        flex: none;
+        padding: 9px 16px;
+        border: 1px solid #ffffff30;
+        border-radius: 99px;
+        color: #d7deea;
+        font-size: 14px;
+        white-space: nowrap;
+
+        &[aria-current='page'] {
+            border-color: #e8eaf0;
+            background: #e8eaf0;
+            color: #15191f;
+        }
+    }
+}
+
+.client-account-section > .client-player-hint {
+    margin: 0.4em 0 0;
+    color: #bdbdbd;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.client-account-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
