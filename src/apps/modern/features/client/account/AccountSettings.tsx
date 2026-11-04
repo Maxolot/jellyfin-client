@@ -9,6 +9,7 @@ import Dashboard from 'utils/dashboard';
 import { AUDIO_CHANNELS, BITRATES, formatBitrate, languageOptions, NEXT_UP_DAYS, normalizeQuickConnectCode, passwordProblem, avatarProblem, STILL_WATCHING,
     SUBTITLE_MODES, TRANSCODE_AUDIO_CODECS, TRANSCODE_VIDEO_CODECS, VIDEO_WIDTHS } from './accountModel';
 import { useAccount } from './useAccount';
+import ClientDialog from '../ClientDialog';
 import './account.scss';
 
 type Account = ReturnType<typeof useAccount>;
@@ -227,7 +228,6 @@ function PasswordSettings({ account }: Readonly<{ account: Account }>) {
 function QuickConnectSettings({ account }: Readonly<{ account: Account }>) {
     const [code, setCode] = useState('');
     const [problem, setProblem] = useState('');
-    if (account.quickConnect.data === false) return <p className='client-player-hint'>Quick Connect est désactivé sur ce serveur.</p>;
     return <form className='client-player-fields client-account-quickconnect' onSubmit={event => {
         event.preventDefault();
         const normalized = normalizeQuickConnectCode(code);
@@ -245,6 +245,13 @@ function QuickConnectSettings({ account }: Readonly<{ account: Account }>) {
     </form>;
 }
 
+/** Profile menu entry: authorizing another device is a quick action, not a setting. */
+export function QuickConnectMenuItem() {
+    const account = useAccount();
+    if (account.quickConnect.data === false) return null;
+    return <ClientDialog label='Quick Connect' title='Connecter un autre appareil' buttonClassName='client-profile-action'><QuickConnectSettings account={account} /></ClientDialog>;
+}
+
 export function ProfileSettings() {
     const account = useAccount();
     if (!account.account.data) return <Section title='Profil' scope='Compte Jellyfin'><Loading account={account} /></Section>;
@@ -252,7 +259,6 @@ export function ProfileSettings() {
     return <>
         <Section title='Profil' scope='Compte Jellyfin'><AvatarSettings account={account} /></Section>
         <Section title='Mot de passe' scope='Compte Jellyfin'><PasswordSettings account={account} /></Section>
-        <Section title='Connecter un autre appareil' scope='Quick Connect'><QuickConnectSettings account={account} /></Section>
         <Section title='Session' scope='Cet appareil'>
             <div className='client-account-actions'>
                 <button type='button' onClick={Dashboard.logout}>Se déconnecter</button>
