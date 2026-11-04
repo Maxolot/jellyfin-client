@@ -22,10 +22,11 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
     const video = useRef<HTMLVideoElement>(null);
     const [visible, setVisible] = useState(false);
     const [nearby, setNearby] = useState(false);
-    const [started, setStarted] = useState(false);
+    const [startedKey, setStartedKey] = useState<string>();
     const [fading, setFading] = useState(false);
     const staticSource = preview ? previewSource(preview.sources, item, document.baseURI, surface !== 'episode', surface) : undefined;
     const key = `${surface}:${item.Id}`;
+    const started = startedKey === key;
     const small = useMediaQuery('(max-width: 700px)');
     const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
     const claim = preview?.claim;
@@ -61,11 +62,11 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         else if (server.isPending || server.data?.state === 'pending') source = undefined;
     }
     useEffect(() => {
-        setStarted(false);
+        setStartedKey(undefined);
         setVisible(false);
         setFading(false);
         if (!active || completed?.has(key)) return;
-        const timer = window.setTimeout(() => setStarted(true), 1100);
+        const timer = window.setTimeout(() => setStartedKey(key), 1100);
         return () => window.clearTimeout(timer);
     }, [active, key, completed]);
     useEffect(() => {
@@ -123,7 +124,7 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
             setFading(true);
             finishTimer = window.setTimeout(() => {
                 if (!disposed) {
-                    setStarted(false);
+                    setStartedKey(undefined);
                     setVisible(false);
                 }
             }, 850);
