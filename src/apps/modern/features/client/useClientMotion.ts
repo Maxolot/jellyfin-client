@@ -1,5 +1,8 @@
 import { type RefObject, useEffect } from 'react';
 
+const NAV_BAND_START = 90;
+const NAV_BAND_RANGE = 170;
+
 /** Observe section entries, rather than running a scroll/animation loop at rest. */
 export default function useClientMotion(surface: RefObject<HTMLDivElement>) {
     useEffect(() => {
@@ -8,7 +11,7 @@ export default function useClientMotion(surface: RefObject<HTMLDivElement>) {
         let frame = 0;
         let point = { x: 0, y: 0 };
         const move = (event: PointerEvent) => {
-            if (event.pointerType !== 'mouse' || !header.closest('.client-glass:not(.client-floating)') || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            if (event.pointerType !== 'mouse' || !header.closest('.client-glass') || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             point = { x: event.clientX, y: event.clientY };
             if (frame) return;
             frame = requestAnimationFrame(() => {
@@ -30,6 +33,26 @@ export default function useClientMotion(surface: RefObject<HTMLDivElement>) {
             leave();
             header.removeEventListener('pointermove', move);
             header.removeEventListener('pointerleave', leave);
+        };
+    }, [surface]);
+    useEffect(() => {
+        const root = surface.current;
+        if (!root) return;
+        let frame = 0;
+        // Floating buttons sit on the artwork: the theme band fades in with the scroll position, once the page has moved.
+        const update = () => {
+            frame = 0;
+            const progress = Math.min(1, Math.max(0, (window.scrollY - NAV_BAND_START) / NAV_BAND_RANGE));
+            root.style.setProperty('--nav-band', progress.toFixed(3));
+        };
+        const scroll = () => {
+            if (!frame) frame = requestAnimationFrame(update);
+        };
+        update();
+        window.addEventListener('scroll', scroll, { passive: true });
+        return () => {
+            cancelAnimationFrame(frame);
+            window.removeEventListener('scroll', scroll);
         };
     }, [surface]);
     useEffect(() => {
