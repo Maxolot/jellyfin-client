@@ -37,12 +37,9 @@ export default function MovieSources({ imdbId }: Readonly<{ imdbId?: string }>) 
     const label = { unknown: 'Vérification des sources indisponible.', pending: 'Vérification des sources en cours…',
         found: 'Sources trouvées. Le téléchargement dépend des règles du serveur et de leur disponibilité.',
         empty: 'Aucun résultat pour le moment. Certains indexeurs peuvent être indisponibles ; une demande reste possible.' }[status];
-    let icon: 'check' | 'refresh' | 'info' = 'info';
-    if (status === 'found') icon = 'check';
-    if (status === 'pending') icon = 'refresh';
     return <span role='status' aria-label={label}>
         <button type='button' className={`client-movie-source-indicator is-${status}`} aria-label={label} aria-expanded={showInfo} onClick={() => setShowInfo(!showInfo)}>
-            <ClientIcon name={icon} />
+            <ClientIcon name='search' />
             <span className='client-movie-source-tooltip' aria-hidden='true'>{label}</span>
         </button>
     </span>;
