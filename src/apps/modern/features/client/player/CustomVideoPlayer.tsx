@@ -407,9 +407,15 @@ export default function CustomVideoPlayer() {
                     dialog.current?.close();
                 }}><span>{chapter.Name || `Chapitre ${index + 1}`}</span><small>{formatTime((chapter.StartPositionTicks || 0) / SECOND)}</small></button>)}</div>}
                 {panel === 'settings' && <div className='client-player-fields'>
+                    <div className='client-controls client-player-preferences is-panel'>
                         <Select label='Vitesse' value={playState?.PlaybackRate || 1} options={[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(rate => [rate, rate === 1 ? 'Normale' : `${rate} ×`] as const)}
+                            onChange={rate => action(() => playbackManager.setPlaybackRate(rate))} />
                         <Select label='Qualité' value={playbackManager.enableAutomaticBitrateDetection() ? 0 : playState?.MaxStreamingBitrate || 0}
+                            options={[[0, 'Automatique'] as const, ...Array.from(new Set([playState?.MaxStreamingBitrate || 0, 120000000, 40000000, 20000000, 10000000, 4000000, 1500000])).filter(Boolean).sort((a, b) => b - a).map(bitrate => [bitrate, `Maximum ${bitrate / 1000000} Mbit/s`] as const)]}
+                            onChange={bitrate => action(() => playbackManager.setMaxStreamingBitrate({ enableAutomaticBitrateDetection: bitrate === 0, maxBitrate: bitrate }))} />
                         <Select label='Format de l’image' value={String(playbackManager.getAspectRatio())} options={playbackManager.getSupportedAspectRatios().map((ratio: { id: string; name: string }) => [ratio.id, ratio.name] as const)}
+                            onChange={ratio => action(() => playbackManager.setAspectRatio(ratio))} />
+                    </div>
                     <button type='button' onClick={() => setPanel('technical')}>Informations techniques</button>
                     <p className='client-player-hint'>Le serveur adapte le flux aux capacités du navigateur. Une limite de débit peut déclencher un transcodage.</p>
                     <button type='button' onClick={() => setPanel('appearance')}>Personnaliser le lecteur</button>
