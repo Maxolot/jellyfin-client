@@ -102,6 +102,8 @@
     }
 }
 
+.client-hero-copy:has(.client-more-menu) { position: relative; z-index: 10; }
+
 .client-actions:has(.client-more-menu) { position: relative; z-index: 40; }
 
 .client-actions .client-more { position: relative; }
