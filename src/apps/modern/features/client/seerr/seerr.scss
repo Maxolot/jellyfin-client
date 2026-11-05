@@ -461,3 +461,49 @@
         font-size: 12px;
     }
 }
+
+// Pastille « source trouvée » (plugin Movie Sources) : indicative, jamais une garantie.
+.client-source-badge {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 6px;
+    padding: 4px 11px;
+    border: 1px solid #ffffff2e;
+    border-radius: 999px;
+    background: #ffffff0f;
+    color: #c9d0d9;
+    font-size: 12px;
+    line-height: 1.2;
+    white-space: nowrap;
+
+    .client-icon {
+        width: 13px;
+        height: 13px;
+        flex: none;
+    }
+
+    &.is-found {
+        border-color: #5fd38d66;
+        background: #2fae6a26;
+        color: #b9f0cf;
+    }
+
+    &.is-pending {
+        color: #9aa4b2;
+    }
+
+    &.is-compact {
+        margin-top: 5px;
+        padding: 2px 8px;
+        font-size: 11px;
+    }
+}
+
+.client-request-side {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}

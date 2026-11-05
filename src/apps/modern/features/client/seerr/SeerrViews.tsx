@@ -17,6 +17,8 @@ import { withLocalAvailability, externalIdentity, catalogueItem, providerKey, ca
 import { useLocalIdentities, useLocalSeasons, useSeerrDetail } from './queries';
 import { useSeerr } from './SeerrContext';
 import SeerrSetup from './SeerrSetup';
+import SourceBadge from './SourceBadge';
+import { useMovieSource, useSeasonSources, type SourceStatus } from './sources';
 
 export function SeerrSettings() {
     const seerr = useSeerr();
@@ -59,7 +61,7 @@ function requestState({ data, identity, is4k, selected, permissions, quotaData, 
     return { info, state, seasons, allSeasons, currentQuota, remaining, permitted, restricted, filmRequested, disabled };
 }
 
-function SeasonPicker({ data, is4k, selected, disabled, toggle, selectAll }: Readonly<{ data: ExternalMedia; is4k: boolean; selected: number[]; disabled: boolean; toggle: (number: number) => void; selectAll: (numbers: number[]) => void }>) {
+function SeasonPicker({ data, is4k, selected, disabled, sources, toggle, selectAll }: Readonly<{ data: ExternalMedia; is4k: boolean; selected: number[]; disabled: boolean; sources?: Record<number, SourceStatus>; toggle: (number: number) => void; selectAll: (numbers: number[]) => void }>) {
     const seasons = requestableSeasons(data, is4k);
     const everything = seasons.length > 1 && selected.length < seasons.length;
     return <fieldset disabled={disabled}><legend>Choisir les saisons à compléter{everything && <button type='button' className='client-text-button' onClick={() => selectAll(seasons.map(entry => entry.seasonNumber))}>Tout sélectionner</button>}</legend><div className='client-request-seasons'>{(data.seasons || []).filter(season => season.seasonNumber > 0).map(season => {
@@ -74,7 +76,7 @@ function SeasonPicker({ data, is4k, selected, disabled, toggle, selectAll }: Rea
         }
         return <button type='button' className='client-season-card' key={season.seasonNumber} disabled={!available} aria-pressed={selected.includes(season.seasonNumber)} aria-label={`Saison ${season.seasonNumber}, ${episodes}, ${label}`} onClick={() => toggle(season.seasonNumber)}>
             <span className='client-season-poster'>{poster ? <Artwork source={poster} /> : <span className='client-season-fallback'>{season.seasonNumber}</span>}<i className='client-request-check' aria-hidden='true' /><em>{label}</em></span>
-            <strong>Saison {season.seasonNumber}</strong><small>{episodes}</small>
+            <strong>Saison {season.seasonNumber}</strong><small>{episodes}</small>{available && <SourceBadge status={sources?.[season.seasonNumber]} compact />}
         </button>;
     })}</div></fieldset>;
 }
@@ -136,6 +138,15 @@ export function RequestPanel({ identity, localItem }: Readonly<{ identity: Seerr
     return <RequestForm identity={identity} data={withLocalAvailability(detail.data, localItem, localSeasons.data)} />;
 }
 
+/** Source lookups for the open request dialog: per requestable season for a series, once for a film. */
+function useRequestSources(identity: SeerrIdentity, data: ExternalMedia, is4k: boolean, movieWanted: boolean) {
+    const imdbId = data.externalIds?.imdbId;
+    const requestable = requestableSeasons(data, is4k).map(season => season.seasonNumber);
+    const seasonSources = useSeasonSources(identity.type === 'tv' ? imdbId : undefined, requestable);
+    const movieSource = useMovieSource(identity.type === 'movie' ? imdbId : undefined, movieWanted);
+    return { seasonSources, movieSource };
+}
+
 function RequestForm({ identity, data }: Readonly<{ identity: SeerrIdentity; data: ExternalMedia }>) {
     const seerr = useSeerr();
     const cache = useQueryClient();
@@ -161,11 +172,12 @@ function RequestForm({ identity, data }: Readonly<{ identity: SeerrIdentity; dat
         setConfirm(false);
     }, [identity.id, identity.type, is4k]);
     const { info, state, currentQuota, remaining, permitted, restricted, filmRequested, disabled } = requestState({ data, identity, is4k, selected, permissions: seerr.permissions, quotaData: quota.data, quotaReady: quota.isSuccess, pending: mutation.isPending });
+    const { seasonSources, movieSource } = useRequestSources(identity, data, is4k, !filmRequested && !!permitted);
     const quotaUnit = identity.type === 'tv' ? 'saison(s)' : 'film(s)';
     const quotaLabel = currentQuota?.limit ? `${remaining} ${quotaUnit} restant(s) dans votre quota` : 'Aucune limite de demandes pour votre compte';
-    return <section className='client-request-panel' aria-label='Disponibilité et demandes'><header className='client-request-banner'>{imageUrl(data.backdropPath, true) && <Artwork className='client-request-backdrop' source={imageUrl(data.backdropPath, true)} eager />}<div className='client-request-banner-copy'>{imageUrl(data.posterPath) && <span className='client-request-poster'><Artwork source={imageUrl(data.posterPath)} eager /></span>}<div><h2>{data.title || data.name}</h2><p>{[(data.releaseDate || data.firstAirDate || '').slice(0, 4), identity.type === 'tv' && data.seasons ? `${data.seasons.filter(season => season.seasonNumber > 0).length} saison(s)` : ''].filter(Boolean).join(' · ')}</p></div></div><span className='client-request-status'>{mediaLabel({ status: state })}</span></header>
+    return <section className='client-request-panel' aria-label='Disponibilité et demandes'><header className='client-request-banner'>{imageUrl(data.backdropPath, true) && <Artwork className='client-request-backdrop' source={imageUrl(data.backdropPath, true)} eager />}<div className='client-request-banner-copy'>{imageUrl(data.posterPath) && <span className='client-request-poster'><Artwork source={imageUrl(data.posterPath)} eager /></span>}<div><h2>{data.title || data.name}</h2><p>{[(data.releaseDate || data.firstAirDate || '').slice(0, 4), identity.type === 'tv' && data.seasons ? `${data.seasons.filter(season => season.seasonNumber > 0).length} saison(s)` : ''].filter(Boolean).join(' · ')}</p></div></div><span className='client-request-side'><span className='client-request-status'>{mediaLabel({ status: state })}</span><SourceBadge status={movieSource} /></span></header>
         {canRequest(seerr.permissions, identity.type, true) && <button type='button' role='switch' className='client-switch client-request-quality' aria-checked={is4k} disabled={mutation.isPending} onClick={() => set4k(!is4k)}><i aria-hidden='true' />Version 4K</button>}
-        {identity.type === 'tv' && <SeasonPicker data={data} is4k={is4k} selected={selected} disabled={mutation.isPending || !permitted} toggle={number => {
+        {identity.type === 'tv' && <SeasonPicker data={data} is4k={is4k} selected={selected} disabled={mutation.isPending || !permitted} sources={seasonSources} toggle={number => {
             setConfirm(false);
             setSelected(previous => previous.includes(number) ? previous.filter(value => value !== number) : [...previous, number]);
         }} selectAll={numbers => {
@@ -200,7 +212,12 @@ export function ExternalDetail({ id, row, image }: Readonly<{ id: string; row: (
     }
     const data = detail.data;
     const match = localMatch(data, identity.type, local.data || []);
-    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><div className='client-detail-readability' aria-hidden='true' /><Link className='client-back' to={back} state={backState}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{(data.releaseDate || data.firstAirDate || '').slice(0, 4)} · {data.genres?.map(genre => genre.name).join(' · ')}</p><p className='client-overview'>{data.overview}</p><div className='client-actions'>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}<AvailabilityAction identity={identity} localItem={match} /></div></div></section><ExternalRecommendations identity={identity} local={local.data || []} row={row} data={data} image={image} /></>;
+    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><div className='client-detail-readability' aria-hidden='true' /><Link className='client-back' to={back} state={backState}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{(data.releaseDate || data.firstAirDate || '').slice(0, 4)} · {data.genres?.map(genre => genre.name).join(' · ')}</p><p className='client-overview'>{data.overview}</p><div className='client-actions'>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}<AvailabilityAction identity={identity} localItem={match} /><ExternalSource data={data} identity={identity} owned={!!match} /></div></div></section><ExternalRecommendations identity={identity} local={local.data || []} row={row} data={data} image={image} /></>;
+}
+
+function ExternalSource({ data, identity, owned }: Readonly<{ data: ExternalMedia; identity: SeerrIdentity; owned: boolean }>) {
+    const status = useMovieSource(identity.type === 'movie' ? data.externalIds?.imdbId : undefined, !owned && ![2, 3, 4, 5, 6].includes(data.mediaInfo?.status || 0));
+    return <SourceBadge status={status} />;
 }
 
 function ExternalRecommendations({ identity, local, row, data, image }: Readonly<{ identity: SeerrIdentity; local: BaseItemDto[]; row: (title: string, items: BaseItemDto[]) => React.ReactNode; data: ExternalMedia; image: (item: BaseItemDto, backdrop?: boolean) => string }>) {
