@@ -116,6 +116,10 @@
     position: relative;
 }
 
+.client-actions .client-more > button {
+    position: relative;
+}
+
 .client-actions .client-more > button .client-icon {
     stroke-width: 3.6;
 }
@@ -162,10 +166,6 @@
             flex: none;
         }
     }
-}
-
-.client-actions .client-more > button {
-    position: relative;
 }
 
 .client-more-badge {
