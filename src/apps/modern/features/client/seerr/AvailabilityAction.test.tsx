@@ -33,11 +33,8 @@ describe('AvailabilityAction', () => {
         expect(container.querySelector('button')).toBeNull();
     });
 
-    it('becomes a compact plus button for a series', async () => {
+    it('stays available for a series that may lack seasons', async () => {
         await render({ Id: 's', Type: 'Series', Name: 'Série', ProviderIds: { Tmdb: '20' } });
-        const button = container.querySelector('button');
-        expect(button?.getAttribute('aria-label')).toBe('Demander des saisons');
-        expect(button?.textContent).toBe('');
-        expect(button?.classList.contains('client-action-circle')).toBe(true);
+        expect(container.querySelector('button')?.textContent).toBe('Disponibilité');
     });
 });

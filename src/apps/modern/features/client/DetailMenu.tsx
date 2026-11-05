@@ -1,0 +1,68 @@
+/* eslint-disable react/jsx-no-bind -- Menu handlers are local to this component. */
+import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
+import React, { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+
+import { CastDialog, hasCast } from './DetailExtras';
+import ClientIcon from './ClientIcon';
+import { useSeerr } from './seerr/SeerrContext';
+import { canRequestSeasons, RequestDialog } from './seerr/SeerrViews';
+
+/** Secondary actions of a media page, kept behind one "more" button so the main row stays minimal. */
+export default function DetailMenu({ item, basePath }: Readonly<{ item: BaseItemDto; basePath: string }>) {
+    const seerr = useSeerr();
+    const root = useRef<HTMLDivElement>(null);
+    const trigger = useRef<HTMLButtonElement>(null);
+    const [open, setOpen] = useState(false);
+    const [dialog, setDialog] = useState<'cast' | 'request' | null>(null);
+    const request = canRequestSeasons(item, seerr.connected);
+    useEffect(() => {
+        if (open) root.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
+    }, [open]);
+    useEffect(() => {
+        if (!open) {
+            return;
+        }
+        const dismiss = (event: PointerEvent) => {
+            if (!root.current?.contains(event.target as Node)) setOpen(false);
+        };
+        document.addEventListener('pointerdown', dismiss);
+        return () => document.removeEventListener('pointerdown', dismiss);
+    }, [open]);
+    const closeMenu = (restoreFocus = true) => {
+        setOpen(false);
+        if (restoreFocus) trigger.current?.focus();
+    };
+    const openDialog = (name: 'cast' | 'request') => {
+        setOpen(false);
+        setDialog(name);
+    };
+    const onKeyDown = (event: React.KeyboardEvent) => {
+        if (event.key === 'Escape') {
+            event.stopPropagation();
+            closeMenu();
+            return;
+        }
+        if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+        const entries = Array.from(root.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') || []);
+        if (!entries.length) return;
+        event.preventDefault();
+        const current = entries.indexOf(document.activeElement as HTMLElement);
+        const step = event.key === 'ArrowDown' ? 1 : -1;
+        entries[(current + step + entries.length) % entries.length].focus();
+    };
+    // Keyboard handling for the menu items; the wrapper itself is not interactive.
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+    return <div className='client-more' ref={root} onKeyDown={onKeyDown}>
+        <button ref={trigger} type='button' className='client-button client-action-circle' aria-label='Plus d’actions' title='Plus d’actions' aria-haspopup='menu' aria-expanded={open} onClick={() => setOpen(!open)}><ClientIcon name='more' /></button>
+        {open && <div className='client-more-menu' role='menu' aria-label='Plus d’actions'>
+            {request && <button type='button' role='menuitem' onClick={() => openDialog('request')}><ClientIcon name='plus' />Demander des saisons</button>}
+            {hasCast(item) && <button type='button' role='menuitem' onClick={() => openDialog('cast')}><ClientIcon name='collection' />Distribution et réalisation</button>}
+            <Link role='menuitem' to={`/details?id=${item.Id}`}><ClientIcon name='info' />Options et fiche Jellyfin</Link>
+        </div>}
+        <CastDialog item={item} basePath={basePath} open={dialog === 'cast'} onClose={() => setDialog(null)} />
+        {request && <RequestDialog item={item} open={dialog === 'request'} onClose={() => setDialog(null)} />}
+    </div>;
+}
+
+/* eslint-enable react/jsx-no-bind */

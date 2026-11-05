@@ -35,7 +35,8 @@ import RatingsOverview from '../features/client/RatingsOverview';
 import { GenreTaste, PersonalStatsBand } from '../features/client/PersonalOverview';
 import { usePersonalStats, useViewingHistory } from '../features/client/usePersonalStats';
 import HeroMetadata from '../features/client/HeroMetadata';
-import DetailExtras, { CastAction } from '../features/client/DetailExtras';
+import DetailExtras from '../features/client/DetailExtras';
+import DetailMenu from '../features/client/DetailMenu';
 import InterfacePreview from '../features/client/InterfacePreview';
 import { RecentPage } from '../features/client/LocalDiscoveryPages';
 import MediaRow from '../features/client/MediaRow';
@@ -59,7 +60,7 @@ import AmbientBackdrop from '../features/client/AmbientBackdrop';
 import { SeerrProvider, useSeerr } from '../features/client/seerr/SeerrContext';
 import { useSeerrCatalogue, useSeerrDetail, useSeerrUpcoming } from '../features/client/seerr/queries';
 import UpcomingRow from '../features/client/UpcomingRow';
-import { AvailabilityAction, ExternalDetail, RequestTracking, SeerrSettings } from '../features/client/seerr/SeerrViews';
+import { ExternalDetail, RequestTracking, SeerrSettings } from '../features/client/seerr/SeerrViews';
 import { externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
 
 const links = [['home', 'Accueil'], ['series', 'Séries'], ['films', 'Films'], ['recent', 'Nouveautés'], ['tonight', 'Ce soir'], ['search', 'Rechercher'], ['mine', 'Mon espace']];
@@ -399,19 +400,18 @@ function HeroCopyView({ model, dots }: ViewProps & { dots: ReactNode }) {
     const [synopsisExpanded, setSynopsisExpanded] = useState(false);
     useEffect(() => setSynopsisExpanded(false), [hero?.Id]);
     if (!hero) return null;
-    return <div className='client-hero-copy'><span className='client-eyebrow'>{id ? '✓ Disponible' : 'À LA UNE'}</span>
+    return <div className='client-hero-copy'>{!id && <span className='client-eyebrow'>À LA UNE</span>}
         {hero.ImageTags?.Logo && <Artwork className='client-title-logo' source={artworkUrl(api?.basePath || '', hero, 'logo')} eager />}
         <h1 className={hero.ImageTags?.Logo ? 'client-title-fallback' : undefined}>{hero.Name}</h1>
         <HeroMetadata item={hero} detailed={!!id} />
         {id && <><p className={`client-overview${synopsisExpanded ? ' expanded' : ''}`}>{hero.Overview}</p>{hero.Type === 'Series' && (hero.Overview?.length || 0) > 220 && <button className='client-synopsis-toggle' aria-expanded={synopsisExpanded} onClick={() => setSynopsisExpanded(!synopsisExpanded)}>{synopsisExpanded ? 'Réduire' : 'Lire la suite'}</button>}</>}
         <HeroActions model={model} dots={dots} />
         {id && <PersonalRating item={hero} />}
-        {id && <div className='client-detail-links'><CastAction key={hero.Id} item={hero} basePath={api?.basePath || ''} /><Link className='client-original-link' to={`/details?id=${hero.Id}`}>Options et fiche Jellyfin ›</Link></div>}
     </div>;
 }
 
 function HeroActions({ model, dots }: ViewProps & { dots: ReactNode }) {
-    const { hero, id, item, location, playItem, busy, play, updateState } = model;
+    const { hero, id, item, api, location, playItem, busy, play, updateState } = model;
     if (!hero) return null;
     const homePlayable = hero.Type === 'Movie' ? hero : undefined;
     const playable = id ? playItem : homePlayable;
@@ -420,12 +420,10 @@ function HeroActions({ model, dots }: ViewProps & { dots: ReactNode }) {
     if (playable?.Type === 'Episode') playLabel = episodeLabel(playable);
     return <div className='client-actions'>
         {playable && <button className='client-play' onClick={() => play(playable)}><ClientIcon name='play' />{playLabel}</button>}
-        {id && <AvailabilityAction key={hero.Id} localItem={hero} />}
         {!id && <Link className='client-button' data-client-focus={`info-${hero.Id}`} to={`/client?id=${hero.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }}><ClientIcon name='info' />Plus d’infos</Link>}
         {id && <><button className='client-button client-action-circle' aria-label={item?.UserData?.IsFavorite ? 'Retirer de ma liste' : 'Ajouter à ma liste'} title={item?.UserData?.IsFavorite ? 'Retirer de ma liste' : 'Ajouter à ma liste'} disabled={busy} aria-pressed={!!item?.UserData?.IsFavorite} onClick={() => updateState('favorite')}><ClientIcon name={item?.UserData?.IsFavorite ? 'check' : 'plus'} /></button>
             <button className='client-button client-action-circle' aria-label={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} title={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} disabled={busy} aria-pressed={!!item?.UserData?.Played} onClick={() => updateState('played')}><ClientIcon name={item?.UserData?.Played ? 'check' : 'eye'} /></button>
-            <button className='client-button client-action-circle' disabled aria-label='Ajouter à une collection : à venir' title='Ajout aux collections à venir'><ClientIcon name='collection' /></button>
-            <button className='client-button client-action-circle' disabled aria-label='Téléchargement : à venir' title='Téléchargement hors ligne à venir'><ClientIcon name='download' /></button></>}
+            <DetailMenu key={hero.Id} item={hero} basePath={api?.basePath || ''} /></>}
         {dots}
     </div>;
 }

@@ -84,10 +84,19 @@ export function AvailabilityAction({ identity: supplied, localItem }: Readonly<{
     const seerr = useSeerr();
     const identity = supplied || (localItem && externalIdentity(localItem));
     if (!seerr.connected || !identity) return null;
-    // A local movie is already downloaded: nothing left to request. A local series may still lack seasons, so it keeps a compact "+".
+    // A local movie is already downloaded: nothing left to request.
     if (localItem && localItem.Type !== 'Series') return null;
-    const isSeries = localItem?.Type === 'Series';
-    return <ClientDialog key={`${identity.type}-${identity.id}`} label={isSeries ? 'Demander des saisons' : 'Disponibilité'} icon={isSeries ? 'plus' : undefined} title={isSeries ? 'Saisons et demandes' : 'Disponibilité et demandes'} subtitle={localItem?.Name || ''} buttonClassName={isSeries ? 'client-button client-action-circle client-availability-action' : 'client-button client-availability-action'}><RequestPanel identity={identity} localItem={localItem} /></ClientDialog>;
+    return <ClientDialog key={`${identity.type}-${identity.id}`} label='Disponibilité' title='Disponibilité et demandes' subtitle={localItem?.Name || ''} buttonClassName='client-button client-availability-action'><RequestPanel identity={identity} localItem={localItem} /></ClientDialog>;
+}
+
+export function canRequestSeasons(item: BaseItemDto, connected: boolean) {
+    return connected && item.Type === 'Series' && !!externalIdentity(item);
+}
+
+export function RequestDialog({ item, open, onClose }: Readonly<{ item: BaseItemDto; open: boolean; onClose: () => void }>) {
+    const identity = externalIdentity(item);
+    if (!identity) return null;
+    return <ClientDialog controlled={{ open, onClose }} label='Demander des saisons' title='Saisons et demandes' subtitle={item.Name || ''}><RequestPanel identity={identity} localItem={item} /></ClientDialog>;
 }
 
 export function RequestPanel({ identity, localItem }: Readonly<{ identity: SeerrIdentity; localItem?: BaseItemDto }>) {

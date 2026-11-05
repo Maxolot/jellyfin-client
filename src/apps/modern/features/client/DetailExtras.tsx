@@ -9,7 +9,11 @@ import { providerKey } from './seerr/model';
 
 type Props = { item: BaseItemDto; similar: BaseItemDto[]; image: (item: BaseItemDto, backdrop?: boolean) => string };
 
-export function CastAction({ item, basePath }: Readonly<{ item: BaseItemDto; basePath: string }>) {
+export function hasCast(item: BaseItemDto) {
+    return (item.People || []).some(person => person.Id);
+}
+
+export function CastDialog({ item, basePath, open, onClose }: Readonly<{ item: BaseItemDto; basePath: string; open: boolean; onClose: () => void }>) {
     const people = (item.People || []).filter(person => person.Id);
     if (!people.length) return null;
     function personCard(person: BaseItemPerson, close: () => void) {
@@ -20,7 +24,7 @@ export function CastAction({ item, basePath }: Readonly<{ item: BaseItemDto; bas
             <strong>{person.Name}</strong><small>{role}</small>
         </Link>;
     }
-    return <ClientDialog label='Voir la distribution' title='Distribution et réalisation' subtitle={item.Name || ''} buttonClassName='client-cast-action'>{close => <div className='client-cast-grid'>{people.map(person => personCard(person, close))}</div>}</ClientDialog>;
+    return <ClientDialog label='Voir la distribution' title='Distribution et réalisation' subtitle={item.Name || ''} controlled={{ open, onClose }}>{close => <div className='client-cast-grid'>{people.map(person => personCard(person, close))}</div>}</ClientDialog>;
 }
 
 export default function DetailExtras({ item, similar, image }: Readonly<Props>) {
