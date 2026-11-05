@@ -1,0 +1,46 @@
+// Les messages venus du moteur de lecture gardent leur logique, mais pas l'apparence d'origine.
+.dialog.formDialog,
+.dialog.actionSheet {
+    color: #f2f4f7;
+    background: #14161a;
+    border: 1px solid rgb(255 255 255 / 16%);
+    border-radius: 14px;
+    box-shadow: 0 18px 40px rgb(0 0 0 / 60%);
+    font-family: Arial, Helvetica, sans-serif;
+
+    .formDialogHeader,
+    .formDialogFooter {
+        color: inherit;
+        background: transparent;
+        border: 0;
+    }
+
+    .formDialogFooterItem,
+    .button-submit,
+    .button-cancel {
+        min-height: 44px;
+        color: #fff;
+        background: transparent;
+        border: 1px solid rgb(255 255 255 / 34%);
+        border-radius: 99px;
+    }
+
+    .button-submit {
+        color: #0a0b0e;
+        background: #fff;
+        border-color: #fff;
+    }
+
+    .actionSheetMenuItem:hover,
+    .actionSheetMenuItem:focus-visible {
+        background: rgb(255 255 255 / 12%);
+    }
+}
+
+.toast {
+    color: #f2f4f7;
+    background: #14161a;
+    border: 1px solid rgb(255 255 255 / 16%);
+    border-radius: 10px;
+    font-family: Arial, Helvetica, sans-serif;
+}

@@ -5,6 +5,7 @@ import React, { type ReactNode, useRef, useState } from 'react';
 import appSettings from 'scripts/settings/appSettings';
 import * as userSettings from 'scripts/settings/userSettings';
 import { signOut } from '../profiles/profileSession';
+import { serverInterfaceUrl } from '../session/ServerInterfacePage';
 
 import { AUDIO_CHANNELS, BITRATES, formatBitrate, languageOptions, NEXT_UP_DAYS, normalizeQuickConnectCode, passwordProblem, avatarProblem, STILL_WATCHING,
     SUBTITLE_MODES, TRANSCODE_AUDIO_CODECS, TRANSCODE_VIDEO_CODECS, VIDEO_WIDTHS } from './accountModel';
@@ -66,15 +67,15 @@ function Loading({ account }: Readonly<{ account: Account }>) {
 export function LanguageSettings() {
     const account = useAccount();
     const { config, save, busy } = useServerConfiguration(account);
-    if (!config) return <Section title='Langues et lecture' scope='Compte Jellyfin'><Loading account={account} /></Section>;
+    if (!config) return <Section title='Langues et lecture' scope='Votre compte'><Loading account={account} /></Section>;
     const languages = languageOptions(account.cultures.data || [], config.AudioLanguagePreference);
-    return <Section title='Langues et lecture' scope='Compte Jellyfin · tous vos appareils'>
+    return <Section title='Langues et lecture' scope='Votre compte · tous vos appareils'>
         <div className='client-player-fields'>
             <Choice label='Langue audio préférée' value={config.AudioLanguagePreference || ''} options={languages} disabled={busy} onChange={value => save({ AudioLanguagePreference: value || null })} />
             <Check label='Toujours lire la piste audio par défaut du fichier' hint='Ignore la langue préférée quand le fichier désigne une piste par défaut.' checked={!!config.PlayDefaultAudioTrack} disabled={busy} onChange={value => save({ PlayDefaultAudioTrack: value })} />
             <Check label='Retenir la piste audio choisie' hint='Pour les épisodes suivants de la même série.' checked={!!config.RememberAudioSelections} disabled={busy} onChange={value => save({ RememberAudioSelections: value })} />
             <Check label='Retenir les sous-titres choisis' hint='Pour les épisodes suivants de la même série.' checked={!!config.RememberSubtitleSelections} disabled={busy} onChange={value => save({ RememberSubtitleSelections: value })} />
-            <Check label='Enchaîner l’épisode suivant dans les autres applications Jellyfin' hint='Dans ce client, c’est le compte à rebours du Lecteur qui décide.' checked={!!config.EnableNextEpisodeAutoPlay} disabled={busy} onChange={value => save({ EnableNextEpisodeAutoPlay: value })} />
+            <Check label='Enchaîner l’épisode suivant dans les autres applications' hint='Dans ce client, c’est le compte à rebours du Lecteur qui décide.' checked={!!config.EnableNextEpisodeAutoPlay} disabled={busy} onChange={value => save({ EnableNextEpisodeAutoPlay: value })} />
         </div>
         <SaveStatus mutation={account.configuration} />
     </Section>;
@@ -84,10 +85,10 @@ export function SubtitleSettings() {
     const account = useAccount();
     const { config, save, busy } = useServerConfiguration(account);
     const [burnIn, setBurnIn] = useDeviceSetting(() => device.alwaysBurnInSubtitleWhenTranscoding() as boolean, value => device.alwaysBurnInSubtitleWhenTranscoding(value));
-    if (!config) return <Section title='Sous-titres' scope='Compte Jellyfin'><Loading account={account} /></Section>;
+    if (!config) return <Section title='Sous-titres' scope='Votre compte'><Loading account={account} /></Section>;
     const languages = languageOptions(account.cultures.data || [], config.SubtitleLanguagePreference);
     const mode = config.SubtitleMode || 'Default';
-    return <Section title='Sous-titres' scope='Compte Jellyfin · tous vos appareils'>
+    return <Section title='Sous-titres' scope='Votre compte · tous vos appareils'>
         <div className='client-player-fields'>
             <Choice label='Langue des sous-titres préférée' value={config.SubtitleLanguagePreference || ''} options={languages} disabled={busy} onChange={value => save({ SubtitleLanguagePreference: value })} />
             <Check label='Incruster les sous-titres lors d’un transcodage' hint='Sur cet appareil. Évite les décalages, mais oblige le serveur à réencoder la vidéo.' checked={burnIn} onChange={setBurnIn} />
@@ -105,9 +106,9 @@ export function LibrarySettings() {
     const { config, save, busy } = useServerConfiguration(account);
     const [days, setDays] = useDeviceSetting(() => String(synced.maxDaysForNextUp()), value => synced.maxDaysForNextUp(Number(value)));
     const [rewatching, setRewatching] = useDeviceSetting(() => !!synced.enableRewatchingInNextUp(), value => synced.enableRewatchingInNextUp(value));
-    if (!config) return <Section title='Bibliothèque' scope='Compte Jellyfin'><Loading account={account} /></Section>;
+    if (!config) return <Section title='Bibliothèque' scope='Votre compte'><Loading account={account} /></Section>;
     return <>
-        <Section title='Bibliothèque' scope='Compte Jellyfin · tous vos appareils'>
+        <Section title='Bibliothèque' scope='Votre compte · tous vos appareils'>
             <div className='client-player-fields'>
                 <Check label='Afficher les épisodes manquants' hint='Les épisodes connus mais absents de la bibliothèque apparaissent dans les saisons.' checked={!!config.DisplayMissingEpisodes} disabled={busy} onChange={value => save({ DisplayMissingEpisodes: value })} />
                 <Check label='Masquer les titres vus dans les ajouts récents' checked={!!config.HidePlayedInLatest} disabled={busy} onChange={value => save({ HidePlayedInLatest: value })} />
@@ -254,17 +255,17 @@ export function QuickConnectMenuItem() {
 
 export function ProfileSettings() {
     const account = useAccount();
-    if (!account.account.data) return <Section title='Profil' scope='Compte Jellyfin'><Loading account={account} /></Section>;
+    if (!account.account.data) return <Section title='Profil' scope='Votre compte'><Loading account={account} /></Section>;
     const admin = !!account.account.data.Policy?.IsAdministrator;
     return <>
-        <Section title='Profil' scope='Compte Jellyfin'><AvatarSettings account={account} /></Section>
-        <Section title='Mot de passe' scope='Compte Jellyfin'><PasswordSettings account={account} /></Section>
+        <Section title='Profil' scope='Votre compte'><AvatarSettings account={account} /></Section>
+        <Section title='Mot de passe' scope='Votre compte'><PasswordSettings account={account} /></Section>
         <Section title='Session' scope='Cet appareil'>
             <div className='client-account-actions'>
                 <button type='button' onClick={() => {
                     void signOut(account.api?.basePath, account.account.data?.Id);
                 }}>Se déconnecter</button>
-                {admin && <a className='client-button' href='#/dashboard'>Administration du serveur ›</a>}
+                {admin && account.api && <a className='client-button' href={serverInterfaceUrl(account.api.basePath, 'dashboard')} target='_blank' rel='noopener noreferrer'>Administration du serveur ↗</a>}
             </div>
         </Section>
     </>;

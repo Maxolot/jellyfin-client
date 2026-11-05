@@ -9,18 +9,18 @@
     <meta http-equiv="X-UA-Compatibility" content="IE=Edge">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Jellyfin">
+    <meta name="application-name" content="Médiathèque">
     <meta name="robots" content="noindex, nofollow, noarchive">
     <meta name="referrer" content="no-referrer">
 
-    <meta id="themeColor" name="theme-color" content="#202020">
+    <meta id="themeColor" name="theme-color" content="#0a0b0e">
 
-    <link rel="apple-touch-icon" sizes="180x180" href="../node_modules/@jellyfin/ux-web/favicons/touchicon.png">
-    <link rel="shortcut icon" href="../node_modules/@jellyfin/ux-web/favicons/favicon.ico">
-    <meta name="msapplication-TileImage" content="../node_modules/@jellyfin/ux-web/favicons/touchicon144.png">
-    <meta name="msapplication-TileColor" content="#333333">
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/brand/favicons/touchicon.png">
+    <link rel="shortcut icon" href="./assets/brand/favicons/favicon.ico">
+    <meta name="msapplication-TileImage" content="./assets/brand/favicons/touchicon144.png">
+    <meta name="msapplication-TileColor" content="#0a0b0e">
 
-    <title>Jellyfin</title>
+    <title>Médiathèque</title>
 
     <style>
         .transparentDocument,
@@ -53,8 +53,27 @@
             cursor: none !important;
         }
 
+        .splashLoader {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 28px;
+            height: 28px;
+            margin: -14px 0 0 -14px;
+            border: 2px solid rgba(255, 255, 255, 0.16);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: splashSpin 0.8s linear infinite;
+        }
+
+        @keyframes splashSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         html {
-            background-color: #101010;
+            background-color: #0a0b0e;
             color: rgba(255, 255, 255, 0.7);
         }
 
@@ -88,7 +107,7 @@
 </head>
 <body dir="ltr">
     <div id="reactRoot">
-        <div class="splashLogo"></div>
+        <div class="splashLoader"></div>
     </div>
 </body>
 </html>

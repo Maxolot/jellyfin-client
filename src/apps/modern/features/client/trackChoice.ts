@@ -2,7 +2,7 @@ import type { MediaStream } from '@jellyfin/sdk/lib/generated-client';
 
 export type TrackOption = { key: string; label: string };
 /** Languages asked for on one film or series; absent means the account's own preferences. */
-export type TrackChoice = { audio?: string; subtitle?: string };
+export type TrackChoice = { audio?: string; subtitle?: string; version?: string };
 export const NO_SUBTITLES = 'none';
 
 const LEGACY_CODES: Record<string, string> = { fr: 'fra', fre: 'fra', french: 'fra', français: 'fra', francais: 'fra', en: 'eng', english: 'eng', ger: 'deu', de: 'deu', dut: 'nld', chi: 'zho', cze: 'ces', gre: 'ell', per: 'fas', rum: 'ron', slo: 'slk', ice: 'isl', mac: 'mkd', may: 'msa', bur: 'mya', baq: 'eus', arm: 'hye', alb: 'sqi', tib: 'bod', wel: 'cym', geo: 'kat', es: 'spa', it: 'ita', ja: 'jpn', ko: 'kor' };
@@ -79,7 +79,7 @@ export function saveTrackChoice(basePath: string | undefined, userId: string | u
     const key = storageKey(basePath, userId);
     const all = readAll(key);
     delete all[titleId];
-    if (choice.audio || choice.subtitle) all[titleId] = choice;
+    if (choice.audio || choice.subtitle || choice.version) all[titleId] = choice;
     const titles = Object.keys(all);
     for (const title of titles.slice(0, Math.max(0, titles.length - MAX_TITLES))) delete all[title];
     try {

@@ -1,25 +1,25 @@
 /* eslint-disable react/jsx-no-bind -- Menu handlers are local to this component. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 
 import { useApi } from 'hooks/useApi';
 
 import { CastDialog, hasCast } from './DetailExtras';
 import ClientIcon from './ClientIcon';
 import { useFileTracks } from './languageTags';
+import MediaInfoDialog from './MediaInfoDialog';
 import { useSeerr } from './seerr/SeerrContext';
 import { canRequestSeasons, RequestDialog, useMissingSeasons } from './seerr/SeerrViews';
 import { choiceSummary, readTrackChoice, saveTrackChoice, type TrackChoice } from './trackChoice';
 import TrackMenu from './TrackMenu';
 
 /** Secondary actions of a media page, kept behind one "more" button so the main row stays minimal. */
-export default function DetailMenu({ item, basePath }: Readonly<{ item: BaseItemDto; basePath: string }>) {
+export default function DetailMenu({ item, basePath, play }: Readonly<{ item: BaseItemDto; basePath: string; play: (item: BaseItemDto, startTicks?: number) => void }>) {
     const seerr = useSeerr();
     const root = useRef<HTMLDivElement>(null);
     const trigger = useRef<HTMLButtonElement>(null);
     const [open, setOpen] = useState(false);
-    const [dialog, setDialog] = useState<'cast' | 'request' | null>(null);
+    const [dialog, setDialog] = useState<'cast' | 'request' | 'info' | null>(null);
     const [tracksOpen, setTracksOpen] = useState(false);
     const { api, user } = useApi();
     const tracks = useFileTracks(item);
@@ -58,7 +58,7 @@ export default function DetailMenu({ item, basePath }: Readonly<{ item: BaseItem
         setTracksOpen(false);
         if (restoreFocus) trigger.current?.focus();
     };
-    const openDialog = (name: 'cast' | 'request') => {
+    const openDialog = (name: 'cast' | 'request' | 'info') => {
         setOpen(false);
         setDialog(name);
     };
@@ -86,9 +86,10 @@ export default function DetailMenu({ item, basePath }: Readonly<{ item: BaseItem
                 {canChooseTracks && <button type='button' role='menuitem' onClick={() => setTracksOpen(true)}><ClientIcon name='volume' /><span className='client-more-text'>Audio et sous-titres<span>{choiceSummary(choice)}</span></span></button>}
                 {request && <button type='button' role='menuitem' onClick={() => openDialog('request')}><ClientIcon name='plus' />Demander des saisons{missing > 0 && <small>{missing}</small>}</button>}
                 {hasCast(item) && <button type='button' role='menuitem' onClick={() => openDialog('cast')}><ClientIcon name='collection' />Distribution et réalisation</button>}
-                <Link role='menuitem' to={`/details?id=${item.Id}`}><ClientIcon name='info' />Options et fiche Jellyfin</Link>
+                <button type='button' role='menuitem' onClick={() => openDialog('info')}><ClientIcon name='info' />Informations</button>
             </>}
         </div>}
+        <MediaInfoDialog item={item} basePath={basePath} open={dialog === 'info'} onClose={() => setDialog(null)} play={play} choice={choice} chooseVersion={version => chooseTracks({ ...choice, version })} />
         <CastDialog item={item} basePath={basePath} open={dialog === 'cast'} onClose={() => setDialog(null)} />
         {request && <RequestDialog item={item} open={dialog === 'request'} onClose={() => setDialog(null)} />}
     </div>;

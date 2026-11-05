@@ -17,6 +17,7 @@ const noTracks = { languages: [], audio: [], subtitles: [] };
 let tracks: typeof fileTracks | typeof noTracks = noTracks;
 vi.mock('hooks/useApi', () => ({ useApi: () => ({ api: { basePath: 's' }, user: { Id: 'u' } }) }));
 vi.mock('./languageTags', () => ({ useFileTracks: () => tracks }));
+vi.mock('./MediaInfoDialog', () => ({ default: () => null }));
 vi.mock('./DetailExtras', () => ({ CastDialog: () => null, hasCast: (item: BaseItemDto) => !!item.People?.length }));
 
 let root: Root;
@@ -32,14 +33,14 @@ afterEach(async () => {
     container.remove();
 });
 async function open(item: BaseItemDto) {
-    await act(async () => root.render(<MemoryRouter><DetailMenu item={item} basePath='' /></MemoryRouter>));
+    await act(async () => root.render(<MemoryRouter><DetailMenu item={item} basePath='' play={vi.fn()} /></MemoryRouter>));
     await act(async () => container.querySelector('button')?.click());
     return Array.from(container.querySelectorAll('[role="menuitem"]')).map(entry => entry.textContent);
 }
 
 describe('DetailMenu tracks', () => {
     const openMenu = async () => {
-        await act(async () => root.render(<MemoryRouter><DetailMenu item={{ Id: 'film', Type: 'Movie' }} basePath='' /></MemoryRouter>));
+        await act(async () => root.render(<MemoryRouter><DetailMenu item={{ Id: 'film', Type: 'Movie' }} basePath='' play={vi.fn()} /></MemoryRouter>));
         await act(async () => container.querySelector<HTMLElement>('.client-action-circle')?.click());
     };
     const item = (text: string) => [...container.querySelectorAll<HTMLElement>('[role^="menuitem"]')].find(entry => entry.textContent?.includes(text));
@@ -74,19 +75,19 @@ describe('DetailMenu tracks', () => {
         await openMenu();
         await act(async () => item('Audio et sous-titres')?.click());
         await act(async () => document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
-        expect(item('Distribution') || item('Options et fiche')).toBeDefined();
+        expect(item('Distribution') || item('Informations')).toBeDefined();
     });
 });
 
 describe('DetailMenu', () => {
     it('offers season requests for a series only', async () => {
         const entries = await open({ Id: 's', Type: 'Series', People: [{ Id: 'p' }] });
-        expect(entries).toEqual(['Demander des saisons2', 'Distribution et réalisation', 'Options et fiche Jellyfin']);
+        expect(entries).toEqual(['Demander des saisons2', 'Distribution et réalisation', 'Informations']);
     });
 
     it('does not offer requests for a movie already in the library', async () => {
         const entries = await open({ Id: 'm', Type: 'Movie', People: [{ Id: 'p' }] });
-        expect(entries).toEqual(['Distribution et réalisation', 'Options et fiche Jellyfin']);
+        expect(entries).toEqual(['Distribution et réalisation', 'Informations']);
     });
 
     it('closes with Escape and restores focus', async () => {
@@ -101,10 +102,10 @@ describe('DetailMenu', () => {
 
 describe('DetailMenu badge', () => {
     it('shows a badge on the button when seasons are missing, not for a movie', async () => {
-        await act(async () => root.render(<MemoryRouter><DetailMenu item={{ Id: 's', Type: 'Series' }} basePath='' /></MemoryRouter>));
+        await act(async () => root.render(<MemoryRouter><DetailMenu item={{ Id: 's', Type: 'Series' }} basePath='' play={vi.fn()} /></MemoryRouter>));
         expect(container.querySelector('.client-more-badge')).not.toBeNull();
         expect(container.querySelector('button')?.getAttribute('aria-label')).toBe('Plus d’actions : 2 saisons à demander');
-        await act(async () => root.render(<MemoryRouter><DetailMenu item={{ Id: 'm', Type: 'Movie' }} basePath='' /></MemoryRouter>));
+        await act(async () => root.render(<MemoryRouter><DetailMenu item={{ Id: 'm', Type: 'Movie' }} basePath='' play={vi.fn()} /></MemoryRouter>));
         expect(container.querySelector('.client-more-badge')).toBeNull();
     });
 });

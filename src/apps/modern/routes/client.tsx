@@ -7,6 +7,7 @@ import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
 import { getUserDataApi } from '@jellyfin/sdk/lib/utils/api/user-data-api';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useQueryClient } from '@tanstack/react-query';
+import { APP_NAME } from 'constants/branding';
 import React, { type CSSProperties, memo, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigationType, useSearchParams, useNavigate } from 'react-router-dom';
 
@@ -282,7 +283,7 @@ function useClientController() {
             queryFn: ({ signal }) => clientRequest(async () => (await getLibraryApi(api!).getItem({ itemId: targetId, userId: user!.Id! }, { signal })).data)
         });
     }
-    async function play(i: BaseItemDto) {
+    async function play(i: BaseItemDto, startTicks?: number) {
         if (isExternal(i)) {
             setParams({ id: i.Id! }, { state: { returnTo: location.pathname + location.search, returnState: location.state } });
             return;
@@ -290,10 +291,10 @@ function useClientController() {
         setActionError('');
         setPreviewSuspended(true);
         try {
-            await playbackManager.play({ items: [i as ItemDto], startPositionTicks: i.UserData?.PlaybackPositionTicks || 0, ...await chosenTracks(api, user?.Id, i) });
+            await playbackManager.play({ items: [i as ItemDto], startPositionTicks: startTicks ?? (i.UserData?.PlaybackPositionTicks || 0), ...await chosenTracks(api, user?.Id, i) });
         } catch {
             setPreviewSuspended(false);
-            setActionError('La lecture n’a pas pu démarrer. Réessayez ou ouvrez la fiche Jellyfin.');
+            setActionError('La lecture n’a pas pu démarrer. Réessayez dans un instant.');
         }
     }
     async function updateState(kind: 'favorite' | 'played', target = item) {
@@ -398,7 +399,7 @@ const NavLinks = memo(function ClientNavLinks({ view, detail, prepare }: NavProp
 
 function ClientView({ model }: ViewProps) {
     const { preferences, id, view, user, actionError, error, media, details, profileOpen, setProfileOpen, profileButton, profileMenu, accent } = model;
-    return <PreviewProvider serverAvailable={model.previewProviderAvailable} surface={model.surface} enabled={preferences.previews} muted={preferences.previewMuted} suspended={model.previewSuspended} toggleMuted={() => model.savePreference({ ...preferences, previewMuted: !preferences.previewMuted })} onPlayingChange={model.setPreviewPlaying}><Page id='clientPage' title='Client' className='client-page' isBackButtonEnabled={false}>
+    return <PreviewProvider serverAvailable={model.previewProviderAvailable} surface={model.surface} enabled={preferences.previews} muted={preferences.previewMuted} suspended={model.previewSuspended} toggleMuted={() => model.savePreference({ ...preferences, previewMuted: !preferences.previewMuted })} onPlayingChange={model.setPreviewPlaying}><Page id='clientPage' title={APP_NAME} className='client-page' isBackButtonEnabled={false}>
         <div ref={model.surface} className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} ${preferences.chromatic ? 'client-chromatic' : ''} ${preferences.hero === 'background' ? 'client-hero-background' : ''} client-treatment-${preferences.detailTreatment} client-layout-${preferences.detail} ${id ? 'client-detail-page' : ''}`} style={{ '--client-accent': accent, '--detail-blur': `${preferences.detailBlur}px`, '--detail-shade': preferences.detailShade / 100, '--detail-width': `${preferences.detailWidth}%`, '--hero-fade': `${preferences.heroFade}%` } as CSSProperties}>
             {preferences.ambient && !id && <AmbientBackdrop source={model.ambient} />}
             <nav className='client-nav' data-alignment={preferences.headerAlignment} aria-label='Navigation principale'>
@@ -478,7 +479,7 @@ function HeroActions({ model, dots }: ViewProps & { dots: ReactNode }) {
         {!id && <Link className='client-button' data-client-focus={`info-${hero.Id}`} to={`/client?id=${hero.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }}><ClientIcon name='info' />Plus d’infos</Link>}
         {id && <><button className='client-button client-action-circle' aria-label={item?.UserData?.IsFavorite ? 'Retirer de ma liste' : 'Ajouter à ma liste'} title={item?.UserData?.IsFavorite ? 'Retirer de ma liste' : 'Ajouter à ma liste'} disabled={busy} aria-pressed={!!item?.UserData?.IsFavorite} onClick={() => updateState('favorite')}><ClientIcon name={item?.UserData?.IsFavorite ? 'check' : 'plus'} /></button>
             <button className='client-button client-action-circle' aria-label={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} title={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} disabled={busy} aria-pressed={!!item?.UserData?.Played} onClick={() => updateState('played')}><ClientIcon name={item?.UserData?.Played ? 'check' : 'eye'} /></button>
-            <DetailMenu key={hero.Id} item={hero} basePath={api?.basePath || ''} /></>}
+            <DetailMenu key={hero.Id} item={hero} basePath={api?.basePath || ''} play={play} /></>}
         {dots}
     </div>;
 }

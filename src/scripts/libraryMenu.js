@@ -1,3 +1,4 @@
+import { APP_NAME } from 'constants/branding';
 import escapeHtml from 'escape-html';
 import Headroom from 'headroom.js';
 
@@ -689,7 +690,7 @@ let navDrawerInstance;
 let mainDrawerButton;
 let headerHomeButton;
 let currentDrawerType;
-let documentTitle = 'Jellyfin';
+let documentTitle = APP_NAME;
 let pageTitleElement;
 let headerBackButton;
 let headerUserButton;
@@ -726,7 +727,6 @@ const fetchServerName = (_apiClient) => {
     _apiClient
         ?.getPublicSystemInfo()
         .then(({ ServerName }) => {
-            documentTitle = ServerName || documentTitle;
             document.title = documentTitle;
         })
         .catch(err => {

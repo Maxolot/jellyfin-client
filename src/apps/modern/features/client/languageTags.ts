@@ -79,10 +79,13 @@ export function useLocalLanguages(item: BaseItemDto): FileLanguage[] {
 /** The track numbers to start this very file with, from the languages chosen on its film or series. */
 export async function chosenTracks(api: Api | undefined, userId: string | undefined, item: BaseItemDto) {
     const choice = readTrackChoice(api?.basePath, userId, item.SeriesId || item.Id);
-    if (!api || !userId || !item.Id || (!choice.audio && !choice.subtitle)) return {};
+    if (!api || !userId || !item.Id || (!choice.audio && !choice.subtitle && !choice.version)) return {};
     try {
         const full = (await getLibraryApi(api).getItems({ userId, ids: [item.Id], fields: streamFields })).data.Items?.[0];
-        return full ? resolveTracks(streamsOf(full), choice) : {};
+        if (!full) return {};
+        // A version only exists on the film it was chosen for; episodes keep their own.
+        const source = full.MediaSources?.find(entry => entry.Id === choice.version);
+        return { ...(source?.Id ? { mediaSourceId: source.Id } : {}), ...resolveTracks(source?.MediaStreams || streamsOf(full), choice) };
     } catch {
         // Playing with the account's preferences beats not playing.
         return {};

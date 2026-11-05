@@ -27,8 +27,8 @@ export function SeerrSettings() {
     let label = 'Le service de demandes n’est pas disponible sur ce serveur.';
     if (seerr.status.isFetching) label = 'Vérification de la connexion…';
     if (seerr.status.data?.enabled) label = 'Connexion aux demandes à rétablir.';
-    if (seerr.connected) label = 'Connecté avec votre compte Jellyfin.';
-    if (!seerr.enabled) label = 'Catalogue Jellyfin uniquement.';
+    if (seerr.connected) label = 'Connecté avec votre compte.';
+    if (!seerr.enabled) label = 'Votre bibliothèque uniquement.';
     return <section className='client-seerr-settings'><h2>Découvertes et demandes</h2><label><input type='checkbox' checked={seerr.enabled} disabled={!seerr.permitted} onChange={event => seerr.setEnabled(event.target.checked)} /> Enrichir le catalogue avec Jellyseerr</label><p role='status'>{label}</p>
         {seerr.enabled && !seerr.connected && <button className='client-button' disabled={busy} onClick={async () => {
             setBusy(true);
@@ -131,7 +131,7 @@ export function RequestPanel({ identity, localItem }: Readonly<{ identity: Seerr
         }}>Réessayer</button></section>;
     }
     if (localItem?.Type === 'Series' && localSeasons.isError) {
-        return <section className='client-request-panel'><p>Les saisons présentes dans Jellyfin ne peuvent pas être vérifiées.</p><button className='client-button' onClick={() => {
+        return <section className='client-request-panel'><p>Les saisons présentes dans votre bibliothèque ne peuvent pas être vérifiées.</p><button className='client-button' onClick={() => {
             void localSeasons.refetch();
         }}>Réessayer</button></section>;
     }

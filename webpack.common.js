@@ -47,6 +47,9 @@ const config = {
         ...THEMES_BY_ID
     },
     resolve: {
+        // The project has no logo yet: no leftover path of the inherited code can show the original one.
+        alias: Object.fromEntries(['banner-dark.png', 'banner-light.png', 'icon-transparent.png']
+            .map(name => [`@jellyfin/ux-web/${name}`, path.resolve(__dirname, 'src/assets/brand/blank.png')])),
         extensions: ['.tsx', '.ts', '.js'],
         modules: [
             path.resolve(__dirname, 'src'),
@@ -86,7 +89,7 @@ const config = {
                 'robots.txt',
                 {
                     from: 'touchicon*.png',
-                    context: path.resolve(__dirname, 'node_modules/@jellyfin/ux-web/favicons'),
+                    context: path.resolve(__dirname, 'src/assets/brand/favicons'),
                     to: 'favicons'
                 },
                 ...Assets.map(asset => {

@@ -226,3 +226,99 @@
         max-width: calc(100vw - 32px);
     }
 }
+
+// Informations d'un titre : remplacent la fiche d'origine, sans rien afficher par défaut sur la page.
+.client-media-info {
+    display: grid;
+    gap: 24px;
+    color: #d3d7df;
+    font-size: 14px;
+
+    h3 {
+        margin: 0 0 10px;
+        color: #fff;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    dl {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 6px 16px;
+        margin: 0;
+    }
+
+    dt {
+        color: #a4afc0;
+    }
+
+    dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    ul {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+}
+
+.client-media-info .client-media-row {
+    display: flex;
+    width: 100%;
+    min-height: 44px;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 12px;
+    color: #f2f4f7;
+    background: rgb(255 255 255 / 6%);
+    border: 0;
+    border-radius: 10px;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+        background: rgb(255 255 255 / 14%);
+        outline: none;
+    }
+
+    &[aria-pressed='true'] {
+        background: rgb(255 255 255 / 20%);
+    }
+
+    time,
+    small {
+        margin-left: auto;
+        color: #a4afc0;
+        font-size: 12px;
+    }
+
+    img {
+        width: 72px;
+        height: 40px;
+        flex: none;
+        border-radius: 6px;
+        object-fit: cover;
+    }
+
+    > svg {
+        width: 18px;
+        height: 18px;
+        flex: none;
+    }
+}
+
+.client-media-info .client-media-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+
+    a:any-link {
+        color: #d3d7df;
+    }
+}

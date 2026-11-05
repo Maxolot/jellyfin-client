@@ -4,7 +4,7 @@ import Dashboard from 'utils/dashboard';
 import { forgetProfile, markProfileChosen } from './profileStore';
 
 /** Starts over as this person: nothing of the previous account survives a full reload. */
-export function enterProfile(serverId: string, userId: string, token: string) {
+export function enterProfile(serverId: string, userId: string, token: string, target?: string) {
     const provider = ServerConnections.credentialProvider();
     const credentials = provider.credentials();
     const server = credentials.Servers.find((entry: { Id?: string }) => entry.Id === serverId);
@@ -12,13 +12,13 @@ export function enterProfile(serverId: string, userId: string, token: string) {
     server.UserId = userId;
     server.AccessToken = token;
     provider.credentials(credentials);
-    restart();
+    restart(target);
 }
 
-export function restart() {
+export function restart(target = '/client') {
     markProfileChosen();
     // Silent on purpose: changing the hash would mount the home page with the previous, perhaps closed, session before the reload.
-    window.history.replaceState(null, '', '#/client');
+    window.history.replaceState(null, '', `#${target}`);
     window.location.reload();
 }
 

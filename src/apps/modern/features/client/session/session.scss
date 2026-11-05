@@ -1,0 +1,89 @@
+// Connexion, serveurs et erreurs : même langage que la page de profils.
+.client-profiles.has-backdrop {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+
+    &::after {
+        position: absolute;
+        z-index: -1;
+        background: linear-gradient(180deg, rgb(10 11 14 / 78%), rgb(10 11 14 / 94%));
+        content: '';
+        inset: 0;
+    }
+}
+
+.client-session-backdrop {
+    position: absolute;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    inset: 0;
+}
+
+.client-profile-form .client-session-actions {
+    display: grid;
+    gap: 12px;
+}
+
+.client-session-link {
+    color: #a4afc0;
+    font-size: 14px;
+    text-align: center;
+    text-decoration: underline;
+
+    &:hover,
+    &:focus-visible {
+        color: #fff;
+    }
+}
+
+.client-session-button {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 99px;
+    text-decoration: none;
+}
+
+.client-session-disclaimer {
+    max-width: 520px;
+    margin: 28px auto 0;
+    color: #a4afc0;
+    font-size: 13px;
+    text-align: center;
+
+    a {
+        color: inherit;
+    }
+}
+
+.client-session-details {
+    color: #a4afc0;
+    font-size: 13px;
+
+    pre {
+        overflow: auto;
+        max-height: 40vh;
+        margin: 8px 0 0;
+        white-space: pre-wrap;
+    }
+}
+
+.client-server-list {
+    margin-bottom: 8px;
+
+    .client-profile-avatar {
+        background: rgb(255 255 255 / 8%);
+    }
+}
+
+.client-session-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px 24px;
+    margin-top: 24px;
+}
