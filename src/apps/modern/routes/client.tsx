@@ -100,11 +100,14 @@ function allowExternalCatalogue(view: string, selectors: string[], mode: string 
 }
 
 function restoreClientNavigation(key: string, restoreFocus: boolean, id: string) {
-    try {
-        window.scrollTo(0, Number(sessionStorage.getItem(key)) || 0);
-    } catch {
-        window.scrollTo(0, 0);
+    // Only going back returns to a previous position; opening a page always starts at its top.
+    let top = 0;
+    if (restoreFocus) {
+        try {
+            top = Number(sessionStorage.getItem(key)) || 0;
+        } catch { /* Storage can be disabled. */ }
     }
+    window.scrollTo(0, top);
     try {
         const savedFocus = sessionStorage.getItem(`${key}-focus`);
         const target = restoreFocus ? Array.from(document.querySelectorAll<HTMLElement>('#clientPage [data-client-focus]'))
@@ -215,7 +218,12 @@ function useClientController() {
     const pageReady = clientPageReady(id, view, item, !!media.data, remoteDetails.isFetched);
     useLayoutEffect(() => {
         const key = `${prefKey}-scroll-${params.toString()}`;
-        if (pageReady) restoreClientNavigation(key, restoreFocus, id);
+        if (!pageReady) {
+            // The page shrinks while loading: that forced position must not be saved as this page's own.
+            if (!restoreFocus) window.scrollTo(0, 0);
+            return;
+        }
+        restoreClientNavigation(key, restoreFocus, id);
         const saveFocus = (event: FocusEvent) => {
             const target = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-client-focus]') : null;
             if (target?.dataset.clientFocus) {
