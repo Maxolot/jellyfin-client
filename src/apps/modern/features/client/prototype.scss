@@ -171,18 +171,22 @@
     transition: opacity 0.25s;
 }
 
+// « Reprendre », « S1:E1 » : seulement sur la carte dépliée.
 .client-continue-label {
     position: absolute;
-    bottom: 15px;
-    left: 12px;
+    right: 18px;
+    bottom: 22px;
     font-size: 12px;
     text-shadow: 0 2px 4px #000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s 0.1s, visibility 0s 0.4s;
 }
 
 .client-media-card.active .client-continue-label {
-    right: 18px;
-    bottom: 22px;
-    left: auto;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s 0.1s, visibility 0s;
 }
 
 .client-row-info {
