@@ -497,7 +497,12 @@
 
     &.is-compact {
         flex-wrap: wrap;
+        gap: 4px;
         margin-top: 3px;
+
+        .client-source-lang {
+            margin-left: 0;
+        }
     }
 
     &.is-pill,
