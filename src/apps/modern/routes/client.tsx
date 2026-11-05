@@ -39,6 +39,7 @@ import { usePersonalStats, useViewingHistory } from '../features/client/usePerso
 import HeroMetadata from '../features/client/HeroMetadata';
 import DetailExtras from '../features/client/DetailExtras';
 import DetailMenu from '../features/client/DetailMenu';
+import { openConnectivity } from '../features/client/remote/ConnectivityLayer';
 import ProfilePage from '../features/client/profiles/ProfilePage';
 import { signOut } from '../features/client/profiles/profileSession';
 import { useProfileGate } from '../features/client/profiles/useProfileGate';
@@ -405,7 +406,13 @@ function ClientView({ model }: ViewProps) {
                 <NavLinks view={view} detail={!!id} prepare={model.prepareTab} />
                 <Link to='/client?view=search' className='client-brand client-search-shortcut' aria-label='Rechercher' aria-current={!id && view === 'search' ? 'page' : undefined}><ClientIcon name='search' /></Link>
                 {profileOpen && <div ref={profileMenu} className='client-profile-menu' role='dialog' aria-label='Menu du profil'>
-                    <strong>{user?.Name}</strong><Link to='/client?view=profiles' onClick={() => setProfileOpen(false)}>Changer de profil</Link><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><QuickConnectMenuItem /><button onClick={() => {
+                    <strong>{user?.Name}</strong><Link to='/client?view=profiles' onClick={() => setProfileOpen(false)}>Changer de profil</Link><button type='button' onClick={() => {
+                        setProfileOpen(false);
+                        openConnectivity('targets');
+                    }}>Lire sur un autre appareil</button><button type='button' onClick={() => {
+                        setProfileOpen(false);
+                        openConnectivity('together');
+                    }}>Regarder ensemble</button><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><QuickConnectMenuItem /><button onClick={() => {
                         void signOut(model.api?.basePath, user?.Id);
                     }}>Se déconnecter</button>
                 </div>}

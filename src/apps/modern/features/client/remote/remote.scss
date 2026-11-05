@@ -1,0 +1,438 @@
+// Le client présente sa propre télécommande, sans la barre native du moteur.
+html.client-connectivity-active .appfooter {
+    display: none !important;
+}
+
+// Curseur dessiné : piste fine, partie lue blanche, poignée ronde.
+.client-range {
+    position: relative;
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    cursor: pointer;
+    touch-action: none;
+}
+
+.client-range-track {
+    position: relative;
+    width: 100%;
+    height: 4px;
+    background: rgb(255 255 255 / 22%);
+    border-radius: 99px;
+}
+
+.client-range-fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    background: #fff;
+    border-radius: inherit;
+}
+
+.client-range-thumb {
+    position: absolute;
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    background: #fff;
+    border-radius: 50%;
+}
+
+.client-range:focus-visible {
+    outline: none;
+
+    .client-range-thumb {
+        box-shadow: 0 0 0 4px rgb(255 255 255 / 35%);
+    }
+}
+
+.client-together-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    > svg {
+        width: 28px;
+        height: 28px;
+    }
+
+    > span {
+        display: grid;
+        gap: 2px;
+    }
+
+    strong {
+        color: #fff;
+        font-size: 16px;
+    }
+
+    small {
+        color: #a4afc0;
+    }
+}
+
+// Pastille « Ensemble » : en bas à gauche dans le client, dans l'en-tête du lecteur.
+.client-together-badge {
+    display: inline-flex;
+    min-height: 36px;
+    align-items: center;
+    gap: 8px;
+    padding: 0 14px;
+    color: #fff;
+    background: rgb(20 22 26 / 88%);
+    border: 1px solid rgb(255 255 255 / 24%);
+    border-radius: 99px;
+    font: 600 13px Arial, Helvetica, sans-serif;
+    cursor: pointer;
+
+    > svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    &.is-floating {
+        position: fixed;
+        z-index: 110;
+        bottom: max(16px, env(safe-area-inset-bottom));
+        left: 16px;
+        min-height: 44px;
+    }
+
+    &:hover,
+    &:focus-visible {
+        border-color: #fff;
+        outline: none;
+    }
+}
+
+.client-together-sync {
+    width: 8px;
+    height: 8px;
+    background: #fff;
+    border-radius: 50%;
+    animation: client-together-pulse 1s ease-in-out infinite;
+}
+
+@keyframes client-together-pulse {
+    50% {
+        opacity: 0.25;
+    }
+}
+
+// Barre discrète en bas de l'écran quand un autre appareil est piloté.
+.client-remote-bar {
+    position: fixed;
+    z-index: 110;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    left: 50%;
+    display: flex;
+    width: min(560px, calc(100vw - 32px));
+    align-items: center;
+    gap: 10px;
+    padding: 8px 8px 8px 16px;
+    color: #f2f4f7;
+    background: rgb(20 22 26 / 94%);
+    border: 1px solid rgb(255 255 255 / 16%);
+    border-radius: 99px;
+    box-shadow: 0 18px 40px rgb(0 0 0 / 55%);
+    transform: translateX(-50%);
+    backdrop-filter: blur(18px);
+
+    > svg {
+        width: 22px;
+        height: 22px;
+        flex: none;
+    }
+}
+
+.client-remote-bar-text {
+    display: grid;
+    min-width: 0;
+    flex: 1;
+
+    small {
+        color: #a4afc0;
+        font-size: 11px;
+    }
+
+    strong {
+        overflow: hidden;
+        font-size: 14px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+.client-remote-bar .client-remote-bar-button {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    place-items: center;
+    color: #fff;
+    background: rgb(255 255 255 / 8%);
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+
+    > svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    &:hover,
+    &:focus-visible {
+        background: rgb(255 255 255 / 18%);
+        outline: none;
+    }
+}
+
+.client-remote-list {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.client-remote-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.client-remote-title {
+    margin: 0;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.client-remote-times {
+    display: flex;
+    justify-content: space-between;
+    margin-top: -8px;
+    color: #a4afc0;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+.client-remote-transport {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+}
+
+.client-remote-volume {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .client-range {
+        flex: 1;
+    }
+}
+
+.client-remote-choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    button {
+        min-height: 40px;
+        padding: 0 16px;
+        color: #f2f4f7;
+        background: rgb(255 255 255 / 6%);
+        border: 1px solid rgb(255 255 255 / 20%);
+        border-radius: 99px;
+        font: inherit;
+        cursor: pointer;
+    }
+
+    button[aria-pressed='true'] {
+        color: #0a0b0e;
+        background: #fff;
+        border-color: #fff;
+    }
+}
+
+// Lire sur un autre appareil et regarder ensemble : panneaux, barre et pastille du client.
+.client-remote-panel {
+    display: grid;
+    gap: 16px;
+    color: #d3d7df;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+
+    h3 {
+        margin: 0 0 8px;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+    }
+}
+
+.client-remote-panel .client-remote-row {
+    display: flex;
+    width: 100%;
+    min-height: 56px;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 14px;
+    color: #f2f4f7;
+    background: rgb(255 255 255 / 6%);
+    border: 1px solid transparent;
+    border-radius: 12px;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    > span {
+        display: grid;
+        gap: 2px;
+    }
+
+    small {
+        color: #a4afc0;
+        font-size: 12px;
+    }
+
+    > svg {
+        width: 24px;
+        height: 24px;
+        flex: none;
+    }
+
+    &:hover,
+    &:focus-visible {
+        background: rgb(255 255 255 / 12%);
+        outline: none;
+    }
+
+    &[aria-pressed='true'] {
+        border-color: #fff;
+    }
+}
+
+.client-remote-panel .client-remote-note {
+    margin: 0;
+    color: #a4afc0;
+    line-height: 1.45;
+
+    &.is-error {
+        color: #ffb4a8;
+    }
+}
+
+.client-remote-panel .client-remote-pill {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 18px;
+    color: #fff;
+    background: transparent;
+    border: 1px solid rgb(255 255 255 / 34%);
+    border-radius: 99px;
+    font: inherit;
+    cursor: pointer;
+
+    > svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    &.is-primary {
+        color: #0a0b0e;
+        background: #fff;
+        border-color: #fff;
+    }
+
+    &:hover,
+    &:focus-visible {
+        border-color: #fff;
+        outline: none;
+    }
+}
+
+.client-remote-panel .client-remote-transport button,
+.client-remote-panel .client-remote-volume button {
+    display: grid;
+    width: 48px;
+    height: 48px;
+    place-items: center;
+    color: #fff;
+    background: rgb(255 255 255 / 8%);
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+
+    > svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    &.is-main {
+        width: 64px;
+        height: 64px;
+        color: #0a0b0e;
+        background: #fff;
+    }
+
+    &:hover,
+    &:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 2px;
+    }
+}
+
+@media (max-width: 700px) {
+    .client-remote-bar {
+        bottom: max(72px, env(safe-area-inset-bottom));
+    }
+
+    .client-together-badge.is-floating {
+        bottom: max(16px, env(safe-area-inset-bottom));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .client-together-sync {
+        animation: none;
+    }
+}
+
+html.client-video-active .client-together-badge.is-floating {
+    display: none;
+}
+
+// Les notifications de groupe émises par le moteur reprennent la présentation du client.
+html.client-connectivity-active .toast {
+    min-width: 0;
+    max-width: min(420px, calc(100vw - 32px));
+    padding: 12px 18px;
+    color: #fff;
+    background: #17181c;
+    border: 1px solid rgb(255 255 255 / 24%);
+    border-radius: 14px;
+    font: 14px Arial, Helvetica, sans-serif;
+}
+
+.client-remote-command-error {
+    position: fixed;
+    z-index: 110;
+    bottom: max(100px, calc(env(safe-area-inset-bottom) + 84px));
+    left: 50%;
+    width: min(520px, calc(100vw - 64px));
+    padding: 12px 16px;
+    color: #ffb4a8;
+    background: #17181c;
+    border: 1px solid rgb(255 255 255 / 24%);
+    border-radius: 14px;
+    font: 14px Arial, Helvetica, sans-serif;
+    transform: translateX(-50%);
+}

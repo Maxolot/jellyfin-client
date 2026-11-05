@@ -14,6 +14,8 @@ import { useApi } from 'hooks/useApi';
 import Events, { type Event as PlaybackEvent } from 'utils/events';
 import type { PlaybackStopInfo } from 'types/playbackStopInfo';
 import ClientIcon from '../ClientIcon';
+import RemoteIcon from '../remote/RemoteIcon';
+import { TogetherBadge, openConnectivity } from '../remote/ConnectivityLayer';
 import { PlayerPreferenceFields } from './PlayerSettings';
 import { playerPreferenceKey, usePlayerPreferences } from './preferences';
 import { activeSegment, clampSeek, formatTime, SECOND, trickplayTile } from './model';
@@ -183,6 +185,7 @@ export default function CustomVideoPlayer() {
     }, []);
     useEffect(() => {
         const keydown = (event: KeyboardEvent) => {
+            if (document.querySelector('dialog[open]')) return;
             if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || event.repeat) return;
             keyboardFocus.current = true;
             wake();
@@ -295,6 +298,8 @@ export default function CustomVideoPlayer() {
             <header className='client-player-top'>
                 <button type='button' onClick={leave} aria-label='Quitter le lecteur' title='Retour'><ClientIcon name='back' /></button>
                 <div><small>{item?.Type === 'Episode' ? `${item.SeriesName || ''} · Saison ${item.ParentIndexNumber || 1}, épisode ${item.IndexNumber || 1}` : 'EN LECTURE'}</small><h1>{item?.Name || 'Préparation de la lecture…'}</h1></div>
+                <TogetherBadge />
+                <button type='button' aria-label='Lire sur un autre appareil' title='Lire sur…' onClick={() => openConnectivity('targets')}><RemoteIcon name='cast' /></button>
                 {button('Personnaliser le lecteur', 'settings', () => openPanel('appearance'))}
             </header>
             {!hasPlayer && !ended && <p className='client-player-loading' role='status'>Préparation de la lecture…</p>}
