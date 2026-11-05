@@ -170,7 +170,7 @@ export default function CustomVideoPlayer() {
                 if (!leaving.current) stopOwnedPlayer();
             });
         };
-    }, []);
+    }, [stopOwnedPlayer]);
     useEffect(() => {
         customVideoPresentation.autoNext = preferences.next > 0 && !nextCancelled && !sleepEnd;
     }, [preferences.next, nextCancelled, sleepEnd]);
