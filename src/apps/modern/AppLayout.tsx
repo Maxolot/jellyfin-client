@@ -6,6 +6,8 @@ import AppBody from 'components/AppBody';
 import CustomCss from 'components/CustomCss';
 import ThemeCss from 'components/ThemeCss';
 
+import ConnectivityLayer from './features/client/remote/ConnectivityLayer';
+
 import { LibraryProvider } from './features/libraries/hooks/useLibrary';
 
 import './AppOverrides.scss';
@@ -35,6 +37,7 @@ export const Component = () => {
                     </AppBody>
                 </Box>
             </Box>
+            <ConnectivityLayer />
             <ThemeCss />
             <CustomCss />
         </LibraryProvider>
