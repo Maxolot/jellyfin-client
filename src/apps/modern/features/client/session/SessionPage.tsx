@@ -1,4 +1,4 @@
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, useCallback, useState } from 'react';
 
 import Page from 'components/Page';
 
@@ -8,9 +8,11 @@ import './session.scss';
 
 /** Full-screen frame of everything outside the library: signing in, servers, errors. */
 export default function SessionPage({ title, background, children }: Readonly<PropsWithChildren<{ title: string; background?: string }>>) {
+    const [shown, setShown] = useState(false);
+    const onBackgroundLoad = useCallback(() => setShown(true), []);
     return <Page id='clientPage' title={title} className='client-page' isBackButtonEnabled={false}>
         <div className={`client-profiles${background ? ' has-backdrop' : ''}`}>
-            {background && <img className='client-session-backdrop' src={background} alt='' />}
+            {background && <img className={`client-session-backdrop${shown ? ' is-shown' : ''}`} src={background} alt='' onLoad={onBackgroundLoad} />}
             {children}
         </div>
     </Page>;
