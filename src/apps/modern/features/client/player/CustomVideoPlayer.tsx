@@ -25,6 +25,7 @@ import { PlayerEpisodes, PlayerTechnical, PlayerHelp, SubtitleOffset, sleepLabel
 import { Select } from '../settings/controls';
 import './player.scss';
 import './polish.scss';
+import { isPlayingOffline } from '../offline/playback';
 
 type Panel = 'audio' | 'subtitles' | 'chapters' | 'settings' | 'appearance' | 'episodes' | 'technical' | 'tools' | 'sleep' | 'help';
 const SEEK_BURST_MS = 1100;
@@ -118,9 +119,10 @@ export default function CustomVideoPlayer() {
     }, []);
     const leave = useCallback(() => {
         leaving.current = true;
+        const offline = isPlayingOffline();
         stopOwnedPlayer();
         if (window.history.state?.idx > 0) navigate(-1);
-        else navigate('/client', { replace: true });
+        else navigate(offline ? '/offline' : '/client', { replace: true });
     }, [navigate, stopOwnedPlayer]);
     useEffect(() => {
         // Defer final cleanup so React StrictMode's setup/cleanup rehearsal cannot stop playback.

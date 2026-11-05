@@ -167,7 +167,9 @@ function createStreamInfoFromUrlItem(item) {
         playMethod: 'DirectPlay',
         item: item,
         textTracks: [],
-        mediaType: item.MediaType
+        mediaType: item.MediaType,
+        // A downloaded title describes its own file, subtitles and start position.
+        ...item.LocalStreamInfo
     };
 }
 
@@ -1388,8 +1390,9 @@ export class PlaybackManager {
 
             const mediaType = playerData.streamInfo ? playerData.streamInfo.mediaType : null;
             const currentItem = self.currentItem(player);
+            if (currentItem?.OfflineKey) return 0;
 
-            const apiClient = currentItem ? ServerConnections.getApiClient(currentItem.ServerId) : ServerConnections.currentApiClient();
+            const apiClient = currentItem?.ServerId ? ServerConnections.getApiClient(currentItem.ServerId) : ServerConnections.currentApiClient();
             return getSavedMaxStreamingBitrate(apiClient, mediaType);
         };
 
@@ -1402,8 +1405,9 @@ export class PlaybackManager {
             const playerData = getPlayerData(player);
             const mediaType = playerData.streamInfo ? playerData.streamInfo.mediaType : null;
             const currentItem = self.currentItem(player);
+            if (currentItem?.OfflineKey) return false;
 
-            const apiClient = currentItem ? ServerConnections.getApiClient(currentItem.ServerId) : ServerConnections.currentApiClient();
+            const apiClient = currentItem?.ServerId ? ServerConnections.getApiClient(currentItem.ServerId) : ServerConnections.currentApiClient();
             const endpointInfo = apiClient.getSavedEndpointInfo() || {};
 
             return appSettings.enableAutomaticBitrateDetection(endpointInfo.IsInNetwork, mediaType);
@@ -1873,6 +1877,8 @@ export class PlaybackManager {
         }
 
         function getPlaybackPromise(firstItem, serverId, options, queryOptions, items) {
+            // Local downloads already describe their complete queue and never query episodes on the server.
+            if (firstItem.OfflineKey) return undefined;
             const SortBy = options.shuffle ? ItemSortBy.Random : ItemSortBy.SortName;
 
             switch (firstItem.Type) {
@@ -2367,7 +2373,7 @@ export class PlaybackManager {
                 return playOther(items, options);
             }
 
-            const apiClient = ServerConnections.getApiClient(firstItem.ServerId);
+            const apiClient = firstItem.ServerId ? ServerConnections.getApiClient(firstItem.ServerId) : undefined;
 
             return getIntros(firstItem, apiClient, options).then(function (introsResult) {
                 const introItems = introsResult.Items;
@@ -2629,6 +2635,7 @@ export class PlaybackManager {
         }
 
         function detectBitrate(item, mediaType) {
+            if (item.OfflineKey) return Promise.resolve(0);
             const api = ServerConnections.getApi(item.ServerId);
             const apiClient = ServerConnections.getApiClient(item.ServerId);
 
@@ -4084,6 +4091,7 @@ export class PlaybackManager {
     }
 
     getSubtitleUrl(textStream, serverId) {
+        if (textStream.IsExternalUrl) return textStream.DeliveryUrl;
         const apiClient = ServerConnections.getApiClient(serverId);
 
         return !textStream.IsExternalUrl ? apiClient.getUrl(textStream.DeliveryUrl) : textStream.DeliveryUrl;

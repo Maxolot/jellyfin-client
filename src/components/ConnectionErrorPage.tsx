@@ -47,6 +47,7 @@ const ConnectionErrorPage: FC<ConnectionErrorPageProps> = ({
                 <button type='button' className='client-profile-primary' onClick={reload}>Réessayer</button>
                 {state === ConnectionState.ServerMismatch && <button type='button' disabled={isConnectDisabled} onClick={onForceConnect}>Se connecter quand même</button>}
                 {problem && <p role='alert' className='client-profile-error'>{problem}</p>}
+                <Link className='client-session-link' to='/offline'>Ouvrir mes téléchargements</Link>
                 {appHost.supports(AppFeature.MultiServer) && <Link className='client-session-link' to='/selectserver'>Changer de serveur</Link>}
             </SessionNotice>
         </SessionPage>

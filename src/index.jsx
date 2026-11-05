@@ -48,6 +48,8 @@ import './styles/detailtable.scss';
 import './styles/librarybrowser.scss';
 
 async function init() {
+    // A disconnected launch must not wait for server authentication before showing local files.
+    if (!navigator.onLine) window.history.replaceState(null, '', '#/offline');
     // Log current version to console to help out with issue triage and debugging
     console.info(
         `[${__PACKAGE_JSON_NAME__}]

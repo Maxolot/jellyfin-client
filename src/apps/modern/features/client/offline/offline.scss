@@ -1,0 +1,355 @@
+/* stylelint-disable no-descending-specificity -- Components and their responsive variants have independent scoped selectors. */
+.client-offline-page {
+    min-height: 100vh;
+    color: #f5f5f5;
+    background: #0b0b0d;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.client-offline-shell {
+    max-width: 1100px;
+    margin: auto;
+    padding: 30px 5vw 70px;
+}
+
+.client-offline-header,
+.client-offline-heading,
+.client-offline-actions,
+.client-offline-choices {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.client-offline-header {
+    justify-content: space-between;
+    margin-bottom: 60px;
+    color: #aaa;
+}
+
+.client-offline-heading {
+    gap: 24px;
+    margin-bottom: 32px;
+
+    > .client-icon {
+        width: 44px;
+        height: 44px;
+    }
+
+    h1 {
+        margin: 0 0 10px;
+        font-size: clamp(30px, 5vw, 48px);
+    }
+
+    p {
+        margin: 0;
+        color: #aaa;
+        line-height: 1.5;
+    }
+}
+
+.client-offline-button,
+.client-offline-choices button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    box-sizing: border-box;
+    gap: 10px;
+    padding: 11px 20px;
+    border: 1px solid rgb(255 255 255 / 18%);
+    border-radius: 30px;
+    color: #f5f5f5;
+    background: rgb(255 255 255 / 7%);
+    font: inherit;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 180ms ease, border-color 180ms ease;
+
+    .client-icon {
+        width: 19px;
+        height: 19px;
+    }
+
+    &:hover {
+        border-color: rgb(255 255 255 / 50%);
+        background: rgb(255 255 255 / 15%);
+    }
+
+    &:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 4px;
+    }
+
+    &:disabled {
+        opacity: 0.45;
+        cursor: default;
+    }
+
+    &.is-primary,
+    &[aria-pressed="true"] {
+        border-color: #eee;
+        color: #111;
+        background: #eee;
+    }
+
+    &.is-quiet {
+        border-color: transparent;
+        color: #bbb;
+        background: transparent;
+    }
+}
+
+.client-offline-space {
+    display: grid;
+    gap: 14px;
+    padding: 24px;
+    border: 1px solid rgb(255 255 255 / 10%);
+    border-radius: 18px;
+    background: rgb(255 255 255 / 3%);
+
+    strong {
+        font-size: 24px;
+    }
+
+    small,
+    span {
+        color: #aaa;
+        line-height: 1.5;
+    }
+
+    button {
+        justify-self: start;
+    }
+}
+
+.client-offline-space progress,
+.client-offline-entry progress {
+    display: block;
+    width: 100%;
+    height: 4px;
+    overflow: hidden;
+    border: 0;
+    border-radius: 10px;
+    color: #eee;
+    background: #333;
+    appearance: none;
+
+    &::-webkit-progress-bar {
+        background: #333;
+    }
+
+    &::-webkit-progress-value {
+        border-radius: 10px;
+        background: #eee;
+    }
+
+    &::-moz-progress-bar {
+        border-radius: 10px;
+        background: #eee;
+    }
+}
+
+.client-offline-section-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 42px 0 20px;
+    font-size: 23px;
+
+    small {
+        color: #888;
+        font-size: 16px;
+        font-weight: normal;
+    }
+}
+
+.client-offline-entry {
+    display: flex;
+    gap: 24px;
+    padding: 24px 0;
+    border-bottom: 1px solid rgb(255 255 255 / 10%);
+}
+
+.client-offline-poster {
+    width: 100px;
+    min-width: 100px;
+    height: 150px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #222;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.client-offline-poster-placeholder {
+    display: grid;
+    height: 100%;
+    place-items: center;
+    color: #777;
+
+    .client-icon {
+        width: 32px;
+        height: 32px;
+    }
+}
+
+.client-offline-entry-copy {
+    flex: 1;
+    min-width: 0;
+
+    h2 {
+        margin: 8px 0;
+        font-size: 22px;
+        overflow-wrap: anywhere;
+    }
+
+    small,
+    p {
+        color: #aaa;
+    }
+
+    p {
+        margin: 8px 0 14px;
+        line-height: 1.5;
+    }
+
+    progress {
+        margin-bottom: 16px;
+    }
+}
+
+.client-offline-actions,
+.client-offline-choices {
+    flex-wrap: wrap;
+}
+
+.client-offline-empty {
+    padding: 50px 24px;
+    border: 1px dashed #333;
+    border-radius: 18px;
+    text-align: center;
+
+    > .client-icon {
+        width: 38px;
+        height: 38px;
+        color: #999;
+    }
+
+    h2 {
+        font-size: 22px;
+    }
+
+    p {
+        max-width: 480px;
+        margin: 16px auto 24px;
+        color: #aaa;
+        line-height: 1.6;
+    }
+}
+
+.client-offline-form {
+    font-family: Arial, Helvetica, sans-serif;
+
+    h3 {
+        margin: 24px 0 14px;
+        font-size: 18px;
+    }
+
+    p {
+        line-height: 1.6;
+    }
+
+    .client-offline-choices + .client-offline-choices {
+        margin-top: 14px;
+    }
+
+    .client-offline-choices button {
+        flex-direction: column;
+        gap: 4px;
+        border-radius: 14px;
+    }
+
+    .client-offline-choices small {
+        color: inherit;
+        opacity: 0.65;
+    }
+
+    [role="alert"] {
+        color: #ffc9c9;
+    }
+}
+
+.client-offline-note {
+    color: #999;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.client-offline-shell > .client-offline-note {
+    margin-top: 36px;
+}
+
+.client-offline-error {
+    padding: 16px 20px;
+    border-radius: 12px;
+    color: #ffc9c9;
+    background: rgb(180 40 40 / 15%);
+}
+
+@media (max-width: 600px) {
+    .client-offline-shell {
+        padding: 22px 5vw 50px;
+    }
+
+    .client-offline-header {
+        margin-bottom: 36px;
+    }
+
+    .client-offline-entry {
+        gap: 14px;
+    }
+
+    .client-offline-poster {
+        width: 70px;
+        min-width: 70px;
+        height: 105px;
+    }
+
+    .client-offline-entry-copy h2 {
+        font-size: 18px;
+    }
+
+    .client-offline-heading {
+        gap: 16px;
+    }
+
+    .client-offline-heading > .client-icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .client-offline-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .client-offline-button {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .client-offline-button,
+    .client-offline-choices button {
+        transition: none;
+    }
+}
+
+/* stylelint-enable no-descending-specificity */

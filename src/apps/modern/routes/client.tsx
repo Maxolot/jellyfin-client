@@ -411,7 +411,7 @@ function ClientView({ model }: ViewProps) {
                     }}>Lire sur un autre appareil</button><button type='button' onClick={() => {
                         setProfileOpen(false);
                         openConnectivity('together');
-                    }}>Regarder ensemble</button><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><QuickConnectMenuItem /><button onClick={() => {
+                    }}>Regarder ensemble</button><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><Link to='/offline' onClick={() => setProfileOpen(false)}>Hors ligne</Link><QuickConnectMenuItem /><button onClick={() => {
                         void signOut(model.api?.basePath, user?.Id);
                     }}>Se déconnecter</button>
                 </div>}
