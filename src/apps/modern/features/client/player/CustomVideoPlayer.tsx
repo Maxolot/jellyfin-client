@@ -68,6 +68,7 @@ export default function CustomVideoPlayer() {
     const keyboardFocus = useRef(false);
     const leaving = useRef(false);
     const lifecycle = useRef<object>();
+    const ownedPlayer = useRef<ReturnType<typeof playbackManager.getCurrentPlayer>>();
     const skipped = useRef(new Set<string>());
     const lastTouch = useRef({ time: 0, side: 0 });
     const latest = useRef({ preferences, snapshot, panel, cache, server: api?.basePath, userId: user?.Id });
@@ -111,12 +112,16 @@ export default function CustomVideoPlayer() {
         jumpTarget.current = { position: target, at: now };
         setJumpFeedback(previous => ({ offset: now - previous.at < SEEK_BURST_MS && Math.sign(previous.offset) === Math.sign(offset) ? previous.offset + offset : offset, serial: previous.serial + 1, at: now }));
     };
+    const stopOwnedPlayer = useCallback(() => {
+        const player = ownedPlayer.current;
+        if (player && player.isLocalPlayer !== false && playbackManager.isPlayingVideo(player)) return playbackManager.stop(player);
+    }, []);
     const leave = useCallback(() => {
         leaving.current = true;
-        if (playbackManager.isPlayingVideo()) playbackManager.stop();
+        stopOwnedPlayer();
         if (window.history.state?.idx > 0) navigate(-1);
         else navigate('/client', { replace: true });
-    }, [navigate]);
+    }, [navigate, stopOwnedPlayer]);
     useEffect(() => {
         // Defer final cleanup so React StrictMode's setup/cleanup rehearsal cannot stop playback.
         leaving.current = false;
@@ -126,6 +131,12 @@ export default function CustomVideoPlayer() {
         document.documentElement.classList.add('client-video-active');
         setBackdropTransparency(TRANSPARENCY_LEVEL.Full);
         shell.enableFullscreen();
+        const capturePlayer = () => {
+            const player = playbackManager.getCurrentPlayer();
+            if (player && player.isLocalPlayer !== false && playbackManager.isPlayingVideo(player)) ownedPlayer.current = player;
+        };
+        capturePlayer();
+        Events.on(playbackManager, 'playbackstart', capturePlayer);
         const onStop = (_event: PlaybackEvent, info: PlaybackStopInfo) => {
             const identity = latest.current;
             if (identity.server && identity.userId) {
@@ -146,6 +157,7 @@ export default function CustomVideoPlayer() {
         Events.on(playbackManager, 'playbackstop', onStop);
         Events.on(playbackManager, 'playbackerror', onError);
         return () => {
+            Events.off(playbackManager, 'playbackstart', capturePlayer);
             Events.off(playbackManager, 'playbackstop', onStop);
             Events.off(playbackManager, 'playbackerror', onError);
             void Promise.resolve().then(() => {
@@ -155,7 +167,7 @@ export default function CustomVideoPlayer() {
                 customVideoPresentation.autoNext = true;
                 setBackdropTransparency(TRANSPARENCY_LEVEL.None);
                 shell.disableFullscreen();
-                if (!leaving.current && playbackManager.isPlayingVideo()) playbackManager.stop();
+                if (!leaving.current) stopOwnedPlayer();
             });
         };
     }, []);
