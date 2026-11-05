@@ -1003,7 +1003,7 @@ export class PlaybackManager {
             if (self.isPlaying(player)) {
                 const playerData = getPlayerData(player);
 
-                return playerData.streamInfo.mediaType === mediaType;
+                return playerData.streamInfo?.mediaType === mediaType;
             }
 
             return false;
