@@ -3,20 +3,20 @@ import React, { useId, useRef, useState } from 'react';
 import ClientIcon from './ClientIcon';
 import './detailDialogs.scss';
 
-type Props = { label: string; title: string; subtitle?: string; buttonClassName?: string; children: React.ReactNode | ((close: () => void) => React.ReactNode) };
+type Props = { label: string; title: string; subtitle?: string; buttonClassName?: string; icon?: 'plus'; children: React.ReactNode | ((close: () => void) => React.ReactNode) };
 
-export default function ClientDialog({ label, title, subtitle, buttonClassName, children }: Readonly<Props>) {
+export default function ClientDialog({ label, title, subtitle, buttonClassName, icon, children }: Readonly<Props>) {
     const dialog = useRef<HTMLDialogElement>(null);
     const titleId = useId();
     const dialogId = useId();
     const [opened, setOpened] = useState(false);
     const [mounted, setMounted] = useState(false);
     const close = () => dialog.current?.close();
-    return <><button type='button' className={buttonClassName} aria-haspopup='dialog' aria-expanded={opened} aria-controls={dialogId} onClick={() => {
+    return <><button type='button' className={buttonClassName} aria-label={icon ? label : undefined} title={icon ? label : undefined} aria-haspopup='dialog' aria-expanded={opened} aria-controls={dialogId} onClick={() => {
         setMounted(true);
         dialog.current?.showModal();
         setOpened(true);
-    }}>{label}</button>
+    }}>{icon ? <ClientIcon name={icon} /> : label}</button>
     {/* Native dialog handles Escape and focus; this pointer handler only dismisses outside clicks. */}
     {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
     <dialog ref={dialog} id={dialogId} className='client-detail-dialog' aria-labelledby={titleId} onClose={() => setOpened(false)} onClick={event => {

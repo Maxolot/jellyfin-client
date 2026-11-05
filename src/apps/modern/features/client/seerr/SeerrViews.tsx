@@ -84,7 +84,10 @@ export function AvailabilityAction({ identity: supplied, localItem }: Readonly<{
     const seerr = useSeerr();
     const identity = supplied || (localItem && externalIdentity(localItem));
     if (!seerr.connected || !identity) return null;
-    return <ClientDialog key={`${identity.type}-${identity.id}`} label='Disponibilité' title='Disponibilité et demandes' subtitle={localItem?.Name || ''} buttonClassName='client-button client-availability-action'><RequestPanel identity={identity} localItem={localItem} /></ClientDialog>;
+    // A local movie is already downloaded: nothing left to request. A local series may still lack seasons, so it keeps a compact "+".
+    if (localItem && localItem.Type !== 'Series') return null;
+    const isSeries = localItem?.Type === 'Series';
+    return <ClientDialog key={`${identity.type}-${identity.id}`} label={isSeries ? 'Demander des saisons' : 'Disponibilité'} icon={isSeries ? 'plus' : undefined} title={isSeries ? 'Saisons et demandes' : 'Disponibilité et demandes'} subtitle={localItem?.Name || ''} buttonClassName={isSeries ? 'client-button client-action-circle client-availability-action' : 'client-button client-availability-action'}><RequestPanel identity={identity} localItem={localItem} /></ClientDialog>;
 }
 
 export function RequestPanel({ identity, localItem }: Readonly<{ identity: SeerrIdentity; localItem?: BaseItemDto }>) {

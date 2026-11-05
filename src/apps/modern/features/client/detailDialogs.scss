@@ -72,7 +72,7 @@
 
 .client-detail-dialog-body { padding: 22px; }
 
-.client-actions .client-availability-action {
+.client-actions .client-availability-action:not(.client-action-circle) {
     min-height: 44px;
     padding: 11px 13px;
     font-size: 13px;
