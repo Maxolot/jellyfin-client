@@ -1,6 +1,6 @@
 import { usePreviewCapabilities } from '../features/client/previews/provider';
-import PlayerSettings from '../features/client/player/PlayerSettings';
-import { DeviceSettings, LanguageSettings, LibrarySettings, ProfileSettings, QuickConnectMenuItem, SubtitleSettings } from '../features/client/account/AccountSettings';
+import { QuickConnectMenuItem } from '../features/client/account/AccountSettings';
+import SettingsPage from '../features/client/settings/SettingsPage';
 /* eslint-disable react/jsx-no-bind -- View-local closures do not cross memoized component boundaries. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
@@ -43,7 +43,6 @@ import ProfilePage from '../features/client/profiles/ProfilePage';
 import { signOut } from '../features/client/profiles/profileSession';
 import { useProfileGate } from '../features/client/profiles/useProfileGate';
 import { chosenTracks } from '../features/client/languageTags';
-import InterfacePreview from '../features/client/InterfacePreview';
 import { RecentPage } from '../features/client/LocalDiscoveryPages';
 import MediaRow from '../features/client/MediaRow';
 import { episodeLabel, progressPercent, uniqueItems } from '../features/client/model';
@@ -66,7 +65,7 @@ import AmbientBackdrop from '../features/client/AmbientBackdrop';
 import { SeerrProvider, useSeerr } from '../features/client/seerr/SeerrContext';
 import { useSeerrCatalogue, useSeerrDetail, useSeerrUpcoming } from '../features/client/seerr/queries';
 import UpcomingRow from '../features/client/UpcomingRow';
-import { ExternalDetail, RequestTracking, SeerrSettings } from '../features/client/seerr/SeerrViews';
+import { ExternalDetail, RequestTracking } from '../features/client/seerr/SeerrViews';
 import { externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
 
 const links = [['home', 'Accueil'], ['series', 'Séries'], ['films', 'Films'], ['recent', 'Nouveautés'], ['tonight', 'Ce soir'], ['search', 'Rechercher'], ['mine', 'Mon espace']];
@@ -543,33 +542,10 @@ function ContentView({ model }: ViewProps) {
     if (view === 'mine') return <PersonalView model={model} />;
     return <LibraryView model={model} />;
 }
-const SETTINGS_TABS = [['interface', 'Interface'], ['lecture', 'Lecture'], ['bibliotheque', 'Bibliothèque'], ['compte', 'Compte'], ['demandes', 'Demandes']] as const;
-
 function SettingsView({ model }: ViewProps) {
     const { preferences, savePreference, user, params } = model;
     if (!model.api || !user?.Id) return <section className='client-settings'><h1>Paramètres</h1><ClientSkeleton layout='settings' contained count={3} label='Chargement des préférences…' /></section>;
-    const requested = params.get('section') || 'interface';
-    const tab = SETTINGS_TABS.some(([key]) => key === requested) ? requested : 'interface';
-    return <section className='client-settings'><h1>Paramètres</h1>
-        <nav className='client-settings-tabs' aria-label='Sections des paramètres'>{SETTINGS_TABS.map(([key, label]) => <Link key={key} to={`/client?view=settings&section=${key}`} replace aria-current={tab === key ? 'page' : undefined}>{label}</Link>)}</nav>
-        {tab === 'lecture' && <><PlayerSettings /><LanguageSettings /><SubtitleSettings /><DeviceSettings /></>}
-        {tab === 'bibliotheque' && <LibrarySettings />}
-        {tab === 'compte' && <ProfileSettings />}
-        {tab === 'demandes' && <SeerrSettings />}
-        {tab === 'interface' && <>
-            <h2>Thème</h2><div className='client-setting-options'>{[[true, 'Liquid Glass'], [false, 'Classique']].map(([key, label]) => <button key={String(key)} aria-pressed={preferences.glass === key} onClick={() => savePreference({ ...preferences, glass: key as boolean })}><InterfacePreview kind={key ? 'glass' : 'classic'} /><strong>{label}</strong></button>)}</div>
-            <label className='client-chromatic-option'><input type='checkbox' checked={preferences.chromatic} onChange={event => savePreference({ ...preferences, chromatic: event.target.checked })} /> Couleurs inspirées du média</label>
-            <label className='client-chromatic-option'><input type='checkbox' checked={preferences.ambient} onChange={event => savePreference({ ...preferences, ambient: event.target.checked })} /> Fond immersif au survol</label>
-            <label className='client-chromatic-option'><input type='checkbox' checked={preferences.hoverDescriptions} onChange={event => savePreference({ ...preferences, hoverDescriptions: event.target.checked })} /> Descriptions au survol entre les sections</label>
-            <h2>Visuel principal</h2><div className='client-setting-options'>{[['framed', 'Encadré'], ['background', 'Fond plein écran']].map(([key, label]) => <button key={key} aria-pressed={preferences.hero === key} onClick={() => savePreference({ ...preferences, hero: key as Preferences['hero'] })}><InterfacePreview kind={key === 'background' ? 'hero-background' : 'hero-framed'} /><strong>{label}</strong></button>)}</div>
-            <h2>Navigation</h2><div className='client-setting-options'>{[[false, 'Bandeau du thème'], [true, 'Boutons flottants']].map(([key, label]) => <button key={String(key)} aria-pressed={preferences.floating === key} onClick={() => savePreference({ ...preferences, floating: key as boolean })}><InterfacePreview kind={key ? 'floating' : 'grouped'} /><strong>{label}</strong></button>)}</div>
-            <h3>Alignement des boutons</h3><div className='client-setting-options'>{[['left', 'À gauche'], ['center', 'Au centre'], ['right', 'À droite']].map(([key, label]) => <button key={key} aria-pressed={preferences.headerAlignment === key} onClick={() => savePreference({ ...preferences, headerAlignment: key as Preferences['headerAlignment'] })}><InterfacePreview kind={`nav-${key}` as 'nav-left' | 'nav-center' | 'nav-right'} /><strong>{label}</strong></button>)}</div>
-            <h2>Fond des fiches</h2><div className='client-setting-options'>{[['continuous', 'Fond continu'], ['fade', 'Fondu progressif'], ['immersive', 'Fiche immersive']].map(([key, label]) => <button key={key} aria-pressed={preferences.detail === key} onClick={() => savePreference({ ...preferences, detail: key as Preferences['detail'] })}><InterfacePreview kind={key as 'continuous' | 'fade' | 'immersive'} /><strong>{label}</strong></button>)}</div>
-            <h3>Lisibilité des fiches</h3><div className='client-setting-options'>{[['progressive', 'Flou progressif'], ['cinema', 'Voile cinéma'], ['clear', 'Image nette']].map(([key, label]) => <button key={key} aria-pressed={preferences.detailTreatment === key} onClick={() => savePreference({ ...preferences, detailTreatment: key as Preferences['detailTreatment'] })}><strong>{label}</strong></button>)}</div>
-            <div className='client-backdrop-settings'>{([['detailBlur', 'Intensité du flou', 0, 48, 'px'], ['detailShade', 'Assombrissement derrière le texte', 0, 95, '%'], ['detailWidth', 'Largeur de la zone de lecture', 35, 85, '%'], ['heroFade', 'Hauteur du fondu du hero', 20, 70, '%']] as const).map(([key, label, min, max, unit]) => <label key={key}>{label}<output>{preferences[key]}{unit}</output><input type='range' min={min} max={max} value={preferences[key]} disabled={key === 'detailBlur' && preferences.detailTreatment !== 'progressive'} onChange={event => savePreference({ ...preferences, [key]: Number(event.target.value) })} /></label>)}</div>
-            <section className='client-preview-setting'><h2>Aperçus vidéo</h2><label><input type='checkbox' checked={preferences.previews} onChange={event => savePreference({ ...preferences, previews: event.target.checked })} /> Activer les extraits vidéo {!model.hasPreviews && <small>Aucun extrait disponible sur ce serveur</small>}</label><label><input type='checkbox' disabled={!preferences.previews} checked={!preferences.previewMuted} onChange={event => savePreference({ ...preferences, previewMuted: !event.target.checked })} /> Activer le son des aperçus</label><p>Chaque extrait se joue une fois, puis revient doucement à l’affiche. Le son est partagé entre les aperçus.</p></section>
-        </>}
-    </section>;
+    return <SettingsPage section={params.get('section')} preferences={preferences} savePreference={savePreference} hasPreviews={model.hasPreviews} />;
 }
 function BrowseControls({ model }: ViewProps) {
     const { id, view, discovery, params, setParams, genres, genre, filters, audio } = model;

@@ -15,6 +15,7 @@ import Events, { type Event as PlaybackEvent } from 'utils/events';
 import type { PlaybackStopInfo } from 'types/playbackStopInfo';
 import ClientIcon from '../ClientIcon';
 import { PlayerPreferenceFields } from './PlayerSettings';
+import { Select } from '../settings/controls';
 import { playerPreferenceKey, usePlayerPreferences } from './preferences';
 import { activeSegment, clampSeek, formatTime, SECOND, trickplayTile } from './model';
 import { usePlaybackSnapshot } from './usePlaybackSnapshot';
@@ -357,9 +358,15 @@ export default function CustomVideoPlayer() {
                     dialog.current?.close();
                 }}><span>{chapter.Name || `Chapitre ${index + 1}`}</span><small>{formatTime((chapter.StartPositionTicks || 0) / SECOND)}</small></button>)}</div>}
                 {panel === 'settings' && <div className='client-player-fields'>
-                    <label>Vitesse<select aria-label='Vitesse' value={playState?.PlaybackRate || 1} onChange={event => action(() => playbackManager.setPlaybackRate(Number(event.target.value)))}>{[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(rate => <option key={rate} value={rate}>{rate === 1 ? 'Normale' : `${rate} ×`}</option>)}</select></label>
-                    <label>Qualité<select aria-label='Qualité' value={playbackManager.enableAutomaticBitrateDetection() ? 0 : playState?.MaxStreamingBitrate || 0} onChange={event => action(() => playbackManager.setMaxStreamingBitrate({ enableAutomaticBitrateDetection: Number(event.target.value) === 0, maxBitrate: Number(event.target.value) }))}><option value={0}>Automatique</option>{Array.from(new Set([playState?.MaxStreamingBitrate || 0, 120000000, 40000000, 20000000, 10000000, 4000000, 1500000])).filter(Boolean).sort((a, b) => b - a).map(bitrate => <option key={bitrate} value={bitrate}>Maximum {bitrate / 1000000} Mbit/s</option>)}</select></label>
-                    <label>Format de l’image<select aria-label='Format de l’image' value={playbackManager.getAspectRatio()} onChange={event => action(() => playbackManager.setAspectRatio(event.target.value))}>{playbackManager.getSupportedAspectRatios().map((ratio: { id: string; name: string }) => <option key={ratio.id} value={ratio.id}>{ratio.name}</option>)}</select></label>
+                    <div className='client-controls client-player-preferences is-panel'>
+                        <Select label='Vitesse' value={playState?.PlaybackRate || 1} options={[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(rate => [rate, rate === 1 ? 'Normale' : `${rate} ×`] as const)}
+                            onChange={rate => action(() => playbackManager.setPlaybackRate(rate))} />
+                        <Select label='Qualité' value={playbackManager.enableAutomaticBitrateDetection() ? 0 : playState?.MaxStreamingBitrate || 0}
+                            options={[[0, 'Automatique'] as const, ...Array.from(new Set([playState?.MaxStreamingBitrate || 0, 120000000, 40000000, 20000000, 10000000, 4000000, 1500000])).filter(Boolean).sort((a, b) => b - a).map(bitrate => [bitrate, `Maximum ${bitrate / 1000000} Mbit/s`] as const)]}
+                            onChange={bitrate => action(() => playbackManager.setMaxStreamingBitrate({ enableAutomaticBitrateDetection: bitrate === 0, maxBitrate: bitrate }))} />
+                        <Select label='Format de l’image' value={String(playbackManager.getAspectRatio())} options={playbackManager.getSupportedAspectRatios().map((ratio: { id: string; name: string }) => [ratio.id, ratio.name] as const)}
+                            onChange={ratio => action(() => playbackManager.setAspectRatio(ratio))} />
+                    </div>
                     <details className='client-player-stream-info'><summary>Informations de lecture</summary><dl><dt>Mode</dt><dd>{playState?.PlayMethod || '—'}</dd><dt>Vidéo</dt><dd>{snapshot?.state.MediaSource?.MediaStreams?.find(stream => stream.Type === 'Video')?.Codec || '—'}</dd><dt>Débit du média</dt><dd>{snapshot?.state.MediaSource?.Bitrate ? `${Math.round(snapshot.state.MediaSource.Bitrate / 1000)} kbit/s` : '—'}</dd></dl></details>
                     <p className='client-player-hint'>Le serveur adapte le flux aux capacités du navigateur. Une limite de débit peut déclencher un transcodage.</p>
                     <button type='button' onClick={() => setPanel('appearance')}>Personnaliser le lecteur</button>
