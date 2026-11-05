@@ -323,7 +323,7 @@ function useClientController() {
     }
     function row(title: string, items: BaseItemDto[] | undefined, horizontal = false) {
         if (!items?.length) return null;
-        return <MediaRow key={`${title}:${items.map(entry => entry.Id).join('|')}`} title={title} items={items} continuation={horizontal} showDescription={preferences.hoverDescriptions} image={image} logo={logo} onPrepare={prepareDetail} onRelease={releaseDetail} onPlay={play} onFavorite={target => updateState('favorite', target)} />;
+        return <MediaRow key={`${title}:${items.map(entry => entry.Id).join('|')}`} title={title} items={items} continuation={horizontal} showDescription={preferences.hoverDescriptions} image={image} logo={logo} onPrepare={prepareDetail} onRelease={releaseDetail} />;
     }
     const heroItems = heroCandidates(discovery, media.data);
     const lead = heroItems[heroIndex % Math.max(1, heroItems.length)];

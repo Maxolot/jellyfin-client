@@ -6,11 +6,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import MediaRow from './MediaRow';
 
-vi.mock('./FavoriteAction', () => ({ default: () => null }));
 vi.mock('./PreviewClip', () => ({ default: () => null }));
 const noLogo = () => undefined;
 const prepare = () => undefined;
-const action = async () => undefined;
 const items = ['a', 'b', 'c'].map(Id => ({ Id, Name: Id, Type: 'Movie' as const }));
 const image = (item: BaseItemDto, wide = false) => `https://media.example.test/${item.Id}-${wide ? 'wide' : 'poster'}.jpg`;
 function Location() {
@@ -35,7 +33,7 @@ beforeEach(async () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
-    await act(async () => root.render(<MemoryRouter><Location /><MediaRow title='Films' items={items} image={image} logo={noLogo} onPrepare={prepare} onPlay={action} onFavorite={action} /></MemoryRouter>));
+    await act(async () => root.render(<MemoryRouter><Location /><MediaRow title='Films' items={items} image={image} logo={noLogo} onPrepare={prepare} /></MemoryRouter>));
 });
 afterEach(async () => {
     await act(async () => root.unmount());

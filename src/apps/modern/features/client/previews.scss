@@ -54,15 +54,7 @@
     inset: 0;
 }
 
-.client-media-card .client-card-shade,
-.client-media-card .client-expanded-title,
-.client-media-card .client-continue-label,
-.client-media-card .client-progress {
-    z-index: 2;
-}
-
-.client-media-card .client-availability,
-.client-media-card .client-card-actions {
+.client-media-card .client-availability {
     z-index: 3;
 }
 

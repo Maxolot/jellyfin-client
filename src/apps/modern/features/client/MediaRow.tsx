@@ -7,7 +7,6 @@ import ResizeObserver from 'resize-observer-polyfill';
 import ClientIcon from './ClientIcon';
 import Artwork from './Artwork';
 import PreviewClip from './PreviewClip';
-import FavoriteAction from './FavoriteAction';
 import useArtworkColor from './useArtworkColor';
 
 import { isExternal, mediaLabel, type CatalogueItem } from './seerr/model';
@@ -23,15 +22,13 @@ type Props = {
     logo: (item: BaseItemDto) => string | undefined;
     onPrepare: (item: BaseItemDto) => void;
     onRelease?: () => void;
-    onPlay: (item: BaseItemDto) => Promise<void>;
-    onFavorite: (item: BaseItemDto) => Promise<void>;
 };
 
 function continuationLabel(item: BaseItemDto) {
     return progressPercent(item) > 0 ? 'Reprendre' : 'À suivre';
 }
 
-export default function MediaRow({ title, items, continuation, showDescription = true, image, logo, onPrepare, onRelease, onPlay, onFavorite }: Readonly<Props>) {
+export default function MediaRow({ title, items, continuation, showDescription = true, image, logo, onPrepare, onRelease }: Readonly<Props>) {
     const [readyBackdrops, setReadyBackdrops] = useState<Partial<Record<string, boolean>>>({});
     const preparedSources = useRef<Partial<Record<string, boolean>>>({});
     const [active, setActive] = useState(-1);
@@ -143,18 +140,16 @@ export default function MediaRow({ title, items, continuation, showDescription =
                         <Artwork className='client-card-poster' source={image(media)} />
                         <Artwork className='client-card-backdrop' source={backdrop} eager={pending === index} rootMargin='180px 180px' onReady={() => prepared(index, backdrop, true)} onFailure={() => prepared(index, backdrop, false)} />
                         <span className='client-card-fallback'>{media.SeriesName || media.Name}</span>
+                    </Link>
+                    <PreviewClip item={media} surface='card' enabled={active === index} />
+                    {/* Above the clip, so that the title stays on the card while it plays. */}
+                    <span className='client-card-overlay' aria-hidden='true'>
                         <span className='client-card-shade' />
                         <span className='client-expanded-title'>{logo(media) && <Artwork source={logo(media)!} enabled={active === index} eager />}<strong>{media.SeriesName || media.Name}</strong></span>
                         {continuation && <span className='client-continue-label'>{media.Type === 'Episode' ? episodeLabel(media) : continuationLabel(media)}</span>}
                         {progressPercent(media) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(media)}%` }} /></span>}
-                    </Link>
-                    <PreviewClip item={media} surface='card' enabled={active === index} />
-                    <span className='client-availability' aria-label={isExternal(media) ? mediaLabel((media as CatalogueItem).Seerr?.mediaInfo) : 'Disponible dans votre bibliothèque'}><ClientIcon name={isExternal(media) ? 'plus' : 'check'} /><span>{isExternal(media) ? mediaLabel((media as CatalogueItem).Seerr?.mediaInfo) : 'Disponible'}</span></span>
-                    <div className='client-card-actions'>
-                        <button className='client-card-play' aria-label={`${isExternal(media) ? 'Demander' : 'Lire'} ${media.Name}`} onClick={() => { void onPlay(media); }}><ClientIcon name={isExternal(media) ? 'plus' : 'play'} /></button>
-                        {!isExternal(media) && active === index && <FavoriteAction item={media} onFavorite={onFavorite} />}
-                        <Link to={`/client?id=${media.Type === 'Episode' ? media.SeriesId || media.Id : media.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }} aria-label={`Informations sur ${media.Name}`}><ClientIcon name='down' /></Link>
-                    </div>
+                    </span>
+                    <span className='client-availability' role='img' aria-label={isExternal(media) ? mediaLabel((media as CatalogueItem).Seerr?.mediaInfo) : 'Disponible dans votre bibliothèque'} title={isExternal(media) ? mediaLabel((media as CatalogueItem).Seerr?.mediaInfo) : 'Disponible dans votre bibliothèque'}><ClientIcon name={isExternal(media) ? 'plus' : 'check'} /></span>
                 </article>;
             })}</div>
         {showDescription && <div className='client-row-info' aria-live='polite'>{item && <><h3>{item.SeriesName || item.Name}</h3><span>{[item.Type === 'Episode' ? episodeLabel(item) : item.ProductionYear, ...(item.Genres || []).slice(0, 2)].filter(Boolean).join(' · ')}</span><p>{item.Overview}</p></>}</div>}

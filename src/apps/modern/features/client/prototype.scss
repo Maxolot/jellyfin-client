@@ -100,14 +100,8 @@
 
     &.active .client-expanded-title,
     &.active .client-card-shade,
-    &.active .client-card-actions,
     &.active .client-availability {
         opacity: 1;
-        visibility: visible;
-    }
-
-    &.active .client-card-actions {
-        pointer-events: auto;
         visibility: visible;
     }
 
@@ -124,10 +118,19 @@
     transition: opacity 0.35s;
 }
 
+.client-card-overlay {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
 .client-expanded-title {
     position: absolute;
-    right: 6%;
-    bottom: 26%;
+    right: 40%;
+    bottom: 18px;
     left: 6%;
     opacity: 0;
     transition: opacity 0.4s 0.1s;
@@ -150,37 +153,6 @@
     }
 }
 
-.client-card-actions {
-    position: absolute;
-    z-index: 2;
-    bottom: 18px;
-    left: 6%;
-    display: flex;
-    gap: 9px;
-    opacity: 0;
-    pointer-events: none;
-    visibility: hidden;
-    transition: opacity 0.25s;
-
-    button,
-    a {
-        display: grid;
-        width: 38px;
-        height: 38px;
-        place-items: center;
-        border: 1px solid #ffffff90;
-        border-radius: 50%;
-        background: #14171bc0;
-        font-size: 22px;
-    }
-
-    .client-card-play {
-        background: #fff;
-        color: #111;
-        font-size: 16px;
-    }
-}
-
 .client-availability {
     position: absolute;
     top: 15px;
@@ -197,12 +169,6 @@
     pointer-events: none;
     visibility: hidden;
     transition: opacity 0.25s;
-
-    span {
-        position: absolute;
-        right: 36px;
-        font-size: 11px;
-    }
 }
 
 .client-continue-label {
@@ -215,7 +181,7 @@
 
 .client-media-card.active .client-continue-label {
     right: 18px;
-    bottom: 28px;
+    bottom: 22px;
     left: auto;
 }
 
@@ -286,7 +252,6 @@
     .client-expanding-row .client-card img,
     .client-expanded-title,
     .client-card-shade,
-    .client-card-actions,
     .client-availability,
     .client-section-glow {
         transition: none;
