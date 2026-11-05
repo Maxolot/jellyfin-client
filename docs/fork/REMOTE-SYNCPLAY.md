@@ -6,7 +6,7 @@ propres panneaux. Aucun plugin serveur supplémentaire n’est requis.
 ## Lire sur…
 
 Ouvrir le menu du profil → **Lire sur un autre appareil**, ou le bouton de diffusion
-dans le lecteur. La liste contient les sessions vidéo que le serveur autorise ce
+dans le lecteur. La liste contient uniquement les sessions Jellyfin vidéo que le serveur autorise ce
 compte à contrôler. Le serveur décide des droits : l’application ne contourne pas
 les restrictions entre utilisateurs.
 
@@ -54,6 +54,9 @@ peut être limité par l’appareil destinataire.
 Les événements du moteur assurent les mises à jour rapides ; une relecture des
 sessions toutes les deux secondes garde un repli lorsque ces événements manquent.
 Les réponses obsolètes sont ignorées après un changement d’appareil ou de compte.
+Une sélection en cours ne peut arrêter un ancien lecteur local après un retour au
+navigateur ou un changement de compte/destination. Une commande déjà acceptée par le
+serveur avant cette annulation peut toutefois avoir démarré sur l’autre appareil.
 
 Le navigateur peut refuser un démarrage automatique, notamment sur Safari/iPad :
 un premier geste utilisateur dans chaque navigateur peut être nécessaire. Les

@@ -41,7 +41,8 @@ function TargetsPanel({ open, onClose, openRemote }: Readonly<{ open: boolean; o
         try {
             await chooseTarget(target);
             openRemote();
-        } catch {
+        } catch (error) {
+            if (error instanceof DOMException && error.name === 'AbortError') return;
             setSelectionError('Impossible de joindre cet appareil. Actualisez la liste et réessayez.');
         } finally {
             setSelecting(false);
