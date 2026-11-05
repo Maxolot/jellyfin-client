@@ -14,7 +14,7 @@ const TAGS: Record<FileLanguage, { text: string; title: string }> = {
 export default function LanguageTags({ item }: Readonly<{ item: BaseItemDto }>) {
     const languages = useLocalLanguages(item);
     if (!languages.length) return null;
-    return <span className='client-source-badge is-found is-button client-button client-availability-action' role='status' aria-label='Langues disponibles dans votre bibliothèque'>
-        <span>Dans votre bibliothèque</span>{languages.map(tag => <b key={tag} className={`client-source-lang is-${tag}`} title={TAGS[tag].title}>{TAGS[tag].text}</b>)}
+    return <span className='client-file-languages' role='group' aria-label='Langues disponibles'>
+        {languages.map(tag => <abbr key={tag} title={TAGS[tag].title}>{TAGS[tag].text}</abbr>)}
     </span>;
 }

@@ -1818,6 +1818,25 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     margin: 0;
 }
 
+// Langues des fichiers (VF, VOSTFR…), à la suite des infos du titre.
+.client-file-languages {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 5px;
+
+    abbr {
+        padding: 1px 5px;
+        color: #d3d7df;
+        border: 1px solid rgb(255 255 255 / 34%);
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        line-height: 1.4;
+        text-decoration: none;
+    }
+}
+
 .client-detail:not(.client-series-detail) .client-overview {
     display: block;
 }
