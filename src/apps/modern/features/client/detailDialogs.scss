@@ -102,21 +102,24 @@
     }
 }
 
+.client-actions:has(.client-more-menu) { position: relative; z-index: 40; }
+
 .client-actions .client-more { position: relative; }
+
+.client-actions .client-more > button .client-icon { stroke-width: 3.6; }
 
 .client-more-menu {
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
-    z-index: 30;
+    z-index: 50;
     display: grid;
     min-width: 250px;
     padding: 6px;
     border: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: 14px;
-    background: rgba(18, 20, 24, 0.94);
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(18px);
+    background: #14161a;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
 
     > button, > a {
         display: flex;
@@ -159,4 +162,12 @@
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.16);
     font-size: 12px;
+}
+
+@media (max-width: 700px) {
+    .client-more-menu {
+        right: 0;
+        left: auto;
+        max-width: calc(100vw - 32px);
+    }
 }
