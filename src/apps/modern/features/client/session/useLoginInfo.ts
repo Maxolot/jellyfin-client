@@ -4,6 +4,7 @@ import markdownIt from 'markdown-it';
 import { useEffect, useState } from 'react';
 
 import { SPLASHSCREEN_URL } from 'constants/branding';
+import { useWebConfig } from 'hooks/useWebConfig';
 
 import type { SavedProfile } from '../profiles/profileStore';
 
@@ -13,6 +14,7 @@ export type LoginInfo = { publicUsers: SavedProfile[]; passwordless: Set<string>
 
 /** What a server chooses to show before signing in: its public accounts, its notice, its background. */
 export function useLoginInfo(client: ApiClient | undefined) {
+    const { clientLoginBackground } = useWebConfig();
     const [info, setInfo] = useState<LoginInfo>();
     useEffect(() => {
         if (!client) return;
@@ -27,12 +29,12 @@ export function useLoginInfo(client: ApiClient | undefined) {
                 passwordless: new Set(users.flatMap(user => user.Id && !user.HasPassword ? [user.Id] : [])),
                 // eslint-disable-next-line sonarjs/disabled-auto-escaping, @typescript-eslint/naming-convention -- The administrator's notice, sanitized here; ADD_ATTR is DOMPurify's own name.
                 disclaimer: branding.LoginDisclaimer ? purify.sanitize(markdownIt({ html: true }).render(branding.LoginDisclaimer), { ADD_ATTR: ['target', 'rel'] }) : '',
-                background: branding.SplashscreenEnabled ? `${client.serverAddress()}${SPLASHSCREEN_URL}` : undefined
+                background: clientLoginBackground || (branding.SplashscreenEnabled ? `${client.serverAddress()}${SPLASHSCREEN_URL}` : undefined)
             });
         });
         return () => {
             left = true;
         };
-    }, [client]);
+    }, [client, clientLoginBackground]);
     return info;
 }

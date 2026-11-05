@@ -28,4 +28,6 @@ export interface WebConfig {
     clientPreviews?: Record<string, ClientPreviewSources>
     /** Optional self-hosted gallery of profile pictures: the address of its JSON list. */
     clientAvatars?: string
+    /** Optional self-hosted picture behind the sign-in page; otherwise the server's own, if it has one. */
+    clientLoginBackground?: string
 }

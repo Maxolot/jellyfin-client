@@ -21,3 +21,7 @@ Le projet n'a pas encore d'identité. Pour la lui donner :
 
 - le nom : `constants/branding.ts` (`APP_NAME`), `manifest.json` et `index.html` ;
 - l'icône : `assets/brand/favicons`.
+
+## Fond de la page de connexion
+
+Sans réglage, le client affiche l'image d'accueil configurée sur le serveur, si elle existe. Pour une image propre à cette installation : `"clientLoginBackground": "./client-login/background.jpg"` dans `config.json`. Aucune image n'est fournie avec le projet.
