@@ -8,7 +8,7 @@ import { getUserDataApi } from '@jellyfin/sdk/lib/utils/api/user-data-api';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useQueryClient } from '@tanstack/react-query';
 import { APP_NAME } from 'constants/branding';
-import React, { type CSSProperties, memo, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { type CSSProperties, memo, type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigationType, useSearchParams, useNavigate } from 'react-router-dom';
 
 import Page from 'components/Page';
@@ -48,7 +48,7 @@ import { RecentPage } from '../features/client/LocalDiscoveryPages';
 import MediaRow from '../features/client/MediaRow';
 import { episodeLabel, progressPercent, uniqueItems } from '../features/client/model';
 import { clientRequest } from '../features/client/session';
-import { useClientCollections, useClientDetails, useClientFilters, useClientMedia } from '../features/client/useClientMedia';
+import { useClientCollections, useClientDetails, useClientFilters, useClientMedia, useMoreBrowse } from '../features/client/useClientMedia';
 import '../features/client/client.scss';
 import '../features/client/prototype.scss';
 import '../features/client/motion.scss';
@@ -142,8 +142,6 @@ function useClientController() {
     const discovery = (view === 'films' || view === 'series') && params.get('mode') !== 'library';
     const id = params.get('id') || '';
     const search = params.get('q') || '';
-    const parsedOffset = Number(params.get('offset'));
-    const offset = Number.isFinite(parsedOffset) ? Math.max(0, Math.floor(parsedOffset)) : 0;
     const season = params.get('season') || '';
     const genre = params.get('genre') || '';
     const person = params.get('person') || '';
@@ -173,7 +171,7 @@ function useClientController() {
     const surface = useRef<HTMLDivElement>(null);
     const profileMenu = useRef<HTMLDivElement>(null);
     const browseInput = clientBrowseInput(view, search, { genre, sort, person, audio, collection });
-    const media = useClientMedia(id || view === 'settings' ? 'disabled' : view, browseInput.search, offset, browseInput.filters);
+    const media = useClientMedia(id || view === 'settings' ? 'disabled' : view, browseInput.search, 0, browseInput.filters);
     const remote = isExternal({ Id: id });
     const remoteIdentity = externalIdentity({ Id: id });
     const remoteDetails = useSeerrDetail(remoteIdentity?.type, remoteIdentity?.id, false);
@@ -352,7 +350,7 @@ function useClientController() {
     const hero = id ? item : homeHero;
     const accent = useArtworkColor(preferences.chromatic && hero ? image(hero, true) : undefined);
     const error = id ? details.item.isError : media.isError;
-    return { api, user, params, location, setParams, view, id, search, offset, media, details, item, preferences, actionError, busy,
+    return { api, user, params, location, setParams, view, id, search, browseInput, media, details, item, preferences, actionError, busy,
         searchInput, setSearchInput, genres, genre, sort, savePreference, image, play, updateState, cards, row, playItem, hero, error,
         prepareDetail, releaseDetail, prepareTab, seerr, catalogue, upcoming, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, previewProviderAvailable, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent };
 }
@@ -571,13 +569,11 @@ function BrowseControls({ model }: ViewProps) {
         <label className='client-genre-control'>{genre || 'Genres'}<ClientIcon name='down' /><select aria-label='Genres' value={genre} onChange={event => {
             const next = new URLSearchParams(params);
             next.set('genre', event.target.value);
-            next.delete('offset');
             setParams(next);
         }}><option value=''>Tous les genres</option>{genres.data?.map(entry => <option key={entry.Id || entry.Name} value={entry.Name || ''}>{entry.Name}</option>)}</select></label>
         <label className='client-genre-control'>{audio || 'Langues'}<ClientIcon name='down' /><select aria-label='Langues audio' value={audio} onChange={event => {
             const next = new URLSearchParams(params);
             next.set('audio', event.target.value);
-            next.delete('offset');
             setParams(next);
         }}><option value=''>Toutes les langues</option>{filters.data?.AudioLanguages?.map(entry => <option key={entry.Value} value={entry.Value || ''}>{entry.Name || entry.Value}</option>)}</select></label>
     </div>;
@@ -637,19 +633,44 @@ function SearchResultCount({ model, embedded, count }: ViewProps & { readonly em
     return <span className='client-result-count'>{model.media.data?.total || 0} titres</span>;
 }
 
-function LibraryPagination({ model, browse }: ViewProps & { readonly browse: (changes: Record<string, string>, keepOffset?: boolean) => void }) {
-    const { offset, media } = model;
-    if ((media.data?.total || 0) <= 48 && offset === 0) return null;
-    return <div className='client-pagination'><button disabled={offset === 0} onClick={() => browse({ offset: String(Math.max(0, offset - 48)) }, true)}>Précédent</button><span>{model.view === 'search' && model.seerr.connected && 'Bibliothèque : '}{media.data?.items.length ? offset + 1 : 0}–{offset + (media.data?.items.length || 0)} / {media.data?.total || 0}</span><button disabled={offset + 48 >= (media.data?.total || 0)} onClick={() => browse({ offset: String(offset + 48) }, true)}>Suivant</button></div>;
+/** One loaded page of a long list: rendered once, so that hovering a card does not redraw hundreds of them. */
+const GridChunk = memo(function ClientGridChunk({ items, render }: Readonly<{ items: BaseItemDto[]; render: (items: BaseItemDto[]) => ReactNode }>) {
+    return <>{render(items)}</>;
+}, (previous, next) => previous.items === next.items);
+
+/** Asks for the next titles well before the end of the page is reached. */
+function LoadMore({ loading, failed, pages, load }: Readonly<{ loading: boolean; failed: boolean; pages: number; load: () => void }>) {
+    const marker = useRef<HTMLDivElement>(null);
+    const supported = 'IntersectionObserver' in window;
+    useEffect(() => {
+        const element = marker.current;
+        if (!element || !supported || loading || failed) return;
+        // A new observer per page also covers a tall screen, where the end is still in view after loading.
+        const observer = new IntersectionObserver(entries => {
+            if (entries.some(entry => entry.isIntersecting)) load();
+        }, { rootMargin: '1600px 0px' });
+        observer.observe(element);
+        return () => observer.disconnect();
+    }, [loading, failed, pages, load, supported]);
+    return <div ref={marker} className='client-load-more'>
+        {loading && <ClientSkeleton layout='grid' count={6} contained label='Chargement des titres suivants…' />}
+        {failed && <p role='alert'>Impossible de charger la suite. <button type='button' onClick={load}>Réessayer</button></p>}
+        {!supported && !loading && !failed && <button type='button' className='client-button' onClick={load}>Afficher plus</button>}
+    </div>;
 }
 
 function LibraryView({ model, embedded = false }: ViewProps & { readonly embedded?: boolean }) {
     const { view, searchInput, setSearchInput, setParams, cards, media, genres, genre, sort, params } = model;
-    const shown = mixCatalogue(media.data?.items || [], !embedded && view === 'search' ? model.catalogue.items : []);
+    const more = useMoreBrowse(view, model.browseInput.search, model.browseInput.filters || {}, media.data);
+    const { fetchMore } = more;
+    const loadMore = useCallback(() => {
+        void fetchMore();
+    }, [fetchMore]);
+    const local = more.pages.flat();
+    const external = mixCatalogue(local, !embedded && view === 'search' ? model.catalogue.items : []).slice(local.length);
     const externalPending = !embedded && view === 'search' && model.seerr.enabled && (model.catalogue.loading || model.seerr.status.isPending || model.seerr.me.isFetching);
-    function browse(changes: Record<string, string>, keepOffset = false) {
+    function browse(changes: Record<string, string>) {
         const next = new URLSearchParams(params);
-        if (!keepOffset) next.delete('offset');
         Object.entries(changes).forEach(([key, value]) => {
             next.set(key, value);
         });
@@ -657,21 +678,24 @@ function LibraryView({ model, embedded = false }: ViewProps & { readonly embedde
     }
     return <section className={`client-library${view === 'search' ? ' client-search-page' : ''}${embedded ? ' embedded' : ''}`}>
         {!embedded && <header className='client-library-heading'><h1>{params.get('collectionName') || params.get('personName') || links.find(([key]) => key === view)?.[1] || 'Bibliothèque'}</h1>{view === 'search' && <p>Un titre, une envie de cinéma : trouvez votre prochaine séance.</p>}</header>}
-        {!embedded && <><form onSubmit={event => {
+        {!embedded && <>{view === 'search' && <form onSubmit={event => {
             event.preventDefault();
             browse({ q: searchInput });
         }}><ClientIcon name='search' /><input type='search' aria-label='Rechercher un film ou une série' placeholder='Titre d’un film ou d’une série' value={searchInput} onChange={event => setSearchInput(event.target.value)} />{searchInput && <button type='button' aria-label='Effacer la recherche' onClick={() => {
                 setSearchInput('');
                 browse({ q: '' });
-            }}>×</button>}<button>Rechercher</button></form>
-        <div className='client-filter-options'><label>Genre <select value={genre} onChange={event => browse({ genre: event.target.value })}><option value=''>Tous les genres</option>{genres.data?.filter(entry => entry.Name).map(entry => <option key={entry.Id || entry.Name} value={entry.Name!}>{entry.Name}</option>)}</select></label><label>Trier <select value={sort} onChange={event => browse({ sort: event.target.value })}><option value='name'>Titre</option><option value='recent'>Ajouts récents</option></select></label><SearchResultCount model={model} embedded={embedded} count={shown.length} /></div></>}
+            }}>×</button>}<button>Rechercher</button></form>}
+        <div className='client-filter-options'><label>Genre <select value={genre} onChange={event => browse({ genre: event.target.value })}><option value=''>Tous les genres</option>{genres.data?.filter(entry => entry.Name).map(entry => <option key={entry.Id || entry.Name} value={entry.Name!}>{entry.Name}</option>)}</select></label><label>Trier <select value={sort} onChange={event => browse({ sort: event.target.value })}><option value='name'>Titre</option><option value='recent'>Ajouts récents</option></select></label><SearchResultCount model={model} embedded={embedded} count={local.length + external.length} /></div></>}
         {media.isPending && <ClientSkeleton layout='grid' count={12} contained label='Chargement des titres…' />}
-        <div className='client-grid'>{cards(shown)}</div>
+        <div className='client-grid'>
+            {more.pages.filter(page => page.length).map(page => <GridChunk key={page[0].Id} items={page} render={cards} />)}
+            {cards(external)}
+        </div>
+        {more.hasMore && <LoadMore loading={more.isFetching} failed={more.isError} pages={more.pages.length} load={loadMore} />}
         {externalPending && <ClientSkeleton layout='row' contained label='Recherche dans les découvertes…' />}
         {!embedded && view === 'search' && model.catalogue.hasNextPage && <button className='client-button' disabled={model.catalogue.isFetchingNextPage} onClick={() => { void model.catalogue.fetchNextPage(); }}>Plus de découvertes</button>}
         {!embedded && view === 'search' && model.catalogue.isError && <p>Les résultats externes sont temporairement indisponibles. <button onClick={() => { void model.catalogue.refetch(); }}>Réessayer</button></p>}
         {media.data?.items.length === 0 && !model.catalogue.items.length && !externalPending && <p>{view === 'mine' ? 'Ajoutez des films et des séries à votre liste depuis leurs fiches.' : 'Aucun résultat.'}</p>}
-        <LibraryPagination model={model} browse={browse} />
     </section>;
 }
 

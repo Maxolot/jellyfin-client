@@ -20,7 +20,8 @@ describe('deferred cache writes', () => {
 
     it('leaves the identities of the whole library out of the saved cache', () => {
         const saved = { timestamp: 1, buster: 'b', clientState: { mutations: [], queries: [
-            { queryKey: ['ClientSeerr', 's', 'u', 'LocalIdentities'], queryHash: 'identities' }, { queryKey: ['Client', 's', 'u', 'Browse', 'films'], queryHash: 'films' }
+            { queryKey: ['ClientSeerr', 's', 'u', 'LocalIdentities'], queryHash: 'identities' }, { queryKey: ['Client', 's', 'u', 'Browse', 'films'], queryHash: 'films' },
+            { queryKey: ['Client', 's', 'u', 'Browse', 'films', 'More'], queryHash: 'more' }
         ] } } as unknown as PersistedClient;
         expect(withoutPreviewGrants(saved).clientState.queries.map(query => query.queryHash)).toEqual(['films']);
     });

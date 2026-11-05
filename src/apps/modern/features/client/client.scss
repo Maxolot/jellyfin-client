@@ -666,3 +666,12 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     display: block !important;
     margin-top: 24px;
 }
+
+.client-load-more {
+    min-height: 1px;
+    margin-top: 18px;
+
+    p {
+        text-align: center;
+    }
+}

@@ -6,8 +6,8 @@ export function withoutPreviewGrants(client: PersistedClient): PersistedClient {
         ...client,
         clientState: {
             ...client.clientState,
-            // The whole library's identities are large, quick to fetch again, and would slow every save.
-            queries: client.clientState.queries.filter(query => query.queryKey[0] !== 'ClientPreviews' && !query.queryKey.includes('LocalIdentities'))
+            // The whole library's identities and long scrolled lists are large, quick to fetch again, and would slow every save.
+            queries: client.clientState.queries.filter(query => query.queryKey[0] !== 'ClientPreviews' && !query.queryKey.includes('LocalIdentities') && query.queryKey[query.queryKey.length - 1] !== 'More')
         }
     };
 }
