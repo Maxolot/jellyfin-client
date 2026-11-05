@@ -9,10 +9,10 @@ import './session.scss';
 /** Full-screen frame of everything outside the library: signing in, servers, errors. */
 export default function SessionPage({ title, background, children }: Readonly<PropsWithChildren<{ title: string; background?: string }>>) {
     return <Page id='clientPage' title={title} className='client-page' isBackButtonEnabled={false}>
-        <main className={`client-profiles${background ? ' has-backdrop' : ''}`}>
+        <div className={`client-profiles${background ? ' has-backdrop' : ''}`}>
             {background && <img className='client-session-backdrop' src={background} alt='' />}
             {children}
-        </main>
+        </div>
     </Page>;
 }
 
