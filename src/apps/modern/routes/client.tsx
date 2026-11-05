@@ -38,6 +38,7 @@ import { usePersonalStats, useViewingHistory } from '../features/client/usePerso
 import HeroMetadata from '../features/client/HeroMetadata';
 import DetailExtras from '../features/client/DetailExtras';
 import DetailMenu from '../features/client/DetailMenu';
+import { chosenTracks } from '../features/client/languageTags';
 import InterfacePreview from '../features/client/InterfacePreview';
 import { RecentPage } from '../features/client/LocalDiscoveryPages';
 import MediaRow from '../features/client/MediaRow';
@@ -285,7 +286,7 @@ function useClientController() {
         setActionError('');
         setPreviewSuspended(true);
         try {
-            await playbackManager.play({ items: [i as ItemDto], startPositionTicks: i.UserData?.PlaybackPositionTicks || 0 });
+            await playbackManager.play({ items: [i as ItemDto], startPositionTicks: i.UserData?.PlaybackPositionTicks || 0, ...await chosenTracks(api, user?.Id, i) });
         } catch {
             setPreviewSuspended(false);
             setActionError('La lecture n’a pas pu démarrer. Réessayez ou ouvrez la fiche Jellyfin.');

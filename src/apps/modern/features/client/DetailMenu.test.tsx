@@ -12,6 +12,11 @@ vi.mock('./seerr/SeerrViews', () => ({
     RequestDialog: () => null,
     useMissingSeasons: (item: BaseItemDto) => item.Type === 'Series' ? 2 : 0
 }));
+const fileTracks = { languages: [], audio: [{ key: 'eng', label: 'Anglais' }, { key: 'fra', label: 'Français' }], subtitles: [{ key: 'fra', label: 'Français' }] };
+const noTracks = { languages: [], audio: [], subtitles: [] };
+let tracks: typeof fileTracks | typeof noTracks = noTracks;
+vi.mock('hooks/useApi', () => ({ useApi: () => ({ api: { basePath: 's' }, user: { Id: 'u' } }) }));
+vi.mock('./languageTags', () => ({ useFileTracks: () => tracks }));
 vi.mock('./DetailExtras', () => ({ CastDialog: () => null, hasCast: (item: BaseItemDto) => !!item.People?.length }));
 
 let root: Root;
@@ -31,6 +36,47 @@ async function open(item: BaseItemDto) {
     await act(async () => container.querySelector('button')?.click());
     return Array.from(container.querySelectorAll('[role="menuitem"]')).map(entry => entry.textContent);
 }
+
+describe('DetailMenu tracks', () => {
+    const openMenu = async () => {
+        await act(async () => root.render(<MemoryRouter><DetailMenu item={{ Id: 'film', Type: 'Movie' }} basePath='' /></MemoryRouter>));
+        await act(async () => container.querySelector<HTMLElement>('.client-action-circle')?.click());
+    };
+    const item = (text: string) => [...container.querySelectorAll<HTMLElement>('[role^="menuitem"]')].find(entry => entry.textContent?.includes(text));
+    beforeEach(() => {
+        localStorage.clear();
+        tracks = fileTracks;
+    });
+    afterEach(() => {
+        tracks = noTracks;
+    });
+
+    it('offers nothing when the file has no alternative', async () => {
+        tracks = { languages: [], audio: [{ key: 'eng', label: 'Anglais' }], subtitles: [] };
+        await openMenu();
+        expect(item('Audio et sous-titres')).toBeUndefined();
+    });
+
+    it('remembers a language for this title and shows it', async () => {
+        await openMenu();
+        expect(item('Audio et sous-titres')?.textContent).toContain('Par défaut');
+        await act(async () => item('Audio et sous-titres')?.click());
+        const french = container.querySelector<HTMLElement>('[aria-label="Audio : Français"]');
+        expect(french?.getAttribute('aria-checked')).toBe('false');
+        await act(async () => french?.click());
+        expect(container.querySelector('[aria-label="Audio : Français"]')?.getAttribute('aria-checked')).toBe('true');
+        expect(JSON.parse(localStorage.getItem('client-track-choices-s-u') || '{}').film).toEqual({ audio: 'fra' });
+        await act(async () => container.querySelector<HTMLElement>('.client-more-menu [role="menuitem"]')?.click());
+        expect(item('Audio et sous-titres')?.textContent).toContain('Français');
+    });
+
+    it('goes back one level with Escape', async () => {
+        await openMenu();
+        await act(async () => item('Audio et sous-titres')?.click());
+        await act(async () => document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
+        expect(item('Distribution') || item('Options et fiche')).toBeDefined();
+    });
+});
 
 describe('DetailMenu', () => {
     it('offers season requests for a series only', async () => {
