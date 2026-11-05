@@ -5,7 +5,7 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useServerPreview } from './previews/provider';
 import { compactPreview } from './previews/model';
-import { detectLetterbox, letterboxTransform } from './previews/letterbox';
+import { detectLetterbox, frameHasContent, letterboxTransform } from './previews/letterbox';
 import ClientIcon from './ClientIcon';
 import { usePreviews } from './PreviewProvider';
 import { previewSource, type PreviewSurface } from './previewSource';
@@ -71,7 +71,7 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
     }, [active, key, completed]);
     useEffect(() => {
         if (video.current) video.current.muted = preview?.muted !== false;
-    }, [preview?.muted, started]);
+    }, [preview?.muted, started, source]);
     useEffect(() => {
         const element = video.current;
         if (!active || !started || !element || !source || !playback) return;
@@ -85,6 +85,8 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         let checks = 0;
         let lastBars: { top: number; bottom: number } | undefined;
         let stable = 0;
+        let cleanFrames = 0;
+        let inspectionStarted = false;
         let measured: { top: number; bottom: number } | undefined;
         const canvas = surface === 'hero' ? document.createElement('canvas') : undefined;
         if (canvas) {
@@ -96,25 +98,49 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
             const bounds = element.parentElement.getBoundingClientRect();
             element.style.transform = letterboxTransform(element.videoWidth, element.videoHeight, bounds.width, bounds.height, measured);
         };
+        const reveal = () => {
+            if (disposed || finishing || !playback.owns(element, lease)) return;
+            element.volume = 1;
+            setVisible(true);
+        };
         const measureBars = () => {
-            if (disposed || !playback.owns(element, lease) || !canvas || !element.videoWidth || checks++ >= 8) return;
+            if (disposed || !playback.owns(element, lease)) return;
+            const maxChecks = Number.isFinite(element.duration) && element.duration < 5 ? 3 : 8;
+            if (!canvas || !element.videoWidth || checks++ >= maxChecks) {
+                reveal();
+                return;
+            }
             try {
                 const context = canvas.getContext('2d', { willReadFrequently: true });
-                if (!context) return;
+                if (!context) {
+                    reveal();
+                    return;
+                }
                 context.drawImage(element, 0, 0, canvas.width, canvas.height);
-                const bars = detectLetterbox(context.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height);
+                const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+                const bars = detectLetterbox(pixels, canvas.width, canvas.height);
                 if (bars && lastBars && Math.abs(bars.top - lastBars.top) < 0.025 && Math.abs(bars.bottom - lastBars.bottom) < 0.025) stable++;
                 else stable = 0;
                 lastBars = bars;
+                cleanFrames = !bars && frameHasContent(pixels, canvas.width, canvas.height) ? cleanFrames + 1 : 0;
                 if (bars && stable >= 2) {
                     measured = bars;
                     applyFraming();
+                    reveal();
+                    return;
+                }
+                if (cleanFrames >= 3) {
+                    reveal();
                     return;
                 }
                 frameTimer = window.setTimeout(measureBars, 250);
-            } catch { /* Cross-origin or unreadable video keeps the normal cover framing. */ }
+            } catch {
+                // Cross-origin or unreadable video keeps the normal cover framing.
+                reveal();
+            }
         };
         window.addEventListener('resize', applyFraming);
+        if (surface === 'hero') element.volume = 0;
         report?.(owner, true);
         const finish = () => {
             if (finishing || disposed || !playback.owns(element, lease)) return;
@@ -150,8 +176,12 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
                 playback.release(element, lease);
                 return;
             }
-            setVisible(true);
-            if (surface === 'hero' && !frameTimer && !measured) frameTimer = window.setTimeout(measureBars, 100);
+            if (surface !== 'hero') {
+                reveal();
+            } else if (!inspectionStarted) {
+                inspectionStarted = true;
+                frameTimer = window.setTimeout(measureBars, 100);
+            }
         };
         const metadata = () => {
             // A preview registry cannot silently turn a whole film into an autoplay source.

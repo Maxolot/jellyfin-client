@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { detectLetterbox, letterboxTransform } from './letterbox';
+import { detectLetterbox, frameHasContent, letterboxTransform } from './letterbox';
 
 function frame(top: number, bottom: number, darkScene = false) {
     const width = 160;
@@ -25,6 +25,10 @@ describe('embedded cinema bars', () => {
         expect(detectLetterbox(frame(0, 0), 160, 90)).toBeUndefined();
         expect(detectLetterbox(frame(12, 12, true), 160, 90)).toBeUndefined();
         expect(detectLetterbox(frame(12, 2), 160, 90)).toBeUndefined();
+    });
+    it('distinguishes a lit frame from a fade to black', () => {
+        expect(frameHasContent(frame(12, 12), 160, 90)).toBe(true);
+        expect(frameHasContent(frame(12, 12, true), 160, 90)).toBe(false);
     });
     it('only enlarges as needed to fill the available area', () => {
         expect(letterboxTransform(1920, 1080, 1280, 840, { top: 12 / 90, bottom: 12 / 90 })).toBe('translateY(0.00px) scale(1.3636)');

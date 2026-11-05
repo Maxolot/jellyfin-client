@@ -20,6 +20,20 @@ export function detectLetterbox(pixels: Uint8ClampedArray, width: number, height
     return { top: top / height, bottom: bottom / height };
 }
 
+/** Avoid treating a fade from black as evidence that the video has no bars. */
+export function frameHasContent(pixels: Uint8ClampedArray, width: number, height: number): boolean {
+    if (width < 16 || height < 16 || pixels.length !== width * height * 4) return false;
+    let bright = 0;
+    for (let y = Math.floor(height / 4); y < Math.floor(height * 3 / 4); y += 4) {
+        for (let x = 0; x < width; x += 4) {
+            const i = (y * width + x) * 4;
+            if (pixels[i] > 22 || pixels[i + 1] > 22 || pixels[i + 2] > 22) bright++;
+            if (bright >= 8) return true;
+        }
+    }
+    return false;
+}
+
 /** Scale only as much as necessary for the picture between the bars to fill the box. */
 export function letterboxTransform(videoWidth: number, videoHeight: number, boxWidth: number, boxHeight: number, bars: { top: number; bottom: number }) {
     if (![videoWidth, videoHeight, boxWidth, boxHeight].every(value => Number.isFinite(value) && value > 0)) return '';
