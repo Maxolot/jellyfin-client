@@ -54,8 +54,20 @@ export default function PreviewProvider({ children, surface, serverAvailable, en
     const completion = useMemo(() => ({ scope, items: new Set<string>() }), [scope]);
     const completed = completion.items;
     const playback = useMemo(() => new PreviewPlayback(), []);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- A resume point never crosses accounts.
-    const handoff = useMemo(() => new PreviewHandoff(), [scope]);
+    const handoff = useMemo(() => new PreviewHandoff(() => playback.stop()), [playback]);
+    useEffect(() => {
+        const root = surface.current;
+        if (!root) return;
+        // Runs before the link navigates: says which media page the viewer is opening.
+        const opening = (event: MouseEvent) => {
+            const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[href]') : null;
+            const id = link?.href.match(/[?&]id=([^&#]+)/)?.[1];
+            if (id) handoff.intend(decodeURIComponent(id));
+        };
+        root.addEventListener('click', opening, true);
+        return () => root.removeEventListener('click', opening, true);
+    }, [surface, handoff]);
+    useEffect(() => () => handoff.discard(), [handoff, scope]);
     const order = useRef(0);
     const muting = useRef({ muted, toggleMuted });
     useEffect(() => {
@@ -107,6 +119,9 @@ export default function PreviewProvider({ children, surface, serverAvailable, en
     }, [busy, onPlayingChange]);
     const selected = [...owners].sort((a, b) => a.priority - b.priority || a.order - b.order).pop()?.id;
     const active = enabled && !hidden && !reduced && !suspended && !realPlayback && !dialogOpen;
+    useEffect(() => {
+        if (!active) handoff.discard();
+    }, [active, handoff]);
     const value = useMemo(() => ({ enabled: active, serverAvailable, playback, handoff, muted, scope, sources, selected, completed, claim, release, report, toggleMuted, mute }), [active, serverAvailable, playback, handoff, muted, scope, sources, selected, completed, claim, release, report, toggleMuted, mute]);
     return <PreviewContext.Provider value={value}>{children}</PreviewContext.Provider>;
 }

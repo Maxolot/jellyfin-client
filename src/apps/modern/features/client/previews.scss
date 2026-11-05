@@ -8,6 +8,8 @@
     pointer-events: none;
 
     video {
+        position: absolute;
+        inset: 0;
         display: block;
         width: 100%;
         height: 100%;
@@ -25,18 +27,22 @@
     opacity: 0;
 }
 
-// Extrait repris depuis la page précédente : aucune attente visible, l'image figée cède la place à la vidéo.
-.client-preview-media.is-resuming video {
+// Extrait qui change de page : la même vidéo continue, sans fondu d'apparition.
+.client-preview-media.is-resuming:not(.is-fading) video {
+    opacity: 1;
     transition: none;
 }
 
-.client-preview-bridge {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: opacity 0.2s ease;
+.client-preview-media.client-preview-stage {
+    position: fixed;
+    z-index: 5;
+    inset: auto;
+    border-radius: 12px;
+}
+
+// Version de meilleure qualité qui se prépare, invisible, avant de prendre le relais.
+.client-preview-media.is-resuming video.is-loading {
+    opacity: 0;
 }
 
 .client-hero > .client-preview-media {

@@ -1,11 +1,11 @@
 /* eslint-disable react/jsx-no-bind -- Preview controls belong to their own short-lived surface. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useServerPreview } from './previews/provider';
 import { compactPreview } from './previews/model';
-import { captureFrame } from './previews/handoff';
+import { createPreviewVideo, growFrom, prepareUpgrade, sameFile, type HandedClip } from './previews/handoff';
 import { detectLetterbox, frameHasContent, letterboxTransform } from './previews/letterbox';
 import ClientIcon from './ClientIcon';
 import { usePreviews } from './PreviewProvider';
@@ -20,7 +20,7 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
     const generatedId = useId();
     const owner = `${preview?.scope || ''}:${generatedId}`;
     const region = useRef<HTMLSpanElement>(null);
-    const video = useRef<HTMLVideoElement>(null);
+    const video = useRef<HTMLVideoElement>();
     const [visible, setVisible] = useState(false);
     const [nearby, setNearby] = useState(false);
     const [startedKey, setStartedKey] = useState<string>();
@@ -56,7 +56,7 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         setResolve(false);
         if (!active || completed?.has(key)) return;
         // A clip carried over from the previous page does not wait for the usual hover delay.
-        const timer = window.setTimeout(() => setResolve(true), surface === 'detail' && handoff?.fresh() ? 0 : 600);
+        const timer = window.setTimeout(() => setResolve(true), surface === 'detail' && handoff?.pending() ? 0 : 600);
         return () => window.clearTimeout(timer);
     }, [active, completed, key, surface, handoff]);
     const server = useServerPreview(item, surface, active && resolve && !!preview?.serverAvailable && !completed?.has(key));
@@ -70,26 +70,51 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         setVisible(false);
         setFading(false);
         if (!active || completed?.has(key)) return;
-        const timer = window.setTimeout(() => setStartedKey(key), surface === 'detail' && handoff?.fresh() ? 0 : 1100);
+        const timer = window.setTimeout(() => setStartedKey(key), surface === 'detail' && handoff?.pending() ? 0 : 1100);
         return () => window.clearTimeout(timer);
     }, [active, key, completed, surface, handoff]);
+    // Read by the cleanups below, which run with the props of the page being left.
+    const nextSurface = useRef(surface);
+    nextSurface.current = surface;
+    const unmounting = useRef(false);
+    const handedOver = useRef<HTMLVideoElement>();
+    const adopted = useRef<HandedClip>();
+    useLayoutEffect(() => () => {
+        unmounting.current = true;
+    }, []);
+    // The element lives outside React so that the same playing video can change page.
+    useLayoutEffect(() => {
+        if (!active || !started || !source || !region.current) return;
+        const place = region.current;
+        const clip = surface === 'detail' && item.Id ? handoff?.adopt(item.Id, source) : undefined;
+        const element = clip?.element || createPreviewVideo(source);
+        adopted.current = clip;
+        if (clip) setResuming(true);
+        place.appendChild(element);
+        video.current = element;
+        return () => {
+            const leaving = unmounting.current || (surface !== 'detail' && nextSurface.current === 'detail');
+            const current = video.current || element;
+            video.current = undefined;
+            const handed = leaving && surface !== 'episode' && !current.paused && !current.ended && !!item.Id
+                && handoff?.hand({ itemId: item.Id, source, element: current, from: place.getBoundingClientRect() }, [item.Id, item.SeriesId]);
+            if (handed) handedOver.current = current;
+            else current.remove();
+        };
+    }, [active, started, source, surface, item.Id, item.SeriesId, handoff]);
     useEffect(() => {
         if (video.current) video.current.muted = preview?.muted !== false;
     }, [preview?.muted, started, source]);
     useEffect(() => {
-        const element = video.current;
-        if (!active || !started || !element || !source || !playback) return;
-        const lease = playback.acquire(element);
-        const resume = surface === 'detail' && item.Id ? handoff?.take(item.Id, source) : undefined;
-        const bridge = resume?.frame;
-        if (bridge) region.current?.appendChild(bridge);
-        if (resume) setResuming(true);
-        let bridgeTimer = 0;
-        const clearBridge = () => {
-            if (!bridge?.parentElement) return;
-            bridge.style.opacity = '0';
-            bridgeTimer = window.setTimeout(() => bridge.remove(), 250);
-        };
+        const first = video.current;
+        const place = region.current;
+        if (!active || !started || !first || !source || !playback || !place) return;
+        let element = first;
+        let lease = playback.acquire(element);
+        const clip = adopted.current;
+        adopted.current = undefined;
+        let stopGrowing = () => undefined as void;
+        let stopUpgrade = () => undefined as void;
         let disposed = false;
         let frame = 0;
         let revealFrame = 0;
@@ -116,7 +141,6 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         const reveal = () => {
             if (disposed || finishing || !playback.owns(element, lease)) return;
             setVisible(true);
-            clearBridge();
             if (surface !== 'hero') {
                 element.volume = 1;
                 return;
@@ -171,7 +195,6 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         const finish = () => {
             if (finishing || disposed || !playback.owns(element, lease)) return;
             finishing = true;
-            clearBridge();
             element.pause();
             completed?.add(key);
             setFading(true);
@@ -203,8 +226,6 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
                 playback.release(element, lease);
                 return;
             }
-            // The first frame of a resumed clip must be the right one.
-            if (element.seeking) return;
             if (surface !== 'hero') {
                 reveal();
             } else if (!inspectionStarted) {
@@ -214,18 +235,61 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         };
         const metadata = () => {
             // A preview registry cannot silently turn a whole film into an autoplay source.
-            if (!Number.isFinite(element.duration) || element.duration > 30.5) {
-                finish();
-                return;
-            }
-            if (resume && resume.time < element.duration - 1) element.currentTime = resume.time;
+            if (!Number.isFinite(element.duration) || element.duration > 30.5) finish();
         };
-        element.addEventListener('playing', ready);
-        element.addEventListener('seeked', ready);
-        element.addEventListener('loadedmetadata', metadata);
-        element.addEventListener('timeupdate', progress);
-        element.addEventListener('ended', finish);
-        element.addEventListener('error', finish);
+        function cleanupPlayback() {
+            disposed = true;
+            stopGrowing();
+            stopUpgrade();
+            setResuming(false);
+            report?.(owner, false);
+            window.clearTimeout(finishTimer);
+            window.clearTimeout(frameTimer);
+            window.removeEventListener('resize', applyFraming);
+            element.style.transform = '';
+            cancelAnimationFrame(frame);
+            cancelAnimationFrame(revealFrame);
+            detach(element);
+            // A clip on its way to the media page keeps playing.
+            if (handedOver.current === element) handedOver.current = undefined;
+            else playback?.release(element, lease);
+        }
+        const attach = (target: HTMLVideoElement) => {
+            target.addEventListener('playing', ready);
+            target.addEventListener('loadedmetadata', metadata);
+            target.addEventListener('timeupdate', progress);
+            target.addEventListener('ended', finish);
+            target.addEventListener('error', finish);
+        };
+        const detach = (target: HTMLVideoElement) => {
+            target.removeEventListener('playing', ready);
+            target.removeEventListener('loadedmetadata', metadata);
+            target.removeEventListener('timeupdate', progress);
+            target.removeEventListener('ended', finish);
+            target.removeEventListener('error', finish);
+        };
+        attach(element);
+        if (clip) {
+            // The same video carries on: it only needs to reach its place, then its best quality.
+            if (element.paused) void element.play().catch(() => undefined);
+            stopGrowing = growFrom(clip.from, place, element, () => {
+                reveal();
+                if (sameFile(element.currentSrc || element.src, source)) return;
+                stopUpgrade = prepareUpgrade(source, place, () => element, next => {
+                    const previous = element;
+                    next.volume = previous.volume;
+                    next.muted = previous.muted;
+                    detach(previous);
+                    element = next;
+                    video.current = next;
+                    lease = playback.acquire(next);
+                    attach(next);
+                    previous.remove();
+                    if (next.paused) void next.play().catch(() => finish());
+                });
+            });
+            return cleanupPlayback;
+        }
         void element.play().then(() => {
             if (disposed || !playback.owns(element, lease)) playback.release(element, lease);
         }).catch(error => {
@@ -241,34 +305,10 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
             }
             finish();
         });
-        return () => {
-            disposed = true;
-            if (surface !== 'detail' && surface !== 'episode' && item.Id && !finishing && element.currentTime > 0) {
-                handoff?.save({ itemId: item.Id, source, time: element.currentTime, at: Date.now(), frame: captureFrame(element) });
-            }
-            window.clearTimeout(bridgeTimer);
-            bridge?.remove();
-            setResuming(false);
-            report?.(owner, false);
-            window.clearTimeout(finishTimer);
-            window.clearTimeout(frameTimer);
-            window.removeEventListener('resize', applyFraming);
-            element.style.transform = '';
-            cancelAnimationFrame(frame);
-            cancelAnimationFrame(revealFrame);
-            element.removeEventListener('playing', ready);
-            element.removeEventListener('seeked', ready);
-            element.removeEventListener('loadedmetadata', metadata);
-            element.removeEventListener('timeupdate', progress);
-            element.removeEventListener('ended', finish);
-            element.removeEventListener('error', finish);
-            playback.release(element, lease);
-        };
-    }, [active, started, source, key, completed, owner, report, mute, playback, surface, handoff, item.Id]);
+        return cleanupPlayback;
+    }, [active, started, source, key, completed, owner, report, mute, playback, surface]);
     if (!available || !preview) return null;
-    return <><span ref={region} className={`client-preview-media${visible && !fading ? ' is-playing' : ''}${fading ? ' is-fading' : ''}${resuming ? ' is-resuming' : ''}`} aria-hidden='true'>
-        {active && started && source && <video key={source} ref={video} src={source} muted playsInline preload='none' crossOrigin='anonymous' />}
-    </span>{soundControl && visible && !fading && <button className={`client-preview-sound client-preview-sound-${surface}`} aria-label={preview.muted ? 'Activer le son des aperçus' : 'Couper le son des aperçus'} aria-pressed={!preview.muted} onClick={event => {
+    return <><span ref={region} className={`client-preview-media${visible && !fading ? ' is-playing' : ''}${fading ? ' is-fading' : ''}${resuming ? ' is-resuming' : ''}`} aria-hidden='true' />{soundControl && visible && !fading && <button className={`client-preview-sound client-preview-sound-${surface}`} aria-label={preview.muted ? 'Activer le son des aperçus' : 'Couper le son des aperçus'} aria-pressed={!preview.muted} onClick={event => {
         event.preventDefault();
         event.stopPropagation();
         preview.toggleMuted();
