@@ -37,9 +37,7 @@ const router = createHashRouter([
 export const history = createRouterHistory(router);
 
 export default function RootAppRouter() {
-    // The heavy page render stays interruptible, so a click never freezes the interface.
-    // eslint-disable-next-line @typescript-eslint/naming-convention -- Name imposed by React Router.
-    return <RouterProvider router={router} future={{ v7_startTransition: true }} />;
+    return <RouterProvider router={router} />;
 }
 
 /**

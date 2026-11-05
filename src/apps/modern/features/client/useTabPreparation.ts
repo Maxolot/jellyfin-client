@@ -10,7 +10,7 @@ import { useSeerr } from './seerr/SeerrContext';
 import { browseQuery } from './useClientMedia';
 
 /** The tabs a viewer goes back and forth between; the others are prepared on approach only. */
-const MAIN_TABS = ['home', 'series', 'films'];
+const MAIN_TABS = ['home', 'series', 'films', 'recent'];
 const POSTERS = 12;
 const DISCOVERY_TABS = new Set(['home', 'films', 'series']);
 

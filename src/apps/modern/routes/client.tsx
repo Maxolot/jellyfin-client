@@ -8,7 +8,7 @@ import { getUserDataApi } from '@jellyfin/sdk/lib/utils/api/user-data-api';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useQueryClient } from '@tanstack/react-query';
 import React, { type CSSProperties, memo, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigationType, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigationType, useSearchParams, useNavigate } from 'react-router-dom';
 
 import Page from 'components/Page';
 import { playbackManager } from 'components/playback/playbackmanager';
@@ -380,13 +380,20 @@ function ClientSurface() {
 
 type NavProps = { view: string; detail: boolean; prepare: (view: string) => void };
 
-/** On its own so that a click lights up the tab at once, while the page itself renders behind it. */
+/** On its own so that a click lights up the tab first: the page changes right after that frame has been painted. */
 const NavLinks = memo(function ClientNavLinks({ view, detail, prepare }: NavProps) {
+    const navigate = useNavigate();
     const [opening, setOpening] = useState<string>();
     useEffect(() => setOpening(undefined), [view, detail]);
     const current = opening ?? (detail ? undefined : view);
     return <div className='client-nav-links'>{links.filter(([key]) => key !== 'search').map(([key, label]) => <Link key={key} to={`/client?view=${key}`} aria-current={current === key ? 'page' : undefined}
-        onPointerEnter={() => prepare(key)} onFocus={() => prepare(key)} onClick={() => setOpening(key)}>{label}</Link>)}</div>;
+        onPointerEnter={() => prepare(key)} onFocus={() => prepare(key)} onClick={event => {
+            // Opening in a new tab or window stays the browser's business.
+            if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            event.preventDefault();
+            setOpening(key);
+            requestAnimationFrame(() => window.setTimeout(() => navigate(`/client?view=${key}`)));
+        }}>{label}</Link>)}</div>;
 });
 
 function ClientView({ model }: ViewProps) {
