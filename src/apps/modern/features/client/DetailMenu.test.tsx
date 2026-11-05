@@ -9,7 +9,8 @@ import DetailMenu from './DetailMenu';
 vi.mock('./seerr/SeerrContext', () => ({ useSeerr: () => ({ connected: true }) }));
 vi.mock('./seerr/SeerrViews', () => ({
     canRequestSeasons: (item: BaseItemDto) => item.Type === 'Series',
-    RequestDialog: () => null
+    RequestDialog: () => null,
+    useMissingSeasons: (item: BaseItemDto) => item.Type === 'Series' ? 2 : 0
 }));
 vi.mock('./DetailExtras', () => ({ CastDialog: () => null, hasCast: (item: BaseItemDto) => !!item.People?.length }));
 
@@ -34,7 +35,7 @@ async function open(item: BaseItemDto) {
 describe('DetailMenu', () => {
     it('offers season requests for a series only', async () => {
         const entries = await open({ Id: 's', Type: 'Series', People: [{ Id: 'p' }] });
-        expect(entries).toEqual(['Demander des saisons', 'Distribution et réalisation', 'Options et fiche Jellyfin']);
+        expect(entries).toEqual(['Demander des saisons2', 'Distribution et réalisation', 'Options et fiche Jellyfin']);
     });
 
     it('does not offer requests for a movie already in the library', async () => {
@@ -49,5 +50,15 @@ describe('DetailMenu', () => {
         });
         expect(container.querySelector('[role="menu"]')).toBeNull();
         expect(document.activeElement).toBe(container.querySelector('button'));
+    });
+});
+
+describe('DetailMenu badge', () => {
+    it('shows a badge on the button when seasons are missing, not for a movie', async () => {
+        await act(async () => root.render(<MemoryRouter><DetailMenu item={{ Id: 's', Type: 'Series' }} basePath='' /></MemoryRouter>));
+        expect(container.querySelector('.client-more-badge')).not.toBeNull();
+        expect(container.querySelector('button')?.getAttribute('aria-label')).toBe('Plus d’actions : 2 saisons à demander');
+        await act(async () => root.render(<MemoryRouter><DetailMenu item={{ Id: 'm', Type: 'Movie' }} basePath='' /></MemoryRouter>));
+        expect(container.querySelector('.client-more-badge')).toBeNull();
     });
 });

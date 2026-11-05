@@ -139,3 +139,24 @@
         .client-icon { width: 18px; height: 18px; flex: none; }
     }
 }
+
+.client-actions .client-more > button { position: relative; }
+
+.client-more-badge {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 10px;
+    height: 10px;
+    border: 2px solid #15171b;
+    border-radius: 50%;
+    background: #e50914;
+}
+
+.client-more-menu > button small {
+    margin-left: auto;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+    font-size: 12px;
+}

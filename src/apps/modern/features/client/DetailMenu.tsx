@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { CastDialog, hasCast } from './DetailExtras';
 import ClientIcon from './ClientIcon';
 import { useSeerr } from './seerr/SeerrContext';
-import { canRequestSeasons, RequestDialog } from './seerr/SeerrViews';
+import { canRequestSeasons, RequestDialog, useMissingSeasons } from './seerr/SeerrViews';
 
 /** Secondary actions of a media page, kept behind one "more" button so the main row stays minimal. */
 export default function DetailMenu({ item, basePath }: Readonly<{ item: BaseItemDto; basePath: string }>) {
@@ -16,6 +16,11 @@ export default function DetailMenu({ item, basePath }: Readonly<{ item: BaseItem
     const [open, setOpen] = useState(false);
     const [dialog, setDialog] = useState<'cast' | 'request' | null>(null);
     const request = canRequestSeasons(item, seerr.connected);
+    const missing = useMissingSeasons(item, request);
+    let triggerLabel = 'Plus d’actions';
+    if (missing > 0) {
+        triggerLabel = `Plus d’actions : ${missing} saison${missing > 1 ? 's' : ''} à demander`;
+    }
     useEffect(() => {
         if (open) root.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
     }, [open]);
@@ -54,9 +59,9 @@ export default function DetailMenu({ item, basePath }: Readonly<{ item: BaseItem
     // Keyboard handling for the menu items; the wrapper itself is not interactive.
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     return <div className='client-more' ref={root} onKeyDown={onKeyDown}>
-        <button ref={trigger} type='button' className='client-button client-action-circle' aria-label='Plus d’actions' title='Plus d’actions' aria-haspopup='menu' aria-expanded={open} onClick={() => setOpen(!open)}><ClientIcon name='more' /></button>
+        <button ref={trigger} type='button' className='client-button client-action-circle' aria-label={triggerLabel} title={missing ? 'Des saisons peuvent être demandées' : 'Plus d’actions'} aria-haspopup='menu' aria-expanded={open} onClick={() => setOpen(!open)}><ClientIcon name='more' />{missing > 0 && <span className='client-more-badge' aria-hidden='true' />}</button>
         {open && <div className='client-more-menu' role='menu' aria-label='Plus d’actions'>
-            {request && <button type='button' role='menuitem' onClick={() => openDialog('request')}><ClientIcon name='plus' />Demander des saisons</button>}
+            {request && <button type='button' role='menuitem' onClick={() => openDialog('request')}><ClientIcon name='plus' />Demander des saisons{missing > 0 && <small>{missing}</small>}</button>}
             {hasCast(item) && <button type='button' role='menuitem' onClick={() => openDialog('cast')}><ClientIcon name='collection' />Distribution et réalisation</button>}
             <Link role='menuitem' to={`/details?id=${item.Id}`}><ClientIcon name='info' />Options et fiche Jellyfin</Link>
         </div>}

@@ -93,6 +93,15 @@ export function canRequestSeasons(item: BaseItemDto, connected: boolean) {
     return connected && item.Type === 'Series' && !!externalIdentity(item);
 }
 
+/** Number of seasons still requestable for a local series; 0 while loading or when everything is present. */
+export function useMissingSeasons(item: BaseItemDto, enabled: boolean) {
+    const identity = enabled ? externalIdentity(item) : undefined;
+    const detail = useSeerrDetail(identity?.type, identity?.id, false);
+    const localSeasons = useLocalSeasons(enabled ? item : undefined);
+    if (!identity || !detail.data || localSeasons.isPending || localSeasons.isError) return 0;
+    return requestableSeasons(withLocalAvailability(detail.data, item, localSeasons.data)).length;
+}
+
 export function RequestDialog({ item, open, onClose }: Readonly<{ item: BaseItemDto; open: boolean; onClose: () => void }>) {
     const identity = externalIdentity(item);
     if (!identity) return null;
