@@ -45,7 +45,7 @@ function useMovieSearch(imdbId: string | undefined, enabled: boolean): { status?
     const { api, user, request } = useSourceRequest();
     const capability = useSourceCapability();
     const active = capability.movies && enabled && !!imdbId && IMDB.test(imdbId);
-    const search = useQuery({ queryKey: ['MovieSources', api?.basePath, user?.Id, 'Movie', imdbId], enabled: active,
+    const search = useQuery({ queryKey: ['MovieSources', api?.basePath, user?.Id, 'MovieTags', imdbId], enabled: active,
         queryFn: async ({ signal }) => {
             const result = await request<{ Found?: boolean; found?: boolean; Languages?: unknown; languages?: unknown }>(`Movies/${imdbId}`, signal);
             if (typeof (result.Found ?? result.found) !== 'boolean') throw new Error('Réponse invalide');
@@ -68,7 +68,7 @@ function useSeasonSearch(imdbId: string | undefined, seasons: number[]): { statu
     const capability = useSourceCapability();
     const wanted = seasons.slice(0, 12).sort((a, b) => a - b);
     const active = capability.series && !!imdbId && IMDB.test(imdbId) && wanted.length > 0;
-    const search = useQuery({ queryKey: ['MovieSources', api?.basePath, user?.Id, 'Series', imdbId, wanted.join(',')], enabled: active,
+    const search = useQuery({ queryKey: ['MovieSources', api?.basePath, user?.Id, 'SeriesTags', imdbId, wanted.join(',')], enabled: active,
         queryFn: async ({ signal }) => {
             const result = await request<{ Seasons?: Record<string, boolean>; seasons?: Record<string, boolean>; Languages?: Record<string, unknown>; languages?: Record<string, unknown> }>(`Series/${imdbId}?seasons=${wanted.join(',')}`, signal);
             const found = result.Seasons ?? result.seasons;
