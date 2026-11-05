@@ -26,5 +26,5 @@ export function useProfileGate() {
     const requested = params.get('view') === 'profiles';
     // Links to a precise page are never interrupted, only an arrival on the home page.
     const arriving = pathname.endsWith('/client') && !params.toString() && profiles.length > 1 && !profileChosen();
-    return { showing: requested || arriving };
+    return { showing: requested || arriving, revision: saved };
 }

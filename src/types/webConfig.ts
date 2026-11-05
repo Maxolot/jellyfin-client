@@ -26,4 +26,6 @@ export interface WebConfig {
     clientSeerr?: boolean
     /** Optional self-hosted short clips, scoped by Jellyfin server and item IDs. */
     clientPreviews?: Record<string, ClientPreviewSources>
+    /** Optional self-hosted gallery of profile pictures: the address of its JSON list. */
+    clientAvatars?: string
 }

@@ -1,16 +1,21 @@
 /* eslint-disable react/jsx-no-bind -- Actions are local to this page. */
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useApi } from 'hooks/useApi';
+import { useWebConfig } from 'hooks/useWebConfig';
 import Page from 'components/Page';
 
 import ClientIcon from '../ClientIcon';
+import AvatarPicker from './AvatarPicker';
+import { saveAvatar, type GalleryAvatar } from './avatars';
 import { enterProfile, restart } from './profileSession';
 import { dropToken, forgetProfile, markProfileChosen, profileTone, readProfiles, rememberProfile, type SavedProfile } from './profileStore';
+import QuickConnectPanel from './QuickConnectPanel';
 import './profiles.scss';
 
 type Form = { name: string; locked: boolean; note?: string };
+type SignedIn = { User?: { Id?: string; Name?: string | null; PrimaryImageTag?: string | null; Policy?: { IsAdministrator?: boolean } | null }; AccessToken?: string | null };
 
 const tokenHeader = (token: string) => ({ Authorization: `MediaBrowser Token="${token}"` });
 
@@ -22,33 +27,55 @@ function Avatar({ profile, basePath }: Readonly<{ profile: SavedProfile; basePat
 }
 
 function refusal(status?: number) {
-    if (status === 401) return 'Nom d’utilisateur ou mot de passe incorrect. Si ce compte demande une double authentification, déconnectez-vous puis utilisez la page de connexion.';
+    if (status === 401) return 'Nom d’utilisateur ou mot de passe incorrect. Si ce compte demande une double authentification, utilisez Quick Connect.';
     if (status === 403) return 'Ce compte n’a pas le droit de se connecter ici.';
     return 'Le serveur est injoignable. Réessayez dans un instant.';
 }
 
 /** Who is watching: the people who have signed in on this browser, and nobody else. */
-export default function ProfilePage() {
+export default function ProfilePage({ revision }: Readonly<{ revision: number }>) {
     const { api, user, __legacyApiClient__: legacy } = useApi();
+    const { clientAvatars } = useWebConfig();
     const navigate = useNavigate();
     const basePath = api?.basePath || '';
     const [profiles, setProfiles] = useState(() => readProfiles(basePath));
+    // On a direct load the connection arrives after the first render, and the current person is only saved then.
+    useEffect(() => {
+        setProfiles(readProfiles(basePath));
+    }, [basePath, revision]);
     const [managing, setManaging] = useState(false);
     const [form, setForm] = useState<Form>();
+    const [quick, setQuick] = useState(false);
+    const [picking, setPicking] = useState<SavedProfile>();
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
     const [busy, setBusy] = useState(false);
     const formElement = useRef<HTMLFormElement>(null);
-    const formOpen = !!form;
+    const formOpen = !!form && !quick;
     useEffect(() => {
         if (formOpen) formElement.current?.querySelector('input')?.focus();
     }, [formOpen]);
 
     /** An administrator's session is not kept, so it must not stay open behind the next person. */
-    async function leaveCurrent() {
-        if (!user?.Policy?.IsAdministrator || !api?.accessToken) return;
-        await fetch(`${basePath}/Sessions/Logout`, { method: 'POST', headers: tokenHeader(api.accessToken) }).catch(() => undefined);
-    }
+    const closing = useRef<string>();
+    closing.current = user?.Policy?.IsAdministrator ? api?.accessToken : undefined;
+    const closeAdministrator = useCallback(async (token: string | undefined) => {
+        if (token) await fetch(`${basePath}/Sessions/Logout`, { method: 'POST', headers: tokenHeader(token) }).catch(() => undefined);
+    }, [basePath]);
+
+    /** The session only changes once the new person is signed in, so a refused attempt costs nothing. */
+    const welcome = useCallback(async (result: SignedIn, leaving: string | undefined) => {
+        const signedIn = result.User;
+        rememberProfile(basePath, { userId: signedIn?.Id || '', name: signedIn?.Name || '', imageTag: signedIn?.PrimaryImageTag || undefined,
+            token: signedIn?.Policy?.IsAdministrator ? undefined : result.AccessToken || undefined });
+        await closeAdministrator(leaving === result.AccessToken ? undefined : leaving);
+        restart();
+    }, [basePath, closeAdministrator]);
+
+    const quickDone = useCallback((result: SignedIn) => {
+        void welcome(result, closingAtStart.current);
+    }, [welcome]);
+    const closingAtStart = useRef<string>();
 
     async function choose(profile: SavedProfile) {
         setMessage('');
@@ -73,7 +100,7 @@ export default function ProfilePage() {
                 return;
             }
             if (!response.ok) throw new Error(String(response.status));
-            await leaveCurrent();
+            await closeAdministrator(closing.current);
             enterProfile(legacy?.serverId() || user?.ServerId || '', profile.userId, profile.token);
         } catch {
             setMessage('Impossible de changer de profil pour le moment. Réessayez dans un instant.');
@@ -87,13 +114,9 @@ export default function ProfilePage() {
         if (!legacy || !form?.name.trim()) return;
         setBusy(true);
         setMessage('');
+        const leaving = closing.current;
         try {
-            await leaveCurrent();
-            const result = await legacy.authenticateUserByName(form.name.trim(), password);
-            const signedIn = result.User;
-            rememberProfile(basePath, { userId: signedIn?.Id || '', name: signedIn?.Name || form.name, imageTag: signedIn?.PrimaryImageTag || undefined,
-                token: signedIn?.Policy?.IsAdministrator ? undefined : result.AccessToken || undefined });
-            restart();
+            await welcome(await legacy.authenticateUserByName(form.name.trim(), password), leaving);
         } catch (error) {
             setPassword('');
             setMessage(refusal((error as { status?: number }).status));
@@ -107,55 +130,103 @@ export default function ProfilePage() {
         setProfiles(readProfiles(basePath));
     }
 
+    const tokenOf = (profile: SavedProfile) => profile.userId === user?.Id ? api?.accessToken : profile.token;
+
+    async function pick(avatar: GalleryAvatar) {
+        const token = picking && tokenOf(picking);
+        if (!picking || !token) return;
+        setBusy(true);
+        setMessage('');
+        try {
+            const imageTag = await saveAvatar(basePath, picking.userId, token, avatar);
+            rememberProfile(basePath, { ...picking, imageTag });
+            setProfiles(readProfiles(basePath));
+            // The active profile also shows its picture in the navigation, so everything restarts from the server.
+            if (picking.userId === user?.Id) {
+                window.location.reload();
+                return;
+            }
+            setPicking(undefined);
+        } catch {
+            setMessage('Impossible d’enregistrer cette photo. Réessayez dans un instant.');
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    function closeForm() {
+        setForm(undefined);
+        setQuick(false);
+        setPassword('');
+        setMessage('');
+    }
+
+    function renderManaged(profile: SavedProfile) {
+        const current = profile.userId === user?.Id;
+        const editable = !!clientAvatars && !!tokenOf(profile);
+        return <li key={profile.userId} className='client-profile-managed'>
+            <button type='button' className='client-profile-tile' disabled={!editable} aria-label={editable ? `Changer la photo de ${profile.name}` : profile.name} onClick={() => setPicking(profile)}>
+                <Avatar profile={profile} basePath={basePath} />
+                {editable && <span className='client-profile-edit'><ClientIcon name='edit' /></span>}
+                <strong>{profile.name}</strong>{current && <small>Profil actif</small>}
+            </button>
+            {!current && <button type='button' className='client-profile-remove' aria-label={`Retirer ${profile.name} de ce navigateur`} onClick={() => {
+                void remove(profile);
+            }}><ClientIcon name='close' /></button>}
+        </li>;
+    }
+
     const title = managing ? 'Gérer les profils' : 'Qui regarde ?';
+    let content;
+    if (picking && clientAvatars) {
+        content = <AvatarPicker manifest={clientAvatars} name={picking.name} busy={busy} problem={message} choose={avatar => {
+            void pick(avatar);
+        }} cancel={() => {
+            setPicking(undefined);
+            setMessage('');
+        }} />;
+    } else if (quick && legacy) {
+        content = <QuickConnectPanel legacy={legacy} done={quickDone} cancel={() => setQuick(false)} />;
+    } else if (form) {
+        content = <form ref={formElement} className='client-profile-form' onSubmit={signIn}>
+            <h1>{form.locked ? form.name : 'Ajouter un profil'}</h1>
+            {form.note && <p>{form.note}</p>}
+            {!form.locked && <label>Nom d’utilisateur<input autoComplete='username' value={form.name} disabled={busy} onChange={event => setForm({ ...form, name: event.target.value })} /></label>}
+            <label>Mot de passe<input type='password' autoComplete='current-password' value={password} disabled={busy} onChange={event => setPassword(event.target.value)} /></label>
+            {message && <p role='alert' className='client-profile-error'>{message}</p>}
+            <div>
+                <button type='submit' className='client-profile-primary' disabled={busy || !form.name.trim()}>Continuer</button>
+                <button type='button' disabled={busy} onClick={closeForm}>Annuler</button>
+            </div>
+            <button type='button' className='client-profile-quick' disabled={busy} onClick={() => {
+                closingAtStart.current = closing.current;
+                setMessage('');
+                setQuick(true);
+            }}>Utiliser Quick Connect</button>
+        </form>;
+    } else {
+        content = <>
+            <h1>{title}</h1>
+            {message && <p role='alert' className='client-profile-error'>{message}</p>}
+            <ul>
+                {profiles.map(profile => managing ? renderManaged(profile) : <li key={profile.userId}>
+                    <button type='button' className='client-profile-tile' disabled={busy} aria-current={profile.userId === user?.Id ? 'true' : undefined} onClick={() => {
+                        void choose(profile);
+                    }}>
+                        <Avatar profile={profile} basePath={basePath} /><strong>{profile.name}</strong>
+                    </button>
+                </li>)}
+                {!managing && <li>
+                    <button type='button' className='client-profile-tile' disabled={busy} onClick={() => setForm({ name: '', locked: false })}>
+                        <span className='client-profile-avatar client-profile-add'><ClientIcon name='plus' /></span><strong>Ajouter un profil</strong>
+                    </button>
+                </li>}
+            </ul>
+            <button type='button' className='client-profile-manage' disabled={busy} onClick={() => setManaging(!managing)}>{managing ? 'Terminé' : 'Gérer les profils'}</button>
+        </>;
+    }
     return <Page id='clientPage' title={title} className='client-page' isBackButtonEnabled={false}>
-        <main className='client-profiles'>
-            {form ? <form ref={formElement} className='client-profile-form' onSubmit={signIn}>
-                <h1>{form.locked ? form.name : 'Ajouter un profil'}</h1>
-                {form.note && <p>{form.note}</p>}
-                {!form.locked && <label>Nom d’utilisateur<input autoComplete='username' value={form.name} disabled={busy} onChange={event => setForm({ ...form, name: event.target.value })} /></label>}
-                <label>Mot de passe<input type='password' autoComplete='current-password' value={password} disabled={busy} onChange={event => setPassword(event.target.value)} /></label>
-                {message && <p role='alert' className='client-profile-error'>{message}</p>}
-                <div>
-                    <button type='submit' className='client-profile-primary' disabled={busy || !form.name.trim()}>Continuer</button>
-                    <button type='button' disabled={busy} onClick={() => {
-                        setForm(undefined);
-                        setPassword('');
-                        setMessage('');
-                    }}>Annuler</button>
-                </div>
-            </form> : <>
-                <h1>{title}</h1>
-                {message && <p role='alert' className='client-profile-error'>{message}</p>}
-                <ul>
-                    {profiles.map(profile => {
-                        const current = profile.userId === user?.Id;
-                        if (managing) {
-                            return <li key={profile.userId}>
-                                <button type='button' className='client-profile-tile' disabled={current} aria-label={current ? `${profile.name}, profil actif` : `Retirer ${profile.name} de ce navigateur`} onClick={() => {
-                                    void remove(profile);
-                                }}>
-                                    <Avatar profile={profile} basePath={basePath} />{!current && <span className='client-profile-remove'><ClientIcon name='close' /></span>}<strong>{profile.name}</strong>{current && <small>Profil actif</small>}
-                                </button>
-                            </li>;
-                        }
-                        return <li key={profile.userId}>
-                            <button type='button' className='client-profile-tile' disabled={busy} aria-current={current ? 'true' : undefined} onClick={() => {
-                                void choose(profile);
-                            }}>
-                                <Avatar profile={profile} basePath={basePath} /><strong>{profile.name}</strong>
-                            </button>
-                        </li>;
-                    })}
-                    {!managing && <li>
-                        <button type='button' className='client-profile-tile' disabled={busy} onClick={() => setForm({ name: '', locked: false })}>
-                            <span className='client-profile-avatar client-profile-add'><ClientIcon name='plus' /></span><strong>Ajouter un profil</strong>
-                        </button>
-                    </li>}
-                </ul>
-                <button type='button' className='client-profile-manage' disabled={busy} onClick={() => setManaging(!managing)}>{managing ? 'Terminé' : 'Gérer les profils'}</button>
-            </>}
-        </main>
+        <main className='client-profiles'>{basePath ? content : null}</main>
     </Page>;
 }
 /* eslint-enable react/jsx-no-bind */
