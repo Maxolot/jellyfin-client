@@ -108,13 +108,15 @@ export function useRemoteState(enabled: boolean) {
         // Reports can be missed: a slow refresh keeps the remote honest.
         let cancelled = false;
         let sequence = 0;
+        let appliedSequence = 0;
         const poll = async () => {
             const id = targetId;
             const request = ++sequence;
             if (!client || client !== ServerConnections.currentApiClient() || playbackManager.getPlayerInfo()?.id !== id || client.getCurrentUserId() !== userId) return;
             try {
                 const sessions = await client.getSessions({ ControllableByUserId: client.getCurrentUserId() });
-                if (cancelled || request !== sequence || client !== ServerConnections.currentApiClient() || playbackManager.getPlayerInfo()?.id !== id || client.getCurrentUserId() !== userId) return;
+                if (cancelled || request < appliedSequence || client !== ServerConnections.currentApiClient() || playbackManager.getPlayerInfo()?.id !== id || client.getCurrentUserId() !== userId) return;
+                appliedSequence = request;
                 const selected = sessions.find((entry: { Id?: string }) => entry.Id === id);
                 if (!selected) {
                     playbackManager.setDefaultPlayerActive();
@@ -127,7 +129,7 @@ export function useRemoteState(enabled: boolean) {
                 setReportedAt(Date.now());
                 setUnreachable(false);
             } catch {
-                if (!cancelled && request === sequence) setUnreachable(true);
+                if (!cancelled && request >= appliedSequence) setUnreachable(true);
             }
         };
         void poll();
