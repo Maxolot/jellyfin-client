@@ -462,42 +462,60 @@
     }
 }
 
-// Pastille « source trouvée » (plugin Movie Sources) : indicative, jamais une garantie.
+// Ligne « source trouvée » (plugin Movie Sources) : texte discret avec un point, jamais une garantie.
 .client-source-badge {
     display: inline-flex;
     align-items: center;
     align-self: flex-start;
-    gap: 6px;
-    padding: 4px 11px;
-    border: 1px solid #ffffff2e;
-    border-radius: 999px;
-    background: #ffffff0f;
-    color: #c9d0d9;
+    gap: 7px;
+    color: #a4afc0;
     font-size: 12px;
-    line-height: 1.2;
+    line-height: 1.3;
     white-space: nowrap;
 
-    .client-icon {
-        width: 13px;
-        height: 13px;
+    .client-source-dot {
+        width: 7px;
+        height: 7px;
         flex: none;
+        border: 1.5px solid #ffffff80;
+        border-radius: 50%;
     }
 
     &.is-found {
-        border-color: #5fd38d66;
-        background: #2fae6a26;
-        color: #b9f0cf;
+        color: #eef1f5;
+
+        .client-source-dot {
+            border-color: #fff;
+            background: #fff;
+            box-shadow: 0 0 8px #ffffff80;
+        }
     }
 
-    &.is-pending {
-        color: #9aa4b2;
+    &.is-pending .client-source-dot {
+        animation: client-source-pulse 1.2s ease-in-out infinite;
     }
 
     &.is-compact {
-        margin-top: 5px;
-        padding: 2px 8px;
-        font-size: 11px;
+        margin-top: 3px;
     }
+
+    &.is-pill,
+    &.is-button {
+        align-self: auto;
+        gap: 8px;
+        cursor: default;
+    }
+
+    &.is-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+    }
+}
+
+@keyframes client-source-pulse {
+    50% { opacity: 0.25; }
 }
 
 .client-request-side {
