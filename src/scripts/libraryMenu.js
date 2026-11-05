@@ -690,7 +690,7 @@ let navDrawerInstance;
 let mainDrawerButton;
 let headerHomeButton;
 let currentDrawerType;
-let documentTitle = APP_NAME;
+const documentTitle = APP_NAME;
 let pageTitleElement;
 let headerBackButton;
 let headerUserButton;
@@ -726,7 +726,7 @@ function setTabs (type, selectedIndex, builder) {
 const fetchServerName = (_apiClient) => {
     _apiClient
         ?.getPublicSystemInfo()
-        .then(({ ServerName }) => {
+        .then(() => {
             document.title = documentTitle;
         })
         .catch(err => {
