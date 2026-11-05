@@ -36,7 +36,10 @@ export default function DetailMenu({ item, basePath }: Readonly<{ item: BaseItem
         triggerLabel = `Plus d’actions : ${missing} saison${missing > 1 ? 's' : ''} à demander`;
     }
     useEffect(() => {
-        if (open) root.current?.querySelector<HTMLElement>('[role^="menuitem"]')?.focus();
+        if (!open) return;
+        root.current?.querySelector<HTMLElement>('[role^="menuitem"]')?.focus({ preventScroll: true });
+        // A long list must fit on screen as soon as it opens.
+        root.current?.querySelector('.client-more-menu')?.scrollIntoView?.({ block: 'nearest' });
     }, [open, tracksOpen]);
     useEffect(() => {
         if (!open) {

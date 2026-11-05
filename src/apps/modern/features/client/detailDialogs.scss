@@ -102,6 +102,12 @@
     }
 }
 
+// La fiche forme son propre plan : le menu ouvert doit passer le plan entier au-dessus des cartes qui suivent, sous la navigation.
+.client-hero.client-detail:has(.client-more-menu) {
+    position: relative;
+    z-index: 15;
+}
+
 .client-hero .client-hero-copy.client-hero-copy:has(.client-more-menu) {
     position: relative;
     z-index: 10;
@@ -137,6 +143,7 @@
     background: #14161a;
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
     max-height: min(70vh, 520px);
+    scroll-margin: 16px;
     overflow-y: auto;
 
     > button,
