@@ -6,7 +6,7 @@ const target = (fields: Partial<PlayTarget>): PlayTarget => ({ id: 'x', name: 'S
 
 describe('play targets', () => {
     it('keeps only other devices that show video', () => {
-        const list = [target({ id: 'a' }), target({ id: 'b', playableMediaTypes: ['Audio'] }), target({ id: 'c', isLocalPlayer: true }), target({ id: 'd', playableMediaTypes: ['Audio', 'Video'] })];
+        const list = [target({ id: 'a' }), target({ id: 'b', playableMediaTypes: ['Audio'] }), target({ id: 'c', isLocalPlayer: true }), target({ id: 'd', playableMediaTypes: ['Audio', 'Video'] }), target({ id: 'cast', playerName: 'Chromecast', playableMediaTypes: ['Video'] })];
         expect(videoTargets(list).map(entry => entry.id)).toEqual(['a', 'd']);
     });
     it('names a device with its application', () => {

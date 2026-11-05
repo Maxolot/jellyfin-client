@@ -13,9 +13,11 @@ export type PlayTarget = {
     user?: { Id?: string; Name?: string } | null;
 };
 
+export const SESSION_PLAYER = 'Remote Control';
+
 /** Only devices that can show a video, never this browser itself (it has its own entry). */
 export function videoTargets(targets: PlayTarget[]) {
-    return targets.filter(target => !target.isLocalPlayer && (!target.playableMediaTypes || target.playableMediaTypes.includes('Video')));
+    return targets.filter(target => target.playerName === SESSION_PLAYER && !target.isLocalPlayer && (!target.playableMediaTypes || target.playableMediaTypes.includes('Video')));
 }
 
 export function targetLabel(target: Pick<PlayTarget, 'name' | 'appName'>) {

@@ -2,18 +2,23 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import Events from 'utils/events';
 import RangeControl from './RangeControl';
-import { useRemoteCommands, useRemoteState } from './useRemote';
+import { chooseTarget, playHere, useRemoteCommands, useRemoteState } from './useRemote';
 
 const mock = vi.hoisted(() => {
-    const player = { isLocalPlayer: false, getPlayerState: () => ({}) };
+    const player = { isLocalPlayer: false, getPlayerState: vi.fn(() => ({})) };
+    const client = { getSessions: vi.fn(), getCurrentUserId: vi.fn(() => 'viewer'), serverId: vi.fn(() => 'server'), sendCommand: vi.fn(), sendPlayStateCommand: vi.fn() };
     return {
-        client: { getSessions: vi.fn(), getCurrentUserId: () => 'viewer', sendCommand: vi.fn(), sendPlayStateCommand: vi.fn() },
-        engine: { getCurrentPlayer: () => player, getPlayerInfo: vi.fn(), setDefaultPlayerActive: vi.fn() }
+        player,
+        client,
+        activeClient: client,
+        engine: { getCurrentPlayer: vi.fn(() => player), getPlayerInfo: vi.fn(), setDefaultPlayerActive: vi.fn(), setActivePlayer: vi.fn(), getPlayerState: vi.fn(), play: vi.fn(), stop: vi.fn() }
     };
 });
 vi.mock('hooks/useApi', () => ({ useApi: () => ({ __legacyApiClient__: mock.client }) }));
 vi.mock('components/playback/playbackmanager', () => ({ playbackManager: mock.engine }));
+vi.mock('lib/jellyfin-apiclient', () => ({ ServerConnections: { currentApiClient: () => mock.activeClient } }));
 
 let container: HTMLDivElement;
 let root: Root;
@@ -31,7 +36,23 @@ function Probe({ mode }: Readonly<{ mode: 'commands' | 'state' }>) {
 beforeEach(() => {
     Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
     vi.clearAllMocks();
-    mock.engine.getPlayerInfo.mockReturnValue({ id: 'screen-b', isLocalPlayer: false });
+    mock.activeClient = mock.client;
+    mock.client.getCurrentUserId.mockReturnValue('viewer');
+    mock.client.serverId.mockReturnValue('server');
+    mock.player.isLocalPlayer = false;
+    mock.player.getPlayerState.mockReturnValue({});
+    mock.engine.getCurrentPlayer.mockReturnValue(mock.player);
+    mock.engine.getPlayerInfo.mockReturnValue({ id: 'screen-b', name: 'Remote Control', isLocalPlayer: false });
+    mock.engine.setActivePlayer.mockImplementation((name: string, target: { id: string }) => {
+        mock.engine.getPlayerInfo.mockReturnValue({ id: target.id, name, isLocalPlayer: false });
+        Events.trigger(mock.engine, 'playerchange');
+    });
+    mock.engine.setDefaultPlayerActive.mockImplementation(() => {
+        mock.engine.getPlayerInfo.mockReturnValue({ id: 'local', isLocalPlayer: true });
+        Events.trigger(mock.engine, 'playerchange');
+    });
+    mock.engine.play.mockResolvedValue(undefined);
+    mock.engine.stop.mockResolvedValue(undefined);
     mock.client.getSessions.mockResolvedValue([]);
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -95,7 +116,7 @@ describe('remote session reports', () => {
             answer = resolve;
         }));
         await act(async () => root.render(<Probe mode='state' />));
-        mock.engine.getPlayerInfo.mockReturnValue({ id: 'screen-c', isLocalPlayer: false });
+        mock.engine.getPlayerInfo.mockReturnValue({ id: 'screen-c', name: 'Remote Control', isLocalPlayer: false });
         await act(async () => answer([{ Id: 'screen-b', NowPlayingItem: { Id: 'old' } }]));
         expect(state.item).toBeUndefined();
         expect(mock.engine.setDefaultPlayerActive).not.toHaveBeenCalled();
@@ -134,5 +155,118 @@ describe('remote sliders', () => {
             slider.dispatchEvent(new MouseEvent('pointerup', { clientX: 80, bubbles: true }));
         });
         expect(change).toHaveBeenCalledExactlyOnceWith(80);
+    });
+});
+
+describe('pending local transfers', () => {
+    const target = { id: 'screen-b', name: 'B', playerName: 'Remote Control', isLocalPlayer: false };
+    function pendingTransfer() {
+        mock.player.isLocalPlayer = true;
+        mock.engine.getPlayerState.mockReturnValue({ NowPlayingItem: { Id: 'movie' }, PlayState: { PositionTicks: 123 } });
+        let resolve!: () => void;
+        let reject!: (error: Error) => void;
+        mock.engine.play.mockReturnValue(new Promise<void>((yes, no) => {
+            resolve = yes;
+            reject = no;
+        }));
+        return { resolve, reject };
+    }
+    it('does not stop the local source after the user returned to this browser', async () => {
+        const request = pendingTransfer();
+        const transfer = chooseTarget(target);
+        playHere();
+        request.resolve();
+        await expect(transfer).rejects.toMatchObject({ name: 'AbortError' });
+        expect(mock.engine.stop).not.toHaveBeenCalled();
+        expect(mock.engine.setDefaultPlayerActive).toHaveBeenCalledOnce();
+    });
+    it('does not reset a newer target when an old transfer fails', async () => {
+        const request = pendingTransfer();
+        const transfer = chooseTarget(target);
+        mock.engine.getPlayerInfo.mockReturnValue({ id: 'screen-c', name: 'Remote Control', isLocalPlayer: false });
+        request.reject(new Error('offline'));
+        await expect(transfer).rejects.toThrow('offline');
+        expect(mock.engine.setDefaultPlayerActive).not.toHaveBeenCalled();
+        expect(mock.engine.stop).not.toHaveBeenCalled();
+    });
+    it('does not stop the source after an account changes on the same client object', async () => {
+        const request = pendingTransfer();
+        const transfer = chooseTarget(target);
+        mock.client.getCurrentUserId.mockReturnValue('another-viewer');
+        request.resolve();
+        await expect(transfer).rejects.toMatchObject({ name: 'AbortError' });
+        expect(mock.engine.stop).not.toHaveBeenCalled();
+        expect(mock.engine.setDefaultPlayerActive).not.toHaveBeenCalled();
+    });
+    it('stops its local source only after a transfer still owned by this account succeeds', async () => {
+        const request = pendingTransfer();
+        const transfer = chooseTarget(target);
+        request.resolve();
+        await transfer;
+        expect(mock.engine.stop).toHaveBeenCalledExactlyOnceWith(mock.player);
+    });
+    it('does not stop the source after replacing the active API client', async () => {
+        const request = pendingTransfer();
+        const transfer = chooseTarget(target);
+        mock.activeClient = { ...mock.client };
+        request.resolve();
+        await expect(transfer).rejects.toMatchObject({ name: 'AbortError' });
+        expect(mock.engine.stop).not.toHaveBeenCalled();
+    });
+    it('rejects a Cast target before selecting or sending anything', async () => {
+        await expect(chooseTarget({ ...target, playerName: 'Chromecast' })).rejects.toThrow('unsupported-target');
+        expect(mock.engine.setActivePlayer).not.toHaveBeenCalled();
+        expect(mock.engine.play).not.toHaveBeenCalled();
+    });
+});
+
+describe('target identity of session data', () => {
+    it('clears the previous movie and ignores the singleton player cache when changing devices', async () => {
+        mock.client.getSessions.mockResolvedValueOnce([{ Id: 'screen-b', NowPlayingItem: { Id: 'old', RunTimeTicks: 900000000, MediaStreams: [{ Type: 'Audio', Index: 7 }] }, PlayState: { PositionTicks: 120000000, IsPaused: true } }]);
+        await act(async () => root.render(<Probe mode='state' />));
+        expect(state.item?.Id).toBe('old');
+        let answer!: (value: unknown[]) => void;
+        mock.client.getSessions.mockReturnValue(new Promise<unknown[]>(resolve => {
+            answer = resolve;
+        }));
+        mock.player.getPlayerState.mockReturnValue({ Id: 'screen-b', NowPlayingItem: { Id: 'old' } });
+        await act(async () => {
+            mock.engine.getPlayerInfo.mockReturnValue({ id: 'screen-c', name: 'Remote Control', isLocalPlayer: false });
+            Events.trigger(mock.engine, 'playerchange');
+        });
+        expect(state.item).toBeUndefined();
+        expect(state.audio).toEqual([]);
+        expect(state.position).toBe(0);
+        await act(async () => answer([{ Id: 'screen-c', NowPlayingItem: { Id: 'new' } }]));
+        expect(state.item?.Id).toBe('new');
+    });
+    it('clears a snapshot when another account uses the same API client', async () => {
+        mock.client.getSessions.mockResolvedValueOnce([{ Id: 'screen-b', NowPlayingItem: { Id: 'private-movie' } }]);
+        await act(async () => root.render(<Probe mode='state' />));
+        expect(state.item?.Id).toBe('private-movie');
+        mock.client.getSessions.mockReturnValue(new Promise(() => undefined));
+        mock.client.getCurrentUserId.mockReturnValue('another-viewer');
+        await act(async () => root.render(<Probe mode='state' />));
+        expect(state.item).toBeUndefined();
+        expect(state.position).toBe(0);
+    });
+    it('ignores an earlier overlapping poll that arrives after a newer report', async () => {
+        vi.useFakeTimers();
+        try {
+            let first!: (value: unknown[]) => void;
+            let second!: (value: unknown[]) => void;
+            mock.client.getSessions.mockReturnValueOnce(new Promise<unknown[]>(resolve => {
+                first = resolve;
+            })).mockReturnValueOnce(new Promise<unknown[]>(resolve => {
+                second = resolve;
+            }));
+            await act(async () => root.render(<Probe mode='state' />));
+            await act(async () => vi.advanceTimersByTimeAsync(2000));
+            await act(async () => second([{ Id: 'screen-b', NowPlayingItem: { Id: 'new' } }]));
+            await act(async () => first([{ Id: 'screen-b', NowPlayingItem: { Id: 'old' } }]));
+            expect(state.item?.Id).toBe('new');
+        } finally {
+            vi.useRealTimers();
+        }
     });
 });
