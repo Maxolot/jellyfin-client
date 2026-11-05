@@ -501,32 +501,19 @@
         margin-top: 3px;
     }
 
-    &.is-pill,
-    &.is-button {
+    &.is-pill {
         align-self: auto;
         gap: 8px;
         cursor: default;
     }
 
-    &.is-button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        pointer-events: none;
+    // Dans les infos sous le titre d'une fiche : sur sa propre ligne, même taille de texte.
+    &.is-meta {
+        display: flex;
+        flex-basis: 100%;
+        flex-wrap: wrap;
+        white-space: normal;
     }
-}
-
-// Étiquettes de langue (VF, VOSTFR, MULTI) à la suite de « Source trouvée ».
-.client-source-badge .client-source-lang {
-    padding: 1px 6px;
-    color: inherit;
-    border: 1px solid currentcolor;
-    border-radius: 999px;
-    font-size: 0.78em;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    line-height: 1.4;
-    opacity: 0.85;
 }
 
 @keyframes client-source-pulse {

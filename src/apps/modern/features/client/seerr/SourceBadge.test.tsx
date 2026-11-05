@@ -25,11 +25,16 @@ async function render(status?: SourceStatus, languages?: SourceLanguage[]) {
 describe('SourceBadge', () => {
     it('lists the French flavours next to a found source', async () => {
         const badge = await render('found', ['multi', 'vostfr']);
-        expect([...badge?.querySelectorAll('.client-source-lang') || []].map(tag => tag.textContent)).toEqual(['MULTI', 'VOSTFR']);
+        expect([...badge?.querySelectorAll('abbr') || []].map(tag => tag.textContent)).toEqual(['MULTI', 'VOSTFR']);
+    });
+
+    it('admits a failed search and names what it is about on a media page', async () => {
+        await act(async () => root.render(<SourceBadge status='unknown' variant='meta' prefix='Saisons manquantes' />));
+        expect(container.textContent).toBe('Saisons manquantes : sources indisponibles');
     });
 
     it('shows no language when nothing was found', async () => {
-        expect((await render('empty', ['vf']))?.querySelectorAll('.client-source-lang').length).toBe(0);
+        expect((await render('empty', ['vf']))?.querySelectorAll('abbr').length).toBe(0);
     });
 
     it('says a source was found', async () => {

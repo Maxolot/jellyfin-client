@@ -212,7 +212,7 @@ export function ExternalDetail({ id, row, image }: Readonly<{ id: string; row: (
     }
     const data = detail.data;
     const match = localMatch(data, identity.type, local.data || []);
-    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><div className='client-detail-readability' aria-hidden='true' /><Link className='client-back' to={back} state={backState}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{(data.releaseDate || data.firstAirDate || '').slice(0, 4)} · {data.genres?.map(genre => genre.name).join(' · ')}</p><p className='client-overview'>{data.overview}</p><div className='client-actions'>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}<AvailabilityAction identity={identity} localItem={match} /><ExternalSource data={data} identity={identity} owned={!!match} /></div></div></section><ExternalRecommendations identity={identity} local={local.data || []} row={row} data={data} image={image} /></>;
+    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><div className='client-detail-readability' aria-hidden='true' /><Link className='client-back' to={back} state={backState}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{(data.releaseDate || data.firstAirDate || '').slice(0, 4)} · {data.genres?.map(genre => genre.name).join(' · ')}</p><ExternalSource data={data} identity={identity} owned={!!match} /><p className='client-overview'>{data.overview}</p><div className='client-actions'>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}<AvailabilityAction identity={identity} localItem={match} /></div></div></section><ExternalRecommendations identity={identity} local={local.data || []} row={row} data={data} image={image} /></>;
 }
 
 function ExternalSource({ data, identity, owned }: Readonly<{ data: ExternalMedia; identity: SeerrIdentity; owned: boolean }>) {
@@ -221,11 +221,11 @@ function ExternalSource({ data, identity, owned }: Readonly<{ data: ExternalMedi
     const status = useMovieSource(identity.type === 'movie' ? imdbId : undefined, wanted);
     const languages = useMovieLanguages(identity.type === 'movie' ? imdbId : undefined, wanted);
     if (identity.type === 'tv') return <SeriesSources data={data} />;
-    return <SourceBadge status={status} languages={languages} variant='button' />;
+    return <SourceBadge status={status} languages={languages} variant='meta' />;
 }
 
 /** One badge for a series page: sources for the seasons that can still be requested, with the language tags found. */
-function SeriesSources({ data }: Readonly<{ data: ExternalMedia }>) {
+function SeriesSources({ data, missing = false }: Readonly<{ data: ExternalMedia; missing?: boolean }>) {
     const requestable = requestableSeasons(data, false).map(season => season.seasonNumber);
     const imdbId = data.externalIds?.imdbId;
     const statuses = useSeasonSources(imdbId, requestable);
@@ -237,7 +237,9 @@ function SeriesSources({ data }: Readonly<{ data: ExternalMedia }>) {
     else if (values.includes('unknown')) status = 'unknown';
     else if (values.length && values.every(value => value === 'empty')) status = 'empty';
     const languages = (['multi', 'vf', 'vostfr'] as SourceLanguage[]).filter(tag => Object.values(tags).some(list => list.includes(tag)));
-    return <SourceBadge status={status} languages={languages} variant='button' />;
+    let prefix: string | undefined;
+    if (missing) prefix = requestable.length > 1 ? 'Saisons manquantes' : 'Saison manquante';
+    return <SourceBadge status={status} languages={languages} variant='meta' prefix={prefix} />;
 }
 
 /** Same badge on the page of a series already in the library, for its missing seasons. */
@@ -248,7 +250,7 @@ export function LocalSeriesSources({ item }: Readonly<{ item: BaseItemDto }>) {
     const detail = useSeerrDetail(identity?.type, identity?.id, false);
     const localSeasons = useLocalSeasons(enabled ? item : undefined);
     if (!identity || !detail.data || localSeasons.isPending || localSeasons.isError) return null;
-    return <SeriesSources data={withLocalAvailability(detail.data, item, localSeasons.data)} />;
+    return <SeriesSources data={withLocalAvailability(detail.data, item, localSeasons.data)} missing />;
 }
 
 function ExternalRecommendations({ identity, local, row, data, image }: Readonly<{ identity: SeerrIdentity; local: BaseItemDto[]; row: (title: string, items: BaseItemDto[]) => React.ReactNode; data: ExternalMedia; image: (item: BaseItemDto, backdrop?: boolean) => string }>) {
