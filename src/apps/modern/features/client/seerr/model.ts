@@ -37,7 +37,7 @@ export type ExternalMedia = {
     collection?: { id: number; name: string };
     genreIds?: number[];
     genres?: { id: number; name: string }[];
-    seasons?: { id: number; seasonNumber: number; name: string; episodeCount?: number; airDate?: string }[];
+    seasons?: { id: number; seasonNumber: number; name: string; episodeCount?: number; airDate?: string; posterPath?: string }[];
     externalIds?: { tvdbId?: number; imdbId?: string };
     mediaInfo?: MediaInfo;
 };
