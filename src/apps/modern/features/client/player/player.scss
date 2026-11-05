@@ -417,7 +417,7 @@ html.client-video-active {
         font-size: 1.2em;
     }
 
-    button {
+    button:not(.client-controls button) {
         min-height: 44px;
         padding: 0.6em 0.9em;
         border: 1px solid #ffffff20;
@@ -425,7 +425,7 @@ html.client-video-active {
         background: #ffffff09;
         cursor: pointer;
     }
-    button:hover { background: #ffffff1c; }
+    button:not(.client-controls button):hover { background: #ffffff1c; }
 
     button[aria-pressed=true] {
         border-color: var(--player-accent);

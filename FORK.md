@@ -16,6 +16,7 @@ Authentication and playback retain the upstream implementations. Visual details
 and optional integrations continue in separately reviewed changes.
 See the [changelog](docs/fork/CHANGELOG.md).
 
+- [Installation et configuration (français)](docs/fork/INSTALLATION-FR.md)
 - [Build and run](docs/fork/DEVELOPMENT.md)
 - [Upstream baseline](docs/fork/UPSTREAM.md)
 - [Roadmap and acceptance criteria](docs/fork/ROADMAP.md)

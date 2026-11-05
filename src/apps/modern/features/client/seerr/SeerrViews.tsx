@@ -16,33 +16,44 @@ import { withLocalAvailability, externalIdentity, catalogueItem, providerKey, ca
     type ExternalMedia, type MediaRequest, type MediaType, type Quota, type Results, type SeerrIdentity } from './model';
 import { useLocalIdentities, useLocalSeasons, useSeerrDetail } from './queries';
 import { useSeerr } from './SeerrContext';
-import SeerrSetup from './SeerrSetup';
+import { SettingCard, StatusBadge, Toggle } from '../settings/controls';
+import seerrLogo from '../settings/logos/seerr.svg';
+import { useApi } from 'hooks/useApi';
 import SourceBadge from './SourceBadge';
 import { useMovieLanguages, useMovieSource, useSeasonLanguages, useSeasonSources, type SourceLanguage, type SourceStatus } from './sources';
 
 export function SeerrSettings() {
     const seerr = useSeerr();
+    const { user } = useApi();
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
-    let label = 'Le service de demandes n’est pas disponible sur ce serveur.';
-    if (seerr.status.isFetching) label = 'Vérification de la connexion…';
-    if (seerr.status.data?.enabled) label = 'Connexion aux demandes à rétablir.';
-    if (seerr.connected) label = 'Connecté avec votre compte.';
-    if (!seerr.enabled) label = 'Votre bibliothèque uniquement.';
-    return <section className='client-seerr-settings'><h2>Découvertes et demandes</h2><label><input type='checkbox' checked={seerr.enabled} disabled={!seerr.permitted} onChange={event => seerr.setEnabled(event.target.checked)} /> Enrichir le catalogue avec Jellyseerr</label><p role='status'>{label}</p>
-        {seerr.enabled && !seerr.connected && <button className='client-button' disabled={busy} onClick={async () => {
-            setBusy(true);
-            setError('');
-            try {
-                if (seerr.status.data?.enabled && !seerr.status.data.authenticated) await seerr.reconnect();
-                else await seerr.status.refetch();
-            } catch {
-                setError('La connexion automatique n’est pas disponible. Connectez ce compte dans Moonfin, puis réessayez ici.');
-            } finally { setBusy(false); }
-        }}>{busy ? 'Connexion…' : 'Vérifier la connexion'}</button>}
-        {error && <p role='alert'>{error}</p>}
-        <SeerrSetup />
-    </section>;
+    let badge = <StatusBadge tone='off'>Indisponible</StatusBadge>;
+    if (seerr.status.isFetching) badge = <StatusBadge tone='busy'>Vérification…</StatusBadge>;
+    else if (seerr.connected) badge = <StatusBadge tone='ok'>Connecté</StatusBadge>;
+    else if (seerr.status.data?.enabled) badge = <StatusBadge tone='warning'>À reconnecter</StatusBadge>;
+    if (!seerr.enabled) badge = <StatusBadge tone='off'>Désactivé</StatusBadge>;
+    let hint = 'Le service de demandes n’est pas encore installé sur ce serveur.';
+    if (seerr.connected) hint = 'Connecté avec votre compte : les découvertes et vos demandes apparaissent dans le catalogue.';
+    else if (seerr.status.data?.enabled) hint = 'Le service existe, mais votre compte n’est pas encore relié.';
+    if (!seerr.enabled) hint = 'Seuls les titres de votre bibliothèque sont affichés.';
+    return <div className='client-controls'>
+        <SettingCard title='Découvertes et demandes' scope='browser' aside={<>{badge}<img className='client-setting-logo' src={seerrLogo} alt='' /></>}
+            description='Proposé par Seerr : des titres absents de la bibliothèque, à demander en un clic.'>
+            <Toggle label='Enrichir le catalogue avec Seerr' hint={hint} checked={seerr.enabled} disabled={!seerr.permitted} onChange={seerr.setEnabled} />
+            {seerr.enabled && !seerr.connected && <div className='client-settings-actions'><button type='button' className='client-settings-button' disabled={busy} onClick={async () => {
+                setBusy(true);
+                setError('');
+                try {
+                    if (seerr.status.data?.enabled && !seerr.status.data.authenticated) await seerr.reconnect();
+                    else await seerr.status.refetch();
+                } catch {
+                    setError('La connexion automatique n’est pas disponible. Vérifiez que votre compte existe dans Seerr, puis réessayez.');
+                } finally { setBusy(false); }
+            }}>{busy ? 'Connexion…' : 'Vérifier la connexion'}</button></div>}
+            {error && <p className='client-setting-note is-error' role='alert'>{error}</p>}
+            {user?.Policy?.IsAdministrator && <p className='client-setting-note'>Installation et adresse de Seerr : <Link to='/client?view=settings&section=serveur-demandes'>Serveur › Demandes</Link>.</p>}
+        </SettingCard>
+    </div>;
 }
 
 function requestState({ data, identity, is4k, selected, permissions, quotaData, quotaReady, pending }: { data: ExternalMedia; identity: SeerrIdentity; is4k: boolean; selected: number[]; permissions: number; quotaData: Quota | undefined; quotaReady: boolean; pending: boolean }) {

@@ -30,4 +30,6 @@ export interface WebConfig {
     clientAvatars?: string
     /** Optional self-hosted picture behind the sign-in page; otherwise the server's own, if it has one. */
     clientLoginBackground?: string
+    /** Plugin catalogues (Jellyfin repository manifests) offered to administrators when an extension is missing. */
+    clientPluginRepositories?: Partial<Record<'previews' | 'movieSources', string>>
 }

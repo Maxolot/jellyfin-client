@@ -5,8 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AvailabilityAction } from './SeerrViews';
 
+vi.mock('hooks/useApi', () => ({ useApi: () => ({}) }));
 vi.mock('./SeerrContext', () => ({ useSeerr: () => ({ connected: true }) }));
-vi.mock('./SeerrSetup', () => ({ default: () => null }));
 vi.mock('../DetailExtras', () => ({ default: () => null }));
 vi.mock('../HeroArtwork', () => ({ default: () => null }));
 vi.mock('./sources', () => ({ useMovieSource: () => undefined, useSeasonSources: () => undefined, useMovieLanguages: () => [], useSeasonLanguages: () => ({}) }));
