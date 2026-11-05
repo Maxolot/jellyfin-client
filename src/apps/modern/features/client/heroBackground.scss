@@ -9,17 +9,30 @@
     margin: 0 0 28px;
     padding: 60px var(--client-margin) 70px;
     overflow: visible;
-    overflow-x: clip;
     border: 0;
     border-radius: 0;
     background: transparent;
 
-    .client-background,
+    > .client-hero-image-layer,
     > .client-preview-media,
     &::before {
         top: calc(-1 * var(--client-hero-offset, 0px));
         height: calc(100% + var(--client-hero-offset, 0px));
         border-radius: 0;
+    }
+
+    > .client-hero-image-layer {
+        position: absolute;
+        z-index: -2;
+        right: 0;
+        left: 0;
+        overflow: hidden;
+        pointer-events: none;
+
+        .client-background {
+            inset: 0;
+            height: 100%;
+        }
     }
 
     &::before {

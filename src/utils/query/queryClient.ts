@@ -1,6 +1,7 @@
 import { QueryCache, QueryClient } from '@tanstack/react-query';
 import type { PersistedClient, Persister } from '@tanstack/react-query-persist-client';
 import { get, set, del } from 'idb-keyval';
+import { withoutPreviewGrants } from './persistence';
 
 // TODO: Move this file to lib/query
 
@@ -63,10 +64,11 @@ queryClient = new QueryClient({
 /** Create an IndexedDB persister for react-query-persist-client. Uses idb-keyval for simplicity. */
 const createIDBPersister = (idbValidKey: IDBValidKey = 'query-cache') => ({
     persistClient: async (client: PersistedClient) => {
-        await set(idbValidKey, client);
+        await set(idbValidKey, withoutPreviewGrants(client));
     },
-    restoreClient: () => {
-        return get<PersistedClient>(idbValidKey);
+    restoreClient: async () => {
+        const saved = await get<PersistedClient>(idbValidKey);
+        return saved ? withoutPreviewGrants(saved) : undefined;
     },
     removeClient: async () => {
         await del(idbValidKey);

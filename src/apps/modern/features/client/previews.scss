@@ -111,3 +111,8 @@
         display: none;
     }
 }
+
+/* Keep the still artwork out of the picture while the hero excerpt is visible. */
+.client-hero:has(> .client-preview-media.is-playing) .client-background {
+    opacity: 0;
+}

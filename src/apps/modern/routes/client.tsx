@@ -1,3 +1,4 @@
+import { usePreviewCapabilities } from '../features/client/previews/provider';
 import PlayerSettings from '../features/client/player/PlayerSettings';
 import { DeviceSettings, LanguageSettings, LibrarySettings, ProfileSettings, QuickConnectMenuItem, SubtitleSettings } from '../features/client/account/AccountSettings';
 /* eslint-disable react/jsx-no-bind -- View-local closures do not cross memoized component boundaries. */
@@ -19,7 +20,7 @@ import Events from 'utils/events';
 
 import HeroArtwork from '../features/client/HeroArtwork';
 import ClientSkeleton from '../features/client/ClientSkeleton';
-import PreviewProvider from '../features/client/PreviewProvider';
+import PreviewProvider, { usePreviews } from '../features/client/PreviewProvider';
 import PreviewClip from '../features/client/PreviewClip';
 import { type Preferences, useInterfacePreferences } from '../features/client/interfacePreferences';
 import HeroPagination, { type MarkerPosition } from '../features/client/HeroPagination';
@@ -124,7 +125,7 @@ function useClientController() {
     const { api, user } = useApi();
     const seerr = useSeerr();
     const { clientPreviews } = useWebConfig();
-    const hasPreviews = !!api && !!user?.Id && Object.keys(clientPreviews?.[user.ServerId || ''] || {}).length > 0;
+    const hasStaticPreviews = Object.keys(clientPreviews?.[user?.ServerId || ''] || {}).length > 0;
     const [params, setParams] = useSearchParams();
     const location = useLocation();
     const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
@@ -146,6 +147,9 @@ function useClientController() {
     const cache = useQueryClient();
     const prefKey = `client-interface-${api?.basePath}-${user?.Id}`;
     const [preferences, storePreference] = useInterfacePreferences(prefKey);
+    const previewProvider = usePreviewCapabilities(preferences.previews && !reducedMotion);
+    const previewProviderAvailable = previewProvider.data === true;
+    const hasPreviews = hasStaticPreviews || previewProviderAvailable;
     const [actionError, setActionError] = useState('');
     const [busy, setBusy] = useState(false);
     const [searchInput, setSearchInput] = useState(search);
@@ -336,7 +340,7 @@ function useClientController() {
     const error = id ? details.item.isError : media.isError;
     return { api, user, params, location, setParams, view, id, search, offset, media, details, item, preferences, actionError, busy,
         searchInput, setSearchInput, genres, genre, sort, savePreference, image, play, updateState, cards, row, playItem, hero, error,
-        prepareDetail, releaseDetail, seerr, catalogue, upcoming, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent };
+        prepareDetail, releaseDetail, seerr, catalogue, upcoming, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, previewProviderAvailable, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent };
 }
 
 type ClientModel = ReturnType<typeof useClientController>;
@@ -354,7 +358,7 @@ function ClientSurface() {
 
 function ClientView({ model }: ViewProps) {
     const { preferences, id, view, user, actionError, error, media, details, profileOpen, setProfileOpen, profileButton, profileMenu, accent } = model;
-    return <PreviewProvider surface={model.surface} enabled={preferences.previews} muted={preferences.previewMuted} suspended={model.previewSuspended} toggleMuted={() => model.savePreference({ ...preferences, previewMuted: !preferences.previewMuted })} onPlayingChange={model.setPreviewPlaying}><Page id='clientPage' title='Client' className='client-page' isBackButtonEnabled={false}>
+    return <PreviewProvider serverAvailable={model.previewProviderAvailable} surface={model.surface} enabled={preferences.previews} muted={preferences.previewMuted} suspended={model.previewSuspended} toggleMuted={() => model.savePreference({ ...preferences, previewMuted: !preferences.previewMuted })} onPlayingChange={model.setPreviewPlaying}><Page id='clientPage' title='Client' className='client-page' isBackButtonEnabled={false}>
         <div ref={model.surface} className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} ${preferences.chromatic ? 'client-chromatic' : ''} ${preferences.hero === 'background' ? 'client-hero-background' : ''} client-treatment-${preferences.detailTreatment} client-layout-${preferences.detail} ${id ? 'client-detail-page' : ''}`} style={{ '--client-accent': accent, '--detail-blur': `${preferences.detailBlur}px`, '--detail-shade': preferences.detailShade / 100, '--detail-width': `${preferences.detailWidth}%`, '--hero-fade': `${preferences.heroFade}%` } as CSSProperties}>
             {preferences.ambient && !id && <AmbientBackdrop source={model.ambient} />}
             <nav className='client-nav' data-alignment={preferences.headerAlignment} aria-label='Navigation principale'>
@@ -380,17 +384,26 @@ function HeroView({ model }: ViewProps) {
     const { hero, id, location, image, heroItems, setHeroIndex, setHeroPaused, preferences } = model;
     const region = useRef<HTMLElement>(null);
     const marker = useRef<MarkerPosition | null>(null);
+    const previews = usePreviews();
     useHeroBackground(region, !id && preferences.hero === 'background', !!hero);
     if (!hero) return null;
+    function selectHero(index: number) {
+        previews?.playback.stop();
+        setHeroIndex(index);
+    }
+    function advanceHero(delta: number) {
+        previews?.playback.stop();
+        setHeroIndex(index => (index + heroItems.length + delta) % heroItems.length);
+    }
     return <section ref={region} className={`client-hero${id ? ' client-detail' : ' client-home-hero'}${hero.Type === 'Series' && id ? ' client-series-detail' : ''}`} onPointerEnter={() => setHeroPaused(true)} onPointerLeave={() => setHeroPaused(false)} onFocus={() => setHeroPaused(true)} onBlur={event => {
         if (!event.currentTarget.contains(event.relatedTarget)) setHeroPaused(false);
     }}>
-        <HeroArtwork source={image(hero, true, true)} />
-        <PreviewClip key={hero.Id} item={hero} surface={id ? 'detail' : 'hero'} />
+        <HeroArtwork source={image(hero, true, true)} fullBackground={!id && preferences.hero === 'background'} />
+        <PreviewClip item={hero} surface={id ? 'detail' : 'hero'} />
         {id && <div className='client-detail-readability' aria-hidden='true' />}
         {id && <Link className='client-back' to={(location.state as ClientNavigationState | null)?.returnTo || '/client'} state={{ ...(location.state as ClientNavigationState | null)?.returnState, restoreFocus: true }}><ClientIcon name='back' />Retour</Link>}
-        <HeroCopyView key={hero.Id} model={model} dots={!id && heroItems.length > 1 ? <HeroPagination items={heroItems} index={Math.max(0, heroItems.findIndex(entry => entry.Id === hero.Id))} select={setHeroIndex} position={marker} /> : null} />
-        {!id && heroItems.length > 1 && <div className='client-hero-arrows'><button aria-label='Média précédent' onClick={() => setHeroIndex(index => (index + heroItems.length - 1) % heroItems.length)}><ClientIcon name='back' /></button><button aria-label='Média suivant' onClick={() => setHeroIndex(index => index + 1)}><ClientIcon name='next' /></button></div>}
+        <HeroCopyView key={hero.Id} model={model} dots={!id && heroItems.length > 1 ? <HeroPagination items={heroItems} index={Math.max(0, heroItems.findIndex(entry => entry.Id === hero.Id))} select={selectHero} position={marker} /> : null} />
+        {!id && heroItems.length > 1 && <div className='client-hero-arrows'><button aria-label='Média précédent' onClick={() => advanceHero(-1)}><ClientIcon name='back' /></button><button aria-label='Média suivant' onClick={() => advanceHero(1)}><ClientIcon name='next' /></button></div>}
         <EpisodesView model={model} />
     </section>;
 }
@@ -503,7 +516,7 @@ function SettingsView({ model }: ViewProps) {
             <h2>Fond des fiches</h2><div className='client-setting-options'>{[['continuous', 'Fond continu'], ['fade', 'Fondu progressif'], ['immersive', 'Fiche immersive']].map(([key, label]) => <button key={key} aria-pressed={preferences.detail === key} onClick={() => savePreference({ ...preferences, detail: key as Preferences['detail'] })}><InterfacePreview kind={key as 'continuous' | 'fade' | 'immersive'} /><strong>{label}</strong></button>)}</div>
             <h3>Lisibilité des fiches</h3><div className='client-setting-options'>{[['progressive', 'Flou progressif'], ['cinema', 'Voile cinéma'], ['clear', 'Image nette']].map(([key, label]) => <button key={key} aria-pressed={preferences.detailTreatment === key} onClick={() => savePreference({ ...preferences, detailTreatment: key as Preferences['detailTreatment'] })}><strong>{label}</strong></button>)}</div>
             <div className='client-backdrop-settings'>{([['detailBlur', 'Intensité du flou', 0, 48, 'px'], ['detailShade', 'Assombrissement derrière le texte', 0, 95, '%'], ['detailWidth', 'Largeur de la zone de lecture', 35, 85, '%'], ['heroFade', 'Hauteur du fondu du hero', 20, 70, '%']] as const).map(([key, label, min, max, unit]) => <label key={key}>{label}<output>{preferences[key]}{unit}</output><input type='range' min={min} max={max} value={preferences[key]} disabled={key === 'detailBlur' && preferences.detailTreatment !== 'progressive'} onChange={event => savePreference({ ...preferences, [key]: Number(event.target.value) })} /></label>)}</div>
-            <section className='client-preview-setting'><h2>Aperçus vidéo</h2><label><input type='checkbox' disabled={!model.hasPreviews} checked={model.hasPreviews && preferences.previews} onChange={event => savePreference({ ...preferences, previews: event.target.checked })} /> Activer les extraits vidéo {!model.hasPreviews && <small>Aucun extrait configuré</small>}</label><label><input type='checkbox' disabled={!model.hasPreviews || !preferences.previews} checked={!preferences.previewMuted} onChange={event => savePreference({ ...preferences, previewMuted: !event.target.checked })} /> Activer le son des aperçus</label><p>Chaque extrait se joue une fois, puis revient doucement à l’affiche. Le son est partagé entre les aperçus.</p></section>
+            <section className='client-preview-setting'><h2>Aperçus vidéo</h2><label><input type='checkbox' checked={preferences.previews} onChange={event => savePreference({ ...preferences, previews: event.target.checked })} /> Activer les extraits vidéo {!model.hasPreviews && <small>Aucun extrait disponible sur ce serveur</small>}</label><label><input type='checkbox' disabled={!preferences.previews} checked={!preferences.previewMuted} onChange={event => savePreference({ ...preferences, previewMuted: !event.target.checked })} /> Activer le son des aperçus</label><p>Chaque extrait se joue une fois, puis revient doucement à l’affiche. Le son est partagé entre les aperçus.</p></section>
         </>}
     </section>;
 }

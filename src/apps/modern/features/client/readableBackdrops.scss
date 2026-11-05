@@ -1,6 +1,4 @@
 .client-hero-background .client-home-hero {
-    clip-path: inset(calc(-1 * var(--client-hero-offset, 0px)) 0 0);
-
     .client-background,
     > .client-preview-media {
         mask-image: linear-gradient(to top, transparent, black var(--hero-fade, 45%));
