@@ -25,6 +25,20 @@
     opacity: 0;
 }
 
+// Extrait repris depuis la page précédente : aucune attente visible, l'image figée cède la place à la vidéo.
+.client-preview-media.is-resuming video {
+    transition: none;
+}
+
+.client-preview-bridge {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 0.2s ease;
+}
+
 .client-hero > .client-preview-media {
     z-index: -2;
     inset: -118px 0 0;

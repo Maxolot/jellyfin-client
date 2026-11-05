@@ -5,6 +5,7 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useServerPreview } from './previews/provider';
 import { compactPreview } from './previews/model';
+import { captureFrame } from './previews/handoff';
 import { detectLetterbox, frameHasContent, letterboxTransform } from './previews/letterbox';
 import ClientIcon from './ClientIcon';
 import { usePreviews } from './PreviewProvider';
@@ -35,6 +36,8 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
     const completed = preview?.completed;
     const mute = preview?.mute;
     const playback = preview?.playback;
+    const handoff = preview?.handoff;
+    const [resuming, setResuming] = useState(false);
     const available = (!!staticSource || !!preview?.serverAvailable) && enabled && !!preview?.enabled;
     useEffect(() => {
         if (!available || !region.current || !('IntersectionObserver' in window)) return;
@@ -52,9 +55,10 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
     useEffect(() => {
         setResolve(false);
         if (!active || completed?.has(key)) return;
-        const timer = window.setTimeout(() => setResolve(true), 600);
+        // A clip carried over from the previous page does not wait for the usual hover delay.
+        const timer = window.setTimeout(() => setResolve(true), surface === 'detail' && handoff?.fresh() ? 0 : 600);
         return () => window.clearTimeout(timer);
-    }, [active, completed, key]);
+    }, [active, completed, key, surface, handoff]);
     const server = useServerPreview(item, surface, active && resolve && !!preview?.serverAvailable && !completed?.has(key));
     let source = staticSource;
     if (preview?.serverAvailable) {
@@ -66,9 +70,9 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         setVisible(false);
         setFading(false);
         if (!active || completed?.has(key)) return;
-        const timer = window.setTimeout(() => setStartedKey(key), 1100);
+        const timer = window.setTimeout(() => setStartedKey(key), surface === 'detail' && handoff?.fresh() ? 0 : 1100);
         return () => window.clearTimeout(timer);
-    }, [active, key, completed]);
+    }, [active, key, completed, surface, handoff]);
     useEffect(() => {
         if (video.current) video.current.muted = preview?.muted !== false;
     }, [preview?.muted, started, source]);
@@ -76,6 +80,16 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         const element = video.current;
         if (!active || !started || !element || !source || !playback) return;
         const lease = playback.acquire(element);
+        const resume = surface === 'detail' && item.Id ? handoff?.take(item.Id, source) : undefined;
+        const bridge = resume?.frame;
+        if (bridge) region.current?.appendChild(bridge);
+        if (resume) setResuming(true);
+        let bridgeTimer = 0;
+        const clearBridge = () => {
+            if (!bridge?.parentElement) return;
+            bridge.style.opacity = '0';
+            bridgeTimer = window.setTimeout(() => bridge.remove(), 250);
+        };
         let disposed = false;
         let frame = 0;
         let revealFrame = 0;
@@ -102,6 +116,7 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         const reveal = () => {
             if (disposed || finishing || !playback.owns(element, lease)) return;
             setVisible(true);
+            clearBridge();
             if (surface !== 'hero') {
                 element.volume = 1;
                 return;
@@ -156,6 +171,7 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         const finish = () => {
             if (finishing || disposed || !playback.owns(element, lease)) return;
             finishing = true;
+            clearBridge();
             element.pause();
             completed?.add(key);
             setFading(true);
@@ -187,6 +203,8 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
                 playback.release(element, lease);
                 return;
             }
+            // The first frame of a resumed clip must be the right one.
+            if (element.seeking) return;
             if (surface !== 'hero') {
                 reveal();
             } else if (!inspectionStarted) {
@@ -196,9 +214,14 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         };
         const metadata = () => {
             // A preview registry cannot silently turn a whole film into an autoplay source.
-            if (!Number.isFinite(element.duration) || element.duration > 30.5) finish();
+            if (!Number.isFinite(element.duration) || element.duration > 30.5) {
+                finish();
+                return;
+            }
+            if (resume && resume.time < element.duration - 1) element.currentTime = resume.time;
         };
         element.addEventListener('playing', ready);
+        element.addEventListener('seeked', ready);
         element.addEventListener('loadedmetadata', metadata);
         element.addEventListener('timeupdate', progress);
         element.addEventListener('ended', finish);
@@ -220,6 +243,12 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         });
         return () => {
             disposed = true;
+            if (surface !== 'detail' && surface !== 'episode' && item.Id && !finishing && element.currentTime > 0) {
+                handoff?.save({ itemId: item.Id, source, time: element.currentTime, at: Date.now(), frame: captureFrame(element) });
+            }
+            window.clearTimeout(bridgeTimer);
+            bridge?.remove();
+            setResuming(false);
             report?.(owner, false);
             window.clearTimeout(finishTimer);
             window.clearTimeout(frameTimer);
@@ -228,15 +257,16 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
             cancelAnimationFrame(frame);
             cancelAnimationFrame(revealFrame);
             element.removeEventListener('playing', ready);
+            element.removeEventListener('seeked', ready);
             element.removeEventListener('loadedmetadata', metadata);
             element.removeEventListener('timeupdate', progress);
             element.removeEventListener('ended', finish);
             element.removeEventListener('error', finish);
             playback.release(element, lease);
         };
-    }, [active, started, source, key, completed, owner, report, mute, playback, surface]);
+    }, [active, started, source, key, completed, owner, report, mute, playback, surface, handoff, item.Id]);
     if (!available || !preview) return null;
-    return <><span ref={region} className={`client-preview-media${visible && !fading ? ' is-playing' : ''}${fading ? ' is-fading' : ''}`} aria-hidden='true'>
+    return <><span ref={region} className={`client-preview-media${visible && !fading ? ' is-playing' : ''}${fading ? ' is-fading' : ''}${resuming ? ' is-resuming' : ''}`} aria-hidden='true'>
         {active && started && source && <video key={source} ref={video} src={source} muted playsInline preload='none' crossOrigin='anonymous' />}
     </span>{soundControl && visible && !fading && <button className={`client-preview-sound client-preview-sound-${surface}`} aria-label={preview.muted ? 'Activer le son des aperçus' : 'Couper le son des aperçus'} aria-pressed={!preview.muted} onClick={event => {
         event.preventDefault();
