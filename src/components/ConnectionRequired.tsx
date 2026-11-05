@@ -6,6 +6,7 @@ import { ConnectionState, ServerConnections } from 'lib/jellyfin-apiclient';
 
 import ConnectionErrorPage from './ConnectionErrorPage';
 import Loading from './loading/LoadingComponent';
+import { isPlayingOffline } from 'apps/modern/features/client/offline/playback';
 
 enum AccessLevel {
     /** Requires a user with administrator access */
@@ -183,6 +184,11 @@ const ConnectionRequired: FunctionComponent<ConnectionRequiredProps> = ({
     }, [bounce, level]);
 
     useEffect(() => {
+        // A local blob has already been selected by the remembered active account.
+        if (level === AccessLevel.User && location.pathname === '/video' && isPlayingOffline()) {
+            setIsLoading(false);
+            return;
+        }
         // Check connection status on initial page load
         const apiClient = ServerConnections.currentApiClient();
         const connection = Promise.resolve(ServerConnections.firstConnection ? null : ServerConnections.connect());
@@ -213,7 +219,7 @@ const ConnectionRequired: FunctionComponent<ConnectionRequiredProps> = ({
         }).catch(err => {
             console.error('[ConnectionRequired] failed to connect', err);
         });
-    }, [handleIncompleteWizard, handleWizard, level, validateUserAccess]);
+    }, [handleIncompleteWizard, handleWizard, level, location.pathname, validateUserAccess]);
 
     if (errorState) {
         return <ConnectionErrorPage state={errorState} />;

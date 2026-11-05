@@ -9,12 +9,14 @@ import FallbackRoute from 'components/router/FallbackRoute';
 import { ASYNC_PUBLIC_ROUTES, ASYNC_USER_ROUTES } from './asyncRoutes';
 import { SERVER_INTERFACE_ROUTES, USER_REDIRECTS } from './redirects';
 import VideoPage from './video';
+import OfflinePage from '../features/client/offline/OfflinePage';
 
 export const APP_ROUTES: RouteObject[] = [
     {
         path: '/*',
         lazy: () => import('../AppLayout'),
         children: [
+            { path: 'offline', Component: OfflinePage },
             { index: true, element: <Navigate replace to='/home' /> },
 
             {

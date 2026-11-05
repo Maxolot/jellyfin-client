@@ -10,6 +10,7 @@ import browser from 'scripts/browser';
 import { persister, queryClient } from 'utils/query/queryClient';
 
 import RootAppRouter from 'RootAppRouter';
+import OfflineBridge from 'apps/modern/features/client/offline/OfflineBridge';
 
 const useReactQueryDevtools = window.Proxy // '@tanstack/query-devtools' requires 'Proxy', which cannot be polyfilled for legacy browsers
     && !browser.tv; // Don't use devtools on the TV as the navigation is weird
@@ -26,6 +27,7 @@ const RootApp = () => (
             <UserSettingsProvider>
                 <WebConfigProvider>
                     <QueryClientEventHandler />
+                    <OfflineBridge />
                     <RootAppRouter />
                 </WebConfigProvider>
             </UserSettingsProvider>

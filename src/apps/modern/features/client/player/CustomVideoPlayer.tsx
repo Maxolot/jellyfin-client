@@ -19,6 +19,7 @@ import { playerPreferenceKey, usePlayerPreferences } from './preferences';
 import { activeSegment, clampSeek, formatTime, SECOND, trickplayTile } from './model';
 import { usePlaybackSnapshot } from './usePlaybackSnapshot';
 import './player.scss';
+import { isPlayingOffline } from '../offline/playback';
 
 type Panel = 'audio' | 'subtitles' | 'chapters' | 'settings' | 'appearance';
 const segmentLabels: Record<string, string> = { Intro: 'Passer l’intro', Recap: 'Passer le récapitulatif', Outro: 'Passer le générique' };
@@ -96,9 +97,10 @@ export default function CustomVideoPlayer() {
     };
     const leave = useCallback(() => {
         leaving.current = true;
+        const offline = isPlayingOffline();
         if (playbackManager.isPlayingVideo()) playbackManager.stop();
         if (window.history.state?.idx > 0) navigate(-1);
-        else navigate('/client', { replace: true });
+        else navigate(offline ? '/offline' : '/client', { replace: true });
     }, [navigate]);
     useEffect(() => {
         // Defer final cleanup so React StrictMode's setup/cleanup rehearsal cannot stop playback.

@@ -6,6 +6,7 @@ import { useApi } from 'hooks/useApi';
 
 import { CastDialog, hasCast } from './DetailExtras';
 import ClientIcon from './ClientIcon';
+import DownloadDialog from './offline/DownloadDialog';
 import { useFileTracks } from './languageTags';
 import MediaInfoDialog from './MediaInfoDialog';
 import { useSeerr } from './seerr/SeerrContext';
@@ -19,7 +20,7 @@ export default function DetailMenu({ item, basePath, play }: Readonly<{ item: Ba
     const root = useRef<HTMLDivElement>(null);
     const trigger = useRef<HTMLButtonElement>(null);
     const [open, setOpen] = useState(false);
-    const [dialog, setDialog] = useState<'cast' | 'request' | 'info' | null>(null);
+    const [dialog, setDialog] = useState<'cast' | 'request' | 'info' | 'download' | null>(null);
     const [tracksOpen, setTracksOpen] = useState(false);
     const { api, user } = useApi();
     const tracks = useFileTracks(item);
@@ -58,7 +59,7 @@ export default function DetailMenu({ item, basePath, play }: Readonly<{ item: Ba
         setTracksOpen(false);
         if (restoreFocus) trigger.current?.focus();
     };
-    const openDialog = (name: 'cast' | 'request' | 'info') => {
+    const openDialog = (name: 'cast' | 'request' | 'info' | 'download') => {
         setOpen(false);
         setDialog(name);
     };
@@ -85,10 +86,12 @@ export default function DetailMenu({ item, basePath, play }: Readonly<{ item: Ba
             {tracksOpen ? <TrackMenu audio={tracks.audio} subtitles={tracks.subtitles} choice={choice} onChange={chooseTracks} onBack={() => setTracksOpen(false)} /> : <>
                 {canChooseTracks && <button type='button' role='menuitem' onClick={() => setTracksOpen(true)}><ClientIcon name='volume' /><span className='client-more-text'>Audio et sous-titres<span>{choiceSummary(choice)}</span></span></button>}
                 {request && <button type='button' role='menuitem' onClick={() => openDialog('request')}><ClientIcon name='plus' />Demander des saisons{missing > 0 && <small>{missing}</small>}</button>}
+                {user?.Policy?.EnableContentDownloading && ['Movie', 'Series', 'Episode'].includes(item.Type || '') && <button type='button' role='menuitem' onClick={() => openDialog('download')}><ClientIcon name='download' />Télécharger</button>}
                 {hasCast(item) && <button type='button' role='menuitem' onClick={() => openDialog('cast')}><ClientIcon name='collection' />Distribution et réalisation</button>}
                 <button type='button' role='menuitem' onClick={() => openDialog('info')}><ClientIcon name='info' />Informations</button>
             </>}
         </div>}
+        <DownloadDialog item={item} open={dialog === 'download'} onClose={() => setDialog(null)} />
         <MediaInfoDialog item={item} basePath={basePath} open={dialog === 'info'} onClose={() => setDialog(null)} play={play} choice={choice} chooseVersion={version => chooseTracks({ ...choice, version })} />
         <CastDialog item={item} basePath={basePath} open={dialog === 'cast'} onClose={() => setDialog(null)} />
         {request && <RequestDialog item={item} open={dialog === 'request'} onClose={() => setDialog(null)} />}
