@@ -499,10 +499,6 @@
         flex-wrap: wrap;
         gap: 4px;
         margin-top: 3px;
-
-        .client-source-lang {
-            margin-left: 0;
-        }
     }
 
     &.is-pill,
@@ -522,7 +518,6 @@
 
 // Étiquettes de langue (VF, VOSTFR, MULTI) à la suite de « Source trouvée ».
 .client-source-badge .client-source-lang {
-    margin-left: 6px;
     padding: 1px 6px;
     color: inherit;
     border: 1px solid currentcolor;
