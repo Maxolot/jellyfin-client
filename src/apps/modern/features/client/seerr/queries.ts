@@ -3,7 +3,7 @@ import { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-ite
 import { ItemFields } from '@jellyfin/sdk/lib/generated-client/models/item-fields';
 import { getShowApi } from '@jellyfin/sdk/lib/utils/api/show-api';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, type QueryClient } from '@tanstack/react-query';
 
 import { useApi } from 'hooks/useApi';
 
@@ -47,6 +47,14 @@ function catalogueEndpoint(view: string, search: string, ids: number[]) {
     if (view === 'search' && search) endpoint = `search?query=${encodeURIComponent(search)}`;
     return endpoint;
 }
+/** Prepares the first page of discoveries a tab will show, under the key that tab reads. */
+export function prepareCatalogue(cache: QueryClient, seerr: ReturnType<typeof useSeerr>, view: string) {
+    const endpoint = catalogueEndpoint(view, '', []);
+    return cache.prefetchInfiniteQuery({ queryKey: [...seerr.root, 'Catalogue', endpoint, ''], initialPageParam: 1, staleTime: 60000, retry: false, pages: 1,
+        queryFn: ({ signal, pageParam }) => seerr.call<Results<ExternalMedia>>(`Api/${endpoint}&page=${pageParam}`, signal),
+        getNextPageParam: (last: Results<ExternalMedia>) => (last.page || 1) < (last.totalPages || 1) ? (last.page || 1) + 1 : undefined });
+}
+
 export function useSeerrCatalogue(view: string, search: string, enabled: boolean, genre = '') {
     const seerr = useSeerr();
     const local = useLocalIdentities(enabled && seerr.connected);

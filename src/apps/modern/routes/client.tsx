@@ -7,7 +7,7 @@ import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
 import { getUserDataApi } from '@jellyfin/sdk/lib/utils/api/user-data-api';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useQueryClient } from '@tanstack/react-query';
-import React, { type CSSProperties, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { type CSSProperties, memo, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigationType, useSearchParams } from 'react-router-dom';
 
 import Page from 'components/Page';
@@ -24,6 +24,7 @@ import PreviewClip from '../features/client/PreviewClip';
 import { type Preferences, useInterfacePreferences } from '../features/client/interfacePreferences';
 import HeroPagination, { type MarkerPosition } from '../features/client/HeroPagination';
 import useLoadedHero from '../features/client/useLoadedHero';
+import useTabPreparation from '../features/client/useTabPreparation';
 import Artwork from '../features/client/Artwork';
 import useClientMotion from '../features/client/useClientMotion';
 import useHeroBackground from '../features/client/useHeroBackground';
@@ -219,6 +220,7 @@ function useClientController() {
         setActionError('');
     }, [params]);
     const pageReady = clientPageReady(id, view, item, !!media.data, remoteDetails.isFetched);
+    const prepareTab = useTabPreparation(pageReady);
     useLayoutEffect(() => {
         const key = `${prefKey}-scroll-${params.toString()}`;
         if (!pageReady) {
@@ -351,7 +353,7 @@ function useClientController() {
     const error = id ? details.item.isError : media.isError;
     return { api, user, params, location, setParams, view, id, search, offset, media, details, item, preferences, actionError, busy,
         searchInput, setSearchInput, genres, genre, sort, savePreference, image, play, updateState, cards, row, playItem, hero, error,
-        prepareDetail, releaseDetail, seerr, catalogue, upcoming, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, previewProviderAvailable, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent };
+        prepareDetail, releaseDetail, prepareTab, seerr, catalogue, upcoming, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, previewProviderAvailable, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent };
 }
 
 type ClientModel = ReturnType<typeof useClientController>;
@@ -366,8 +368,26 @@ export default function Client() {
 function ClientSurface() {
     const model = useClientController();
     useClientMotion(model.surface);
+    useLayoutEffect(() => {
+        const root = model.surface.current;
+        if (!root) return;
+        root.dataset.tabSwitch = 'true';
+        const timer = window.setTimeout(() => delete root.dataset.tabSwitch, 700);
+        return () => window.clearTimeout(timer);
+    }, [model.surface, model.view, model.id]);
     return <ClientView model={model} />;
 }
+
+type NavProps = { view: string; detail: boolean; prepare: (view: string) => void };
+
+/** On its own so that a click lights up the tab at once, while the page itself renders behind it. */
+const NavLinks = memo(function ClientNavLinks({ view, detail, prepare }: NavProps) {
+    const [opening, setOpening] = useState<string>();
+    useEffect(() => setOpening(undefined), [view, detail]);
+    const current = opening ?? (detail ? undefined : view);
+    return <div className='client-nav-links'>{links.filter(([key]) => key !== 'search').map(([key, label]) => <Link key={key} to={`/client?view=${key}`} aria-current={current === key ? 'page' : undefined}
+        onPointerEnter={() => prepare(key)} onFocus={() => prepare(key)} onClick={() => setOpening(key)}>{label}</Link>)}</div>;
+});
 
 function ClientView({ model }: ViewProps) {
     const { preferences, id, view, user, actionError, error, media, details, profileOpen, setProfileOpen, profileButton, profileMenu, accent } = model;
@@ -376,7 +396,7 @@ function ClientView({ model }: ViewProps) {
             {preferences.ambient && !id && <AmbientBackdrop source={model.ambient} />}
             <nav className='client-nav' data-alignment={preferences.headerAlignment} aria-label='Navigation principale'>
                 <button ref={profileButton} className='client-profile' aria-label='Menu du profil' aria-expanded={profileOpen} onClick={() => setProfileOpen(!profileOpen)}>{user?.PrimaryImageTag ? <img src={`${model.api?.basePath}/Users/${user.Id}/Images/Primary?tag=${user.PrimaryImageTag}&width=96&quality=90`} alt='' /> : user?.Name?.slice(0, 1) || '•'}</button>
-                <div className='client-nav-links'>{links.filter(([key]) => key !== 'search').map(([key, label]) => <Link key={key} to={`/client?view=${key}`} aria-current={!id && view === key ? 'page' : undefined}>{label}</Link>)}</div>
+                <NavLinks view={view} detail={!!id} prepare={model.prepareTab} />
                 <Link to='/client?view=search' className='client-brand client-search-shortcut' aria-label='Rechercher' aria-current={!id && view === 'search' ? 'page' : undefined}><ClientIcon name='search' /></Link>
                 {profileOpen && <div ref={profileMenu} className='client-profile-menu' role='dialog' aria-label='Menu du profil'>
                     <strong>{user?.Name}</strong><Link to='/client?view=profiles' onClick={() => setProfileOpen(false)}>Changer de profil</Link><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><QuickConnectMenuItem /><button onClick={() => {

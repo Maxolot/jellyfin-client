@@ -335,6 +335,19 @@
     }
 }
 
+// Changer d'onglet doit répondre vite : les longues transitions restent réservées au carrousel.
+.client-interface[data-tab-switch] {
+    .client-hero .client-background {
+        transition-duration: 0.3s;
+    }
+
+    .client-hero-copy > :not(.client-actions),
+    .client-hero-copy > .client-actions > :not(.client-hero-dots),
+    .client-reveal-enter {
+        animation-duration: 0.18s;
+    }
+}
+
 // « Bientôt à découvrir » : grandes affiches 2:3 de la maquette, hauteur bornée selon l'écran.
 .client-upcoming {
     --release-height: clamp(420px, 34vw, 560px);
