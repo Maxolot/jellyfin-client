@@ -1883,3 +1883,77 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     border-radius: 7px;
     color: #9ca7b5;
 }
+
+// Invitation « Ce soir » de la maquette : une ligne entre deux filets, sous le bandeau d'accueil.
+.client-interface .client-tonight-invite {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin: 2px var(--client-margin) 28px;
+    padding: 19px 0;
+    color: #fff;
+    border-top: 1px solid #ffffff16;
+    border-bottom: 1px solid #ffffff16;
+    text-decoration: none;
+    transition: background-color 0.2s;
+
+    .client-tonight-invite-copy {
+        display: flex;
+        min-width: 0;
+        flex: 1;
+        flex-direction: column;
+        gap: 6px;
+
+        strong {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        span {
+            color: #999;
+            font-size: 13px;
+        }
+    }
+
+    .client-tonight-invite-action {
+        display: flex;
+        flex: none;
+        align-items: center;
+        gap: 12px;
+        color: #ddd;
+        font-size: 14px;
+
+        .client-icon {
+            width: 18px;
+            height: 18px;
+        }
+    }
+
+    &:hover,
+    &:focus-visible {
+        background: #ffffff06;
+        outline: none;
+    }
+
+    &:focus-visible .client-tonight-invite-action {
+        text-decoration: underline;
+    }
+
+    @media (max-width: 700px) {
+        gap: 12px;
+        padding: 17px 0;
+
+        .client-tonight-invite-copy strong {
+            font-size: 16px;
+        }
+
+        .client-tonight-invite-copy span {
+            font-size: 11px;
+        }
+
+        .client-tonight-invite-action {
+            gap: 6px;
+            font-size: 12px;
+        }
+    }
+}

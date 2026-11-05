@@ -500,6 +500,15 @@ function EpisodesView({ model }: ViewProps) {
     </section>;
 }
 
+/** A thin line under the home hero, as on the mockup: the way into « Ce soir ». */
+function TonightInvite({ prepare }: Readonly<{ prepare: (view: string) => void }>) {
+    const ready = useCallback(() => prepare('tonight'), [prepare]);
+    return <Link className='client-tonight-invite' to='/client?view=tonight' onPointerEnter={ready} onFocus={ready}>
+        <span className='client-tonight-invite-copy'><strong>Une idée pour ce soir ?</strong><span>Selon vos envies et votre temps.</span></span>
+        <span className='client-tonight-invite-action'>Choisir un film<ClientIcon name='next' /></span>
+    </Link>;
+}
+
 function ContentView({ model }: ViewProps) {
     const { id, view, details, media, row, api, image } = model;
     if (model.remote) return <ExternalDetail key={id} id={id} row={row} image={image} />;
@@ -516,6 +525,7 @@ function ContentView({ model }: ViewProps) {
         const recent = take([...(media.data?.movies || []), ...(media.data?.series || [])].sort((a, b) => String(b.DateCreated || '').localeCompare(String(a.DateCreated || ''))), 16);
         const trends = take(model.catalogue.items, 20);
         return <>
+            <TonightInvite prepare={model.prepareTab} />
             {row('Continuer à regarder', continuing, true)}
             {row('À découvrir', picks)}
             {row('Ajouts récents', recent)}
