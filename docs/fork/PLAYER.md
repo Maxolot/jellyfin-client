@@ -58,3 +58,26 @@ item detail cache so an immediate return/reload cannot resume from a stale posit
 Leaving the route stops video playback; StrictMode's effect rehearsal does not.
 The session presentation flag avoids duplicate legacy segment UI and keeps natural
 end/queue handling in the playback engine.
+
+## Player polish (2026-11-05)
+
+Seek buttons display their configured interval (15 seconds by default). Rapid jumps
+accumulate their destination and animate the pressed button, including keyboard and
+touch jumps; no central seek popup is mounted. Previously saved intervals remain.
+
+The episode panel loads seasons and episodes on demand for the current account.
+Choosing an episode resumes its stored position and retains the remainder of the
+series as the playback queue, including subsequent seasons when available. A local timer pauses playback after 15–90 minutes;
+end-of-item mode disables automatic next for the current title. Leaving the player
+ends this timer. Browser background suspension may delay timed actions.
+
+Tools exposes keyboard help and a live technical panel. Source/server bitrates are
+labelled separately from measured fragment transfer and decoded-video rates. The
+latter depend on resource timing access and browser counters; unavailable values
+are displayed explicitly. Server session polling runs only while this panel is
+mounted. Buffer, resolution and dropped/total frame counters come from the video.
+
+Timeline previews work on mouse hover and touch scrubbing. Server trickplay sprites
+are loaded before display, sized to the viewport; chapter images are a labelled
+fallback. Missing images keep time/chapter text. The client never enables server
+extraction by itself. Subtitle offset uses custom ±0.1-second buttons and reset.

@@ -1,0 +1,161 @@
+/* stylelint-disable no-descending-specificity -- Independent player components share child tag selectors. */
+.client-player-center .client-player-jump {
+    position: relative;
+    width: 4.1em;
+    height: 4.1em;
+    flex-direction: column;
+    gap: 0.1em;
+    border: 1px solid #ffffff24;
+
+    svg {
+        width: 1.6em;
+        height: 1.6em;
+    }
+
+    strong {
+        font-size: 0.85em;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+    }
+
+    small {
+        margin-left: 0.15em;
+        font-size: 0.75em;
+    }
+    &.is-jumping { background: #ffffff24; }
+    &.is-jumping > span { animation: player-jump-pulse 0.45s ease-out; }
+}
+
+@keyframes player-jump-pulse {
+    0% {
+        opacity: 0.5;
+        transform: rotate(-20deg) scale(0.88);
+    }
+
+    100% {
+        opacity: 1;
+        transform: rotate(0) scale(1);
+    }
+}
+
+.client-player-offset {
+    padding: 1em;
+    border: 1px solid #ffffff25;
+    border-radius: 12px;
+    background: #ffffff06;
+
+    h3 {
+        margin: 0;
+        font-size: 1em;
+    }
+
+    p {
+        color: #bbb;
+        font-size: 0.85em;
+    }
+
+    > div {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5em;
+    }
+
+    output {
+        min-width: 4em;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+.client-player-season-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    margin-bottom: 1em;
+    button { border-radius: 2em; }
+}
+
+.client-player-episodes .client-player-episode {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 1em;
+    margin-bottom: 0.6em;
+    padding: 0.5em;
+    text-align: left;
+
+    &[aria-current=true] {
+        border-color: var(--player-accent);
+        background: #ffffff15;
+    }
+
+    img {
+        width: 36%;
+        aspect-ratio: 16 / 9;
+        border-radius: 6px;
+        object-fit: cover;
+    }
+
+    > span {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 0.45em;
+    }
+
+    small {
+        color: #bbb;
+        font-size: 0.75em;
+    }
+}
+
+.client-player-panel:has(.client-player-episodes) { width: min(650px, calc(100vw - 2em)); }
+
+.client-player-technical dl,
+.client-player-help {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: 0.8em 1em;
+    font-size: 0.9em;
+    dt { color: #bdbdbd; }
+
+    dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+}
+
+.client-player-scrub-preview > small {
+    display: block;
+    max-width: 200px;
+    padding: 0.25em 0.5em;
+    color: #ccc;
+    font-size: 0.7em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .client-player-center .client-player-jump.is-jumping > span { animation: none; }
+}
+
+.client-player-chapter-image {
+    display: block;
+    width: min(220px, 40vw);
+    aspect-ratio: 16 / 9;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+.client-player-timeline > input {
+    height: 32px;
+    border-radius: 0;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 5px;
+}
+
+.client-player-chapter-markers i { top: calc(50% - 3px); }
+.client-player-scrub-preview { bottom: calc(50% + 16px); }
+.client-player-tools { flex-wrap: wrap; }
+
+/* stylelint-enable no-descending-specificity */

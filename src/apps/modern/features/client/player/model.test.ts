@@ -13,7 +13,7 @@ describe('player preferences', () => {
     });
     it('bounds numeric options and rejects malformed saved choices', () => {
         localStorage.setItem('p', JSON.stringify({ size: 500, hideAfter: -1, subtitlePosition: 90, subtitleSize: 0, skip: 99, style: '<style>', accent: 'invalid' }));
-        expect(readPlayerPreferences('p')).toMatchObject({ size: 130, hideAfter: 2, subtitlePosition: 25, subtitleSize: 70, skip: 10, style: 'glass', accent: 'white' });
+        expect(readPlayerPreferences('p')).toMatchObject({ size: 130, hideAfter: 2, subtitlePosition: 25, subtitleSize: 70, skip: 15, style: 'glass', accent: 'white' });
         for (const invalid of ['{', 'null', '[]', 'true']) {
             localStorage.setItem('p', invalid);
             expect(readPlayerPreferences('p')).toEqual(playerDefaults);
