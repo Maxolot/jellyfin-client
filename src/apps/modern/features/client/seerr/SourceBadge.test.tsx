@@ -3,7 +3,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import SourceBadge from './SourceBadge';
-import type { SourceStatus } from './sources';
+import type { SourceLanguage, SourceStatus } from './sources';
 
 let root: Root;
 let container: HTMLDivElement;
@@ -17,12 +17,21 @@ afterEach(async () => {
     await act(async () => root.unmount());
     container.remove();
 });
-async function render(status?: SourceStatus) {
-    await act(async () => root.render(status ? <SourceBadge status={status} /> : <SourceBadge />));
+async function render(status?: SourceStatus, languages?: SourceLanguage[]) {
+    await act(async () => root.render(status ? <SourceBadge status={status} languages={languages} /> : <SourceBadge />));
     return container.querySelector('.client-source-badge');
 }
 
 describe('SourceBadge', () => {
+    it('lists the French flavours next to a found source', async () => {
+        const badge = await render('found', ['multi', 'vostfr']);
+        expect([...badge?.querySelectorAll('.client-source-lang') || []].map(tag => tag.textContent)).toEqual(['MULTI', 'VOSTFR']);
+    });
+
+    it('shows no language when nothing was found', async () => {
+        expect((await render('empty', ['vf']))?.querySelectorAll('.client-source-lang').length).toBe(0);
+    });
+
     it('says a source was found', async () => {
         const badge = await render('found');
         expect(badge?.textContent).toBe('Source trouvée');

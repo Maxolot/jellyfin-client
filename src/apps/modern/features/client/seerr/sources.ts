@@ -3,6 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { useApi } from 'hooks/useApi';
 
 export type SourceStatus = 'pending' | 'found' | 'empty' | 'unknown';
+/** Audio and subtitle flavours announced by the release titles: French dub, French subtitles, multi-audio. */
+export type SourceLanguage = 'vf' | 'vostfr' | 'multi';
+const LANGUAGES: SourceLanguage[] = ['multi', 'vf', 'vostfr'];
+function cleanLanguages(value: unknown): SourceLanguage[] {
+    return Array.isArray(value) ? LANGUAGES.filter(tag => value.includes(tag)) : [];
+}
 type Capability = { Enabled?: boolean; enabled?: boolean; Series?: boolean; series?: boolean };
 type Retryable = { response?: { status?: number } };
 
@@ -35,39 +41,58 @@ export function statusOf(query: { isPending: boolean; isError: boolean }, found:
 }
 
 /** Has the film been published on the configured torrent indexers? Indicative only. */
-export function useMovieSource(imdbId: string | undefined, enabled: boolean): SourceStatus | undefined {
+function useMovieSearch(imdbId: string | undefined, enabled: boolean): { status?: SourceStatus; languages: SourceLanguage[] } {
     const { api, user, request } = useSourceRequest();
     const capability = useSourceCapability();
     const active = capability.movies && enabled && !!imdbId && IMDB.test(imdbId);
     const search = useQuery({ queryKey: ['MovieSources', api?.basePath, user?.Id, 'Movie', imdbId], enabled: active,
         queryFn: async ({ signal }) => {
-            const result = await request<{ Found?: boolean; found?: boolean }>(`Movies/${imdbId}`, signal);
+            const result = await request<{ Found?: boolean; found?: boolean; Languages?: unknown; languages?: unknown }>(`Movies/${imdbId}`, signal);
             if (typeof (result.Found ?? result.found) !== 'boolean') throw new Error('Réponse invalide');
-            return !!(result.Found ?? result.found);
+            return { found: !!(result.Found ?? result.found), languages: cleanLanguages(result.Languages ?? result.languages) };
         }, staleTime: 300000, retry: retryLimited, retryDelay: 6000, refetchOnWindowFocus: false });
-    return active ? statusOf(search, search.data) : undefined;
+    return { status: active ? statusOf(search, search.data?.found) : undefined, languages: search.data?.languages || [] };
+}
+
+export function useMovieSource(imdbId: string | undefined, enabled: boolean): SourceStatus | undefined {
+    return useMovieSearch(imdbId, enabled).status;
+}
+
+export function useMovieLanguages(imdbId: string | undefined, enabled: boolean): SourceLanguage[] {
+    return useMovieSearch(imdbId, enabled).languages;
 }
 
 /** Same question per season of a series; a season missing from the answer stays unknown. */
-export function useSeasonSources(imdbId: string | undefined, seasons: number[]): Record<number, SourceStatus> | undefined {
+function useSeasonSearch(imdbId: string | undefined, seasons: number[]): { statuses?: Record<number, SourceStatus>; languages: Record<number, SourceLanguage[]> } {
     const { api, user, request } = useSourceRequest();
     const capability = useSourceCapability();
     const wanted = seasons.slice(0, 12).sort((a, b) => a - b);
     const active = capability.series && !!imdbId && IMDB.test(imdbId) && wanted.length > 0;
     const search = useQuery({ queryKey: ['MovieSources', api?.basePath, user?.Id, 'Series', imdbId, wanted.join(',')], enabled: active,
         queryFn: async ({ signal }) => {
-            const result = await request<{ Seasons?: Record<string, boolean>; seasons?: Record<string, boolean> }>(`Series/${imdbId}?seasons=${wanted.join(',')}`, signal);
+            const result = await request<{ Seasons?: Record<string, boolean>; seasons?: Record<string, boolean>; Languages?: Record<string, unknown>; languages?: Record<string, unknown> }>(`Series/${imdbId}?seasons=${wanted.join(',')}`, signal);
             const found = result.Seasons ?? result.seasons;
             if (!found || typeof found !== 'object') throw new Error('Réponse invalide');
-            return found;
+            const tags = result.Languages ?? result.languages ?? {};
+            return { found, languages: Object.fromEntries(Object.entries(tags).map(([key, value]) => [key, cleanLanguages(value)])) };
         }, staleTime: 300000, retry: retryLimited, retryDelay: 6000, refetchOnWindowFocus: false });
-    if (!active) return undefined;
+    if (!active) return { languages: {} };
     const statuses: Record<number, SourceStatus> = {};
     for (const season of wanted) {
-        const known = search.data?.[String(season)];
+        const known = search.data?.found[String(season)];
         if (search.isError || (search.data && typeof known !== 'boolean')) statuses[season] = 'unknown';
         else if (search.isPending) statuses[season] = 'pending';
         else statuses[season] = known ? 'found' : 'empty';
     }
-    return statuses;
+    const languages: Record<number, SourceLanguage[]> = {};
+    for (const season of wanted) languages[season] = search.data?.languages[String(season)] || [];
+    return { statuses, languages };
+}
+
+export function useSeasonSources(imdbId: string | undefined, seasons: number[]): Record<number, SourceStatus> | undefined {
+    return useSeasonSearch(imdbId, seasons).statuses;
+}
+
+export function useSeasonLanguages(imdbId: string | undefined, seasons: number[]): Record<number, SourceLanguage[]> {
+    return useSeasonSearch(imdbId, seasons).languages;
 }

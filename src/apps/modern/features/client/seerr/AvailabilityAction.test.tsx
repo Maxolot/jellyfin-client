@@ -9,7 +9,7 @@ vi.mock('./SeerrContext', () => ({ useSeerr: () => ({ connected: true }) }));
 vi.mock('./SeerrSetup', () => ({ default: () => null }));
 vi.mock('../DetailExtras', () => ({ default: () => null }));
 vi.mock('../HeroArtwork', () => ({ default: () => null }));
-vi.mock('./sources', () => ({ useMovieSource: () => undefined, useSeasonSources: () => undefined }));
+vi.mock('./sources', () => ({ useMovieSource: () => undefined, useSeasonSources: () => undefined, useMovieLanguages: () => [], useSeasonLanguages: () => ({}) }));
 vi.mock('./queries', () => ({ useLocalIdentities: vi.fn(), useLocalSeasons: vi.fn(), useSeerrDetail: vi.fn() }));
 
 let root: Root;

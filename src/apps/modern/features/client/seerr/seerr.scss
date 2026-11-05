@@ -496,6 +496,7 @@
     }
 
     &.is-compact {
+        flex-wrap: wrap;
         margin-top: 3px;
     }
 
@@ -512,6 +513,20 @@
         justify-content: center;
         pointer-events: none;
     }
+}
+
+// Étiquettes de langue (VF, VOSTFR, MULTI) à la suite de « Source trouvée ».
+.client-source-badge .client-source-lang {
+    margin-left: 6px;
+    padding: 1px 6px;
+    color: inherit;
+    border: 1px solid currentcolor;
+    border-radius: 999px;
+    font-size: 0.78em;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+    opacity: 0.85;
 }
 
 @keyframes client-source-pulse {
