@@ -250,6 +250,20 @@ describe('target identity of session data', () => {
         expect(state.item).toBeUndefined();
         expect(state.position).toBe(0);
     });
+    it('shows a report taking longer than the refresh interval while a newer poll is still pending', async () => {
+        vi.useFakeTimers();
+        try {
+            mock.client.getSessions.mockImplementation(() => new Promise(resolve => {
+                window.setTimeout(() => resolve([{ Id: 'screen-b', NowPlayingItem: { Id: 'slow-report' } }]), 2500);
+            }));
+            await act(async () => root.render(<Probe mode='state' />));
+            await act(async () => vi.advanceTimersByTimeAsync(2500));
+            expect(mock.client.getSessions).toHaveBeenCalledTimes(2);
+            expect(state.item?.Id).toBe('slow-report');
+        } finally {
+            vi.useRealTimers();
+        }
+    });
     it('ignores an earlier overlapping poll that arrives after a newer report', async () => {
         vi.useFakeTimers();
         try {
