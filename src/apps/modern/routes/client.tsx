@@ -38,6 +38,7 @@ import { usePersonalStats, useViewingHistory } from '../features/client/usePerso
 import HeroMetadata from '../features/client/HeroMetadata';
 import DetailExtras from '../features/client/DetailExtras';
 import DetailMenu from '../features/client/DetailMenu';
+import LanguageTags from '../features/client/LanguageTags';
 import InterfacePreview from '../features/client/InterfacePreview';
 import { RecentPage } from '../features/client/LocalDiscoveryPages';
 import MediaRow from '../features/client/MediaRow';
@@ -436,7 +437,7 @@ function HeroActions({ model, dots }: ViewProps & { dots: ReactNode }) {
         {!id && <Link className='client-button' data-client-focus={`info-${hero.Id}`} to={`/client?id=${hero.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }}><ClientIcon name='info' />Plus d’infos</Link>}
         {id && <><button className='client-button client-action-circle' aria-label={item?.UserData?.IsFavorite ? 'Retirer de ma liste' : 'Ajouter à ma liste'} title={item?.UserData?.IsFavorite ? 'Retirer de ma liste' : 'Ajouter à ma liste'} disabled={busy} aria-pressed={!!item?.UserData?.IsFavorite} onClick={() => updateState('favorite')}><ClientIcon name={item?.UserData?.IsFavorite ? 'check' : 'plus'} /></button>
             <button className='client-button client-action-circle' aria-label={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} title={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} disabled={busy} aria-pressed={!!item?.UserData?.Played} onClick={() => updateState('played')}><ClientIcon name={item?.UserData?.Played ? 'check' : 'eye'} /></button>
-            <DetailMenu key={hero.Id} item={hero} basePath={api?.basePath || ''} /><LocalSeriesSources key={`src-${hero.Id}`} item={hero} /></>}
+            <DetailMenu key={hero.Id} item={hero} basePath={api?.basePath || ''} /><LanguageTags key={`lang-${hero.Id}`} item={hero} /><LocalSeriesSources key={`src-${hero.Id}`} item={hero} /></>}
         {dots}
     </div>;
 }

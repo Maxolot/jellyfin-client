@@ -234,6 +234,7 @@ function SeriesSources({ data }: Readonly<{ data: ExternalMedia }>) {
     let status: SourceStatus | undefined;
     if (values.includes('found')) status = 'found';
     else if (values.includes('pending')) status = 'pending';
+    else if (values.includes('unknown')) status = 'unknown';
     else if (values.length && values.every(value => value === 'empty')) status = 'empty';
     const languages = (['multi', 'vf', 'vostfr'] as SourceLanguage[]).filter(tag => Object.values(tags).some(list => list.includes(tag)));
     return <SourceBadge status={status} languages={languages} variant='button' />;

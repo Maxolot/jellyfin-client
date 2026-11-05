@@ -2,9 +2,10 @@ import React from 'react';
 
 import type { SourceLanguage, SourceStatus } from './sources';
 
-const LABELS: Record<Exclude<SourceStatus, 'unknown'>, { short: string; long: string }> = {
+const LABELS: Record<SourceStatus, { short: string; long: string }> = {
     pending: { short: 'Recherche…', long: 'Recherche des sources en cours…' },
     found: { short: 'Source trouvée', long: 'Une source a été trouvée. Le téléchargement dépend des règles du serveur et de la disponibilité des sources.' },
+    unknown: { short: 'Sources indisponibles', long: 'La recherche de sources a échoué (plugin ou indexeurs injoignables). Une demande reste possible.' },
     empty: { short: 'Aucune source', long: 'Aucune source trouvée pour le moment. Certains indexeurs peuvent être indisponibles ; une demande reste possible.' }
 };
 
@@ -19,7 +20,7 @@ const TAGS: Record<SourceLanguage, { text: string; title: string }> = {
 const CLASSES: Record<Variant, string> = { line: '', pill: ' client-request-status', button: ' client-button client-availability-action' };
 
 export default function SourceBadge({ status, variant = 'line', compact = false, languages = [] }: Readonly<{ status?: SourceStatus; variant?: Variant; compact?: boolean; languages?: SourceLanguage[] }>) {
-    if (!status || status === 'unknown') return null;
+    if (!status || (status === 'unknown' && variant !== 'button')) return null;
     const label = LABELS[status];
     return <span className={`client-source-badge is-${status} is-${variant}${compact ? ' is-compact' : ''}${CLASSES[variant]}`} title={label.long} role='status' aria-label={label.long}>
         <i className='client-source-dot' aria-hidden='true' />{label.short}{status === 'found' && languages.map(tag => <b key={tag} className={`client-source-lang is-${tag}`} title={TAGS[tag].title}>{TAGS[tag].text}</b>)}
