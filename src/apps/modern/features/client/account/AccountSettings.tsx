@@ -4,7 +4,7 @@ import React, { type ReactNode, useRef, useState } from 'react';
 
 import appSettings from 'scripts/settings/appSettings';
 import * as userSettings from 'scripts/settings/userSettings';
-import Dashboard from 'utils/dashboard';
+import { signOut } from '../profiles/profileSession';
 
 import { AUDIO_CHANNELS, BITRATES, formatBitrate, languageOptions, NEXT_UP_DAYS, normalizeQuickConnectCode, passwordProblem, avatarProblem, STILL_WATCHING,
     SUBTITLE_MODES, TRANSCODE_AUDIO_CODECS, TRANSCODE_VIDEO_CODECS, VIDEO_WIDTHS } from './accountModel';
@@ -261,7 +261,9 @@ export function ProfileSettings() {
         <Section title='Mot de passe' scope='Compte Jellyfin'><PasswordSettings account={account} /></Section>
         <Section title='Session' scope='Cet appareil'>
             <div className='client-account-actions'>
-                <button type='button' onClick={Dashboard.logout}>Se déconnecter</button>
+                <button type='button' onClick={() => {
+                    void signOut(account.api?.basePath, account.account.data?.Id);
+                }}>Se déconnecter</button>
                 {admin && <a className='client-button' href='#/dashboard'>Administration du serveur ›</a>}
             </div>
         </Section>

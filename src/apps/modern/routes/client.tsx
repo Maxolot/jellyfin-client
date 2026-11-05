@@ -15,7 +15,6 @@ import { playbackManager } from 'components/playback/playbackmanager';
 import { useApi } from 'hooks/useApi';
 import { useWebConfig } from 'hooks/useWebConfig';
 import type { ItemDto } from 'types/base/models/item-dto';
-import Dashboard from 'utils/dashboard';
 import Events from 'utils/events';
 
 import HeroArtwork from '../features/client/HeroArtwork';
@@ -38,6 +37,9 @@ import { usePersonalStats, useViewingHistory } from '../features/client/usePerso
 import HeroMetadata from '../features/client/HeroMetadata';
 import DetailExtras from '../features/client/DetailExtras';
 import DetailMenu from '../features/client/DetailMenu';
+import ProfilePage from '../features/client/profiles/ProfilePage';
+import { signOut } from '../features/client/profiles/profileSession';
+import { useProfileGate } from '../features/client/profiles/useProfileGate';
 import { chosenTracks } from '../features/client/languageTags';
 import InterfacePreview from '../features/client/InterfacePreview';
 import { RecentPage } from '../features/client/LocalDiscoveryPages';
@@ -356,6 +358,8 @@ type ClientModel = ReturnType<typeof useClientController>;
 type ViewProps = { readonly model: ClientModel };
 
 export default function Client() {
+    const { showing } = useProfileGate();
+    if (showing) return <ProfilePage />;
     return <SeerrProvider><ClientSurface /></SeerrProvider>;
 }
 
@@ -375,7 +379,9 @@ function ClientView({ model }: ViewProps) {
                 <div className='client-nav-links'>{links.filter(([key]) => key !== 'search').map(([key, label]) => <Link key={key} to={`/client?view=${key}`} aria-current={!id && view === key ? 'page' : undefined}>{label}</Link>)}</div>
                 <Link to='/client?view=search' className='client-brand client-search-shortcut' aria-label='Rechercher' aria-current={!id && view === 'search' ? 'page' : undefined}><ClientIcon name='search' /></Link>
                 {profileOpen && <div ref={profileMenu} className='client-profile-menu' role='dialog' aria-label='Menu du profil'>
-                    <strong>{user?.Name}</strong><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><QuickConnectMenuItem /><button onClick={Dashboard.logout}>Se déconnecter</button>
+                    <strong>{user?.Name}</strong><Link to='/client?view=profiles' onClick={() => setProfileOpen(false)}>Changer de profil</Link><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><QuickConnectMenuItem /><button onClick={() => {
+                        void signOut(model.api?.basePath, user?.Id);
+                    }}>Se déconnecter</button>
                 </div>}
             </nav>
             {actionError && <p role='alert' className='client-message'>{actionError}</p>}

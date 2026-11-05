@@ -1,0 +1,211 @@
+// Page « Qui regarde ? » : plein écran, sans navigation, comme à l'arrivée sur Netflix.
+.client-profiles {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    color: #fff;
+    background: #0a0b0e;
+    font-family: Arial, Helvetica, sans-serif;
+
+    h1 {
+        margin: 0 0 40px;
+        font-size: clamp(30px, 4vw, 52px);
+        font-weight: 400;
+        text-align: center;
+    }
+
+    ul {
+        display: flex;
+        max-width: 1000px;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: clamp(16px, 2.4vw, 32px);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    button {
+        font: inherit;
+    }
+}
+
+.client-profile-avatar {
+    display: flex;
+    overflow: hidden;
+    width: 100%;
+    aspect-ratio: 1;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    border-radius: 10px;
+    font-size: clamp(44px, 5vw, 68px);
+    transition: box-shadow 0.15s ease;
+
+    img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .client-icon {
+        width: 44%;
+        height: 44%;
+    }
+}
+
+.client-profile-add {
+    color: #a4afc0;
+    background: rgb(255 255 255 / 8%);
+}
+
+.client-profile-tile {
+    position: relative;
+    display: flex;
+    width: clamp(112px, 12vw, 160px);
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+    color: #a4afc0;
+    background: none;
+    border: 0;
+    cursor: pointer;
+
+    strong {
+        overflow: hidden;
+        max-width: 100%;
+        font-size: 16px;
+        font-weight: 400;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    small {
+        font-size: 12px;
+    }
+
+    &:disabled {
+        cursor: default;
+    }
+
+    &:focus-visible,
+    &:hover:not(:disabled) {
+        color: #fff;
+        outline: none;
+
+        .client-profile-avatar {
+            box-shadow: 0 0 0 3px #fff;
+        }
+    }
+}
+
+.client-profile-remove {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: rgb(0 0 0 / 72%);
+    border-radius: 50%;
+
+    .client-icon {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.client-profile-manage {
+    min-height: 44px;
+    margin-top: 48px;
+    padding: 0 24px;
+    color: #a4afc0;
+    background: none;
+    border: 1px solid rgb(255 255 255 / 34%);
+    border-radius: 99px;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+        color: #fff;
+        border-color: #fff;
+    }
+}
+
+.client-profile-form {
+    display: grid;
+    width: min(380px, 100%);
+    gap: 18px;
+
+    h1 {
+        margin: 0;
+    }
+
+    p {
+        margin: 0;
+        color: #a4afc0;
+        text-align: center;
+    }
+
+    label {
+        display: grid;
+        gap: 6px;
+        color: #a4afc0;
+        font-size: 14px;
+    }
+
+    input {
+        min-height: 44px;
+        padding: 0 12px;
+        color: #fff;
+        background: rgb(255 255 255 / 8%);
+        border: 1px solid rgb(255 255 255 / 24%);
+        border-radius: 10px;
+        font: inherit;
+        font-size: 16px;
+    }
+
+    div {
+        display: flex;
+        gap: 10px;
+    }
+
+    button {
+        min-height: 44px;
+        flex: 1;
+        color: #fff;
+        background: none;
+        border: 1px solid rgb(255 255 255 / 34%);
+        border-radius: 99px;
+        cursor: pointer;
+    }
+}
+
+.client-profile-form .client-profile-primary {
+    color: #0a0b0e;
+    background: #fff;
+    border-color: #fff;
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: default;
+    }
+}
+
+.client-profiles .client-profile-error {
+    margin: 0 0 24px;
+    color: #ffb4a8;
+    text-align: center;
+}
+
+.client-profile-form .client-profile-error {
+    margin: 0;
+}
