@@ -119,8 +119,8 @@
 }
 
 // Sur Safari, le champ actif garderait sinon le bleu du système.
-.client-profiles .client-profile-form input:focus-visible,
-.client-avatar-picker input:focus-visible {
+.client-avatar-picker input:focus-visible,
+.client-profiles .client-profile-form input:focus-visible {
     border-color: #fff;
     outline: 1px solid #fff;
     outline-offset: 0;
