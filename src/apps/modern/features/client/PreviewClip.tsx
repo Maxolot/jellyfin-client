@@ -78,6 +78,7 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         const lease = playback.acquire(element);
         let disposed = false;
         let frame = 0;
+        let revealFrame = 0;
         let finishTimer = 0;
         let fadeStarted = false;
         let finishing = false;
@@ -100,8 +101,18 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         };
         const reveal = () => {
             if (disposed || finishing || !playback.owns(element, lease)) return;
-            element.volume = 1;
             setVisible(true);
+            if (surface !== 'hero') {
+                element.volume = 1;
+                return;
+            }
+            let remaining = 15;
+            const releaseAudio = () => {
+                if (disposed || finishing || !playback.owns(element, lease)) return;
+                if (element.parentElement?.classList.contains('is-playing')) element.volume = 1;
+                else if (remaining-- > 0) revealFrame = requestAnimationFrame(releaseAudio);
+            };
+            revealFrame = requestAnimationFrame(releaseAudio);
         };
         const measureBars = () => {
             if (disposed || !playback.owns(element, lease)) return;
@@ -215,6 +226,7 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
             window.removeEventListener('resize', applyFraming);
             element.style.transform = '';
             cancelAnimationFrame(frame);
+            cancelAnimationFrame(revealFrame);
             element.removeEventListener('playing', ready);
             element.removeEventListener('loadedmetadata', metadata);
             element.removeEventListener('timeupdate', progress);
