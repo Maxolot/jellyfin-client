@@ -4,6 +4,9 @@ import { MOONBASE_ID, MOONBASE_NAME, MOONBASE_REPOSITORY } from '../../seerr/set
 
 export type ExtensionKey = 'previews' | 'moonbase' | 'movieSources';
 
+/** Catalogue published with the client (plugins/catalog in the repository); a deployment can point elsewhere in config.json. */
+export const CLIENT_PLUGIN_CATALOGUE = 'https://raw.githubusercontent.com/Maxolot/jellyfin-client/main/plugins/catalog/manifest.json';
+
 export type Extension = {
     key: ExtensionKey;
     /** Assembly GUID, as the server and the catalogues know it. */
@@ -18,11 +21,11 @@ export type Extension = {
 
 export const EXTENSIONS: Record<ExtensionKey, Extension> = {
     previews: { key: 'previews', id: '14d4d2e1-8801-44df-bd61-7bb2d8ba2c8e', packageName: 'Native Previews', title: 'Extraits vidéo',
-        summary: 'Prépare de courts extraits des films et séries, joués au survol des cartes et sur les fiches.' },
+        summary: 'Prépare de courts extraits des films et séries, joués au survol des cartes et sur les fiches.', repository: CLIENT_PLUGIN_CATALOGUE },
     moonbase: { key: 'moonbase', id: MOONBASE_ID, packageName: MOONBASE_NAME, title: 'Demandes avec Seerr',
         summary: 'Relie le serveur à Seerr : découvertes, demandes de films et de saisons, suivi.', repository: MOONBASE_REPOSITORY },
     movieSources: { key: 'movieSources', id: '894c6e88-9250-4627-9d43-f45da80f30eb', packageName: 'Movie Sources', title: 'Sources disponibles',
-        summary: 'Indique avant une demande si un film ou une saison est déjà publié, et en quelles langues, grâce à Prowlarr.' }
+        summary: 'Indique avant une demande si un film ou une saison est déjà publié, et en quelles langues, grâce à Prowlarr.', repository: CLIENT_PLUGIN_CATALOGUE }
 };
 
 export type ExtensionStage = 'missing' | 'restart' | 'ready' | 'disabled' | 'problem';

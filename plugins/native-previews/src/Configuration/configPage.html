@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html><head><title>Native Previews</title></head><body>
+<div id="NativePreviewsConfig" data-role="page" class="page type-interior pluginConfigurationPage"><div data-role="content"><div class="content-primary">
+<h1>Native Previews</h1><p>Extraits de scènes approuvées, cache borné et accès selon les droits Jellyfin.</p>
+<form id="nativePreviewOptions"><label><input type="checkbox" id="previewEnabled"> Activer le fournisseur</label><br>
+<p><label><input type="checkbox" id="previewAutomatic"> Préparer automatiquement les extraits lorsque les médias sont consultés</label><br><small>Une scène choisie automatiquement peut révéler des éléments de l’histoire. Les scènes déjà approuvées restent prioritaires.</small></p>
+<label>Cache total maximum (Mio) <input type="number" id="previewBudget" min="64" max="102400"></label><br>
+<label>Espace libre à conserver (Mio) <input type="number" id="previewReserve" min="64" max="102400"></label><br>
+<label>Threads CPU (1–4) <input type="number" id="previewThreads" min="1" max="4"></label><br>
+<label>Encodeur <select id="previewEncoder"><option value="auto">Configuration Jellyfin (QSV, NVENC ou CPU)</option><option value="software">CPU</option><option value="qsv">Intel QSV, repli CPU</option><option value="nvenc">NVENC, repli CPU</option></select></label><br>
+<label><input type="checkbox" id="previewIdle"> Attendre la fin des lectures avant de commencer</label><br><button is="emby-button" type="submit" class="raised button-submit block">Enregistrer</button></form>
+<h2>Préparer une scène</h2><form id="nativePreviewScene"><label>Rechercher un film ou une série <input id="previewSearch" type="search"></label><button type="button" id="previewFind">Rechercher</button><br><label>Titre <select id="previewItem" required></select></label><br><label>Début (secondes) <input id="previewStart" type="number" min="0" value="60" required></label><br><label>Durée (1–30 s) <input id="previewDuration" type="number" min="1" max="30" value="20" required></label><br><label><input id="previewApproved" type="checkbox" required> J’ai vérifié cette scène et approuve sa diffusion en aperçu.</label><p>Pour une série, la source est S1E1. La sélection d’un timecode ne garantit pas l’absence de spoilers. Le fichier source reste intact.</p><button is="emby-button" type="submit" class="raised button-submit block">Préparer les deux formats</button></form>
+<h2>Catalogue</h2><button type="button" id="previewRefresh">Actualiser</button><pre id="previewState" style="white-space:pre-wrap"></pre><p id="previewMessage" role="status"></p>
+</div></div>
+<script>
+(function(){'use strict';var id='14d4d2e1-8801-44df-bd61-7bb2d8ba2c8e',page=document.querySelector('#NativePreviewsConfig');
+function el(name){return page.querySelector('#'+name)}
+function call(path,method,data){return ApiClient.ajax({url:ApiClient.getUrl('NativePreviews/'+path),type:method||'GET',dataType:'json',contentType:'application/json',data:data?JSON.stringify(data):undefined})}
+function message(text){el('previewMessage').textContent=text}
+function refresh(){return call('Admin/Scenes').then(function(rows){el('previewState').textContent=rows.map(function(s){return(s.ItemId||s.itemId)+' — '+(s.State||s.state)+((s.Automatic||s.automatic)?' — automatique':'')}).join('\n')||'Aucune scène approuvée.'})}
+page.addEventListener('pageshow',function(){ApiClient.getPluginConfiguration(id).then(function(c){var o=c.Options;el('previewEnabled').checked=o.Enabled;el('previewAutomatic').checked=o.AutomaticScenes;el('previewBudget').value=o.MaxCacheMiB;el('previewReserve').value=o.ReserveFreeMiB;el('previewThreads').value=o.Threads;el('previewEncoder').value=o.Encoder;el('previewIdle').checked=o.PauseDuringPlayback});refresh()});
+el('nativePreviewOptions').addEventListener('submit',function(e){e.preventDefault();ApiClient.getPluginConfiguration(id).then(function(c){Object.assign(c.Options,{Enabled:el('previewEnabled').checked,AutomaticScenes:el('previewAutomatic').checked,MaxCacheMiB:Number(el('previewBudget').value),ReserveFreeMiB:Number(el('previewReserve').value),Threads:Number(el('previewThreads').value),Encoder:el('previewEncoder').value,PauseDuringPlayback:el('previewIdle').checked});return ApiClient.updatePluginConfiguration(id,c)}).then(function(){message('Configuration enregistrée.')}).catch(function(){message('Impossible d’enregistrer la configuration.')})});
+el('previewFind').addEventListener('click',function(){ApiClient.getItems(ApiClient.getCurrentUserId(),{Recursive:true,IncludeItemTypes:'Movie,Series',SearchTerm:el('previewSearch').value,Limit:15}).then(function(r){el('previewItem').replaceChildren();r.Items.forEach(function(item){var o=document.createElement('option');o.value=item.Id;o.textContent=item.Name+' ('+(item.ProductionYear||'')+')';el('previewItem').appendChild(o)})})});
+el('nativePreviewScene').addEventListener('submit',function(e){e.preventDefault();call('Admin/Scenes/'+el('previewItem').value,'POST',{StartSeconds:Number(el('previewStart').value),DurationSeconds:Number(el('previewDuration').value),Approved:el('previewApproved').checked}).then(function(){message('Scène mise en file. Elle sera préparée lorsque le serveur sera disponible.');refresh()}).catch(function(){message('La scène n’a pas pu être préparée.')})});
+el('previewRefresh').addEventListener('click',refresh);
+})();
+</script></div></body></html>

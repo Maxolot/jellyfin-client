@@ -98,7 +98,9 @@ function InstallCard({ extension }: Readonly<{ extension: Extension }>) {
         </>;
     } else {
         body = <>
-            <p>Aucun catalogue de votre serveur ne propose encore {extension.packageName}. Ajoutez celui qui le publie : n’ajoutez qu’un catalogue en qui vous avez confiance, ses plugins s’exécutent sur votre serveur.</p>
+            <p>{url.trim() === extension.repository ?
+                `Le catalogue officiel du client, qui publie ${extension.packageName}, sera ajouté à votre serveur. Vous pouvez aussi indiquer un autre catalogue en qui vous avez confiance : ses plugins s’exécutent sur votre serveur.` :
+                `Aucun catalogue de votre serveur ne propose encore ${extension.packageName}. Ajoutez celui qui le publie : n’ajoutez qu’un catalogue en qui vous avez confiance, ses plugins s’exécutent sur votre serveur.`}</p>
             <TextField label='Adresse du catalogue' hint='Un fichier manifest.json, joignable par le serveur Jellyfin. Le guide d’installation indique comment en servir un.' type='url'
                 placeholder='https://exemple.fr/jellyfin/manifest.json' value={url} disabled={busy} onChange={setUrl} />
             <div className='client-settings-actions'>

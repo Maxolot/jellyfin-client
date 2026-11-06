@@ -23,9 +23,9 @@ Cette application est un client web indépendant pour les films et séries de Je
 4. Confirmez l’installation. Les autres catalogues sont conservés.
 5. Une fois le paquet téléchargé, confirmez séparément le redémarrage. L’application indique les lectures en cours et attend le retour du serveur. L’installation seule ne redémarre jamais automatiquement Jellyfin.
 
-**Distribution actuelle :** Moonbase dispose de son catalogue officiel proposé par l’application. Native Previews et Movie Sources nécessitent un paquet compatible et un catalogue fourni par leur mainteneur ou hébergé par vous. Cette branche ne publie aucun catalogue ni paquet. Sans ce catalogue, l’installation automatique de ces deux plugins chez un ami n’est pas encore autonome. Vous pouvez aussi les installer selon les instructions de leur dépôt ; leur configuration devient ensuite accessible ici.
+**Catalogue du projet :** Moonbase dispose de son catalogue officiel. Native Previews et Movie Sources sont publiés dans le catalogue du client, `https://raw.githubusercontent.com/Maxolot/jellyfin-client/main/plugins/catalog/manifest.json`, déjà renseigné dans l’écran d’installation : il suffit de confirmer. Les sources, les paquets et leurs sommes de contrôle sont dans le dossier `plugins/` du dépôt. Votre serveur doit pouvoir joindre GitHub pendant l’installation.
 
-Pour proposer vos catalogues dans un paquet déployé, `config.json` accepte :
+Pour proposer d’autres catalogues (par exemple une copie hébergée chez vous), `config.json` accepte :
 
 ```json
 {

@@ -1,0 +1,38 @@
+[
+  {
+    "guid": "14d4d2e1-8801-44df-bd61-7bb2d8ba2c8e",
+    "name": "Native Previews",
+    "description": "Approved native scene clips with bounded cache and authenticated delivery.",
+    "overview": "Optional Jellyfin12 preview provider.",
+    "owner": "Maxolot",
+    "category": "General",
+    "versions": [
+      {
+        "version": "0.1.0.0",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/Maxolot/jellyfin-client/main/plugins/catalog/native-previews-0.1.0.zip",
+        "checksum": "114e97f3b6175160ca4e4e43a3544cc8",
+        "timestamp": "2026-11-04T15:49:29+01:00",
+        "changelog": "Initial provider: approved scenes, compact/full clips, scoped tickets and bounded cache."
+      }
+    ]
+  },
+  {
+    "guid": "894c6e88-9250-4627-9d43-f45da80f30eb",
+    "name": "Movie Sources",
+    "owner": "Maxolot",
+    "category": "General",
+    "description": "Tells compatible clients whether a film or season has published releases, and in which languages.",
+    "overview": "Optional on-demand Prowlarr lookup for Jellyfin 12 clients.",
+    "versions": [
+      {
+        "version": "0.1.0.0",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/Maxolot/jellyfin-client/main/plugins/catalog/movie-sources-0.1.0.zip",
+        "checksum": "48c6d44a9564ff26c73e521bc4013966",
+        "timestamp": "2026-11-06T14:03:55+01:00",
+        "changelog": "Films and seasons, release languages (VF, VOSTFR, MULTi)."
+      }
+    ]
+  }
+]
