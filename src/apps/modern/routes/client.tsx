@@ -60,6 +60,7 @@ import '../features/client/ratings.scss';
 import '../features/client/heroBackground.scss';
 import '../features/client/headerAlignment.scss';
 import '../features/client/readableBackdrops.scss';
+import '../features/client/themeConsistency.scss';
 
 type ClientNavigationState = { returnTo?: string, returnState?: ClientNavigationState | null, restoreFocus?: boolean };
 import TonightPage from '../features/client/TonightPage';
