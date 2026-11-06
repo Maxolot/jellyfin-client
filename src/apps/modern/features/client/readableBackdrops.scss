@@ -1,14 +1,32 @@
 .client-hero-background .client-home-hero {
+    // Full screen at the top of the page, then a framed card while scrolling (useHeroBackground):
+    // no blurred bottom edge, the image and its clip are only cut, never faded or resized.
+    --hero-cut: calc(var(--hero-frame, 0) * var(--client-margin));
+
+    > .client-hero-image-layer,
+    > .client-preview-media,
+    &::before {
+        clip-path: inset(calc(var(--hero-frame, 0) * var(--client-hero-offset, 0px)) var(--hero-cut) 0 var(--hero-cut) round calc(var(--hero-frame, 0) * 28px));
+    }
+
     .client-background,
     > .client-preview-media {
-        mask-image: linear-gradient(to top, transparent, black var(--hero-fade, 45%));
         transform-origin: 50% 0;
     }
 
-    // The readability shade fades out with the image: an opaque dark bottom edge would draw a line
-    // against the blurred page background, all the more visible when that background is light.
-    &::before {
-        mask-image: linear-gradient(to top, transparent, black var(--hero-fade, 45%));
+    // The frame of the encadré mode appears with the card.
+    &::after {
+        position: absolute;
+        z-index: -1;
+        top: calc((var(--hero-frame, 0) - 1) * var(--client-hero-offset, 0px));
+        right: var(--hero-cut);
+        bottom: 0;
+        left: var(--hero-cut);
+        border: 1px solid #fff3;
+        border-radius: calc(var(--hero-frame, 0) * 28px);
+        opacity: var(--hero-frame, 0);
+        pointer-events: none;
+        content: '';
     }
 }
 
