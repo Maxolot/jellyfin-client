@@ -17,11 +17,11 @@ export interface AsyncRoute {
 const importRoute = (page: string, type: AppType) => {
     switch (type) {
         case AppType.Dashboard:
-            return import(/* webpackChunkName: "[request]" */ `../../apps/dashboard/routes/${page}`);
+            return import(/* webpackChunkName: "[request]", webpackExclude: /\.test\.[jt]sx?$/ */ `../../apps/dashboard/routes/${page}`);
         case AppType.Modern:
-            return import(/* webpackChunkName: "[request]" */ `../../apps/modern/routes/${page}`);
+            return import(/* webpackChunkName: "[request]", webpackExclude: /\.test\.[jt]sx?$/ */ `../../apps/modern/routes/${page}`);
         case AppType.Legacy:
-            return import(/* webpackChunkName: "[request]" */ `../../apps/legacy/routes/${page}`);
+            return import(/* webpackChunkName: "[request]", webpackExclude: /\.test\.[jt]sx?$/ */ `../../apps/legacy/routes/${page}`);
     }
 };
 
