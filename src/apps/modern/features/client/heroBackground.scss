@@ -6,8 +6,12 @@
 .client-hero-background .client-home-hero {
     height: calc(100svh - var(--client-hero-offset, 0px));
     min-height: 480px;
+    // Content sits where it belongs in the final framed card (same insets as the encadré hero),
+    // so nothing moves while the artwork narrows into that card on scroll.
+    --hero-inset: calc(var(--client-margin) + 42px);
+
     margin: 0 0 28px;
-    padding: 60px var(--client-margin) 70px;
+    padding: 60px var(--hero-inset) 70px;
     overflow: visible;
     border: 0;
     border-radius: 0;
@@ -41,12 +45,13 @@
 
     > .client-preview-sound {
         top: auto;
-        right: var(--client-margin);
+        right: calc(var(--client-margin) + 28px);
         bottom: 105px;
     }
 
     .client-hero-arrows {
-        right: var(--client-margin);
+        right: calc(var(--client-margin) + 28px);
+        bottom: 30px;
     }
 }
 
@@ -69,8 +74,20 @@
 
 @media (max-width: 700px) {
     .client-hero-background .client-home-hero {
+        --hero-inset: calc(var(--client-margin) + 22px);
+
         min-height: 500px;
         padding-top: 75px;
         padding-bottom: 50px;
+
+        > .client-preview-sound {
+            right: calc(var(--client-margin) + 20px);
+        }
+
+        // As in the encadré hero on phones: the arrows sit at the top of the card.
+        .client-hero-arrows {
+            right: calc(var(--client-margin) + 20px);
+            bottom: auto;
+        }
     }
 }
