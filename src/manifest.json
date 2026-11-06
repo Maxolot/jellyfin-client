@@ -1,11 +1,11 @@
 {
-    "name": "Jellyfin",
-    "description": "The Free Software Media System",
-    "lang": "en-US",
-    "short_name": "Jellyfin",
-    "start_url": "index.html#/home",
-    "theme_color": "#101010",
-    "background_color": "#101010",
+    "name": "Médiathèque",
+    "description": "Vos films et séries",
+    "lang": "fr-FR",
+    "short_name": "Médiathèque",
+    "start_url": "index.html#/client",
+    "theme_color": "#0a0b0e",
+    "background_color": "#0a0b0e",
     "display": "standalone",
     "icons": [
         {

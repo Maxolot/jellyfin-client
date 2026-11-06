@@ -1,9 +1,7 @@
 import React, { useMemo } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 
-import Page from 'components/Page';
-import globalize from 'lib/globalize';
-import LinkButton from 'elements/emby-button/LinkButton';
+import SessionPage, { SessionNotice } from 'apps/modern/features/client/session/SessionPage';
 
 const FallbackRoute = () => {
     const location = useLocation();
@@ -38,23 +36,11 @@ const FallbackRoute = () => {
     }
 
     return (
-        <Page
-            id='fallbackPage'
-            title={globalize.translate('HeaderPageNotFound')}
-            className='mainAnimatedPage libraryPage'
-            shouldAutoFocus
-        >
-            <div className='padded-left padded-right'>
-                <h1>{globalize.translate('HeaderPageNotFound')}</h1>
-                <p>{globalize.translate('PageNotFound')}</p>
-                <LinkButton
-                    className='button-link'
-                    href='#/home'
-                >
-                    {globalize.translate('GoHome')}
-                </LinkButton>
-            </div>
-        </Page>
+        <SessionPage title='Page introuvable'>
+            <SessionNotice title='Page introuvable' message='Cette page n’existe pas ou plus.'>
+                <Link className='client-session-link' to='/client'>Retour à l’accueil</Link>
+            </SessionNotice>
+        </SessionPage>
     );
 };
 

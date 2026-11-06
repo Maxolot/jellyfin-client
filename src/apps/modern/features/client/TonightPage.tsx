@@ -49,7 +49,7 @@ function usePreparedDraw(selection: BaseItemDto[], seed: number, image: (item: B
 type Criteria = { mood: string; minutes: number; prompt: string };
 const initialCriteria: Criteria = { mood: 'Surprise', minutes: 0, prompt: '' };
 const durations = [[90, '1 h 30'], [120, '2 h'], [150, '2 h 30'], [0, 'Sans limite']] as const;
-type Props = { items: BaseItemDto[]; loading?: boolean; image: (item: BaseItemDto) => string; onPrepare: (item: BaseItemDto) => void; onRelease: () => void };
+type Props = { items: BaseItemDto[]; loading?: boolean; image: (item: BaseItemDto) => string; onPrepare: (item: BaseItemDto) => void; onRelease: () => void; onFeature?: (item?: BaseItemDto) => void };
 
 function DrawFilters({ panel, criteria, draft, setDraft, canReset, onApply, onReset }: Readonly<{
     panel: RefObject<HTMLDetailsElement>; criteria: Criteria; draft: Criteria; setDraft: Dispatch<SetStateAction<Criteria>>;
@@ -76,7 +76,7 @@ function DrawFilters({ panel, criteria, draft, setDraft, canReset, onApply, onRe
     </details>;
 }
 
-function DrawPoster({ item, index, count, image, onPrepare, onRelease, onDismiss }: Readonly<Omit<Props, 'items' | 'loading'> & { item: BaseItemDto; index: number; count: number; onDismiss: (id: string) => void }>) {
+function DrawPoster({ item, index, count, image, onPrepare, onRelease, onDismiss }: Readonly<Omit<Props, 'items' | 'loading' | 'onFeature'> & { item: BaseItemDto; index: number; count: number; onDismiss: (id: string) => void }>) {
     const location = useLocation();
     return <article className='client-tonight-result client-draw-card' style={{ '--draw-order': index, '--card-angle': `${(index - (count - 1) / 2) * 9}deg`, '--card-lift': `${index === Math.floor(count / 2) ? -16 : 12}px` } as CSSProperties} onAnimationEnd={event => {
         if (event.animationName === 'draw-deal') event.currentTarget.style.animation = 'none';
@@ -92,16 +92,69 @@ function DrawPoster({ item, index, count, image, onPrepare, onRelease, onDismiss
         </div></div></article>;
 }
 
-export default function TonightPage({ items, loading = false, image, onPrepare, onRelease }: Readonly<Props>) {
+let lastVisit: { seed: number; previous: string[]; at: number } | undefined;
+const lastDrawKey = 'client-tonight-last-draw';
+function readLastDraw(): string[] {
+    try {
+        const value: unknown = JSON.parse(localStorage.getItem(lastDrawKey) || '[]');
+        return Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string').slice(0, 12) : [];
+    } catch {
+        return [];
+    }
+}
+function rememberDraw(ids: string[]) {
+    try {
+        // The last few draws are skipped on the next visit, so opening the tab does not always deal the same films.
+        localStorage.setItem(lastDrawKey, JSON.stringify([...ids, ...readLastDraw().filter(id => !ids.includes(id))].slice(0, 12)));
+    } catch {
+        // Private browsing: the draw is still random, only less varied across visits.
+    }
+}
+
+/**
+ * The films come as a random sample of the library: first the one kept in cache, then a new one from the server.
+ * A draw already dealt stays until the viewer asks for other ideas or changes the criteria, so it is never dealt twice.
+ */
+function useStableSelection(items: BaseItemDto[], criteria: Criteria, excluded: string[], previous: string[], seed: number) {
+    const kept = useRef<{ inputs: string; items: BaseItemDto[] }>();
+    return useMemo(() => {
+        const inputs = JSON.stringify([criteria, excluded, previous, seed]);
+        if (kept.current?.inputs === inputs && kept.current.items.length === 3 && items.length) return kept.current.items;
+        const next = tonightCandidates(items, criteria.mood, criteria.minutes, criteria.prompt, excluded, previous, seed);
+        kept.current = { inputs, items: next };
+        return next;
+    }, [items, criteria, excluded, previous, seed]);
+}
+
+export default function TonightPage({ items, loading = false, image, onPrepare, onRelease, onFeature }: Readonly<Props>) {
     const [criteria, setCriteria] = useState(initialCriteria);
     const [draft, setDraft] = useState(initialCriteria);
     const [excluded, setExcluded] = useState<string[]>([]);
-    const [previous, setPrevious] = useState<string[]>([]);
-    const [seed, setSeed] = useState(1);
+    // Mounted again within a few seconds (data arriving, layout switch): the same draw is resumed, never a second one.
+    const resumed = useState(() => (lastVisit && Date.now() - lastVisit.at < 5000 ? lastVisit : undefined))[0];
+    const [previous, setPrevious] = useState<string[]>(() => resumed?.previous || readLastDraw());
+    // eslint-disable-next-line sonarjs/pseudo-random -- Only varies which films are suggested first, nothing secret.
+    const [seed, setSeed] = useState(() => resumed?.seed || 1 + Math.floor(Math.random() * 1e6));
+    useEffect(() => () => {
+        lastVisit = { seed: seedRef.current, previous: previousRef.current, at: Date.now() };
+    }, []);
+    const seedRef = useRef(seed);
+    seedRef.current = seed;
+    const previousRef = useRef(previous);
+    previousRef.current = previous;
     const panel = useRef<HTMLDetailsElement>(null);
-    const selection = useMemo(() => tonightCandidates(items, criteria.mood, criteria.minutes, criteria.prompt, excluded, previous, seed), [items, criteria, excluded, previous, seed]);
+    const selection = useStableSelection(items, criteria, excluded, previous, seed);
+    const shown = selection.map(item => item.Id || '').join('|');
+    useEffect(() => {
+        if (shown) rememberDraw(shown.split('|'));
+    }, [shown]);
     const draw = usePreparedDraw(selection, seed, image);
     const pending = loading || draw.seed !== seed;
+    // The film dealt in the middle gives the page its blurred background.
+    const featured = draw.items[Math.floor(draw.items.length / 2)];
+    const feature = useRef(onFeature);
+    feature.current = onFeature;
+    useEffect(() => feature.current?.(featured), [featured]);
     const refined = criteria.mood !== 'Surprise' || criteria.minutes !== 0 || !!criteria.prompt;
     const description = refined ? [criteria.mood === 'Surprise' ? '' : criteria.mood, criteria.minutes ? `Jusqu’à ${criteria.minutes} min` : '', criteria.prompt].filter(Boolean).join(' · ') : 'Trois films de votre bibliothèque.';
     function reroll() {

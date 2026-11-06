@@ -26,6 +26,7 @@ export type ExternalMedia = {
     id: number;
     mediaType?: MediaType | 'person';
     title?: string;
+    imdbId?: string;
     name?: string;
     overview?: string;
     posterPath?: string;
@@ -37,7 +38,7 @@ export type ExternalMedia = {
     collection?: { id: number; name: string };
     genreIds?: number[];
     genres?: { id: number; name: string }[];
-    seasons?: { id: number; seasonNumber: number; name: string; episodeCount?: number; airDate?: string }[];
+    seasons?: { id: number; seasonNumber: number; name: string; episodeCount?: number; airDate?: string; posterPath?: string }[];
     externalIds?: { tvdbId?: number; imdbId?: string };
     mediaInfo?: MediaInfo;
 };
@@ -88,6 +89,16 @@ export function mixCatalogue(local: BaseItemDto[], external: BaseItemDto[]) {
         return true;
     })];
 }
+/** « 14 mars 2027 », ou « Sortie le 14 mars 2027 » tant qu'elle est à venir. Seule l'année si la date est incomplète. */
+export function releaseLabel(date: string | undefined, now = new Date()) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(date || '');
+    if (!match) return (date || '').slice(0, 4);
+    // Read as a local date: a UTC parse would show the day before in the Americas.
+    const day = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    const text = day.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    return day > now ? `Sortie le ${text}` : text;
+}
+
 export function imageUrl(path: string | undefined, backdrop = false) {
     if (!path || !/^\/[a-zA-Z0-9._-]+$/.test(path)) return '';
     return `https://image.tmdb.org/t/p/${backdrop ? 'w1280' : 'w500'}${path}`;

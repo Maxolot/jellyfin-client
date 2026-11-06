@@ -1,0 +1,127 @@
+// Connexion, serveurs et erreurs : même langage que la page de profils.
+.client-profiles.has-backdrop {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+
+    // Le centre reste sombre pour le formulaire ; les affiches ne vivent que sur les bords.
+    &::after {
+        position: absolute;
+        z-index: -1;
+        background:
+            radial-gradient(ellipse 62% 78% at 50% 50%, rgb(10 11 14 / 96%) 30%, rgb(10 11 14 / 78%) 68%, rgb(10 11 14 / 52%) 100%),
+            linear-gradient(180deg, rgb(10 11 14 / 55%), transparent 22%, transparent 78%, rgb(10 11 14 / 70%));
+        content: '';
+        inset: 0;
+    }
+}
+
+// Le mur d'affiches défile très lentement, juste assez pour donner vie à la page.
+.client-session-backdrop {
+    position: absolute;
+    z-index: -2;
+    top: -12%;
+    left: -12%;
+    width: 124%;
+    height: 124%;
+    object-fit: cover;
+    opacity: 0;
+    filter: saturate(0.9);
+    transition: opacity 1.2s ease;
+    animation: client-session-drift 90s ease-in-out infinite alternate;
+    will-change: transform;
+
+    &.is-shown {
+        opacity: 1;
+    }
+}
+
+@keyframes client-session-drift {
+    from {
+        transform: translate3d(-4%, 4%, 0);
+    }
+
+    to {
+        transform: translate3d(4%, -4%, 0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .client-session-backdrop {
+        animation: none;
+    }
+}
+
+.client-profile-form .client-session-actions {
+    display: grid;
+    gap: 12px;
+}
+
+.client-session-link {
+    color: #a4afc0;
+    font-size: 14px;
+    text-align: center;
+    text-decoration: underline;
+
+    &:hover,
+    &:focus-visible {
+        color: #fff;
+    }
+}
+
+.client-session-button {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 99px;
+    text-decoration: none;
+}
+
+.client-session-disclaimer {
+    max-width: 520px;
+    margin: 28px auto 0;
+    color: #a4afc0;
+    font-size: 13px;
+    text-align: center;
+
+    a {
+        color: inherit;
+    }
+}
+
+.client-session-details {
+    color: #a4afc0;
+    font-size: 13px;
+
+    pre {
+        overflow: auto;
+        max-height: 40vh;
+        margin: 8px 0 0;
+        white-space: pre-wrap;
+    }
+}
+
+.client-server-list {
+    margin-bottom: 8px;
+
+    .client-profile-avatar {
+        background: rgb(255 255 255 / 8%);
+    }
+}
+
+.client-session-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px 24px;
+    margin-top: 24px;
+}
+
+// Sur Safari, le champ actif garderait sinon le bleu du système.
+.client-avatar-picker input:focus-visible,
+.client-profiles .client-profile-form input:focus-visible {
+    border-color: #fff;
+    outline: 1px solid #fff;
+    outline-offset: 0;
+}

@@ -1914,6 +1914,11 @@ export class HtmlVideoPlayer {
     /**
      * @private
      */
+    /** Downloaded videos are local object URLs, never arbitrary remote URLs. */
+    canPlayUrl(url) {
+        return typeof url === 'string' && url.startsWith('blob:') && new URL(url).origin === window.location.origin;
+    }
+
     canPlayMediaType(mediaType) {
         return (mediaType || '').toLowerCase() === 'video';
     }

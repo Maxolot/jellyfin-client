@@ -86,6 +86,14 @@ describe('decoded artwork transitions', () => {
         });
         expect(container.querySelector('.artwork-loaded')!.getAttribute('src')).toBe('/first.jpg');
     });
+    it('keeps the fullscreen image in its own clipping layer during a hero change', async () => {
+        await act(async () => root.render(<HeroArtwork source='/first.jpg' fullBackground />));
+        const layer = container.querySelector('.client-hero-image-layer')!;
+        await load(layer.querySelector('img')!);
+        await act(async () => root.render(<HeroArtwork source='/next.jpg' fullBackground />));
+        expect(layer.querySelector('.artwork-loaded')?.getAttribute('src')).toBe('/first.jpg');
+        expect(layer.querySelectorAll('img')).toHaveLength(2);
+    });
     it('returning to the visible hero does not duplicate its image', async () => {
         await act(async () => root.render(<HeroArtwork source='/first.jpg' />));
         await load(container.querySelector('img')!);

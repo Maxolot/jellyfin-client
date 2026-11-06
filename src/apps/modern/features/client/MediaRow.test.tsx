@@ -6,11 +6,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import MediaRow from './MediaRow';
 
-vi.mock('./FavoriteAction', () => ({ default: () => null }));
 vi.mock('./PreviewClip', () => ({ default: () => null }));
 const noLogo = () => undefined;
 const prepare = () => undefined;
-const action = async () => undefined;
 const items = ['a', 'b', 'c'].map(Id => ({ Id, Name: Id, Type: 'Movie' as const }));
 const image = (item: BaseItemDto, wide = false) => `https://media.example.test/${item.Id}-${wide ? 'wide' : 'poster'}.jpg`;
 function Location() {
@@ -35,7 +33,7 @@ beforeEach(async () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
-    await act(async () => root.render(<MemoryRouter><Location /><MediaRow title='Films' items={items} image={image} logo={noLogo} onPrepare={prepare} onPlay={action} onFavorite={action} /></MemoryRouter>));
+    await act(async () => root.render(<MemoryRouter><Location /><MediaRow title='Films' items={items} image={image} logo={noLogo} onPrepare={prepare} /></MemoryRouter>));
 });
 afterEach(async () => {
     await act(async () => root.unmount());
@@ -127,5 +125,27 @@ describe('prepared landscape handoff', () => {
         expect(card(1).classList.contains('active')).toBe(true);
         expect(card(1).classList.contains('has-backdrop')).toBe(false);
         expect(card(1).querySelector('a.client-card')!.getAttribute('href')).toContain('id=b');
+    });
+});
+
+const prepared: string[] = [];
+function remember(item: BaseItemDto) {
+    prepared.push(item.Id || '');
+}
+
+describe('endless row', () => {
+    it('repeats the titles around the original ones and keeps choosing cards past the end', async () => {
+        const long = ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map(Id => ({ Id, Name: Id, Type: 'Movie' as const }));
+        prepared.length = 0;
+        Element.prototype.scrollTo = function () { /* jsdom has no layout. */ };
+        vi.stubGlobal('matchMedia', () => ({ matches: false }));
+        await act(async () => root.render(<MemoryRouter><MediaRow title='Longue' items={long} image={image} logo={noLogo} onPrepare={remember} /></MemoryRouter>));
+        const next = container.querySelector<HTMLButtonElement>('[aria-label="Suivant : Longue"]')!;
+        for (let press = 0; press < 10; press++) await act(async () => next.click());
+        expect(container.querySelectorAll('.client-media-card')).toHaveLength(21);
+        // Ten presses from nothing: a…g, then a, b, c again.
+        expect(prepared.slice(-3)).toEqual(['a', 'b', 'c']);
+        // Only the original copy can restore keyboard focus after visiting a page.
+        expect(container.querySelectorAll('[data-client-focus="a"]')).toHaveLength(1);
     });
 });

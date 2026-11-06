@@ -100,14 +100,8 @@
 
     &.active .client-expanded-title,
     &.active .client-card-shade,
-    &.active .client-card-actions,
     &.active .client-availability {
         opacity: 1;
-        visibility: visible;
-    }
-
-    &.active .client-card-actions {
-        pointer-events: auto;
         visibility: visible;
     }
 
@@ -124,10 +118,19 @@
     transition: opacity 0.35s;
 }
 
+.client-card-overlay {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
 .client-expanded-title {
     position: absolute;
-    right: 6%;
-    bottom: 26%;
+    right: 40%;
+    bottom: 18px;
     left: 6%;
     opacity: 0;
     transition: opacity 0.4s 0.1s;
@@ -150,37 +153,6 @@
     }
 }
 
-.client-card-actions {
-    position: absolute;
-    z-index: 2;
-    bottom: 18px;
-    left: 6%;
-    display: flex;
-    gap: 9px;
-    opacity: 0;
-    pointer-events: none;
-    visibility: hidden;
-    transition: opacity 0.25s;
-
-    button,
-    a {
-        display: grid;
-        width: 38px;
-        height: 38px;
-        place-items: center;
-        border: 1px solid #ffffff90;
-        border-radius: 50%;
-        background: #14171bc0;
-        font-size: 22px;
-    }
-
-    .client-card-play {
-        background: #fff;
-        color: #111;
-        font-size: 16px;
-    }
-}
-
 .client-availability {
     position: absolute;
     top: 15px;
@@ -197,26 +169,49 @@
     pointer-events: none;
     visibility: hidden;
     transition: opacity 0.25s;
+}
 
-    span {
-        position: absolute;
-        right: 36px;
-        font-size: 11px;
+// Saison et épisode à reprendre : pastille discrète, seulement sur la carte dépliée.
+.client-episode-pill {
+    position: absolute;
+    right: 16px;
+    bottom: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 26px;
+    padding: 0 11px;
+    border: 1px solid #ffffff38;
+    border-radius: 999px;
+    background: #0e0f12b3;
+    backdrop-filter: blur(8px);
+    color: #fffc;
+    font-size: 12.5px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s 0.1s, visibility 0s 0.4s;
+
+    b {
+        color: #fff;
+        font-weight: 700;
+    }
+
+    i {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: #fff9;
     }
 }
 
-.client-continue-label {
-    position: absolute;
-    bottom: 15px;
-    left: 12px;
-    font-size: 12px;
-    text-shadow: 0 2px 4px #000;
-}
-
-.client-media-card.active .client-continue-label {
-    right: 18px;
-    bottom: 28px;
-    left: auto;
+.client-media-card.active .client-episode-pill {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s 0.1s, visibility 0s;
 }
 
 .client-row-info {
@@ -286,7 +281,6 @@
     .client-expanding-row .client-card img,
     .client-expanded-title,
     .client-card-shade,
-    .client-card-actions,
     .client-availability,
     .client-section-glow {
         transition: none;
@@ -341,9 +335,20 @@
     }
 }
 
-.client-profile {
-    border: 1px solid #ffffff38;
-    background: #c6323b;
+// Avatar seul, sans liseré ni fond coloré autour de la photo : minimaliste.
+.client-nav .client-profile {
+    overflow: hidden;
+    padding: 0;
+    border: 0;
+    background: #2b303b;
+    box-shadow: none;
+
+    img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 }
 
 .client-brand {
@@ -1212,12 +1217,20 @@
 
 .client-personal-identity > span {
     display: grid;
-    width: 52px;
-    height: 52px;
+    overflow: hidden;
+    width: 64px;
+    height: 64px;
+    flex: none;
     place-items: center;
-    border-radius: 15px;
+    border-radius: 16px;
     background: #c6323b;
-    font-size: 22px;
+    font-size: 24px;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 }
 
 .client-personal-identity h1 {
@@ -1400,16 +1413,60 @@
     vertical-align: middle;
 }
 
+.client-nav .client-brand.client-search-shortcut {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    color: inherit;
+}
+
 .client-nav .client-search-shortcut .client-icon {
     width: 23px;
     height: 23px;
+}
+
+// Autre appareil et Regarder ensemble : de simples icônes à gauche de la loupe.
+.client-nav .client-nav-tool {
+    display: grid;
+    width: 40px;
+    height: 44px;
+    flex: none;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    background: none;
+    color: #ffffffc7;
+    cursor: pointer;
+    transition: color 0.2s;
+
+    &:hover,
+    &:focus-visible {
+        color: #fff;
+    }
+
+    .client-icon {
+        width: 22px;
+        height: 22px;
+    }
+}
+
+@media (max-width: 700px) {
+    .client-nav .client-nav-tool {
+        width: 30px;
+
+        .client-icon {
+            width: 19px;
+            height: 19px;
+        }
+    }
 }
 
 .client-back {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    border-radius: 16px;
+    border-radius: 99px;
 }
 
 .client-actions .client-play,
@@ -1811,6 +1868,25 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     margin: 0;
 }
 
+// Langues des fichiers (VF, VOSTFR…), à la suite des infos du titre.
+.client-file-languages {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 5px;
+
+    abbr {
+        padding: 1px 5px;
+        color: #d3d7df;
+        border: 1px solid rgb(255 255 255 / 34%);
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        line-height: 1.4;
+        text-decoration: none;
+    }
+}
+
 .client-detail:not(.client-series-detail) .client-overview {
     display: block;
 }
@@ -1878,4 +1954,78 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     border: 1px solid #ffffff20;
     border-radius: 7px;
     color: #9ca7b5;
+}
+
+// Invitation « Ce soir » de la maquette : une ligne entre deux filets, sous le bandeau d'accueil.
+.client-interface .client-tonight-invite {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin: 2px var(--client-margin) 28px;
+    padding: 19px 0;
+    color: #fff;
+    border-top: 1px solid #ffffff16;
+    border-bottom: 1px solid #ffffff16;
+    text-decoration: none;
+    transition: background-color 0.2s;
+
+    .client-tonight-invite-copy {
+        display: flex;
+        min-width: 0;
+        flex: 1;
+        flex-direction: column;
+        gap: 6px;
+
+        strong {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        span {
+            color: #999;
+            font-size: 13px;
+        }
+    }
+
+    .client-tonight-invite-action {
+        display: flex;
+        flex: none;
+        align-items: center;
+        gap: 12px;
+        color: #ddd;
+        font-size: 14px;
+
+        .client-icon {
+            width: 18px;
+            height: 18px;
+        }
+    }
+
+    &:hover,
+    &:focus-visible {
+        background: #ffffff06;
+        outline: none;
+    }
+
+    &:focus-visible .client-tonight-invite-action {
+        text-decoration: underline;
+    }
+
+    @media (max-width: 700px) {
+        gap: 12px;
+        padding: 17px 0;
+
+        .client-tonight-invite-copy strong {
+            font-size: 16px;
+        }
+
+        .client-tonight-invite-copy span {
+            font-size: 11px;
+        }
+
+        .client-tonight-invite-action {
+            gap: 6px;
+            font-size: 12px;
+        }
+    }
 }

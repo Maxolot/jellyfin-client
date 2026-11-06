@@ -50,45 +50,6 @@
     }
 }
 
-.client-request-seasons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-
-    button {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        min-width: 145px;
-        padding: 15px;
-        border: 1px solid #ffffff28;
-        border-radius: 12px;
-        background: #ffffff05;
-        color: #fff;
-        text-align: left;
-        transition: border-color 0.2s ease, background 0.2s ease;
-    }
-
-    strong {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        font-size: 14px;
-        font-weight: 500;
-    }
-
-    [aria-pressed='true'] {
-        border-color: #f0f3f6;
-        background: #ffffff14;
-    }
-
-    small {
-        color: #a4afc0;
-        font-size: 12px;
-    }
-}
-
 // Coche ronde des saisons : vide au repos, pleine quand la saison est choisie.
 .client-request-check {
     display: grid;
@@ -316,5 +277,317 @@
         display: block;
         width: min(100%, 420px);
         margin-top: 8px;
+    }
+}
+
+.client-request-banner {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    min-height: 150px;
+    overflow: hidden;
+    padding: 18px;
+    border-radius: 16px;
+    background: #101318;
+    isolation: isolate;
+
+    &::after {
+        position: absolute;
+        z-index: -1;
+        inset: 0;
+        background: linear-gradient(90deg, #0b0d11f0 8%, #0b0d1190 55%, #0b0d1130), linear-gradient(0deg, #0b0d11cc, transparent 60%);
+        content: '';
+    }
+
+    .client-request-backdrop {
+        position: absolute;
+        z-index: -2;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .client-request-banner-copy {
+        display: flex;
+        align-items: flex-end;
+        gap: 16px;
+        min-width: 0;
+
+        h2 {
+            font-size: 24px;
+            font-weight: 600;
+            text-shadow: 0 2px 12px #000a;
+        }
+
+        p {
+            margin: 4px 0 0;
+            color: #d0d6de;
+        }
+    }
+
+    .client-request-poster {
+        flex: none;
+        width: 76px;
+        aspect-ratio: 2 / 3;
+        overflow: hidden;
+        border-radius: 9px;
+        background: #1b1f26;
+        box-shadow: 0 8px 24px #0009;
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    }
+
+    .client-request-status {
+        background: #0b0d11b3;
+    }
+}
+
+.client-request-panel legend {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 13px;
+}
+
+.client-request-seasons {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+    gap: 14px;
+
+    .client-season-card {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: #fff;
+        text-align: left;
+    }
+
+    .client-season-poster {
+        position: relative;
+        display: block;
+        width: 100%;
+        aspect-ratio: 2 / 3;
+        overflow: hidden;
+        margin-bottom: 7px;
+        border: 2px solid transparent;
+        border-radius: 12px;
+        background: #1b1f26;
+        box-shadow: 0 8px 22px #0006;
+        transition: border-color 0.2s ease, transform 0.2s ease, filter 0.2s ease;
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        &::after {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(0deg, #000000b8 0%, transparent 42%);
+            content: '';
+            pointer-events: none;
+        }
+
+        .client-request-check {
+            position: absolute;
+            z-index: 1;
+            top: 8px;
+            right: 8px;
+            background: #0b0d1199;
+        }
+
+        em {
+            position: absolute;
+            z-index: 1;
+            bottom: 8px;
+            left: 8px;
+            padding: 3px 9px;
+            border-radius: 999px;
+            background: #0b0d11cc;
+            font-size: 11px;
+            font-style: normal;
+        }
+    }
+
+    .client-season-fallback {
+        display: grid;
+        height: 100%;
+        place-items: center;
+        color: #fff5;
+        font-size: 42px;
+        font-weight: 600;
+    }
+
+    [aria-pressed='true'] .client-season-poster {
+        border-color: #fff;
+    }
+
+    [aria-pressed='true'] .client-request-check {
+        border-color: #fff;
+        background: #fff;
+    }
+
+    .client-season-card:focus-visible .client-season-poster {
+        border-color: #ffffffa0;
+    }
+
+    .client-season-card:disabled .client-season-poster {
+        filter: grayscale(0.8) brightness(0.78);
+    }
+
+    .client-season-card:not(:disabled):hover .client-season-poster {
+        transform: translateY(-2px);
+    }
+
+    strong {
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    small {
+        color: #a4afc0;
+        font-size: 12px;
+    }
+}
+
+// Ligne « source trouvée » (plugin Movie Sources) : texte discret avec un point, jamais une garantie.
+.client-source-badge {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 7px;
+    color: #a4afc0;
+    font-size: 12px;
+    line-height: 1.3;
+    white-space: nowrap;
+
+    .client-source-dot {
+        width: 7px;
+        height: 7px;
+        flex: none;
+        border: 1.5px solid #ffffff80;
+        border-radius: 50%;
+    }
+
+    &.is-found {
+        color: #eef1f5;
+
+        .client-source-dot {
+            border-color: #fff;
+            background: #fff;
+            box-shadow: 0 0 8px #ffffff80;
+        }
+    }
+
+    &.is-pending .client-source-dot {
+        animation: client-source-pulse 1.2s ease-in-out infinite;
+    }
+
+    &.is-compact {
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 3px;
+    }
+
+    &.is-pill {
+        align-self: auto;
+        gap: 8px;
+        cursor: default;
+    }
+
+    // Dans les infos sous le titre d'une fiche : sur sa propre ligne, même taille de texte.
+    &.is-meta {
+        display: flex;
+        flex-basis: 100%;
+        flex-wrap: wrap;
+        white-space: normal;
+    }
+}
+
+@keyframes client-source-pulse {
+    50% { opacity: 0.25; }
+}
+
+.client-request-side {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.client-movie-source-tooltip {
+    position: absolute;
+    z-index: 20;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    width: max-content;
+    max-width: min(280px, 70vw);
+    padding: 9px 12px;
+    color: white;
+    background: #202020;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.35;
+    text-align: left;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%);
+}
+
+.client-movie-source-indicator {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    color: #ddd;
+    background: rgb(20 20 20 / 72%);
+    border: 1px solid rgb(255 255 255 / 32%);
+    border-radius: 50%;
+
+    &.is-found {
+        color: #91e6ab;
+    }
+
+    &.is-empty {
+        color: #f1cc7b;
+    }
+
+    &.is-pending {
+        color: #ddd;
+    }
+
+    .client-icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    &:focus-visible {
+        outline: 2px solid white;
+        outline-offset: 3px;
+    }
+
+    &:hover .client-movie-source-tooltip,
+    &[aria-expanded="true"] .client-movie-source-tooltip,
+    &:focus-visible .client-movie-source-tooltip {
+        opacity: 1;
+        visibility: visible;
     }
 }

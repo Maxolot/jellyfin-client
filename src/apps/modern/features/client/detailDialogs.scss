@@ -72,7 +72,7 @@
 
 .client-detail-dialog-body { padding: 22px; }
 
-.client-actions .client-availability-action {
+.client-actions .client-availability-action:not(.client-action-circle) {
     min-height: 44px;
     padding: 11px 13px;
     font-size: 13px;
@@ -99,5 +99,226 @@
     &:hover {
         color: white;
         text-decoration: underline;
+    }
+}
+
+// La fiche forme son propre plan : le menu ouvert doit passer le plan entier au-dessus des cartes qui suivent, sous la navigation.
+.client-hero.client-detail:has(.client-more-menu) {
+    position: relative;
+    z-index: 15;
+}
+
+.client-hero .client-hero-copy.client-hero-copy:has(.client-more-menu) {
+    position: relative;
+    z-index: 10;
+}
+
+.client-actions:has(.client-more-menu) {
+    position: relative;
+    z-index: 40;
+}
+
+.client-actions .client-more {
+    position: relative;
+}
+
+.client-actions .client-more > button {
+    position: relative;
+}
+
+.client-actions .client-more > button .client-icon {
+    stroke-width: 3.6;
+}
+
+.client-actions .client-more-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 50;
+    display: grid;
+    min-width: 250px;
+    padding: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
+    background: #14161a;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+    max-height: min(70vh, 520px);
+    scroll-margin: 16px;
+    overflow-y: auto;
+
+    > button,
+    > a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 44px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        color: #f2f4f7;
+        font: inherit;
+        font-size: 14px;
+        text-align: left;
+        text-decoration: none;
+        cursor: pointer;
+
+        &:hover,
+        &:focus-visible {
+            background: rgba(255, 255, 255, 0.12);
+            outline: none;
+        }
+
+        .client-icon {
+            width: 18px;
+            height: 18px;
+            flex: none;
+        }
+    }
+}
+
+.client-more-text {
+    display: grid;
+    gap: 2px;
+    padding: 6px 0;
+
+    > span {
+        color: #a4afc0;
+        font-size: 12px;
+    }
+}
+
+.client-more-heading {
+    padding: 10px 14px 4px;
+    color: #a4afc0;
+    font-size: 12px;
+}
+
+.client-more-mark {
+    display: inline-flex;
+    width: 18px;
+    flex: none;
+}
+
+.client-more-badge {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 10px;
+    height: 10px;
+    border: 2px solid #15171b;
+    border-radius: 50%;
+    background: #e50914;
+}
+
+.client-more-menu > button small {
+    margin-left: auto;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+    font-size: 12px;
+}
+
+@media (max-width: 700px) {
+    .client-more-menu {
+        right: 0;
+        left: auto;
+        max-width: calc(100vw - 32px);
+    }
+}
+
+// Informations d'un titre : remplacent la fiche d'origine, sans rien afficher par défaut sur la page.
+.client-media-info {
+    display: grid;
+    gap: 24px;
+    color: #d3d7df;
+    font-size: 14px;
+
+    h3 {
+        margin: 0 0 10px;
+        color: #fff;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    dl {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 6px 16px;
+        margin: 0;
+    }
+
+    dt {
+        color: #a4afc0;
+    }
+
+    dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    ul {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+}
+
+.client-media-info .client-media-row {
+    display: flex;
+    width: 100%;
+    min-height: 44px;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 12px;
+    color: #f2f4f7;
+    background: rgb(255 255 255 / 6%);
+    border: 0;
+    border-radius: 10px;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+        background: rgb(255 255 255 / 14%);
+        outline: none;
+    }
+
+    &[aria-pressed='true'] {
+        background: rgb(255 255 255 / 20%);
+    }
+
+    time,
+    small {
+        margin-left: auto;
+        color: #a4afc0;
+        font-size: 12px;
+    }
+
+    img {
+        width: 72px;
+        height: 40px;
+        flex: none;
+        border-radius: 6px;
+        object-fit: cover;
+    }
+
+    > svg {
+        width: 18px;
+        height: 18px;
+        flex: none;
+    }
+}
+
+.client-media-info .client-media-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+
+    a:any-link {
+        color: #d3d7df;
     }
 }

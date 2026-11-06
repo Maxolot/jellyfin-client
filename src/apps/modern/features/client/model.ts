@@ -28,3 +28,15 @@ export function runtimeLabel(ticks?: number | null): string {
     const hours = Math.floor(minutes / 60);
     return hours ? `${hours} h ${String(minutes % 60).padStart(2, '0')}` : `${minutes} min`;
 }
+
+/** Formats calendar dates without shifting them across time zones. */
+export function releaseDateLabel(value?: string | null, year?: number | null): string {
+    const match = /^(\d{4})-(\d{2})-(\d{2})(?:$|T)/.exec(value || '');
+    if (match) {
+        const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+        if (date.toISOString().slice(0, 10) === `${match[1]}-${match[2]}-${match[3]}`) {
+            return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date);
+        }
+    }
+    return year && Number.isInteger(year) && year > 0 ? String(year) : 'date inconnue';
+}

@@ -1,6 +1,7 @@
 import { QueryCache, QueryClient } from '@tanstack/react-query';
 import type { PersistedClient, Persister } from '@tanstack/react-query-persist-client';
 import { get, set, del } from 'idb-keyval';
+import { createDeferredSaver, withoutPreviewGrants } from './persistence';
 
 // TODO: Move this file to lib/query
 
@@ -61,16 +62,27 @@ queryClient = new QueryClient({
 });
 
 /** Create an IndexedDB persister for react-query-persist-client. Uses idb-keyval for simplicity. */
-const createIDBPersister = (idbValidKey: IDBValidKey = 'query-cache') => ({
-    persistClient: async (client: PersistedClient) => {
-        await set(idbValidKey, client);
-    },
-    restoreClient: () => {
-        return get<PersistedClient>(idbValidKey);
-    },
-    removeClient: async () => {
-        await del(idbValidKey);
+const createIDBPersister = (idbValidKey: IDBValidKey = 'query-cache') => {
+    const saver = createDeferredSaver<PersistedClient>(client => set(idbValidKey, withoutPreviewGrants(client)));
+    if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', () => {
+            // eslint-disable-next-line compat/compat -- Older browsers simply keep the deferred write.
+            if (document.visibilityState === 'hidden') void saver.flush();
+        });
     }
-} satisfies Persister);
+    return {
+        persistClient: async (client: PersistedClient) => {
+            saver.request(client);
+        },
+        restoreClient: async () => {
+            const saved = await get<PersistedClient>(idbValidKey);
+            return saved ? withoutPreviewGrants(saved) : undefined;
+        },
+        removeClient: async () => {
+            saver.cancel();
+            await del(idbValidKey);
+        }
+    } satisfies Persister;
+};
 
 export const persister = createIDBPersister('jellyfin-query-cache');

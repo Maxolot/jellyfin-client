@@ -15,7 +15,7 @@ export type PlayerPreferences = {
     subtitlePosition: number;
 };
 export const playerDefaults: PlayerPreferences = {
-    style: 'glass', accent: 'white', size: 100, hideAfter: 4, skip: 10,
+    style: 'glass', accent: 'white', size: 100, hideAfter: 4, skip: 15,
     time: 'remaining', previews: true, intro: 'button', next: 10,
     subtitleSize: 100, subtitleBackground: true, subtitlePosition: 8
 };
@@ -29,7 +29,7 @@ export function readPlayerPreferences(key: string): PlayerPreferences {
             style: choice(saved.style, ['glass', 'classic', 'minimal'], 'glass'),
             accent: choice(saved.accent, ['white', 'red', 'blue', 'gold'], 'white'),
             size: bounded(saved.size, 100, 80, 130), hideAfter: bounded(saved.hideAfter, 4, 2, 12),
-            skip: choice(saved.skip, [5, 10, 15, 30], 10),
+            skip: choice(saved.skip, [5, 10, 15, 30], 15),
             time: choice(saved.time, ['remaining', 'total', 'end'], 'remaining'),
             previews: saved.previews !== false, intro: choice(saved.intro, ['button', 'auto', 'never'], 'button'),
             next: choice(saved.next, [0, 5, 10, 15, 30], 10),

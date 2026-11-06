@@ -5,7 +5,7 @@ const CopyPlugin = require('copy-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const { DefinePlugin, IgnorePlugin } = require('webpack');
+const { DefinePlugin, IgnorePlugin, sources, Compilation } = require('webpack');
 const packageJson = require('./package.json');
 
 const Assets = [
@@ -44,9 +44,13 @@ const config = {
     target: 'browserslist',
     entry: {
         'main.jellyfin': './index.jsx',
+        'serviceworker': { import: './serviceworker.js', runtime: false },
         ...THEMES_BY_ID
     },
     resolve: {
+        // The project has no logo yet: no leftover path of the inherited code can show the original one.
+        alias: Object.fromEntries(['banner-dark.png', 'banner-light.png', 'icon-transparent.png']
+            .map(name => [`@jellyfin/ux-web/${name}`, path.resolve(__dirname, 'src/assets/brand/blank.png')])),
         extensions: ['.tsx', '.ts', '.js'],
         modules: [
             path.resolve(__dirname, 'src'),
@@ -56,6 +60,7 @@ const config = {
     plugins: [
         new DefinePlugin({
             __COMMIT_SHA__: JSON.stringify(COMMIT_SHA),
+            __OFFLINE_BUILD__: JSON.stringify(`${COMMIT_SHA}-${Date.now()}`),
             __JF_BUILD_VERSION__: JSON.stringify(
                 process.env.WEBPACK_SERVE ?
                     'Dev Server' :
@@ -66,15 +71,23 @@ const config = {
             __WEBPACK_SERVE__: !!JSON.parse(process.env.WEBPACK_SERVE || '0')
         }),
         new CleanWebpackPlugin(),
+        { apply(compiler) {
+            compiler.hooks.thisCompilation.tap('OfflineShell', compilation => {
+                compilation.hooks.processAssets.tap({ name: 'OfflineShell', stage: Compilation.PROCESS_ASSETS_STAGE_REPORT }, () => {
+                    // Only shipped public assets, never server API responses or runtime configuration.
+                    const assets = Object.keys(compilation.assets).filter(name =>
+                        /\.(js|css|woff2?|ttf|wasm|html|json|png|ico|svg)$/.test(name)
+                        && name !== 'config.json' && name !== 'serviceworker.js');
+                    compilation.emitAsset('offline-shell.json', new sources.RawSource(JSON.stringify(assets)));
+                });
+            });
+        } },
         new HtmlWebpackPlugin({
             filename: 'index.html',
             template: 'index.html',
             // Append file hashes to bundle urls for cache busting
             hash: true,
-            chunks: [
-                'main.jellyfin',
-                'serviceworker'
-            ]
+            chunks: ['main.jellyfin']
         }),
         new CopyPlugin({
             patterns: [
@@ -86,7 +99,7 @@ const config = {
                 'robots.txt',
                 {
                     from: 'touchicon*.png',
-                    context: path.resolve(__dirname, 'node_modules/@jellyfin/ux-web/favicons'),
+                    context: path.resolve(__dirname, 'src/assets/brand/favicons'),
                     to: 'favicons'
                 },
                 ...Assets.map(asset => {
@@ -140,7 +153,7 @@ const config = {
         removeAvailableModules: false,
         removeEmptyChunks: false,
         splitChunks: {
-            chunks: 'all',
+            chunks: chunk => chunk.name !== 'serviceworker',
             maxInitialRequests: Infinity,
             cacheGroups: {
                 node_modules: {

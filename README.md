@@ -37,6 +37,15 @@ Jellyfin Web is the frontend used for most of the clients available for end user
 <img src="https://translate.jellyfin.org/widgets/jellyfin/-/jellyfin-web/multi-auto.svg" alt="Detailed Translation Status"/>
 </a>
 
+## About this fork
+
+This repository is an independent Jellyfin 12 client for films and series, built on Jellyfin Web: its own interface,
+player, profiles, offline viewing and optional Seerr requests, reusing the Jellyfin engine, SDK and authentication.
+
+- Install and configure it on your server: [docs/fork/INSTALLATION-FR.md](docs/fork/INSTALLATION-FR.md) (French).
+- Optional server plugins (clip previews, release sources) and their catalogue: [plugins/](plugins/README.md).
+- Changes and releases: [docs/fork/CHANGELOG.md](docs/fork/CHANGELOG.md).
+
 ## Build Process
 
 ### Dependencies

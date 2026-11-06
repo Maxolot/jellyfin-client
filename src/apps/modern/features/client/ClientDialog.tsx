@@ -1,25 +1,40 @@
 /* eslint-disable react/jsx-no-bind -- Native dialog controls stay within this component. */
-import React, { useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import ClientIcon from './ClientIcon';
 import './detailDialogs.scss';
 
-type Props = { label: string; title: string; subtitle?: string; buttonClassName?: string; children: React.ReactNode | ((close: () => void) => React.ReactNode) };
+type Props = { label: string; title: string; subtitle?: string; buttonClassName?: string; controlled?: { open: boolean; onClose: () => void }; children: React.ReactNode | ((close: () => void) => React.ReactNode) };
 
-export default function ClientDialog({ label, title, subtitle, buttonClassName, children }: Readonly<Props>) {
+export default function ClientDialog({ label, title, subtitle, buttonClassName, controlled, children }: Readonly<Props>) {
     const dialog = useRef<HTMLDialogElement>(null);
     const titleId = useId();
     const dialogId = useId();
     const [opened, setOpened] = useState(false);
     const [mounted, setMounted] = useState(false);
     const close = () => dialog.current?.close();
-    return <><button type='button' className={buttonClassName} aria-haspopup='dialog' aria-expanded={opened} aria-controls={dialogId} onClick={() => {
+    const controlledOpen = controlled?.open;
+    useEffect(() => {
+        if (controlledOpen === undefined) {
+            return;
+        }
+        if (controlledOpen && !dialog.current?.open) {
+            setMounted(true);
+            dialog.current?.showModal();
+        } else if (!controlledOpen && dialog.current?.open) {
+            dialog.current.close();
+        }
+    }, [controlledOpen]);
+    return <>{!controlled && <button type='button' className={buttonClassName} aria-haspopup='dialog' aria-expanded={opened} aria-controls={dialogId} onClick={() => {
         setMounted(true);
         dialog.current?.showModal();
         setOpened(true);
-    }}>{label}</button>
+    }}>{label}</button>}
     {/* Native dialog handles Escape and focus; this pointer handler only dismisses outside clicks. */}
     {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
-    <dialog ref={dialog} id={dialogId} className='client-detail-dialog' aria-labelledby={titleId} onClose={() => setOpened(false)} onClick={event => {
+    <dialog ref={dialog} id={dialogId} className='client-detail-dialog' aria-labelledby={titleId} onClose={() => {
+        setOpened(false);
+        controlled?.onClose();
+    }} onClick={event => {
         const bounds = event.currentTarget.getBoundingClientRect();
         if (event.target === event.currentTarget && (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom)) close();
     }}><header><div>{subtitle && <small>{subtitle}</small>}<h2 id={titleId}>{title}</h2></div><button type='button' aria-label='Fermer' onClick={close}><ClientIcon name='close' /></button></header>

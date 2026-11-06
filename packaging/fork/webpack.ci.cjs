@@ -2,6 +2,9 @@
 // TypeScript is checked explicitly by the quality job before this build.
 const config = require('../../webpack.prod');
 const MinimizerPlugin = require('minimizer-webpack-plugin');
+// Preserve project-local dependency paths when worktrees share node_modules by symlink,
+// so the upstream Babel include rules still match those dependencies.
+config.resolve = { ...config.resolve, symlinks: false };
 config.plugins = config.plugins.filter(plugin => plugin.constructor.name !== 'ForkTsCheckerWebpackPlugin');
 config.optimization.minimizer = [new MinimizerPlugin({ parallel: false })];
 module.exports = config;

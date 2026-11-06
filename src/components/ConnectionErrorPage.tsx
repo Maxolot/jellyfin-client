@@ -1,24 +1,22 @@
-import DOMPurify from 'dompurify';
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
+import { Link } from 'react-router-dom';
+
+import SessionPage, { SessionNotice } from 'apps/modern/features/client/session/SessionPage';
 
 import { appHost } from 'components/apphost';
-import Page from 'components/Page';
-import toast from 'components/toast/toast';
 import { AppFeature } from 'constants/appFeature';
-import LinkButton from 'elements/emby-button/LinkButton';
-import globalize from 'lib/globalize';
 import { ConnectionState, ServerConnections } from 'lib/jellyfin-apiclient';
 
 interface ConnectionErrorPageProps {
     state: ConnectionState
 }
 
+const reload = () => window.location.reload();
+
 const ConnectionErrorPage: FC<ConnectionErrorPageProps> = ({
     state
 }) => {
-    const [ title, setTitle ] = useState<string>();
-    const [ htmlMessage, setHtmlMessage ] = useState<string>();
-    const [ message, setMessage ] = useState<string>();
+    const [ problem, setProblem ] = useState('');
     const [ isConnectDisabled, setIsConnectDisabled ] = useState(false);
 
     const onForceConnect = useCallback(async () => {
@@ -30,75 +28,29 @@ const ConnectionErrorPage: FC<ConnectionErrorPageProps> = ({
             window.location.reload();
         } catch (err) {
             console.error('[ConnectionErrorPage] Failed to force connect to server', err);
-            toast(globalize.translate('HeaderConnectionFailure'));
+            setProblem('La connexion a échoué.');
             setIsConnectDisabled(false);
         }
     }, []);
 
-    useEffect(() => {
-        switch (state) {
-            case ConnectionState.ServerMismatch:
-                setTitle(globalize.translate('HeaderServerMismatch'));
-                setHtmlMessage(undefined);
-                setMessage(globalize.translate('MessageServerMismatch'));
-                return;
-            case ConnectionState.ServerUpdateNeeded:
-                setTitle(globalize.translate('HeaderUpdateRequired'));
-                setHtmlMessage(globalize.translate(
-                    'ServerUpdateNeeded',
-                    '<a href="https://jellyfin.org/downloads/server/">jellyfin.org/downloads/server</a>'
-                ));
-                setMessage(undefined);
-                return;
-            case ConnectionState.Unavailable:
-                setTitle(globalize.translate('HeaderServerUnavailable'));
-                setHtmlMessage(undefined);
-                setMessage(globalize.translate('MessageUnableToConnectToServer'));
-        }
-    }, [ state ]);
-
-    if (!title) return;
+    const texts: Partial<Record<ConnectionState, { title: string; message: string }>> = {
+        [ConnectionState.ServerMismatch]: { title: 'Ce n’est plus le même serveur', message: 'L’adresse enregistrée répond, mais avec un autre serveur que celui connu.' },
+        [ConnectionState.ServerUpdateNeeded]: { title: 'Serveur à mettre à jour', message: 'La version de ce serveur est trop ancienne pour cette application.' },
+        [ConnectionState.Unavailable]: { title: 'Serveur injoignable', message: 'Vérifiez votre connexion, puis réessayez.' }
+    };
+    const text = texts[state];
+    if (!text) return null;
 
     return (
-        <Page
-            id='connectionErrorPage'
-            className='mainAnimatedPage standalonePage'
-            isBackButtonEnabled={false}
-            shouldAutoFocus
-        >
-            <div className='padded-left padded-right'>
-                <h1>{title}</h1>
-                {htmlMessage && (
-                    <p
-                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(htmlMessage) }}
-                        style={{ maxWidth: '80ch' }}
-                    />
-                )}
-                {message && (
-                    <p style={{ maxWidth: '80ch' }}>
-                        {message}
-                    </p>
-                )}
-
-                {appHost.supports(AppFeature.MultiServer) && (
-                    <LinkButton
-                        className='raised'
-                        href='/selectserver'
-                    >
-                        {globalize.translate('ButtonChangeServer')}
-                    </LinkButton>
-                )}
-
-                {state === ConnectionState.ServerMismatch && (
-                    <LinkButton
-                        onClick={onForceConnect}
-                        style={ isConnectDisabled ? { pointerEvents: 'none' } : undefined }
-                    >
-                        {globalize.translate('ConnectAnyway')}
-                    </LinkButton>
-                )}
-            </div>
-        </Page>
+        <SessionPage title={text.title}>
+            <SessionNotice title={text.title} message={text.message}>
+                <button type='button' className='client-profile-primary' onClick={reload}>Réessayer</button>
+                {state === ConnectionState.ServerMismatch && <button type='button' disabled={isConnectDisabled} onClick={onForceConnect}>Se connecter quand même</button>}
+                {problem && <p role='alert' className='client-profile-error'>{problem}</p>}
+                <Link className='client-session-link' to='/offline'>Ouvrir mes téléchargements</Link>
+                {appHost.supports(AppFeature.MultiServer) && <Link className='client-session-link' to='/selectserver'>Changer de serveur</Link>}
+            </SessionNotice>
+        </SessionPage>
     );
 };
 

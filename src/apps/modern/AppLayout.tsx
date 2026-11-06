@@ -1,37 +1,19 @@
-import React, { StrictMode, useCallback, useState } from 'react';
+import React from 'react';
 import Box from '@mui/material/Box';
-import { type Theme } from '@mui/material/styles';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 
 import AppBody from 'components/AppBody';
 import CustomCss from 'components/CustomCss';
-import OffsetAppBar from 'components/OffsetAppBar';
 import ThemeCss from 'components/ThemeCss';
-import { useApi } from 'hooks/useApi';
 
-import AppToolbar from './components/AppToolbar';
-import AppDrawer, { isDrawerPath } from './components/drawers/AppDrawer';
-import LibraryToolbar from './features/libraries/components/LibraryToolbar';
+import ConnectivityLayer from './features/client/remote/ConnectivityLayer';
+
 import { LibraryProvider } from './features/libraries/hooks/useLibrary';
-import { isLibraryPath } from './features/libraries/utils/path';
 
 import './AppOverrides.scss';
+import './features/client/session/nativeDialogs.scss';
 
 export const Component = () => {
-    const [ isDrawerActive, setIsDrawerActive ] = useState(false);
-    const { user } = useApi();
-    const location = useLocation();
-
-    const isClientPage = ['/client', '/home', '/video'].includes(location.pathname);
-    const isMediumScreen = useMediaQuery((t: Theme) => t.breakpoints.up('md'));
-    const isDrawerAvailable = isDrawerPath(location.pathname) && Boolean(user) && !isMediumScreen;
-    const isDrawerOpen = isDrawerActive && isDrawerAvailable;
-
-    const onToggleDrawer = useCallback(() => {
-        setIsDrawerActive(!isDrawerActive);
-    }, [ isDrawerActive, setIsDrawerActive ]);
-
     return (
         <LibraryProvider>
             <Box
@@ -42,27 +24,6 @@ export const Component = () => {
                     height: '100%'
                 }}
             >
-                <StrictMode>
-                    {!isClientPage && <OffsetAppBar dense>
-                        <AppToolbar
-                            isDrawerAvailable={!isMediumScreen && isDrawerAvailable}
-                            isDrawerOpen={isDrawerOpen}
-                            onDrawerButtonClick={onToggleDrawer}
-                        />
-                        {isLibraryPath(location.pathname) && <LibraryToolbar />}
-                    </OffsetAppBar>}
-
-                    {
-                        isDrawerAvailable && !isClientPage && (
-                            <AppDrawer
-                                open={isDrawerOpen}
-                                onClose={onToggleDrawer}
-                                onOpen={onToggleDrawer}
-                            />
-                        )
-                    }
-                </StrictMode>
-
                 <Box
                     component='main'
                     sx={{
@@ -76,6 +37,7 @@ export const Component = () => {
                     </AppBody>
                 </Box>
             </Box>
+            <ConnectivityLayer />
             <ThemeCss />
             <CustomCss />
         </LibraryProvider>

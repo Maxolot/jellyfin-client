@@ -8,6 +8,8 @@
     pointer-events: none;
 
     video {
+        position: absolute;
+        inset: 0;
         display: block;
         width: 100%;
         height: 100%;
@@ -25,6 +27,24 @@
     opacity: 0;
 }
 
+// Extrait qui change de page : la même vidéo continue, sans fondu d'apparition.
+.client-preview-media.is-resuming:not(.is-fading) video {
+    opacity: 1;
+    transition: none;
+}
+
+.client-preview-media.client-preview-stage {
+    position: fixed;
+    z-index: 5;
+    inset: auto;
+    border-radius: 12px;
+}
+
+// Version de meilleure qualité qui se prépare, invisible, avant de prendre le relais.
+.client-preview-media.is-resuming video.is-loading {
+    opacity: 0;
+}
+
 .client-hero > .client-preview-media {
     z-index: -2;
     inset: -118px 0 0;
@@ -34,15 +54,7 @@
     inset: 0;
 }
 
-.client-media-card .client-card-shade,
-.client-media-card .client-expanded-title,
-.client-media-card .client-continue-label,
-.client-media-card .client-progress {
-    z-index: 2;
-}
-
-.client-media-card .client-availability,
-.client-media-card .client-card-actions {
+.client-media-card .client-availability {
     z-index: 3;
 }
 
@@ -110,4 +122,9 @@
     .client-preview-media {
         display: none;
     }
+}
+
+/* Keep the still artwork out of the picture while the hero excerpt is visible. */
+.client-hero:has(> .client-preview-media.is-playing) .client-background {
+    opacity: 0;
 }

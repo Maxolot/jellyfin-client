@@ -4,7 +4,10 @@ import React, { type ReactNode, useRef, useState } from 'react';
 
 import appSettings from 'scripts/settings/appSettings';
 import * as userSettings from 'scripts/settings/userSettings';
-import Dashboard from 'utils/dashboard';
+import { signOut } from '../profiles/profileSession';
+import { serverInterfaceUrl } from '../session/ServerInterfacePage';
+import { Collapsible, SaveNote, Select, SettingCard, type SettingScope, TextField, Toggle } from '../settings/controls';
+import SettingsIcon from '../settings/SettingsIcon';
 
 import { AUDIO_CHANNELS, BITRATES, formatBitrate, languageOptions, NEXT_UP_DAYS, normalizeQuickConnectCode, passwordProblem, avatarProblem, STILL_WATCHING,
     SUBTITLE_MODES, TRANSCODE_AUDIO_CODECS, TRANSCODE_VIDEO_CODECS, VIDEO_WIDTHS } from './accountModel';
@@ -17,24 +20,6 @@ type Account = ReturnType<typeof useAccount>;
 const device = appSettings as unknown as Record<string, (...value: unknown[]) => unknown>;
 const synced = userSettings as unknown as Record<string, (...value: unknown[]) => unknown>;
 
-function SaveStatus({ mutation }: Readonly<{ mutation: { isPending: boolean; isError: boolean; isSuccess: boolean } }>) {
-    let text = '';
-    if (mutation.isPending) text = 'Enregistrement…';
-    else if (mutation.isError) text = 'Le changement n’a pas été enregistré. Réessayez.';
-    else if (mutation.isSuccess) text = 'Enregistré';
-    return <p className={`client-account-status${mutation.isError ? ' error' : ''}`} role='status'>{text}</p>;
-}
-
-function Check({ label, hint, checked, disabled, onChange }: Readonly<{ label: string; hint?: string; checked: boolean; disabled?: boolean; onChange: (value: boolean) => void }>) {
-    return <label className='client-player-check client-account-check'><input type='checkbox' checked={checked} disabled={disabled} onChange={event => onChange(event.target.checked)} />
-        <span>{label}{hint && <small>{hint}</small>}</span></label>;
-}
-
-function Choice({ label, value, options, disabled, onChange }: Readonly<{ label: string; value: string; options: readonly (readonly [string, string])[]; disabled?: boolean; onChange: (value: string) => void }>) {
-    return <label>{label}<select aria-label={label} value={value} disabled={disabled} onChange={event => onChange(event.target.value)}>
-        {options.map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></label>;
-}
-
 /** Device settings are read synchronously from storage; local state re-renders after each change. */
 function useDeviceSetting<T>(read: () => T, write: (value: T) => void): [T, (value: T) => void] {
     const [value, setValue] = useState(read);
@@ -44,8 +29,8 @@ function useDeviceSetting<T>(read: () => T, write: (value: T) => void): [T, (val
     }];
 }
 
-function Section({ title, scope, children }: Readonly<{ title: string; scope: string; children: ReactNode }>) {
-    return <section className='client-account-section'><header><h2>{title}</h2><span className='client-account-scope'>{scope}</span></header>{children}</section>;
+function Section({ title, scope, description, children }: Readonly<{ title: string; scope: SettingScope; description?: string; children: ReactNode }>) {
+    return <SettingCard title={title} scope={scope} description={description}>{children}</SettingCard>;
 }
 
 function useServerConfiguration(account: Account) {
@@ -56,27 +41,30 @@ function useServerConfiguration(account: Account) {
 
 function Loading({ account }: Readonly<{ account: Account }>) {
     if (account.account.isError) {
-        return <p role='alert'>Les réglages du compte ne peuvent pas être chargés. <button type='button' onClick={() => {
-            void account.account.refetch();
-        }}>Réessayer</button></p>;
+        return <div className='client-settings-actions'>
+            <p className='client-setting-note is-error' role='alert'>Les réglages du compte ne peuvent pas être chargés.</p>
+            <button type='button' className='client-settings-button' onClick={() => {
+                void account.account.refetch();
+            }}>Réessayer</button>
+        </div>;
     }
-    return <p role='status'>Chargement des réglages du compte…</p>;
+    return <p className='client-setting-note' role='status'>Chargement des réglages du compte…</p>;
 }
+
+const pick = <T extends string>(options: readonly (readonly [T, string])[], value: string, fallback: T) => options.find(([id]) => id === value)?.[0] ?? fallback;
 
 export function LanguageSettings() {
     const account = useAccount();
     const { config, save, busy } = useServerConfiguration(account);
-    if (!config) return <Section title='Langues et lecture' scope='Compte Jellyfin'><Loading account={account} /></Section>;
+    if (!config) return <Section title='Audio' scope='account'><Loading account={account} /></Section>;
     const languages = languageOptions(account.cultures.data || [], config.AudioLanguagePreference);
-    return <Section title='Langues et lecture' scope='Compte Jellyfin · tous vos appareils'>
-        <div className='client-player-fields'>
-            <Choice label='Langue audio préférée' value={config.AudioLanguagePreference || ''} options={languages} disabled={busy} onChange={value => save({ AudioLanguagePreference: value || null })} />
-            <Check label='Toujours lire la piste audio par défaut du fichier' hint='Ignore la langue préférée quand le fichier désigne une piste par défaut.' checked={!!config.PlayDefaultAudioTrack} disabled={busy} onChange={value => save({ PlayDefaultAudioTrack: value })} />
-            <Check label='Retenir la piste audio choisie' hint='Pour les épisodes suivants de la même série.' checked={!!config.RememberAudioSelections} disabled={busy} onChange={value => save({ RememberAudioSelections: value })} />
-            <Check label='Retenir les sous-titres choisis' hint='Pour les épisodes suivants de la même série.' checked={!!config.RememberSubtitleSelections} disabled={busy} onChange={value => save({ RememberSubtitleSelections: value })} />
-            <Check label='Enchaîner l’épisode suivant dans les autres applications Jellyfin' hint='Dans ce client, c’est le compte à rebours du Lecteur qui décide.' checked={!!config.EnableNextEpisodeAutoPlay} disabled={busy} onChange={value => save({ EnableNextEpisodeAutoPlay: value })} />
-        </div>
-        <SaveStatus mutation={account.configuration} />
+    return <Section title='Audio' scope='account' description='Vaut pour toutes vos applications Jellyfin.'>
+        <Select label='Langue audio préférée' value={config.AudioLanguagePreference || ''} options={languages} disabled={busy} onChange={value => save({ AudioLanguagePreference: value || null })} />
+        <Toggle label='Toujours lire la piste audio par défaut du fichier' hint='Ignore la langue préférée quand le fichier désigne une piste par défaut.' checked={!!config.PlayDefaultAudioTrack} disabled={busy} onChange={value => save({ PlayDefaultAudioTrack: value })} />
+        <Toggle label='Retenir la piste audio choisie' hint='Pour les épisodes suivants de la même série.' checked={!!config.RememberAudioSelections} disabled={busy} onChange={value => save({ RememberAudioSelections: value })} />
+        <Toggle label='Retenir les sous-titres choisis' hint='Pour les épisodes suivants de la même série.' checked={!!config.RememberSubtitleSelections} disabled={busy} onChange={value => save({ RememberSubtitleSelections: value })} />
+        <Toggle label='Enchaîner l’épisode suivant dans les autres applications' hint='Ici, c’est le réglage « Épisode suivant » du Lecteur qui décide.' checked={!!config.EnableNextEpisodeAutoPlay} disabled={busy} onChange={value => save({ EnableNextEpisodeAutoPlay: value })} />
+        <SaveNote state={account.configuration} />
     </Section>;
 }
 
@@ -84,20 +72,21 @@ export function SubtitleSettings() {
     const account = useAccount();
     const { config, save, busy } = useServerConfiguration(account);
     const [burnIn, setBurnIn] = useDeviceSetting(() => device.alwaysBurnInSubtitleWhenTranscoding() as boolean, value => device.alwaysBurnInSubtitleWhenTranscoding(value));
-    if (!config) return <Section title='Sous-titres' scope='Compte Jellyfin'><Loading account={account} /></Section>;
+    if (!config) return <Section title='Sous-titres' scope='account'><Loading account={account} /></Section>;
     const languages = languageOptions(account.cultures.data || [], config.SubtitleLanguagePreference);
     const mode = config.SubtitleMode || 'Default';
-    return <Section title='Sous-titres' scope='Compte Jellyfin · tous vos appareils'>
-        <div className='client-player-fields'>
-            <Choice label='Langue des sous-titres préférée' value={config.SubtitleLanguagePreference || ''} options={languages} disabled={busy} onChange={value => save({ SubtitleLanguagePreference: value })} />
-            <Check label='Incruster les sous-titres lors d’un transcodage' hint='Sur cet appareil. Évite les décalages, mais oblige le serveur à réencoder la vidéo.' checked={burnIn} onChange={setBurnIn} />
-        </div>
-        <fieldset className='client-account-modes' disabled={busy}><legend>Activation automatique</legend>
-            {SUBTITLE_MODES.map(([id, label, description]) => <button key={id} type='button' aria-pressed={mode === id} onClick={() => save({ SubtitleMode: id })}><strong>{label}</strong><small>{description}</small></button>)}
-        </fieldset>
-        <p className='client-player-hint'>Taille, fond et position des sous-titres se règlent dans la section Lecteur, plus haut.</p>
-        <SaveStatus mutation={account.configuration} />
-    </Section>;
+    return <>
+        <Section title='Sous-titres' scope='account' description='Vaut pour toutes vos applications Jellyfin.'>
+            <Select label='Langue des sous-titres préférée' value={config.SubtitleLanguagePreference || ''} options={languages} disabled={busy} onChange={value => save({ SubtitleLanguagePreference: value })} />
+            <Select label='Activation automatique' hint={SUBTITLE_MODES.find(([id]) => id === mode)?.[2]} value={mode} disabled={busy}
+                options={SUBTITLE_MODES.map(([id, label]) => [id, label] as const)} onChange={value => save({ SubtitleMode: value })} />
+            <SaveNote state={account.configuration} />
+            <p className='client-setting-note'>Taille, fond et position des sous-titres se règlent dans la section Lecteur.</p>
+        </Section>
+        <Section title='Sous-titres sur cet appareil' scope='device'>
+            <Toggle label='Incruster les sous-titres lors d’un transcodage' hint='Évite les décalages, mais oblige le serveur à réencoder la vidéo.' checked={burnIn} onChange={setBurnIn} />
+        </Section>
+    </>;
 }
 
 export function LibrarySettings() {
@@ -105,20 +94,16 @@ export function LibrarySettings() {
     const { config, save, busy } = useServerConfiguration(account);
     const [days, setDays] = useDeviceSetting(() => String(synced.maxDaysForNextUp()), value => synced.maxDaysForNextUp(Number(value)));
     const [rewatching, setRewatching] = useDeviceSetting(() => !!synced.enableRewatchingInNextUp(), value => synced.enableRewatchingInNextUp(value));
-    if (!config) return <Section title='Bibliothèque' scope='Compte Jellyfin'><Loading account={account} /></Section>;
+    if (!config) return <Section title='Bibliothèque' scope='account'><Loading account={account} /></Section>;
     return <>
-        <Section title='Bibliothèque' scope='Compte Jellyfin · tous vos appareils'>
-            <div className='client-player-fields'>
-                <Check label='Afficher les épisodes manquants' hint='Les épisodes connus mais absents de la bibliothèque apparaissent dans les saisons.' checked={!!config.DisplayMissingEpisodes} disabled={busy} onChange={value => save({ DisplayMissingEpisodes: value })} />
-                <Check label='Masquer les titres vus dans les ajouts récents' checked={!!config.HidePlayedInLatest} disabled={busy} onChange={value => save({ HidePlayedInLatest: value })} />
-            </div>
-            <SaveStatus mutation={account.configuration} />
+        <Section title='Bibliothèque' scope='account'>
+            <Toggle label='Afficher les épisodes manquants' hint='Les épisodes connus mais absents de la bibliothèque apparaissent dans les saisons.' checked={!!config.DisplayMissingEpisodes} disabled={busy} onChange={value => save({ DisplayMissingEpisodes: value })} />
+            <Toggle label='Masquer les titres vus dans les ajouts récents' checked={!!config.HidePlayedInLatest} disabled={busy} onChange={value => save({ HidePlayedInLatest: value })} />
+            <SaveNote state={account.configuration} />
         </Section>
-        <Section title='Continuer à regarder' scope='Cet appareil'>
-            <div className='client-player-fields'>
-                <Choice label='Proposer les séries commencées depuis' value={NEXT_UP_DAYS.some(([id]) => id === days) ? days : '365'} options={NEXT_UP_DAYS} onChange={setDays} />
-                <Check label='Proposer aussi les séries déjà terminées que vous revoyez' checked={rewatching} onChange={setRewatching} />
-            </div>
+        <Section title='Continuer à regarder' scope='device'>
+            <Select label='Proposer les séries commencées depuis' value={pick(NEXT_UP_DAYS, days, '365')} options={NEXT_UP_DAYS} onChange={setDays} />
+            <Toggle label='Proposer aussi les séries terminées que vous revoyez' checked={rewatching} onChange={setRewatching} />
         </Section>
     </>;
 }
@@ -131,7 +116,7 @@ function BitrateChoice({ remote }: Readonly<{ remote: boolean }>) {
         value => device.maxStreamingBitrate(isInNetwork, 'Video', value));
     const value = auto ? 'auto' : String(BITRATES.find(entry => entry <= bitrate) || BITRATES[BITRATES.length - 1]);
     const label = remote ? 'Qualité hors du réseau local' : 'Qualité sur le réseau local';
-    return <Choice label={label} value={value} options={[['auto', 'Automatique'], ...BITRATES.map(entry => [String(entry), formatBitrate(entry)] as [string, string])]} onChange={next => {
+    return <Select label={label} value={value} options={[['auto', 'Automatique'], ...BITRATES.map(entry => [String(entry), formatBitrate(entry)] as const)]} onChange={next => {
         if (next === 'auto') {
             setAuto(true);
             return;
@@ -154,28 +139,30 @@ export function DeviceSettings() {
     const [hi10p, setHi10p] = useDeviceSetting(() => device.enableHi10p() as boolean, value => device.enableHi10p(value));
     const [videoCodec, setVideoCodec] = useDeviceSetting(() => String(device.preferredTranscodeVideoCodec() || ''), value => device.preferredTranscodeVideoCodec(value));
     const [audioCodec, setAudioCodec] = useDeviceSetting(() => String(device.preferredTranscodeVideoAudioCodec() || ''), value => device.preferredTranscodeVideoAudioCodec(value));
-    return <Section title='Qualité et compatibilité' scope='Cet appareil · s’applique à la prochaine lecture'>
-        <div className='client-player-fields'>
+    return <>
+        <Section title='Qualité de lecture' scope='device' description='S’applique à la prochaine lecture.'>
             <BitrateChoice remote={false} />
             <BitrateChoice remote />
-            <Choice label='Résolution maximale' value={VIDEO_WIDTHS.some(([id]) => id === width) ? width : '0'} options={VIDEO_WIDTHS} onChange={setWidth} />
-            <Check label='Limiter aussi la lecture directe à cette résolution' checked={limitResolution} onChange={setLimitResolution} />
-            <Choice label='Canaux audio' value={AUDIO_CHANNELS.some(([id]) => id === channels) ? channels : '-1'} options={AUDIO_CHANNELS} onChange={setChannels} />
-            <Check label='Mode cinéma' hint='Bandes-annonces et introductions configurées sur le serveur avant un film.' checked={cinema} onChange={setCinema} />
-            <Choice label='Demander « Êtes-vous toujours là ? »' value={stillWatching} options={STILL_WATCHING} onChange={setStillWatching} />
-        </div>
-        <details className='client-account-advanced'><summary>Réglages avancés</summary>
-            <div className='client-player-fields'>
-                <Choice label='Codec vidéo préféré pour le transcodage' value={videoCodec} options={TRANSCODE_VIDEO_CODECS} onChange={setVideoCodec} />
-                <Choice label='Codec audio préféré pour le transcodage' value={audioCodec} options={TRANSCODE_AUDIO_CODECS} onChange={setAudioCodec} />
-                <Check label='Préférer le conteneur fMP4 pour le streaming' checked={fmp4} onChange={setFmp4} />
-                <Check label='Limiter la durée des segments de streaming' checked={segments} onChange={setSegments} />
-                <Check label='Lire le DTS sans conversion' hint='Seulement si votre appareil le décode.' checked={dts} onChange={setDts} />
-                <Check label='Lire le Dolby TrueHD sans conversion' hint='Seulement si votre appareil le décode.' checked={trueHd} onChange={setTrueHd} />
-                <Check label='Lire la vidéo 10 bits H.264 (Hi10P) sans conversion' checked={hi10p} onChange={setHi10p} />
-            </div>
-        </details>
-    </Section>;
+            <Select label='Résolution maximale' value={pick(VIDEO_WIDTHS, width, '0')} options={VIDEO_WIDTHS} onChange={setWidth} />
+            <Toggle label='Limiter aussi la lecture directe à cette résolution' checked={limitResolution} onChange={setLimitResolution} />
+            <Select label='Canaux audio' value={pick(AUDIO_CHANNELS, channels, '-1')} options={AUDIO_CHANNELS} onChange={setChannels} />
+        </Section>
+        <Section title='Pendant la lecture' scope='device'>
+            <Toggle label='Mode cinéma' hint='Bandes-annonces et introductions configurées sur le serveur avant un film.' checked={cinema} onChange={setCinema} />
+            <Select label='Demander « Êtes-vous toujours là ? »' value={pick(STILL_WATCHING, stillWatching, 'default')} options={STILL_WATCHING} onChange={setStillWatching} />
+        </Section>
+        <Section title='Compatibilité' scope='device' description='À changer seulement si une lecture échoue, ou si votre matériel décode ces formats.'>
+            <Collapsible title='Réglages avancés'>
+                <Select label='Codec vidéo préféré pour le transcodage' value={videoCodec} options={TRANSCODE_VIDEO_CODECS} onChange={setVideoCodec} />
+                <Select label='Codec audio préféré pour le transcodage' value={audioCodec} options={TRANSCODE_AUDIO_CODECS} onChange={setAudioCodec} />
+                <Toggle label='Préférer le conteneur fMP4 pour le streaming' checked={fmp4} onChange={setFmp4} />
+                <Toggle label='Limiter la durée des segments de streaming' checked={segments} onChange={setSegments} />
+                <Toggle label='Lire le DTS sans conversion' hint='Seulement si votre appareil le décode.' checked={dts} onChange={setDts} />
+                <Toggle label='Lire le Dolby TrueHD sans conversion' hint='Seulement si votre appareil le décode.' checked={trueHd} onChange={setTrueHd} />
+                <Toggle label='Lire la vidéo 10 bits H.264 (Hi10P) sans conversion' checked={hi10p} onChange={setHi10p} />
+            </Collapsible>
+        </Section>
+    </>;
 }
 
 function AvatarSettings({ account }: Readonly<{ account: Account }>) {
@@ -186,9 +173,10 @@ function AvatarSettings({ account }: Readonly<{ account: Account }>) {
     return <div className='client-account-avatar'>
         {source ? <img src={source} alt='' /> : <span aria-hidden='true'>{user?.Name?.slice(0, 1)}</span>}
         <div><strong>{user?.Name}</strong>
-            <div className='client-account-actions'>
-                <button type='button' disabled={account.avatar.isPending} onClick={() => input.current?.click()}>Changer la photo</button>
-                {source && <button type='button' disabled={account.avatar.isPending} onClick={() => account.avatar.mutate(null)}>Retirer la photo</button>}
+            {user?.Policy?.IsAdministrator && <small>Administrateur du serveur</small>}
+            <div className='client-settings-actions'>
+                <button type='button' className='client-settings-button' disabled={account.avatar.isPending} onClick={() => input.current?.click()}>Changer la photo</button>
+                {source && <button type='button' className='client-settings-button' disabled={account.avatar.isPending} onClick={() => account.avatar.mutate(null)}>Retirer la photo</button>}
             </div>
             <input ref={input} type='file' accept='image/png,image/jpeg,image/webp,image/gif' hidden onChange={event => {
                 const file = event.target.files?.[0];
@@ -198,7 +186,7 @@ function AvatarSettings({ account }: Readonly<{ account: Account }>) {
                 setProblem(error);
                 if (!error) account.avatar.mutate(file);
             }} />
-            {problem ? <p className='client-account-status error' role='alert'>{problem}</p> : <SaveStatus mutation={account.avatar} />}
+            {problem ? <p className='client-setting-note is-error' role='alert'>{problem}</p> : <SaveNote state={account.avatar} />}
         </div>
     </div>;
 }
@@ -206,8 +194,9 @@ function AvatarSettings({ account }: Readonly<{ account: Account }>) {
 function PasswordSettings({ account }: Readonly<{ account: Account }>) {
     const [fields, setFields] = useState({ current: '', next: '', confirmation: '' });
     const [problem, setProblem] = useState('');
-    const field = (key: keyof typeof fields, label: string, autoComplete: string) => <label>{label}<input type='password' autoComplete={autoComplete} value={fields[key]} onChange={event => setFields({ ...fields, [key]: event.target.value })} /></label>;
-    return <form className='client-player-fields client-account-password' onSubmit={event => {
+    const field = (key: keyof typeof fields, label: string, autoComplete: string) => <TextField label={label} type='password' autoComplete={autoComplete} value={fields[key]}
+        onChange={value => setFields({ ...fields, [key]: value })} />;
+    return <form className='client-account-form' onSubmit={event => {
         event.preventDefault();
         const error = passwordProblem(fields.current, fields.next, fields.confirmation, false);
         setProblem(error);
@@ -220,15 +209,15 @@ function PasswordSettings({ account }: Readonly<{ account: Account }>) {
         {field('current', 'Mot de passe actuel (vide si vous n’en avez pas)', 'current-password')}
         {field('next', 'Nouveau mot de passe', 'new-password')}
         {field('confirmation', 'Confirmer le nouveau mot de passe', 'new-password')}
-        <button type='submit' disabled={account.password.isPending}>Changer le mot de passe</button>
-        {problem ? <p className='client-account-status error' role='alert'>{problem}</p> : <p className='client-account-status' role='status'>{account.password.isSuccess ? 'Mot de passe changé.' : ''}</p>}
+        <div className='client-settings-actions'><button type='submit' className='client-settings-button-primary' disabled={account.password.isPending}>Changer le mot de passe</button></div>
+        {problem ? <p className='client-setting-note is-error' role='alert'>{problem}</p> : <p className='client-setting-note is-ok' role='status'>{account.password.isSuccess ? 'Mot de passe changé.' : ''}</p>}
     </form>;
 }
 
 function QuickConnectSettings({ account }: Readonly<{ account: Account }>) {
     const [code, setCode] = useState('');
     const [problem, setProblem] = useState('');
-    return <form className='client-player-fields client-account-quickconnect' onSubmit={event => {
+    return <form className='client-controls client-account-form' onSubmit={event => {
         event.preventDefault();
         const normalized = normalizeQuickConnectCode(code);
         setProblem(normalized ? '' : 'Le code comporte six chiffres.');
@@ -238,10 +227,10 @@ function QuickConnectSettings({ account }: Readonly<{ account: Account }>) {
             onError: () => setProblem('Ce code est inconnu ou a expiré. Générez-en un nouveau sur l’autre appareil.')
         });
     }}>
-        <p className='client-player-hint'>Sur l’appareil à connecter, choisissez Quick Connect : il affiche un code à six chiffres. Saisissez-le ici pour l’ouvrir avec votre compte, sans taper votre mot de passe.</p>
-        <label>Code affiché<input inputMode='numeric' autoComplete='one-time-code' maxLength={9} placeholder='123 456' value={code} onChange={event => setCode(event.target.value)} /></label>
-        <button type='submit' disabled={account.authorize.isPending}>Autoriser l’appareil</button>
-        {problem ? <p className='client-account-status error' role='alert'>{problem}</p> : <p className='client-account-status' role='status'>{account.authorize.isSuccess ? 'Appareil autorisé : il est maintenant connecté.' : ''}</p>}
+        <p className='client-setting-note'>Sur l’appareil à connecter, choisissez Quick Connect : il affiche un code à six chiffres. Saisissez-le ici pour l’ouvrir avec votre compte, sans taper votre mot de passe.</p>
+        <TextField label='Code affiché' inputMode='numeric' autoComplete='one-time-code' maxLength={9} placeholder='123 456' value={code} onChange={setCode} />
+        <div className='client-settings-actions'><button type='submit' className='client-settings-button-primary' disabled={account.authorize.isPending}>Autoriser l’appareil</button></div>
+        {problem ? <p className='client-setting-note is-error' role='alert'>{problem}</p> : <p className='client-setting-note is-ok' role='status'>{account.authorize.isSuccess ? 'Appareil autorisé : il est maintenant connecté.' : ''}</p>}
     </form>;
 }
 
@@ -254,15 +243,18 @@ export function QuickConnectMenuItem() {
 
 export function ProfileSettings() {
     const account = useAccount();
-    if (!account.account.data) return <Section title='Profil' scope='Compte Jellyfin'><Loading account={account} /></Section>;
+    if (!account.account.data) return <Section title='Profil' scope='account'><Loading account={account} /></Section>;
     const admin = !!account.account.data.Policy?.IsAdministrator;
     return <>
-        <Section title='Profil' scope='Compte Jellyfin'><AvatarSettings account={account} /></Section>
-        <Section title='Mot de passe' scope='Compte Jellyfin'><PasswordSettings account={account} /></Section>
-        <Section title='Session' scope='Cet appareil'>
-            <div className='client-account-actions'>
-                <button type='button' onClick={Dashboard.logout}>Se déconnecter</button>
-                {admin && <a className='client-button' href='#/dashboard'>Administration du serveur ›</a>}
+        <Section title='Profil' scope='account'><AvatarSettings account={account} /></Section>
+        <Section title='Mot de passe' scope='account'><PasswordSettings account={account} /></Section>
+        {account.quickConnect.data !== false && <Section title='Connecter un autre appareil' scope='account'><QuickConnectSettings account={account} /></Section>}
+        <Section title='Session' scope='device'>
+            <div className='client-settings-actions'>
+                <button type='button' className='client-settings-button client-settings-button-danger' onClick={() => {
+                    void signOut(account.api?.basePath, account.account.data?.Id);
+                }}>Se déconnecter</button>
+                {admin && account.api && <a className='client-settings-button' href={serverInterfaceUrl(account.api.basePath, 'dashboard')} target='_blank' rel='noopener noreferrer'><SettingsIcon name='external' />Administration du serveur</a>}
             </div>
         </Section>
     </>;

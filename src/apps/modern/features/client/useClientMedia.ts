@@ -1,3 +1,5 @@
+import type { Api } from '@jellyfin/sdk';
+import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-item-kind';
 import { ItemFields } from '@jellyfin/sdk/lib/generated-client/models/item-fields';
 import { ItemSortBy } from '@jellyfin/sdk/lib/generated-client/models/item-sort-by';
@@ -5,7 +7,8 @@ import { SortOrder } from '@jellyfin/sdk/lib/generated-client/models/sort-order'
 import { getFilterApi } from '@jellyfin/sdk/lib/utils/api/filter-api';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
 import { getShowApi } from '@jellyfin/sdk/lib/utils/api/show-api';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
 import { useApi } from 'hooks/useApi';
 import * as userSettings from 'scripts/settings/userSettings';
@@ -26,21 +29,21 @@ function nextUpOptions() {
         nextUpDateCutoff: days > 0 ? new Date(Date.now() - days * 864e5).toISOString() : undefined };
 }
 
-type BrowseFilters = { genre?: string; sort?: string; person?: string; audio?: string; collection?: string };
+export type BrowseFilters = { genre?: string; sort?: string; person?: string; audio?: string; collection?: string };
 
-export function useClientMedia(view: string, search: string, offset: number, { genre = '', sort = 'name', person = '', audio = '', collection = '' }: BrowseFilters = {}) {
-    const { api, user } = useApi();
-    return useQuery({
+type Connection = { api?: Api; user?: { Id?: string | null; Configuration?: { HidePlayedInLatest?: boolean } | null } };
+
+/** One description of a page's data, shared by the page itself and by whatever prepares it in advance. */
+export function browseQuery({ api, user }: Connection, view: string, search: string, offset: number, { genre = '', sort = 'name', person = '', audio = '', collection = '' }: BrowseFilters = {}) {
+    return {
         queryKey: ['Client', api?.basePath, user?.Id, 'Browse', view, search, offset, genre, sort, person, audio, collection],
         staleTime: 30000,
-        refetchOnMount: view === 'home' ? 'always' : true,
-        enabled: !!api && !!user?.Id && view !== 'disabled',
-        queryFn: ({ signal }) => clientRequest(async () => {
+        queryFn: ({ signal }: { signal: AbortSignal }) => clientRequest(async () => {
             const library = getLibraryApi(api!);
             let types = [BaseItemKind.Movie, BaseItemKind.Series];
             if (view === 'films' || view === 'tonight') types = [BaseItemKind.Movie];
             if (view === 'series') types = [BaseItemKind.Series];
-            const common = { userId: user!.Id, recursive: true, parentId: collection || undefined, includeItemTypes: types,
+            const common = { userId: user!.Id!, recursive: true, parentId: collection || undefined, includeItemTypes: types,
                 audioLanguages: audio ? [audio] : undefined, genres: genre ? [genre] : undefined, fields: [ItemFields.Overview, ItemFields.Genres, ItemFields.DateCreated, ItemFields.ProviderIds], imageTypeLimit: 1, enableUserData: true };
             const request = { signal };
             if (view !== 'home') {
@@ -54,9 +57,9 @@ export function useClientMedia(view: string, search: string, offset: number, { g
             const latest = { ...common, isPlayed: user!.Configuration?.HidePlayedInLatest ? false : undefined,
                 sortBy: [ItemSortBy.DateCreated], sortOrder: [SortOrder.Descending] };
             const [resume, next, movies, series, picks] = await Promise.all([
-                library.getResumeItems({ userId: user!.Id, limit: 12,
+                library.getResumeItems({ userId: user!.Id!, limit: 12,
                     includeItemTypes: [BaseItemKind.Movie, BaseItemKind.Episode], fields: common.fields }, request),
-                getShowApi(api!).getNextUp({ userId: user!.Id, limit: 12, fields: common.fields, ...nextUpOptions() }, request),
+                getShowApi(api!).getNextUp({ userId: user!.Id!, limit: 12, fields: common.fields, ...nextUpOptions() }, request),
                 library.getItems({ ...latest, includeItemTypes: [BaseItemKind.Movie], limit: 20 }, request),
                 library.getItems({ ...latest, includeItemTypes: [BaseItemKind.Series], limit: 20 }, request),
                 // Unwatched, best rated titles feed the « À découvrir » selection, as in the mockup.
@@ -69,7 +72,56 @@ export function useClientMedia(view: string, search: string, offset: number, { g
                 movies: uniqueItems(movies.data.Items || [], continuing), series: uniqueItems(series.data.Items || []),
                 picks: uniqueItems(picks.data.Items || [], continuing) };
         })
+    };
+}
+
+export function useClientMedia(view: string, search: string, offset: number, filters: BrowseFilters = {}) {
+    const { api, user } = useApi();
+    return useQuery({
+        ...browseQuery({ api, user }, view, search, offset, filters),
+        refetchOnMount: view === 'home' ? 'always' : true,
+        enabled: !!api && !!user?.Id && view !== 'disabled'
     });
+}
+
+type FirstPage = { items: BaseItemDto[]; total: number };
+
+/**
+ * Titles beyond the first page of a list, fetched as the viewer scrolls.
+ * The first page stays the shared one, already prepared in advance and kept across visits.
+ */
+export function useMoreBrowse(view: string, search: string, filters: BrowseFilters, first: FirstPage | undefined) {
+    const { api, user } = useApi();
+    const cache = useQueryClient();
+    const key = [...browseQuery({ api, user }, view, search, 0, filters).queryKey, 'More'];
+    const pageSize = first?.items.length || 0;
+    const query = useInfiniteQuery({
+        queryKey: key,
+        // Nothing is asked before the viewer gets near the end; what was already loaded stays up to date.
+        enabled: !!cache.getQueryData(key) && pageSize > 0,
+        initialPageParam: pageSize,
+        staleTime: 300000,
+        gcTime: 600000,
+        retry: 1,
+        queryFn: ({ pageParam, signal }) => browseQuery({ api, user }, view, search, pageParam, filters).queryFn({ signal }),
+        getNextPageParam: (last, _pages, lastOffset) => last.items.length ? lastOffset + last.items.length : undefined
+    });
+    const firstItems = first?.items;
+    const loaded = query.data?.pages;
+    const pages = useMemo(() => {
+        // A title added meanwhile shifts the pages: nobody appears twice.
+        const seen = new Set((firstItems || []).map(item => item.Id));
+        return [firstItems || [], ...(loaded || []).map(page => page.items.filter(item => {
+            if (seen.has(item.Id)) return false;
+            seen.add(item.Id);
+            return true;
+        }))];
+    }, [firstItems, loaded]);
+    const count = pages.reduce((sum, page) => sum + page.length, 0);
+    const exhausted = !!loaded?.length && !loaded[loaded.length - 1].items.length;
+    const hasMore = !!first && count > 0 && count < first.total && !exhausted;
+    const { fetchNextPage } = query;
+    return { pages, hasMore, isFetching: query.isFetching, isError: query.isError, fetchMore: fetchNextPage };
 }
 
 export function useClientDetails(id: string, season: string) {

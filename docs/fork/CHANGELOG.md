@@ -1,6 +1,21 @@
 # Fork changelog
 
-## Unreleased — optional Seerr integration
+## client-v1.0.0
+
+First complete version: every screen is the client's own, the Jellyfin engine, SDK and authentication are reused.
+
+- Own screens for sign-in, servers, password, errors and loading; profile picker « Qui regarde ? » with an animated
+  entrance, account switching without a password on this browser, Quick Connect and an avatar gallery hook.
+- Custom player: animated ±15 s, episode panel, subtitle offset, technical details, sleep timer, keyboard help.
+- Home, Films, Séries, Nouveautés, Ce soir and Mon espace: endless rows whose unfolded card stays at the start,
+  full-screen hero that turns into a framed card while scrolling, a blurred page background at all times, native
+  ratings, sagas, infinite library lists and fast tab switching.
+- Settings redesigned per browser, device and account; server page to install and configure optional plugins.
+- Play on another device (remote control) and watch together (SyncPlay); offline viewing on HTTPS deployments.
+- Optional plugins published with the client in `plugins/`: Native Previews (clips) and Movie Sources (release
+  sources through Prowlarr), installable from Settings → Server through the bundled catalogue.
+
+### Optional Seerr integration
 
 - Reuse Moonbase proxy sessions, with per-server/user opt-out and no client admin key.
 - Mix external search/discovery with provider-matched Jellyfin titles; preserve playback.
@@ -9,7 +24,7 @@
 - Soften cached ambient artwork changes and close expanding cards on exit.
 - Restore the three-card Tonight fan and lazy collection member previews.
 
-## Unreleased — visual parity PR
+### Visual parity
 
 - Prepare nearby landscapes before expansion and synchronize the decoded-image
   crossfade; preserve rapid selection, failed-image fallback and second-tap navigation.

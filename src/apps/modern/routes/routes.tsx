@@ -3,19 +3,20 @@ import { Navigate, RouteObject } from 'react-router-dom';
 
 import ConnectionRequired from 'components/ConnectionRequired';
 import { toAsyncPageRoute } from 'components/router/AsyncRoute';
-import { toViewManagerPageRoute } from 'components/router/LegacyRoute';
 import ErrorBoundary from 'components/router/ErrorBoundary';
 import FallbackRoute from 'components/router/FallbackRoute';
 
 import { ASYNC_PUBLIC_ROUTES, ASYNC_USER_ROUTES } from './asyncRoutes';
-import { LEGACY_PUBLIC_ROUTES, LEGACY_USER_ROUTES } from './legacyRoutes';
+import { SERVER_INTERFACE_ROUTES, USER_REDIRECTS } from './redirects';
 import VideoPage from './video';
+import OfflinePage from '../features/client/offline/OfflinePage';
 
 export const APP_ROUTES: RouteObject[] = [
     {
         path: '/*',
         lazy: () => import('../AppLayout'),
         children: [
+            { path: 'offline', Component: OfflinePage },
             { index: true, element: <Navigate replace to='/home' /> },
 
             {
@@ -23,7 +24,7 @@ export const APP_ROUTES: RouteObject[] = [
                 Component: ConnectionRequired,
                 children: [
                     ...ASYNC_USER_ROUTES.map(toAsyncPageRoute),
-                    ...LEGACY_USER_ROUTES.map(toViewManagerPageRoute),
+                    ...USER_REDIRECTS,
 
                     // Client video presentation reuses the retained playback engine.
                     {
@@ -39,7 +40,7 @@ export const APP_ROUTES: RouteObject[] = [
                 element: <ConnectionRequired level='public' />,
                 children: [
                     ...ASYNC_PUBLIC_ROUTES.map(toAsyncPageRoute),
-                    ...LEGACY_PUBLIC_ROUTES.map(toViewManagerPageRoute),
+                    ...SERVER_INTERFACE_ROUTES,
 
                     /* Fallback route for invalid paths */
                     {

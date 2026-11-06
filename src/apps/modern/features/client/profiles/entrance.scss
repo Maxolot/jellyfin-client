@@ -1,0 +1,100 @@
+// Entrée dans un profil, en deux temps.
+
+// 1. « Qui regarde ? » : l'avatar choisi grossit et s'illumine, le reste s'efface.
+.client-profiles-leaving {
+    > h1,
+    > .client-profile-manage,
+    li:not(.is-chosen) {
+        opacity: 0;
+        transform: scale(0.94);
+        transition: opacity 0.32s ease, transform 0.42s cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+
+    li.is-chosen .client-profile-avatar {
+        box-shadow: 0 0 0 3px #fff, 0 18px 60px #0009;
+        transform: scale(1.18);
+        transition: transform 0.42s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.3s ease;
+    }
+
+    li.is-chosen strong {
+        opacity: 0;
+        transition: opacity 0.25s ease;
+    }
+}
+
+// 2. Accueil : l'avatar, posé au centre sur un fond noir, s'agrandit et se dissout ; la page arrive derrière.
+.client-profile-entrance {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: #000;
+    pointer-events: none;
+    animation: client-entrance-veil 1.1s 0.15s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.client-profile-entrance-avatar {
+    display: grid;
+    overflow: hidden;
+    width: clamp(132px, 14vw, 188px);
+    aspect-ratio: 1;
+    place-items: center;
+    border-radius: 12px;
+    color: #fff;
+    font-size: clamp(52px, 6vw, 76px);
+    font-weight: 600;
+    animation: client-entrance-avatar 1.1s 0.15s cubic-bezier(0.5, 0, 0.2, 1) both;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.client-entering-profile .client-interface {
+    animation: client-entrance-page 1s 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes client-entrance-veil {
+    0%,
+    30% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+@keyframes client-entrance-avatar {
+    0% {
+        opacity: 1;
+        filter: blur(0);
+        transform: scale(1.18);
+    }
+
+    100% {
+        opacity: 0;
+        filter: blur(6px);
+        transform: scale(3.2);
+    }
+}
+
+@keyframes client-entrance-page {
+    0% {
+        opacity: 0;
+        transform: scale(1.04);
+    }
+
+    100% {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .client-profile-entrance {
+        display: none;
+    }
+
+    .client-entering-profile .client-interface {
+        animation: none;
+    }
+}

@@ -46,6 +46,20 @@ export function artworkUrl(basePath: string, item: BaseItemDto, kind: ArtworkKin
     return `${basePath}/Items/${id}/Images/${type}?maxWidth=${artworkWidth(kind)}&quality=85${version}`;
 }
 
+const decodedArtwork = new Set<string>();
+const MAX_REMEMBERED = 800;
+
+/** Pictures already decoded in this visit show at once, without a placeholder, when a page comes back. */
+export function rememberDecoded(source: string) {
+    decodedArtwork.delete(source);
+    decodedArtwork.add(source);
+    if (decodedArtwork.size > MAX_REMEMBERED) decodedArtwork.delete(decodedArtwork.values().next().value!);
+}
+
+export function wasDecoded(source: string) {
+    return decodedArtwork.has(source);
+}
+
 // Only the next hero / deliberate navigation intent is warmed, never the whole library.
 const warmed = new Map<string, Promise<void>>();
 export function preloadArtwork(source: string) {
@@ -58,7 +72,10 @@ export function preloadArtwork(source: string) {
     const pending = new Promise<void>((resolve, reject) => {
         image.onload = () => {
             const decoded = typeof image.decode === 'function' ? image.decode() : Promise.resolve();
-            decoded.then(resolve, reject);
+            decoded.then(() => {
+                rememberDecoded(source);
+                resolve();
+            }, reject);
         };
         image.onerror = () => reject(new Error('Artwork unavailable'));
         image.src = source;

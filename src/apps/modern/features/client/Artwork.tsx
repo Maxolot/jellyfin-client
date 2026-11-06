@@ -1,6 +1,7 @@
 /* eslint-disable react/jsx-no-bind -- Decoding belongs to the individual image lifecycle. */
 import React, { useEffect, useRef, useState } from 'react';
 
+import { rememberDecoded, wasDecoded } from './artwork';
 import { ImageSkeleton } from './ClientSkeleton';
 
 type Props = {
@@ -17,7 +18,8 @@ type Props = {
 /** Reveal decoded pixels, rather than exposing a progressive JPEG as it arrives. */
 export default function Artwork({ source, className = '', alt = '', eager = false, enabled = true, onReady, onFailure, rootMargin = '600px 300px' }: Readonly<Props>) {
     const ref = useRef<HTMLImageElement>(null);
-    const [nearby, setNearby] = useState(eager);
+    const known = !!source && wasDecoded(source);
+    const [nearby, setNearby] = useState(eager || known);
     const [decoded, setDecoded] = useState('');
     const [failed, setFailed] = useState('');
     useEffect(() => {
@@ -35,15 +37,17 @@ export default function Artwork({ source, className = '', alt = '', eager = fals
         observer.observe(ref.current);
         return () => observer.disconnect();
     }, [enabled, nearby, rootMargin]);
-    const requested = (enabled && (eager || nearby)) || decoded === source ? source : undefined;
-    const pending = !!requested && decoded !== source && failed !== source && !className.includes('logo');
-    return <>{pending && <ImageSkeleton />}<img ref={ref} className={`client-artwork ${className}${decoded === source ? ' artwork-ready' : ''}`} src={requested || undefined}
+    const ready = decoded === source || known;
+    const requested = (enabled && (eager || nearby)) || ready ? source : undefined;
+    const pending = !!requested && !ready && failed !== source && !className.includes('logo');
+    return <>{pending && <ImageSkeleton />}<img ref={ref} className={`client-artwork ${className}${ready ? ' artwork-ready' : ''}`} src={requested || undefined}
         alt={alt} decoding='async' hidden={failed === source} onLoad={async event => {
             const element = event.currentTarget;
             const loadedSource = source;
             try {
                 if (typeof element.decode === 'function') await element.decode();
                 if (element === ref.current && element.getAttribute('src') === loadedSource) {
+                    rememberDecoded(loadedSource);
                     setDecoded(loadedSource);
                     onReady?.();
                 }

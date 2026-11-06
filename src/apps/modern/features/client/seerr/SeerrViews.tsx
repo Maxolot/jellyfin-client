@@ -13,34 +13,47 @@ import ClientSkeleton from '../ClientSkeleton';
 import HeroArtwork from '../HeroArtwork';
 import ClientIcon from '../ClientIcon';
 import { withLocalAvailability, externalIdentity, catalogueItem, providerKey, canRequest, imageUrl, localMatch, mediaLabel, requestableSeasons, requestLabel,
-    type ExternalMedia, type MediaRequest, type MediaType, type Quota, type Results, type SeerrIdentity } from './model';
+    releaseLabel, type ExternalMedia, type MediaRequest, type MediaType, type Quota, type Results, type SeerrIdentity } from './model';
 import { useLocalIdentities, useLocalSeasons, useSeerrDetail } from './queries';
 import { useSeerr } from './SeerrContext';
-import SeerrSetup from './SeerrSetup';
+import { SettingCard, StatusBadge, Toggle } from '../settings/controls';
+import seerrLogo from '../settings/logos/seerr.svg';
+import { useApi } from 'hooks/useApi';
+import SourceBadge from './SourceBadge';
+import { useMovieLanguages, useMovieSource, useSeasonLanguages, useSeasonSources, type SourceLanguage, type SourceStatus } from './sources';
 
 export function SeerrSettings() {
     const seerr = useSeerr();
+    const { user } = useApi();
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
-    let label = 'Le service de demandes n’est pas disponible sur ce serveur.';
-    if (seerr.status.isFetching) label = 'Vérification de la connexion…';
-    if (seerr.status.data?.enabled) label = 'Connexion aux demandes à rétablir.';
-    if (seerr.connected) label = 'Connecté avec votre compte Jellyfin.';
-    if (!seerr.enabled) label = 'Catalogue Jellyfin uniquement.';
-    return <section className='client-seerr-settings'><h2>Découvertes et demandes</h2><label><input type='checkbox' checked={seerr.enabled} disabled={!seerr.permitted} onChange={event => seerr.setEnabled(event.target.checked)} /> Enrichir le catalogue avec Jellyseerr</label><p role='status'>{label}</p>
-        {seerr.enabled && !seerr.connected && <button className='client-button' disabled={busy} onClick={async () => {
-            setBusy(true);
-            setError('');
-            try {
-                if (seerr.status.data?.enabled && !seerr.status.data.authenticated) await seerr.reconnect();
-                else await seerr.status.refetch();
-            } catch {
-                setError('La connexion automatique n’est pas disponible. Connectez ce compte dans Moonfin, puis réessayez ici.');
-            } finally { setBusy(false); }
-        }}>{busy ? 'Connexion…' : 'Vérifier la connexion'}</button>}
-        {error && <p role='alert'>{error}</p>}
-        <SeerrSetup />
-    </section>;
+    let badge = <StatusBadge tone='off'>Indisponible</StatusBadge>;
+    if (seerr.status.isFetching) badge = <StatusBadge tone='busy'>Vérification…</StatusBadge>;
+    else if (seerr.connected) badge = <StatusBadge tone='ok'>Connecté</StatusBadge>;
+    else if (seerr.status.data?.enabled) badge = <StatusBadge tone='warning'>À reconnecter</StatusBadge>;
+    if (!seerr.enabled) badge = <StatusBadge tone='off'>Désactivé</StatusBadge>;
+    let hint = 'Le service de demandes n’est pas encore installé sur ce serveur.';
+    if (seerr.connected) hint = 'Connecté avec votre compte : les découvertes et vos demandes apparaissent dans le catalogue.';
+    else if (seerr.status.data?.enabled) hint = 'Le service existe, mais votre compte n’est pas encore relié.';
+    if (!seerr.enabled) hint = 'Seuls les titres de votre bibliothèque sont affichés.';
+    return <div className='client-controls'>
+        <SettingCard title='Découvertes et demandes' scope='browser' aside={<>{badge}<img className='client-setting-logo' src={seerrLogo} alt='' /></>}
+            description='Proposé par Seerr : des titres absents de la bibliothèque, à demander en un clic.'>
+            <Toggle label='Enrichir le catalogue avec Seerr' hint={hint} checked={seerr.enabled} disabled={!seerr.permitted} onChange={seerr.setEnabled} />
+            {seerr.enabled && !seerr.connected && <div className='client-settings-actions'><button type='button' className='client-settings-button' disabled={busy} onClick={async () => {
+                setBusy(true);
+                setError('');
+                try {
+                    if (seerr.status.data?.enabled && !seerr.status.data.authenticated) await seerr.reconnect();
+                    else await seerr.status.refetch();
+                } catch {
+                    setError('La connexion automatique n’est pas disponible. Vérifiez que votre compte existe dans Seerr, puis réessayez.');
+                } finally { setBusy(false); }
+            }}>{busy ? 'Connexion…' : 'Vérifier la connexion'}</button></div>}
+            {error && <p className='client-setting-note is-error' role='alert'>{error}</p>}
+            {user?.Policy?.IsAdministrator && <p className='client-setting-note'>Installation et adresse de Seerr : <Link to='/client?view=settings&section=serveur-demandes'>Serveur › Demandes</Link>.</p>}
+        </SettingCard>
+    </div>;
 }
 
 function requestState({ data, identity, is4k, selected, permissions, quotaData, quotaReady, pending }: { data: ExternalMedia; identity: SeerrIdentity; is4k: boolean; selected: number[]; permissions: number; quotaData: Quota | undefined; quotaReady: boolean; pending: boolean }) {
@@ -59,14 +72,23 @@ function requestState({ data, identity, is4k, selected, permissions, quotaData, 
     return { info, state, seasons, allSeasons, currentQuota, remaining, permitted, restricted, filmRequested, disabled };
 }
 
-function SeasonPicker({ data, is4k, selected, disabled, toggle }: Readonly<{ data: ExternalMedia; is4k: boolean; selected: number[]; disabled: boolean; toggle: (number: number) => void }>) {
+function SeasonPicker({ data, is4k, selected, disabled, sources, toggle, selectAll }: Readonly<{ data: ExternalMedia; is4k: boolean; selected: number[]; disabled: boolean; sources?: Record<number, SourceStatus>; toggle: (number: number) => void; selectAll: (numbers: number[]) => void }>) {
     const seasons = requestableSeasons(data, is4k);
-    return <fieldset disabled={disabled}><legend>Choisir les saisons à compléter</legend><div className='client-request-seasons'>{(data.seasons || []).filter(season => season.seasonNumber > 0).map(season => {
+    const everything = seasons.length > 1 && selected.length < seasons.length;
+    return <fieldset disabled={disabled}><legend>Choisir les saisons à compléter{everything && <button type='button' className='client-text-button' onClick={() => selectAll(seasons.map(entry => entry.seasonNumber))}>Tout sélectionner</button>}</legend><div className='client-request-seasons'>{(data.seasons || []).filter(season => season.seasonNumber > 0).map(season => {
         const available = seasons.some(entry => entry.seasonNumber === season.seasonNumber);
         const seasonInfo = data.mediaInfo?.seasons?.find(entry => entry.seasonNumber === season.seasonNumber);
         let label = mediaLabel({ status: is4k ? seasonInfo?.status4k : seasonInfo?.status });
         if (!available && label === 'À demander') label = season.episodeCount === 0 ? 'À venir' : 'Déjà demandée';
-        return <button type='button' key={season.seasonNumber} disabled={!available} aria-pressed={selected.includes(season.seasonNumber)} onClick={() => toggle(season.seasonNumber)}><strong>Saison {season.seasonNumber}<i className='client-request-check' aria-hidden='true' /></strong><small>{label}</small></button>;
+        const poster = imageUrl(season.posterPath) || imageUrl(data.posterPath);
+        let episodes = 'Date à venir';
+        if (season.episodeCount) {
+            episodes = `${season.episodeCount} épisode${season.episodeCount > 1 ? 's' : ''}`;
+        }
+        return <button type='button' className='client-season-card' key={season.seasonNumber} disabled={!available} aria-pressed={selected.includes(season.seasonNumber)} aria-label={`Saison ${season.seasonNumber}, ${episodes}, ${label}`} onClick={() => toggle(season.seasonNumber)}>
+            <span className='client-season-poster'>{poster ? <Artwork source={poster} /> : <span className='client-season-fallback'>{season.seasonNumber}</span>}<i className='client-request-check' aria-hidden='true' /><em>{label}</em></span>
+            <strong>Saison {season.seasonNumber}</strong><small>{episodes}</small>{available && <SourceBadge status={sources?.[season.seasonNumber]} compact />}
+        </button>;
     })}</div></fieldset>;
 }
 
@@ -74,7 +96,8 @@ function QuotaNotice({ label, loaded, restricted, error, onRetry }: Readonly<{ l
     return <>{loaded && <p className='client-request-quota'>{label}</p>}{restricted && <p role='status'>Votre quota ne permet pas cette sélection.</p>}{error && <p role='alert'>Impossible de vérifier le quota. <button className='client-text-button' onClick={onRetry}>Réessayer</button></p>}</>;
 }
 
-const REQUEST_FILTERS = [['all', 'Toutes'], ['pending', 'En attente'], ['processing', 'En préparation'], ['available', 'Disponibles'], ['failed', 'Échecs']] as const;
+// « Pas encore disponibles » d'abord et par défaut : c'est ce qu'on vient vérifier.
+const REQUEST_FILTERS = [['unavailable', 'Pas encore disponibles'], ['all', 'Toutes'], ['pending', 'En attente'], ['processing', 'En préparation'], ['available', 'Disponibles'], ['failed', 'Échecs']] as const;
 
 function RequestHistory({ entries }: { readonly entries: MediaRequest[] }) {
     return <div className='client-request-history'>{entries.map(entry => <p key={entry.id}>{entry.is4k ? '4K · ' : ''}{entry.seasons?.length ? `Saisons ${entry.seasons.map(season => season.seasonNumber).join(', ')} · ` : ''}{requestLabel(entry.status)}</p>)}</div>;
@@ -84,7 +107,28 @@ export function AvailabilityAction({ identity: supplied, localItem }: Readonly<{
     const seerr = useSeerr();
     const identity = supplied || (localItem && externalIdentity(localItem));
     if (!seerr.connected || !identity) return null;
+    // A local movie is already downloaded: nothing left to request.
+    if (localItem && localItem.Type !== 'Series') return null;
     return <ClientDialog key={`${identity.type}-${identity.id}`} label='Disponibilité' title='Disponibilité et demandes' subtitle={localItem?.Name || ''} buttonClassName='client-button client-availability-action'><RequestPanel identity={identity} localItem={localItem} /></ClientDialog>;
+}
+
+export function canRequestSeasons(item: BaseItemDto, connected: boolean) {
+    return connected && item.Type === 'Series' && !!externalIdentity(item);
+}
+
+/** Number of seasons still requestable for a local series; 0 while loading or when everything is present. */
+export function useMissingSeasons(item: BaseItemDto, enabled: boolean) {
+    const identity = enabled ? externalIdentity(item) : undefined;
+    const detail = useSeerrDetail(identity?.type, identity?.id, false);
+    const localSeasons = useLocalSeasons(enabled ? item : undefined);
+    if (!identity || !detail.data || localSeasons.isPending || localSeasons.isError) return 0;
+    return requestableSeasons(withLocalAvailability(detail.data, item, localSeasons.data)).length;
+}
+
+export function RequestDialog({ item, open, onClose }: Readonly<{ item: BaseItemDto; open: boolean; onClose: () => void }>) {
+    const identity = externalIdentity(item);
+    if (!identity) return null;
+    return <ClientDialog controlled={{ open, onClose }} label='Demander des saisons' title='Saisons et demandes' subtitle={item.Name || ''}><RequestPanel identity={identity} localItem={item} /></ClientDialog>;
 }
 
 export function RequestPanel({ identity, localItem }: Readonly<{ identity: SeerrIdentity; localItem?: BaseItemDto }>) {
@@ -99,11 +143,20 @@ export function RequestPanel({ identity, localItem }: Readonly<{ identity: Seerr
         }}>Réessayer</button></section>;
     }
     if (localItem?.Type === 'Series' && localSeasons.isError) {
-        return <section className='client-request-panel'><p>Les saisons présentes dans Jellyfin ne peuvent pas être vérifiées.</p><button className='client-button' onClick={() => {
+        return <section className='client-request-panel'><p>Les saisons présentes dans votre bibliothèque ne peuvent pas être vérifiées.</p><button className='client-button' onClick={() => {
             void localSeasons.refetch();
         }}>Réessayer</button></section>;
     }
     return <RequestForm identity={identity} data={withLocalAvailability(detail.data, localItem, localSeasons.data)} />;
+}
+
+/** Source lookups for the open request dialog: per requestable season for a series, once for a film. */
+function useRequestSources(identity: SeerrIdentity, data: ExternalMedia, is4k: boolean, movieWanted: boolean) {
+    const imdbId = data.externalIds?.imdbId;
+    const requestable = requestableSeasons(data, is4k).map(season => season.seasonNumber);
+    const seasonSources = useSeasonSources(identity.type === 'tv' ? imdbId : undefined, requestable);
+    const movieSource = useMovieSource(identity.type === 'movie' ? imdbId : undefined, movieWanted);
+    return { seasonSources, movieSource };
 }
 
 function RequestForm({ identity, data }: Readonly<{ identity: SeerrIdentity; data: ExternalMedia }>) {
@@ -131,13 +184,17 @@ function RequestForm({ identity, data }: Readonly<{ identity: SeerrIdentity; dat
         setConfirm(false);
     }, [identity.id, identity.type, is4k]);
     const { info, state, currentQuota, remaining, permitted, restricted, filmRequested, disabled } = requestState({ data, identity, is4k, selected, permissions: seerr.permissions, quotaData: quota.data, quotaReady: quota.isSuccess, pending: mutation.isPending });
+    const { seasonSources, movieSource } = useRequestSources(identity, data, is4k, !filmRequested && !!permitted);
     const quotaUnit = identity.type === 'tv' ? 'saison(s)' : 'film(s)';
     const quotaLabel = currentQuota?.limit ? `${remaining} ${quotaUnit} restant(s) dans votre quota` : 'Aucune limite de demandes pour votre compte';
-    return <section className='client-request-panel' aria-label='Disponibilité et demandes'><header><h2>{identity.type === 'tv' ? 'Saisons et demandes' : 'Disponibilité'}</h2><span className='client-request-status'>{mediaLabel({ status: state })}</span></header>
+    return <section className='client-request-panel' aria-label='Disponibilité et demandes'><header className='client-request-banner'>{imageUrl(data.backdropPath, true) && <Artwork className='client-request-backdrop' source={imageUrl(data.backdropPath, true)} eager />}<div className='client-request-banner-copy'>{imageUrl(data.posterPath) && <span className='client-request-poster'><Artwork source={imageUrl(data.posterPath)} eager /></span>}<div><h2>{data.title || data.name}</h2><p>{[releaseLabel(data.releaseDate || data.firstAirDate), identity.type === 'tv' && data.seasons ? `${data.seasons.filter(season => season.seasonNumber > 0).length} saison(s)` : ''].filter(Boolean).join(' · ')}</p></div></div><span className='client-request-side'><span className='client-request-status'>{mediaLabel({ status: state })}</span><SourceBadge status={movieSource} variant='pill' /></span></header>
         {canRequest(seerr.permissions, identity.type, true) && <button type='button' role='switch' className='client-switch client-request-quality' aria-checked={is4k} disabled={mutation.isPending} onClick={() => set4k(!is4k)}><i aria-hidden='true' />Version 4K</button>}
-        {identity.type === 'tv' && <SeasonPicker data={data} is4k={is4k} selected={selected} disabled={mutation.isPending || !permitted} toggle={number => {
+        {identity.type === 'tv' && <SeasonPicker data={data} is4k={is4k} selected={selected} disabled={mutation.isPending || !permitted} sources={seasonSources} toggle={number => {
             setConfirm(false);
             setSelected(previous => previous.includes(number) ? previous.filter(value => value !== number) : [...previous, number]);
+        }} selectAll={numbers => {
+            setConfirm(false);
+            setSelected(numbers);
         }} />}
         {!permitted && <p>Votre compte peut consulter ce contenu mais ne peut pas le demander.</p>}
         <QuotaNotice label={quotaLabel} loaded={!!currentQuota} restricted={!!restricted} error={quota.isError} onRetry={() => { void quota.refetch(); }} />
@@ -167,7 +224,45 @@ export function ExternalDetail({ id, row, image }: Readonly<{ id: string; row: (
     }
     const data = detail.data;
     const match = localMatch(data, identity.type, local.data || []);
-    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><div className='client-detail-readability' aria-hidden='true' /><Link className='client-back' to={back} state={backState}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{(data.releaseDate || data.firstAirDate || '').slice(0, 4)} · {data.genres?.map(genre => genre.name).join(' · ')}</p><p className='client-overview'>{data.overview}</p><div className='client-actions'>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}<AvailabilityAction identity={identity} localItem={match} /></div></div></section><ExternalRecommendations identity={identity} local={local.data || []} row={row} data={data} image={image} /></>;
+    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><div className='client-detail-readability' aria-hidden='true' /><Link className='client-back' to={back} state={backState}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{[releaseLabel(data.releaseDate || data.firstAirDate), ...(data.genres || []).map(genre => genre.name)].filter(Boolean).join(' · ')}</p><ExternalSource data={data} identity={identity} owned={!!match} /><p className='client-overview'>{data.overview}</p><div className='client-actions'>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}<AvailabilityAction identity={identity} localItem={match} /></div></div></section><ExternalRecommendations identity={identity} local={local.data || []} row={row} data={data} image={image} /></>;
+}
+
+function ExternalSource({ data, identity, owned }: Readonly<{ data: ExternalMedia; identity: SeerrIdentity; owned: boolean }>) {
+    const wanted = !owned && ![2, 3, 4, 5, 6].includes(data.mediaInfo?.status || 0);
+    const imdbId = data.externalIds?.imdbId;
+    const status = useMovieSource(identity.type === 'movie' ? imdbId : undefined, wanted);
+    const languages = useMovieLanguages(identity.type === 'movie' ? imdbId : undefined, wanted);
+    if (identity.type === 'tv') return <SeriesSources data={data} />;
+    return <SourceBadge status={status} languages={languages} variant='meta' />;
+}
+
+/** One badge for a series page: sources for the seasons that can still be requested, with the language tags found. */
+function SeriesSources({ data, missing = false }: Readonly<{ data: ExternalMedia; missing?: boolean }>) {
+    const requestable = requestableSeasons(data, false).map(season => season.seasonNumber);
+    const imdbId = data.externalIds?.imdbId;
+    const statuses = useSeasonSources(imdbId, requestable);
+    const tags = useSeasonLanguages(imdbId, requestable);
+    const values = Object.values(statuses || {});
+    let status: SourceStatus | undefined;
+    if (values.includes('found')) status = 'found';
+    else if (values.includes('pending')) status = 'pending';
+    else if (values.includes('unknown')) status = 'unknown';
+    else if (values.length && values.every(value => value === 'empty')) status = 'empty';
+    const languages = (['multi', 'vf', 'vostfr'] as SourceLanguage[]).filter(tag => Object.values(tags).some(list => list.includes(tag)));
+    let prefix: string | undefined;
+    if (missing) prefix = requestable.length > 1 ? 'Saisons manquantes' : 'Saison manquante';
+    return <SourceBadge status={status} languages={languages} variant='meta' prefix={prefix} />;
+}
+
+/** Same badge on the page of a series already in the library, for its missing seasons. */
+export function LocalSeriesSources({ item }: Readonly<{ item: BaseItemDto }>) {
+    const seerr = useSeerr();
+    const enabled = canRequestSeasons(item, seerr.connected);
+    const identity = enabled ? externalIdentity(item) : undefined;
+    const detail = useSeerrDetail(identity?.type, identity?.id, false);
+    const localSeasons = useLocalSeasons(enabled ? item : undefined);
+    if (!identity || !detail.data || localSeasons.isPending || localSeasons.isError) return null;
+    return <SeriesSources data={withLocalAvailability(detail.data, item, localSeasons.data)} missing />;
 }
 
 function ExternalRecommendations({ identity, local, row, data, image }: Readonly<{ identity: SeerrIdentity; local: BaseItemDto[]; row: (title: string, items: BaseItemDto[]) => React.ReactNode; data: ExternalMedia; image: (item: BaseItemDto, backdrop?: boolean) => string }>) {
@@ -196,7 +291,7 @@ function TrackedRequest({ entry, local }: { readonly entry: MediaRequest; readon
 export function RequestTracking() {
     const seerr = useSeerr();
     const [page, setPage] = useState(0);
-    const [filter, setFilter] = useState('all');
+    const [filter, setFilter] = useState<string>('unavailable');
     const local = useLocalIdentities(seerr.connected);
     const query = useQuery({ queryKey: [...seerr.root, 'Requests', page, filter], enabled: seerr.connected,
         refetchInterval: 20000, retry: false, queryFn: ({ signal }) => seerr.call<Results<MediaRequest>>(`Api/request?take=12&skip=${page * 12}&sort=modified&filter=${filter}&requestedBy=${seerr.me.data!.id}`, signal) });
