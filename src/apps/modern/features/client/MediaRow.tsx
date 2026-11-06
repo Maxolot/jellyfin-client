@@ -108,9 +108,11 @@ export default function MediaRow({ title, items, continuation, showDescription =
         intent.current = index;
         cursor.current = index;
         setPending(index);
-        const source = image(items[index], true);
+        // Index in the repeated row: the title is the same in every copy.
+        const media = items[index % count];
+        const source = image(media, true);
         if (!source || preparedSources.current[source] !== undefined) setActive(index);
-        onPrepare(items[index]);
+        onPrepare(media);
     }
     function prepared(index: number, source: string, success: boolean) {
         preparedSources.current = { ...preparedSources.current, [source]: success };

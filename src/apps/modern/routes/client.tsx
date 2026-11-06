@@ -174,7 +174,11 @@ function useClientController() {
     const [heroIndex, setHeroIndex] = useState(0);
     const [ambient, setAmbient] = useState('');
     // The page's own blurred background when nothing is hovered: set by Ce soir and Mon espace, derived elsewhere.
-    const [pageAmbient, setPageAmbient] = useState('');
+    const [ownAmbient, setOwnAmbient] = useState({ page: '', source: '' });
+    const pageKey = [id, view, genre, audio].join('|');
+    // Tied to the page that set it: a page set by a child before the parent's effects run is never wiped.
+    const pageAmbient = ownAmbient.page === pageKey ? ownAmbient.source : '';
+    const setPageAmbient = useCallback((source: string) => setOwnAmbient({ page: pageKey, source }), [pageKey]);
     const prepareTimer = useRef<number>();
     useEffect(() => () => window.clearTimeout(prepareTimer.current), []);
     const [heroPaused, setHeroPaused] = useState(false);
@@ -202,10 +206,7 @@ function useClientController() {
         Events.on(playbackManager, 'playbackstop', refresh);
         return () => Events.off(playbackManager, 'playbackstop', refresh);
     }, [cache, api?.basePath, user?.Id]);
-    useEffect(() => {
-        setAmbient('');
-        setPageAmbient('');
-    }, [id, view, genre, audio]);
+    useEffect(() => setAmbient(''), [id, view, genre, audio]);
 
     useEffect(() => {
         if (!profileOpen) return;
