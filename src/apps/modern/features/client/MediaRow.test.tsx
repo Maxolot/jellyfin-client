@@ -128,13 +128,18 @@ describe('prepared landscape handoff', () => {
     });
 });
 
+const prepared: string[] = [];
+function remember(item: BaseItemDto) {
+    prepared.push(item.Id || '');
+}
+
 describe('endless row', () => {
     it('repeats the titles around the original ones and keeps choosing cards past the end', async () => {
         const long = ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map(Id => ({ Id, Name: Id, Type: 'Movie' as const }));
-        const prepared: string[] = [];
+        prepared.length = 0;
         Element.prototype.scrollTo = function () { /* jsdom has no layout. */ };
         vi.stubGlobal('matchMedia', () => ({ matches: false }));
-        await act(async () => root.render(<MemoryRouter><MediaRow title='Longue' items={long} image={image} logo={noLogo} onPrepare={item => prepared.push(item.Id || '')} /></MemoryRouter>));
+        await act(async () => root.render(<MemoryRouter><MediaRow title='Longue' items={long} image={image} logo={noLogo} onPrepare={remember} /></MemoryRouter>));
         const next = container.querySelector<HTMLButtonElement>('[aria-label="Suivant : Longue"]')!;
         for (let press = 0; press < 10; press++) await act(async () => next.click());
         expect(container.querySelectorAll('.client-media-card')).toHaveLength(21);

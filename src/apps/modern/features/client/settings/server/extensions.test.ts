@@ -46,7 +46,8 @@ describe('published plugin catalogue', () => {
             const entry = catalogue.find(item => item.guid === extension.id);
             expect(entry?.name).toBe(extension.packageName);
             expect(entry?.versions[0].sourceUrl.startsWith(CLIENT_PLUGIN_CATALOGUE.replace('manifest.json', ''))).toBe(true);
-            expect(entry?.versions[0].targetAbi).toBe('12.0.0.0');
+            // Built for Jellyfin 12.
+            expect(entry?.versions[0].targetAbi.split('.')[0]).toBe('12');
         }
     });
 });

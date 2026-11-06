@@ -129,7 +129,9 @@ function clientPageReady(id: string, view: string, item: BaseItemDto | undefined
 }
 
 /** What the blurred page background shows when no card is hovered. */
-function pageBackdrop(view: string, hero: BaseItemDto | undefined, own: string, shown: BaseItemDto[], backdropOf: (item: BaseItemDto) => string) {
+function pageBackdrop(id: string, view: string, hero: BaseItemDto | undefined, own: string, shown: BaseItemDto[], backdropOf: (item: BaseItemDto) => string) {
+    // Detail pages have their own full backdrop.
+    if (id) return '';
     if (hero) return backdropOf(hero);
     // Ce soir and Mon espace name their own image; Paramètres keeps the previous one.
     if (own || ['tonight', 'mine', 'settings'].includes(view)) return own;
@@ -369,7 +371,7 @@ function useClientController() {
     const hero = id ? item : homeHero;
     const accent = useArtworkColor(preferences.chromatic && hero ? image(hero, true) : undefined);
     const error = id ? details.item.isError : media.isError;
-    const backdrop = id ? '' : ambient || pageBackdrop(view, hero, pageAmbient, media.data?.items || [], entry => image(entry, true));
+    const backdrop = ambient || pageBackdrop(id, view, hero, pageAmbient, media.data?.items || [], entry => image(entry, true));
     return { api, user, params, location, setParams, view, id, search, browseInput, media, details, item, preferences, actionError, busy,
         searchInput, setSearchInput, genres, genre, sort, savePreference, image, play, updateState, cards, row, playItem, hero, error,
         prepareDetail, releaseDetail, prepareTab, seerr, catalogue, upcoming, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, previewProviderAvailable, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent, backdrop, setPageAmbient };

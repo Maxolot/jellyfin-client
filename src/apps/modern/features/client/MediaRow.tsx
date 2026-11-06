@@ -125,6 +125,24 @@ export default function MediaRow({ title, items, continuation, showDescription =
         strip.current?.querySelectorAll<HTMLElement>('.client-card')[next]?.focus({ preventScroll: true });
         strip.current?.children[next]?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'nearest', inline: 'nearest' });
     }
+    /** Where the arrows start from: the current card, the last one shown, or nothing chosen yet. */
+    function startIndex(direction: 1 | -1) {
+        const from = intent.current >= 0 ? intent.current : cursor.current;
+        if (from >= 0 || !looping) return from;
+        // Nothing chosen yet: forward starts with the first title, backward with the last one.
+        return direction > 0 ? count - 1 : count;
+    }
+    /** Near the end of the copies, jump back by one copy (same titles in the same places) before moving on. */
+    function rebase(list: HTMLDivElement, from: number, direction: 1 | -1) {
+        const style = getComputedStyle(list);
+        const visible = Math.ceil(list.clientWidth / Math.max(1, (list.children[0] as HTMLElement).offsetWidth + (Number.parseFloat(style.columnGap) || 0)));
+        if (from + direction + visible <= 3 * count && from + direction >= count - 1) return from;
+        const back = from >= 2 * count - 1 ? -count : count;
+        list.scrollTo({ left: list.scrollLeft + Math.sign(back) * copyWidth(list), behavior: 'instant' });
+        intent.current = -1;
+        cursor.current = from + back;
+        return from + back;
+    }
     /** Arrow buttons: the chosen card unfolds at the head of the row, the previous one slides out to the left, endlessly. */
     function step(direction: 1 | -1) {
         if (loopable && !looping) {
@@ -143,21 +161,7 @@ export default function MediaRow({ title, items, continuation, showDescription =
         const list = strip.current;
         if (!list?.children.length) return;
         const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-        let from = intent.current >= 0 ? intent.current : cursor.current;
-        // Nothing chosen yet: forward starts with the first title, backward with the last one.
-        if (from < 0) from = looping ? count - (direction > 0 ? 1 : 0) : -1;
-        if (looping) {
-            // Near the end of the copies, jump back by one copy (same titles in the same places) before moving on.
-            const style = getComputedStyle(list);
-            const visible = Math.ceil(list.clientWidth / Math.max(1, (list.children[0] as HTMLElement).offsetWidth + (Number.parseFloat(style.columnGap) || 0)));
-            if (from + direction + visible > 3 * count || from + direction < count - 1) {
-                const back = from >= 2 * count - 1 ? -count : count;
-                list.scrollTo({ left: list.scrollLeft + Math.sign(back) * copyWidth(list), behavior: 'instant' });
-                from += back;
-                intent.current = -1;
-                cursor.current = from;
-            }
-        }
+        const from = looping ? rebase(list, startIndex(direction), direction) : startIndex(direction);
         const total = count * copies;
         const next = looping ? from + direction : Math.max(0, Math.min(total - 1, from + direction));
         select(next);
