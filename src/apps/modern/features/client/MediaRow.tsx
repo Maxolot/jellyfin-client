@@ -46,7 +46,14 @@ export default function MediaRow({ title, items, continuation, showDescription =
     const touchOpens = useRef(false);
     const pointer = useRef<{ x: number; y: number }>();
     const location = useLocation();
-    const item = items[active];
+    const count = items.length;
+    // Netflix-style endless row: once an arrow is used, the titles are repeated before and after the original ones.
+    // The original cards keep their keys, so the card on screen stays the same element (no image or clip reloaded).
+    const loopable = count >= 6;
+    const [looping, setLooping] = useState(false);
+    const copies = looping ? 3 : 1;
+    const pendingStep = useRef<1 | -1>();
+    const item = active >= 0 ? items[active % count] : undefined;
     const color = useArtworkColor(item ? image(item, true) : undefined);
     const glow = useRef<HTMLDivElement>(null);
     useLayoutEffect(() => {
@@ -72,7 +79,22 @@ export default function MediaRow({ title, items, continuation, showDescription =
             list.removeEventListener('scroll', update);
         };
     }, [active]);
+    useLayoutEffect(() => {
+        const list = strip.current;
+        if (!looping || !list) return;
+        // The original cards moved right by one copy: the row is shifted back by exactly that much before painting.
+        list.scrollLeft += copyWidth(list);
+        const direction = pendingStep.current;
+        pendingStep.current = undefined;
+        if (direction) glide(direction);
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- Runs once, when the copies appear.
+    }, [looping]);
     if (!items.length) return null;
+    function copyWidth(list: HTMLElement) {
+        const first = list.children[0];
+        const original = list.children[count];
+        return first instanceof HTMLElement && original instanceof HTMLElement ? original.offsetLeft - first.offsetLeft : 0;
+    }
     function release() {
         intent.current = -1;
         pointer.current = undefined;
@@ -96,19 +118,48 @@ export default function MediaRow({ title, items, continuation, showDescription =
         if (intent.current === index) setActive(index);
     }
     function move(index: number) {
-        const next = Math.max(0, Math.min(items.length - 1, index));
+        const next = Math.max(0, Math.min(count * copies - 1, index));
         select(next);
         strip.current?.querySelectorAll<HTMLElement>('.client-card')[next]?.focus({ preventScroll: true });
         strip.current?.children[next]?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'nearest', inline: 'nearest' });
     }
-    /** Arrow buttons: the chosen card unfolds at the head of the row, the previous one slides out to the left. */
+    /** Arrow buttons: the chosen card unfolds at the head of the row, the previous one slides out to the left, endlessly. */
     function step(direction: 1 | -1) {
+        if (loopable && !looping) {
+            const shift = (value: number) => (value >= 0 ? value + count : value);
+            intent.current = shift(intent.current);
+            cursor.current = shift(cursor.current);
+            setActive(shift);
+            setPending(shift);
+            pendingStep.current = direction;
+            setLooping(true);
+            return;
+        }
+        glide(direction);
+    }
+    function glide(direction: 1 | -1) {
         const list = strip.current;
-        const from = intent.current >= 0 ? intent.current : cursor.current;
-        const next = Math.max(0, Math.min(items.length - 1, from + direction));
-        select(next);
-        list?.querySelectorAll<HTMLElement>('.client-card')[next]?.focus({ preventScroll: true });
         if (!list?.children.length) return;
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let from = intent.current >= 0 ? intent.current : cursor.current;
+        // Nothing chosen yet: forward starts with the first title, backward with the last one.
+        if (from < 0) from = looping ? count - (direction > 0 ? 1 : 0) : -1;
+        if (looping) {
+            // Near the end of the copies, jump back by one copy (same titles in the same places) before moving on.
+            const style = getComputedStyle(list);
+            const visible = Math.ceil(list.clientWidth / Math.max(1, (list.children[0] as HTMLElement).offsetWidth + (Number.parseFloat(style.columnGap) || 0)));
+            if (from + direction + visible > 3 * count || from + direction < count - 1) {
+                const back = from >= 2 * count - 1 ? -count : count;
+                list.scrollTo({ left: list.scrollLeft + Math.sign(back) * copyWidth(list), behavior: 'instant' });
+                from += back;
+                intent.current = -1;
+                cursor.current = from;
+            }
+        }
+        const total = count * copies;
+        const next = looping ? from + direction : Math.max(0, Math.min(total - 1, from + direction));
+        select(next);
+        list.querySelectorAll<HTMLElement>('.client-card')[next]?.focus({ preventScroll: true });
         // Every card before the chosen one ends folded, so its final place is known before the animation runs.
         const style = getComputedStyle(list);
         const gap = Number.parseFloat(style.columnGap) || 0;
@@ -116,7 +167,7 @@ export default function MediaRow({ title, items, continuation, showDescription =
         const width = folded instanceof HTMLElement ? folded.getBoundingClientRect().width : list.children[0].getBoundingClientRect().width;
         const first = list.children[0].getBoundingClientRect().left - list.getBoundingClientRect().left + list.scrollLeft;
         const left = first - (Number.parseFloat(style.paddingLeft) || 0) + next * (width + gap);
-        list.scrollTo({ left: Math.max(0, left), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+        list.scrollTo({ left: Math.max(0, left), behavior: reduce ? 'instant' : 'smooth' });
     }
     return <section className={`client-row client-expanding-row${item ? ' has-active-card' : ''}`} aria-label={title} style={{ '--client-media-color': color } as CSSProperties}>
         <header className='client-row-heading'><h2>{title}</h2><div><button aria-label={`Précédent : ${title}`} onClick={() => step(-1)}><ClientIcon name='back' /></button><button aria-label={`Suivant : ${title}`} onClick={() => step(1)}><ClientIcon name='next' /></button></div></header>
@@ -129,9 +180,11 @@ export default function MediaRow({ title, items, continuation, showDescription =
             if (event.key === 'Escape') {
                 release();
             }
-        }}>{items.map((media, index) => {
+        }}>{Array.from({ length: count * copies }, (_, index) => {
+                const media = items[index % count];
+                const copy = looping ? Math.floor(index / count) : 1;
                 const backdrop = image(media, true);
-                return <article className={`client-media-card${active === index ? ' active' : ''}${readyBackdrops[backdrop] ? ' has-backdrop' : ''}`} key={media.Id} onPointerLeave={event => {
+                return <article className={`client-media-card${active === index ? ' active' : ''}${readyBackdrops[backdrop] ? ' has-backdrop' : ''}`} key={copy === 1 ? media.Id : `${media.Id}:${copy}`} onPointerLeave={event => {
                     if (event.pointerType !== 'touch' && intent.current === index) release();
                 }} onBlur={event => {
                     // Pressing the row's arrows must not fold the card first, the arrow picks the next one itself.
@@ -149,7 +202,7 @@ export default function MediaRow({ title, items, continuation, showDescription =
                         select(index);
                     }
                 }}>
-                    <Link className='client-card' data-client-focus={media.Id} aria-label={[media.SeriesName, media.Name].filter(Boolean).join(' · ')} to={`/client?id=${media.Type === 'Episode' ? media.SeriesId || media.Id : media.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }} onPointerDown={event => { touchOpens.current = event.pointerType === 'touch' && intent.current !== index; }} onClick={event => {
+                    <Link className='client-card' data-client-focus={copy === 1 ? media.Id : undefined} aria-label={[media.SeriesName, media.Name].filter(Boolean).join(' · ')} to={`/client?id=${media.Type === 'Episode' ? media.SeriesId || media.Id : media.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }} onPointerDown={event => { touchOpens.current = event.pointerType === 'touch' && intent.current !== index; }} onClick={event => {
                         if (touchOpens.current) {
                             event.preventDefault();
                             select(index);

@@ -1,7 +1,7 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import { describe, expect, it } from 'vitest';
 
-import { withLocalAvailability, canRequest, catalogueItem, externalIdentity, imageUrl, mixCatalogue, requestableSeasons } from './model';
+import { withLocalAvailability, canRequest, catalogueItem, externalIdentity, imageUrl, mixCatalogue, releaseLabel, requestableSeasons } from './model';
 
 const local: BaseItemDto[] = [{ Id: 'local-film', Name: 'Même titre', Type: 'Movie', ProviderIds: { Tmdb: '42' } },
     { Id: 'local-series', Name: 'Autre titre', Type: 'Series', ProviderIds: { Tmdb: '42' } }];
@@ -44,5 +44,17 @@ describe('optional Seerr catalogue and request rules', () => {
         expect(externalIdentity({ Id: 'seerr-movie-12' })).toEqual({ type: 'movie', id: 12 });
         expect(externalIdentity({ Type: 'Movie', ProviderIds: { Tmdb: 'NaN' } })).toBeUndefined();
         expect(externalIdentity({ Type: 'Episode', ProviderIds: { Tmdb: '42' } })).toBeUndefined();
+    });
+});
+
+describe('release date label', () => {
+    const now = new Date(2026, 10, 6);
+    it('shows the full date, announced as upcoming while it is in the future', () => {
+        expect(releaseLabel('2024-03-14', now)).toBe('14 mars 2024');
+        expect(releaseLabel('2027-01-09', now)).toBe('Sortie le 9 janvier 2027');
+    });
+    it('falls back to what is known', () => {
+        expect(releaseLabel('2027', now)).toBe('2027');
+        expect(releaseLabel(undefined, now)).toBe('');
     });
 });

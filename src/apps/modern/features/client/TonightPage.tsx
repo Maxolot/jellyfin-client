@@ -49,7 +49,7 @@ function usePreparedDraw(selection: BaseItemDto[], seed: number, image: (item: B
 type Criteria = { mood: string; minutes: number; prompt: string };
 const initialCriteria: Criteria = { mood: 'Surprise', minutes: 0, prompt: '' };
 const durations = [[90, '1 h 30'], [120, '2 h'], [150, '2 h 30'], [0, 'Sans limite']] as const;
-type Props = { items: BaseItemDto[]; loading?: boolean; image: (item: BaseItemDto) => string; onPrepare: (item: BaseItemDto) => void; onRelease: () => void };
+type Props = { items: BaseItemDto[]; loading?: boolean; image: (item: BaseItemDto) => string; onPrepare: (item: BaseItemDto) => void; onRelease: () => void; onFeature?: (item?: BaseItemDto) => void };
 
 function DrawFilters({ panel, criteria, draft, setDraft, canReset, onApply, onReset }: Readonly<{
     panel: RefObject<HTMLDetailsElement>; criteria: Criteria; draft: Criteria; setDraft: Dispatch<SetStateAction<Criteria>>;
@@ -76,7 +76,7 @@ function DrawFilters({ panel, criteria, draft, setDraft, canReset, onApply, onRe
     </details>;
 }
 
-function DrawPoster({ item, index, count, image, onPrepare, onRelease, onDismiss }: Readonly<Omit<Props, 'items' | 'loading'> & { item: BaseItemDto; index: number; count: number; onDismiss: (id: string) => void }>) {
+function DrawPoster({ item, index, count, image, onPrepare, onRelease, onDismiss }: Readonly<Omit<Props, 'items' | 'loading' | 'onFeature'> & { item: BaseItemDto; index: number; count: number; onDismiss: (id: string) => void }>) {
     const location = useLocation();
     return <article className='client-tonight-result client-draw-card' style={{ '--draw-order': index, '--card-angle': `${(index - (count - 1) / 2) * 9}deg`, '--card-lift': `${index === Math.floor(count / 2) ? -16 : 12}px` } as CSSProperties} onAnimationEnd={event => {
         if (event.animationName === 'draw-deal') event.currentTarget.style.animation = 'none';
@@ -92,6 +92,7 @@ function DrawPoster({ item, index, count, image, onPrepare, onRelease, onDismiss
         </div></div></article>;
 }
 
+let lastVisit: { seed: number; previous: string[]; at: number } | undefined;
 const lastDrawKey = 'client-tonight-last-draw';
 function readLastDraw(): string[] {
     try {
@@ -126,13 +127,22 @@ function useStableSelection(items: BaseItemDto[], criteria: Criteria, excluded: 
     }, [items, criteria, excluded, previous, seed]);
 }
 
-export default function TonightPage({ items, loading = false, image, onPrepare, onRelease }: Readonly<Props>) {
+export default function TonightPage({ items, loading = false, image, onPrepare, onRelease, onFeature }: Readonly<Props>) {
     const [criteria, setCriteria] = useState(initialCriteria);
     const [draft, setDraft] = useState(initialCriteria);
     const [excluded, setExcluded] = useState<string[]>([]);
-    const [previous, setPrevious] = useState<string[]>(readLastDraw);
+    // Mounted again within a few seconds (data arriving, layout switch): the same draw is resumed, never a second one.
+    const resumed = useState(() => (lastVisit && Date.now() - lastVisit.at < 5000 ? lastVisit : undefined))[0];
+    const [previous, setPrevious] = useState<string[]>(() => resumed?.previous || readLastDraw());
     // eslint-disable-next-line sonarjs/pseudo-random -- Only varies which films are suggested first, nothing secret.
-    const [seed, setSeed] = useState(() => 1 + Math.floor(Math.random() * 1e6));
+    const [seed, setSeed] = useState(() => resumed?.seed || 1 + Math.floor(Math.random() * 1e6));
+    useEffect(() => () => {
+        lastVisit = { seed: seedRef.current, previous: previousRef.current, at: Date.now() };
+    }, []);
+    const seedRef = useRef(seed);
+    seedRef.current = seed;
+    const previousRef = useRef(previous);
+    previousRef.current = previous;
     const panel = useRef<HTMLDetailsElement>(null);
     const selection = useStableSelection(items, criteria, excluded, previous, seed);
     const shown = selection.map(item => item.Id || '').join('|');
@@ -141,6 +151,11 @@ export default function TonightPage({ items, loading = false, image, onPrepare, 
     }, [shown]);
     const draw = usePreparedDraw(selection, seed, image);
     const pending = loading || draw.seed !== seed;
+    // The film dealt in the middle gives the page its blurred background.
+    const featured = draw.items[Math.floor(draw.items.length / 2)];
+    const feature = useRef(onFeature);
+    feature.current = onFeature;
+    useEffect(() => feature.current?.(featured), [featured]);
     const refined = criteria.mood !== 'Surprise' || criteria.minutes !== 0 || !!criteria.prompt;
     const description = refined ? [criteria.mood === 'Surprise' ? '' : criteria.mood, criteria.minutes ? `Jusqu’à ${criteria.minutes} min` : '', criteria.prompt].filter(Boolean).join(' · ') : 'Trois films de votre bibliothèque.';
     function reroll() {

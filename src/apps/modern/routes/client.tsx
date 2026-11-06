@@ -127,6 +127,16 @@ function clientPageReady(id: string, view: string, item: BaseItemDto | undefined
     return externalReady || (id ? !!item : view === 'settings' || mediaReady);
 }
 
+/** What the blurred page background shows when no card is hovered. */
+function pageBackdrop(view: string, hero: BaseItemDto | undefined, own: string, shown: BaseItemDto[], backdropOf: (item: BaseItemDto) => string) {
+    if (hero) return backdropOf(hero);
+    // Ce soir and Mon espace name their own image; Paramètres keeps the previous one.
+    if (own || ['tonight', 'mine', 'settings'].includes(view)) return own;
+    // Nouveautés lists the films first: its background is the first title on screen.
+    const first = view === 'recent' ? shown.find(entry => entry.Type === 'Movie') || shown[0] : shown[0];
+    return first ? backdropOf(first) : '';
+}
+
 function clientBrowseInput(view: string, search: string, filters: Parameters<typeof useClientMedia>[3]) {
     return ['mine', 'tonight'].includes(view) ? { search: '', filters: {} } : { search, filters };
 }
@@ -163,6 +173,8 @@ function useClientController() {
     const [searchInput, setSearchInput] = useState(search);
     const [heroIndex, setHeroIndex] = useState(0);
     const [ambient, setAmbient] = useState('');
+    // The page's own blurred background when nothing is hovered: set by Ce soir and Mon espace, derived elsewhere.
+    const [pageAmbient, setPageAmbient] = useState('');
     const prepareTimer = useRef<number>();
     useEffect(() => () => window.clearTimeout(prepareTimer.current), []);
     const [heroPaused, setHeroPaused] = useState(false);
@@ -190,7 +202,10 @@ function useClientController() {
         Events.on(playbackManager, 'playbackstop', refresh);
         return () => Events.off(playbackManager, 'playbackstop', refresh);
     }, [cache, api?.basePath, user?.Id]);
-    useEffect(() => setAmbient(''), [id, view, genre, audio]);
+    useEffect(() => {
+        setAmbient('');
+        setPageAmbient('');
+    }, [id, view, genre, audio]);
 
     useEffect(() => {
         if (!profileOpen) return;
@@ -352,9 +367,10 @@ function useClientController() {
     const hero = id ? item : homeHero;
     const accent = useArtworkColor(preferences.chromatic && hero ? image(hero, true) : undefined);
     const error = id ? details.item.isError : media.isError;
+    const backdrop = id ? '' : ambient || pageBackdrop(view, hero, pageAmbient, media.data?.items || [], entry => image(entry, true));
     return { api, user, params, location, setParams, view, id, search, browseInput, media, details, item, preferences, actionError, busy,
         searchInput, setSearchInput, genres, genre, sort, savePreference, image, play, updateState, cards, row, playItem, hero, error,
-        prepareDetail, releaseDetail, prepareTab, seerr, catalogue, upcoming, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, previewProviderAvailable, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent };
+        prepareDetail, releaseDetail, prepareTab, seerr, catalogue, upcoming, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, previewProviderAvailable, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent, backdrop, setPageAmbient };
 }
 
 type ClientModel = ReturnType<typeof useClientController>;
@@ -402,7 +418,7 @@ function ClientView({ model }: ViewProps) {
     return <PreviewProvider serverAvailable={model.previewProviderAvailable} surface={model.surface} enabled={preferences.previews} muted={preferences.previewMuted} suspended={model.previewSuspended} toggleMuted={() => model.savePreference({ ...preferences, previewMuted: !preferences.previewMuted })} onPlayingChange={model.setPreviewPlaying}><Page id='clientPage' title={APP_NAME} className='client-page' isBackButtonEnabled={false}>
         <div ref={model.surface} className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} ${preferences.chromatic ? 'client-chromatic' : ''} ${preferences.hero === 'background' ? 'client-hero-background' : ''} client-treatment-${preferences.detailTreatment} client-layout-${preferences.detail} ${id ? 'client-detail-page' : ''}`} style={{ '--client-accent': accent, '--detail-blur': `${preferences.detailBlur}px`, '--detail-shade': preferences.detailShade / 100, '--detail-width': `${preferences.detailWidth}%`, '--hero-fade': `${preferences.heroFade}%` } as CSSProperties}>
             <ProfileEntrance />
-            {preferences.ambient && !id && <AmbientBackdrop source={model.ambient} />}
+            {preferences.ambient && !id && <AmbientBackdrop source={model.backdrop} />}
             <nav className='client-nav' data-alignment={preferences.headerAlignment} aria-label='Navigation principale'>
                 <button ref={profileButton} className='client-profile' aria-label='Menu du profil' aria-expanded={profileOpen} onClick={() => setProfileOpen(!profileOpen)}>{user?.PrimaryImageTag ? <img src={`${model.api?.basePath}/Users/${user.Id}/Images/Primary?tag=${user.PrimaryImageTag}&width=96&quality=90`} alt='' /> : user?.Name?.slice(0, 1) || '•'}</button>
                 <NavLinks view={view} detail={!!id} prepare={model.prepareTab} />
@@ -544,7 +560,7 @@ function ContentView({ model }: ViewProps) {
     }
     if (view === 'settings') return <SettingsView model={model} />;
     if (view === 'recent') return <RecentPage items={media.data?.items || []} row={row} />;
-    if (view === 'tonight') return <TonightPage items={media.data?.items || []} loading={media.isPending} image={item => artworkUrl(model.api?.basePath || '', item, 'draw')} onPrepare={model.prepareDetail} onRelease={model.releaseDetail} />;
+    if (view === 'tonight') return <TonightPage items={media.data?.items || []} loading={media.isPending} image={item => artworkUrl(model.api?.basePath || '', item, 'draw')} onPrepare={model.prepareDetail} onRelease={model.releaseDetail} onFeature={entry => model.setPageAmbient(entry ? image(entry, true) : '')} />;
     if (model.discovery) return <DiscoveryView model={model} />;
     if (view === 'mine') return <PersonalView model={model} />;
     return <LibraryView model={model} />;
@@ -599,6 +615,9 @@ function PersonalView({ model }: ViewProps) {
     const history = useViewingHistory();
     const resume = home.data?.resume || [];
     const lead = resume[0];
+    const leadBackdrop = lead ? image(lead, true) : '';
+    const { setPageAmbient } = model;
+    useEffect(() => setPageAmbient(leadBackdrop), [leadBackdrop, setPageAmbient]);
     return <div className='client-personal'>
         <header className='client-personal-identity'><span aria-hidden='true'>{user?.PrimaryImageTag ? <img src={`${model.api?.basePath}/Users/${user.Id}/Images/Primary?tag=${user.PrimaryImageTag}&width=160&quality=90`} alt='' /> : user?.Name?.slice(0, 1)}</span><div><h1>Mon espace</h1>
             <p>{user?.Name}</p></div></header>
