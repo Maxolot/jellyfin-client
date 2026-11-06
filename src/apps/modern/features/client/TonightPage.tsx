@@ -112,15 +112,14 @@ function rememberDraw(ids: string[]) {
 }
 
 /**
- * The library first arrives from the local cache, then fresh from the server a moment later.
- * A draw already dealt is kept as long as its films are still there, so the cards are not dealt twice.
+ * The films come as a random sample of the library: first the one kept in cache, then a new one from the server.
+ * A draw already dealt stays until the viewer asks for other ideas or changes the criteria, so it is never dealt twice.
  */
 function useStableSelection(items: BaseItemDto[], criteria: Criteria, excluded: string[], previous: string[], seed: number) {
     const kept = useRef<{ inputs: string; items: BaseItemDto[] }>();
     return useMemo(() => {
         const inputs = JSON.stringify([criteria, excluded, previous, seed]);
-        const ids = new Set(items.map(item => item.Id));
-        if (kept.current?.inputs === inputs && kept.current.items.length === 3 && kept.current.items.every(item => ids.has(item.Id))) return kept.current.items;
+        if (kept.current?.inputs === inputs && kept.current.items.length === 3 && items.length) return kept.current.items;
         const next = tonightCandidates(items, criteria.mood, criteria.minutes, criteria.prompt, excluded, previous, seed);
         kept.current = { inputs, items: next };
         return next;

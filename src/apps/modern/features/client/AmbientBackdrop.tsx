@@ -9,5 +9,5 @@ export default function AmbientBackdrop({ source }: { readonly source: string })
         if (source) setLast(source);
     }, [source]);
     // A page without its own image keeps the previous one rather than going back to a flat background.
-    return <div className={`client-ambient${source || last ? ' is-active' : ''}`} aria-hidden='true'>{last && <HeroArtwork source={last} fadeMs={1600} />}</div>;
+    return <div className={`client-ambient${source || last ? ' is-active' : ''}`} aria-hidden='true'>{last && <HeroArtwork source={last} fadeMs={1600} crossfade />}</div>;
 }
