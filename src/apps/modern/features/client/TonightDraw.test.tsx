@@ -11,10 +11,11 @@ import TonightPage from './TonightPage';
 
 const films = (names: string[]) => names.map(Id => ({ Id, Name: Id, Type: 'Movie' as const, RunTimeTicks: 6e10 })) as BaseItemDto[];
 const image = (item: BaseItemDto) => `https://media.example.test/${item.Id}.jpg`;
+const ignore = () => undefined;
 let root: Root;
 let container: HTMLDivElement;
 const dealt = () => [...container.querySelectorAll('.client-draw-card img')].map(img => img.getAttribute('src'));
-const render = async (items: BaseItemDto[]) => act(async () => root.render(<MemoryRouter><TonightPage items={items} image={image} onPrepare={() => undefined} onRelease={() => undefined} /></MemoryRouter>));
+const render = async (items: BaseItemDto[]) => act(async () => root.render(<MemoryRouter><TonightPage items={items} image={image} onPrepare={ignore} onRelease={ignore} /></MemoryRouter>));
 
 beforeEach(() => {
     Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
