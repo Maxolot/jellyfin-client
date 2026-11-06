@@ -24,7 +24,6 @@ export default function AppearanceSettings({ preferences, savePreference, hasPre
                 options={[{ value: false, label: 'Bandeau du thème', preview: <InterfacePreview kind='grouped' /> }, { value: true, label: 'Boutons flottants', preview: <InterfacePreview kind='floating' /> }]} />
             <Segmented label='Alignement des boutons' value={preferences.headerAlignment} onChange={set('headerAlignment')}
                 options={[['left', 'À gauche'], ['center', 'Au centre'], ['right', 'À droite']]} />
-            <Slider label='Hauteur du fondu du visuel principal' value={preferences.heroFade} min={20} max={70} unit=' %' onChange={set('heroFade')} />
             <Toggle label='Descriptions au survol entre les sections' hint='Titre et résumé apparaissent sous la rangée survolée.' checked={preferences.hoverDescriptions} onChange={set('hoverDescriptions')} />
         </SettingCard>
         <SettingCard title='Fiches des films et séries' scope='browser'>
