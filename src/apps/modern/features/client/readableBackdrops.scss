@@ -4,6 +4,12 @@
         mask-image: linear-gradient(to top, transparent, black var(--hero-fade, 45%));
         transform-origin: 50% 0;
     }
+
+    // The readability shade fades out with the image: an opaque dark bottom edge would draw a line
+    // against the blurred page background, all the more visible when that background is light.
+    &::before {
+        mask-image: linear-gradient(to top, transparent, black var(--hero-fade, 45%));
+    }
 }
 
 .client-detail .client-detail-readability {
