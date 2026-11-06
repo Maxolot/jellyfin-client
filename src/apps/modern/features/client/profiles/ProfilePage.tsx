@@ -16,6 +16,8 @@ import ClientIcon from '../ClientIcon';
 import AvatarPicker from './AvatarPicker';
 import { saveAvatar, type GalleryAvatar } from './avatars';
 import { enterProfile, restart } from './profileSession';
+import { leaveProfiles } from './profileEntrance';
+import './entrance.scss';
 import { dropToken, forgetProfile, markProfileChosen, profileTone, readProfiles, rememberProfile, type SavedProfile } from './profileStore';
 import QuickConnectPanel from './QuickConnectPanel';
 
@@ -101,10 +103,14 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
     }, [welcome]);
     const closingAtStart = useRef<string>();
 
-    async function choose(profile: SavedProfile) {
+    const entranceOf = (profile: SavedProfile) => ({ image: profile.imageTag ? `${basePath}/Users/${profile.userId}/Images/Primary?tag=${profile.imageTag}&width=320&quality=90` : undefined,
+        letter: profile.name.slice(0, 1).toUpperCase(), tone: profileTone(profile.userId) });
+
+    async function choose(profile: SavedProfile, tile?: HTMLElement) {
         setMessage('');
         if (profile.userId === user?.Id) {
             markProfileChosen();
+            await leaveProfiles(tile, entranceOf(profile));
             navigate('/client', { replace: true });
             return;
         }
@@ -135,6 +141,7 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
             }
             if (!response.ok) throw new Error(String(response.status));
             await closeAdministrator(closing.current);
+            await leaveProfiles(tile, entranceOf(profile));
             enterProfile(legacy?.serverId() || user?.ServerId || '', profile.userId, profile.token, signedOut?.target);
         } catch {
             setMessage('Impossible de changer de profil pour le moment. Réessayez dans un instant.');
@@ -248,8 +255,8 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
             {message && <p role='alert' className='client-profile-error'>{message}</p>}
             <ul>
                 {tiles.map(profile => managing ? renderManaged(profile) : <li key={profile.userId}>
-                    <button type='button' className='client-profile-tile' disabled={busy} aria-current={profile.userId === user?.Id ? 'true' : undefined} onClick={() => {
-                        void choose(profile);
+                    <button type='button' className='client-profile-tile' disabled={busy} aria-current={profile.userId === user?.Id ? 'true' : undefined} onClick={event => {
+                        void choose(profile, event.currentTarget);
                     }}>
                         <Avatar profile={profile} basePath={basePath} /><strong>{profile.name}</strong>
                     </button>

@@ -171,19 +171,44 @@
     transition: opacity 0.25s;
 }
 
-// « Reprendre », « S1:E1 » : seulement sur la carte dépliée.
-.client-continue-label {
+// Saison et épisode à reprendre : pastille discrète, seulement sur la carte dépliée.
+.client-episode-pill {
     position: absolute;
-    right: 18px;
-    bottom: 22px;
-    font-size: 12px;
-    text-shadow: 0 2px 4px #000;
+    right: 16px;
+    bottom: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 26px;
+    padding: 0 11px;
+    border: 1px solid #ffffff38;
+    border-radius: 999px;
+    background: #0e0f12b3;
+    backdrop-filter: blur(8px);
+    color: #fffc;
+    font-size: 12.5px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+    line-height: 1;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s 0.1s, visibility 0s 0.4s;
+
+    b {
+        color: #fff;
+        font-weight: 700;
+    }
+
+    i {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: #fff9;
+    }
 }
 
-.client-media-card.active .client-continue-label {
+.client-media-card.active .client-episode-pill {
     opacity: 1;
     visibility: visible;
     transition: opacity 0.3s 0.1s, visibility 0s;
@@ -310,11 +335,13 @@
     }
 }
 
-.client-profile {
+// Avatar seul, sans liseré ni fond coloré autour de la photo : minimaliste.
+.client-nav .client-profile {
     overflow: hidden;
     padding: 0;
-    border: 1px solid #ffffff38;
-    background: #c6323b;
+    border: 0;
+    background: #2b303b;
+    box-shadow: none;
 
     img {
         display: block;
@@ -1190,12 +1217,20 @@
 
 .client-personal-identity > span {
     display: grid;
-    width: 52px;
-    height: 52px;
+    overflow: hidden;
+    width: 64px;
+    height: 64px;
+    flex: none;
     place-items: center;
-    border-radius: 15px;
+    border-radius: 16px;
     background: #c6323b;
-    font-size: 22px;
+    font-size: 24px;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 }
 
 .client-personal-identity h1 {
@@ -1388,6 +1423,43 @@
 .client-nav .client-search-shortcut .client-icon {
     width: 23px;
     height: 23px;
+}
+
+// Autre appareil et Regarder ensemble : de simples icônes à gauche de la loupe.
+.client-nav .client-nav-tool {
+    display: grid;
+    width: 40px;
+    height: 44px;
+    flex: none;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    background: none;
+    color: #ffffffc7;
+    cursor: pointer;
+    transition: color 0.2s;
+
+    &:hover,
+    &:focus-visible {
+        color: #fff;
+    }
+
+    .client-icon {
+        width: 22px;
+        height: 22px;
+    }
+}
+
+@media (max-width: 700px) {
+    .client-nav .client-nav-tool {
+        width: 30px;
+
+        .client-icon {
+            width: 19px;
+            height: 19px;
+        }
+    }
 }
 
 .client-back {

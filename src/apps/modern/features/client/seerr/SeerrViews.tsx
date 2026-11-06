@@ -96,7 +96,8 @@ function QuotaNotice({ label, loaded, restricted, error, onRetry }: Readonly<{ l
     return <>{loaded && <p className='client-request-quota'>{label}</p>}{restricted && <p role='status'>Votre quota ne permet pas cette sélection.</p>}{error && <p role='alert'>Impossible de vérifier le quota. <button className='client-text-button' onClick={onRetry}>Réessayer</button></p>}</>;
 }
 
-const REQUEST_FILTERS = [['all', 'Toutes'], ['pending', 'En attente'], ['processing', 'En préparation'], ['available', 'Disponibles'], ['failed', 'Échecs']] as const;
+// « Pas encore disponibles » d'abord et par défaut : c'est ce qu'on vient vérifier.
+const REQUEST_FILTERS = [['unavailable', 'Pas encore disponibles'], ['all', 'Toutes'], ['pending', 'En attente'], ['processing', 'En préparation'], ['available', 'Disponibles'], ['failed', 'Échecs']] as const;
 
 function RequestHistory({ entries }: { readonly entries: MediaRequest[] }) {
     return <div className='client-request-history'>{entries.map(entry => <p key={entry.id}>{entry.is4k ? '4K · ' : ''}{entry.seasons?.length ? `Saisons ${entry.seasons.map(season => season.seasonNumber).join(', ')} · ` : ''}{requestLabel(entry.status)}</p>)}</div>;
@@ -290,7 +291,7 @@ function TrackedRequest({ entry, local }: { readonly entry: MediaRequest; readon
 export function RequestTracking() {
     const seerr = useSeerr();
     const [page, setPage] = useState(0);
-    const [filter, setFilter] = useState('all');
+    const [filter, setFilter] = useState<string>('unavailable');
     const local = useLocalIdentities(seerr.connected);
     const query = useQuery({ queryKey: [...seerr.root, 'Requests', page, filter], enabled: seerr.connected,
         refetchInterval: 20000, retry: false, queryFn: ({ signal }) => seerr.call<Results<MediaRequest>>(`Api/request?take=12&skip=${page * 12}&sort=modified&filter=${filter}&requestedBy=${seerr.me.data!.id}`, signal) });

@@ -24,16 +24,14 @@ type Props = {
     onRelease?: () => void;
 };
 
-function continuationLabel(item: BaseItemDto) {
-    return progressPercent(item) > 0 ? 'Reprendre' : 'À suivre';
-}
-
 export default function MediaRow({ title, items, continuation, showDescription = true, image, logo, onPrepare, onRelease }: Readonly<Props>) {
     const [readyBackdrops, setReadyBackdrops] = useState<Partial<Record<string, boolean>>>({});
     const preparedSources = useRef<Partial<Record<string, boolean>>>({});
     const [active, setActive] = useState(-1);
     const [pending, setPending] = useState(-1);
     const intent = useRef(-1);
+    // Last card the row showed, kept after it folds back so the arrows continue from there.
+    const cursor = useRef(-1);
     const owner = useId();
     const releaseCallback = useRef(onRelease);
     releaseCallback.current = onRelease;
@@ -86,6 +84,7 @@ export default function MediaRow({ title, items, continuation, showDescription =
         if (intent.current === index) return;
         window.dispatchEvent(new CustomEvent('client-card-select', { detail: owner }));
         intent.current = index;
+        cursor.current = index;
         setPending(index);
         const source = image(items[index], true);
         if (!source || preparedSources.current[source] !== undefined) setActive(index);
@@ -102,8 +101,25 @@ export default function MediaRow({ title, items, continuation, showDescription =
         strip.current?.querySelectorAll<HTMLElement>('.client-card')[next]?.focus({ preventScroll: true });
         strip.current?.children[next]?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'nearest', inline: 'nearest' });
     }
+    /** Arrow buttons: the chosen card unfolds at the head of the row, the previous one slides out to the left. */
+    function step(direction: 1 | -1) {
+        const list = strip.current;
+        const from = intent.current >= 0 ? intent.current : cursor.current;
+        const next = Math.max(0, Math.min(items.length - 1, from + direction));
+        select(next);
+        list?.querySelectorAll<HTMLElement>('.client-card')[next]?.focus({ preventScroll: true });
+        if (!list?.children.length) return;
+        // Every card before the chosen one ends folded, so its final place is known before the animation runs.
+        const style = getComputedStyle(list);
+        const gap = Number.parseFloat(style.columnGap) || 0;
+        const folded = Array.from(list.children).find((card, index) => index !== next && index !== from && !card.classList.contains('active'));
+        const width = folded instanceof HTMLElement ? folded.getBoundingClientRect().width : list.children[0].getBoundingClientRect().width;
+        const first = list.children[0].getBoundingClientRect().left - list.getBoundingClientRect().left + list.scrollLeft;
+        const left = first - (Number.parseFloat(style.paddingLeft) || 0) + next * (width + gap);
+        list.scrollTo({ left: Math.max(0, left), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+    }
     return <section className={`client-row client-expanding-row${item ? ' has-active-card' : ''}`} aria-label={title} style={{ '--client-media-color': color } as CSSProperties}>
-        <header className='client-row-heading'><h2>{title}</h2><div><button aria-label={`Précédents : ${title}`} onClick={() => move(intent.current - 1)}><ClientIcon name='back' /></button><button aria-label={`Suivants : ${title}`} onClick={() => move(intent.current + 1)}><ClientIcon name='next' /></button></div></header>
+        <header className='client-row-heading'><h2>{title}</h2><div><button aria-label={`Précédent : ${title}`} onClick={() => step(-1)}><ClientIcon name='back' /></button><button aria-label={`Suivant : ${title}`} onClick={() => step(1)}><ClientIcon name='next' /></button></div></header>
         <div className='client-section-glow' ref={glow} aria-hidden='true' />
         <div className='client-strip' role='toolbar' aria-label={title} ref={strip} onKeyDown={event => {
             if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
@@ -118,6 +134,9 @@ export default function MediaRow({ title, items, continuation, showDescription =
                 return <article className={`client-media-card${active === index ? ' active' : ''}${readyBackdrops[backdrop] ? ' has-backdrop' : ''}`} key={media.Id} onPointerLeave={event => {
                     if (event.pointerType !== 'touch' && intent.current === index) release();
                 }} onBlur={event => {
+                    // Pressing the row's arrows must not fold the card first, the arrow picks the next one itself.
+                    const heading = event.currentTarget.closest('.client-row')?.querySelector('.client-row-heading');
+                    if (event.relatedTarget instanceof Node && heading?.contains(event.relatedTarget)) return;
                     if (!event.currentTarget.contains(event.relatedTarget) && intent.current === index) release();
                 }} onPointerMove={event => {
                     // Layout-driven pointer entry must not steal a keyboard selection.
@@ -146,7 +165,7 @@ export default function MediaRow({ title, items, continuation, showDescription =
                     <span className='client-card-overlay' aria-hidden='true'>
                         <span className='client-card-shade' />
                         <span className='client-expanded-title'>{logo(media) && <Artwork source={logo(media)!} enabled={active === index} eager />}<strong>{media.SeriesName || media.Name}</strong></span>
-                        {continuation && <span className='client-continue-label'>{media.Type === 'Episode' ? episodeLabel(media) : continuationLabel(media)}</span>}
+                        {continuation && media.Type === 'Episode' && <span className='client-episode-pill'><b>S{media.ParentIndexNumber ?? 1}</b><i aria-hidden='true' />É{media.IndexNumber ?? 1}</span>}
                         {progressPercent(media) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(media)}%` }} /></span>}
                     </span>
                     <span className='client-availability' role='img' aria-label={isExternal(media) ? mediaLabel((media as CatalogueItem).Seerr?.mediaInfo) : 'Disponible dans votre bibliothèque'} title={isExternal(media) ? mediaLabel((media as CatalogueItem).Seerr?.mediaInfo) : 'Disponible dans votre bibliothèque'}><ClientIcon name={isExternal(media) ? 'plus' : 'check'} /></span>

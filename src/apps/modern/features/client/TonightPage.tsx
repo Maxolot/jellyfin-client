@@ -92,14 +92,53 @@ function DrawPoster({ item, index, count, image, onPrepare, onRelease, onDismiss
         </div></div></article>;
 }
 
+const lastDrawKey = 'client-tonight-last-draw';
+function readLastDraw(): string[] {
+    try {
+        const value: unknown = JSON.parse(localStorage.getItem(lastDrawKey) || '[]');
+        return Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string').slice(0, 12) : [];
+    } catch {
+        return [];
+    }
+}
+function rememberDraw(ids: string[]) {
+    try {
+        // The last few draws are skipped on the next visit, so opening the tab does not always deal the same films.
+        localStorage.setItem(lastDrawKey, JSON.stringify([...ids, ...readLastDraw().filter(id => !ids.includes(id))].slice(0, 12)));
+    } catch {
+        // Private browsing: the draw is still random, only less varied across visits.
+    }
+}
+
+/**
+ * The library first arrives from the local cache, then fresh from the server a moment later.
+ * A draw already dealt is kept as long as its films are still there, so the cards are not dealt twice.
+ */
+function useStableSelection(items: BaseItemDto[], criteria: Criteria, excluded: string[], previous: string[], seed: number) {
+    const kept = useRef<{ inputs: string; items: BaseItemDto[] }>();
+    return useMemo(() => {
+        const inputs = JSON.stringify([criteria, excluded, previous, seed]);
+        const ids = new Set(items.map(item => item.Id));
+        if (kept.current?.inputs === inputs && kept.current.items.length === 3 && kept.current.items.every(item => ids.has(item.Id))) return kept.current.items;
+        const next = tonightCandidates(items, criteria.mood, criteria.minutes, criteria.prompt, excluded, previous, seed);
+        kept.current = { inputs, items: next };
+        return next;
+    }, [items, criteria, excluded, previous, seed]);
+}
+
 export default function TonightPage({ items, loading = false, image, onPrepare, onRelease }: Readonly<Props>) {
     const [criteria, setCriteria] = useState(initialCriteria);
     const [draft, setDraft] = useState(initialCriteria);
     const [excluded, setExcluded] = useState<string[]>([]);
-    const [previous, setPrevious] = useState<string[]>([]);
-    const [seed, setSeed] = useState(1);
+    const [previous, setPrevious] = useState<string[]>(readLastDraw);
+    // eslint-disable-next-line sonarjs/pseudo-random -- Only varies which films are suggested first, nothing secret.
+    const [seed, setSeed] = useState(() => 1 + Math.floor(Math.random() * 1e6));
     const panel = useRef<HTMLDetailsElement>(null);
-    const selection = useMemo(() => tonightCandidates(items, criteria.mood, criteria.minutes, criteria.prompt, excluded, previous, seed), [items, criteria, excluded, previous, seed]);
+    const selection = useStableSelection(items, criteria, excluded, previous, seed);
+    const shown = selection.map(item => item.Id || '').join('|');
+    useEffect(() => {
+        if (shown) rememberDraw(shown.split('|'));
+    }, [shown]);
     const draw = usePreparedDraw(selection, seed, image);
     const pending = loading || draw.seed !== seed;
     const refined = criteria.mood !== 'Surprise' || criteria.minutes !== 0 || !!criteria.prompt;

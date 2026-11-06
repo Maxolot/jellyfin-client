@@ -40,6 +40,8 @@ import HeroMetadata from '../features/client/HeroMetadata';
 import DetailExtras from '../features/client/DetailExtras';
 import DetailMenu from '../features/client/DetailMenu';
 import { openConnectivity } from '../features/client/remote/ConnectivityLayer';
+import RemoteIcon from '../features/client/remote/RemoteIcon';
+import ProfileEntrance from '../features/client/profiles/ProfileEntrance';
 import ProfilePage from '../features/client/profiles/ProfilePage';
 import { signOut } from '../features/client/profiles/profileSession';
 import { useProfileGate } from '../features/client/profiles/useProfileGate';
@@ -399,19 +401,17 @@ function ClientView({ model }: ViewProps) {
     const { preferences, id, view, user, actionError, error, media, details, profileOpen, setProfileOpen, profileButton, profileMenu, accent } = model;
     return <PreviewProvider serverAvailable={model.previewProviderAvailable} surface={model.surface} enabled={preferences.previews} muted={preferences.previewMuted} suspended={model.previewSuspended} toggleMuted={() => model.savePreference({ ...preferences, previewMuted: !preferences.previewMuted })} onPlayingChange={model.setPreviewPlaying}><Page id='clientPage' title={APP_NAME} className='client-page' isBackButtonEnabled={false}>
         <div ref={model.surface} className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} ${preferences.chromatic ? 'client-chromatic' : ''} ${preferences.hero === 'background' ? 'client-hero-background' : ''} client-treatment-${preferences.detailTreatment} client-layout-${preferences.detail} ${id ? 'client-detail-page' : ''}`} style={{ '--client-accent': accent, '--detail-blur': `${preferences.detailBlur}px`, '--detail-shade': preferences.detailShade / 100, '--detail-width': `${preferences.detailWidth}%`, '--hero-fade': `${preferences.heroFade}%` } as CSSProperties}>
+            <ProfileEntrance />
             {preferences.ambient && !id && <AmbientBackdrop source={model.ambient} />}
             <nav className='client-nav' data-alignment={preferences.headerAlignment} aria-label='Navigation principale'>
                 <button ref={profileButton} className='client-profile' aria-label='Menu du profil' aria-expanded={profileOpen} onClick={() => setProfileOpen(!profileOpen)}>{user?.PrimaryImageTag ? <img src={`${model.api?.basePath}/Users/${user.Id}/Images/Primary?tag=${user.PrimaryImageTag}&width=96&quality=90`} alt='' /> : user?.Name?.slice(0, 1) || '•'}</button>
                 <NavLinks view={view} detail={!!id} prepare={model.prepareTab} />
+                {/* À gauche de la loupe : envoyer la lecture vers un autre appareil, regarder à plusieurs. */}
+                <button type='button' className='client-nav-tool' aria-label='Lire sur un autre appareil' title='Lire sur un autre appareil' onClick={() => openConnectivity('targets')}><RemoteIcon name='cast' /></button>
+                <button type='button' className='client-nav-tool' aria-label='Regarder ensemble' title='Regarder ensemble' onClick={() => openConnectivity('together')}><RemoteIcon name='people' /></button>
                 <Link to='/client?view=search' className='client-brand client-search-shortcut' aria-label='Rechercher' aria-current={!id && view === 'search' ? 'page' : undefined}><ClientIcon name='search' /></Link>
                 {profileOpen && <div ref={profileMenu} className='client-profile-menu' role='dialog' aria-label='Menu du profil'>
-                    <strong>{user?.Name}</strong><Link to='/client?view=profiles' onClick={() => setProfileOpen(false)}>Changer de profil</Link><button type='button' onClick={() => {
-                        setProfileOpen(false);
-                        openConnectivity('targets');
-                    }}>Lire sur un autre appareil</button><button type='button' onClick={() => {
-                        setProfileOpen(false);
-                        openConnectivity('together');
-                    }}>Regarder ensemble</button><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><Link to='/offline' onClick={() => setProfileOpen(false)}>Hors ligne</Link><QuickConnectMenuItem /><button onClick={() => {
+                    <strong>{user?.Name}</strong><Link to='/client?view=profiles' onClick={() => setProfileOpen(false)}>Changer de profil</Link><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><Link to='/offline' onClick={() => setProfileOpen(false)}>Hors ligne</Link><QuickConnectMenuItem /><button onClick={() => {
                         void signOut(model.api?.basePath, user?.Id);
                     }}>Se déconnecter</button>
                 </div>}
@@ -599,10 +599,9 @@ function PersonalView({ model }: ViewProps) {
     const history = useViewingHistory();
     const resume = home.data?.resume || [];
     const lead = resume[0];
-    const watched = (stats.data?.movies || 0) + (stats.data?.episodes || 0);
     return <div className='client-personal'>
-        <header className='client-personal-identity'><span aria-hidden='true'>{user?.Name?.slice(0, 1)}</span><div><h1>Mon espace</h1>
-            <p>{user?.Name}{watched ? ` · ${watched.toLocaleString('fr-FR')} visionnages dans votre historique` : ', retrouvez vos envies et vos prochaines séances.'}</p></div></header>
+        <header className='client-personal-identity'><span aria-hidden='true'>{user?.PrimaryImageTag ? <img src={`${model.api?.basePath}/Users/${user.Id}/Images/Primary?tag=${user.PrimaryImageTag}&width=160&quality=90`} alt='' /> : user?.Name?.slice(0, 1)}</span><div><h1>Mon espace</h1>
+            <p>{user?.Name}</p></div></header>
         <PersonalStatsBand stats={stats.data} pending={stats.isPending} favorites={media.data?.total || 0} favoritesPending={media.isPending} />
         {home.isPending && <ClientSkeleton layout='episodes' contained count={3} label='Chargement des reprises…' />}
         {lead && <section className='client-personal-spotlight'><Artwork source={image(lead, true, true)} eager /><PreviewClip item={lead} surface='spotlight' /><div><small>ON CONTINUE ?</small><h2>{lead.SeriesName || lead.Name}</h2><p>{lead.Type === 'Episode' ? `${episodeLabel(lead)} · ${lead.Name}` : 'Votre film vous attend'}</p>
