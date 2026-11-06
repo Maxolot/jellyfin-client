@@ -137,3 +137,10 @@ $chips: '.client-catalogue-switch button, .client-period-choices button, .client
         font-size: 14px;
     }
 }
+
+// Reprendre et Voir la fiche côte à côte, sur la même ligne.
+.client-personal-spotlight :is(.client-play, .client-button) {
+    margin-top: 0;
+    margin-bottom: 0;
+    vertical-align: middle;
+}
