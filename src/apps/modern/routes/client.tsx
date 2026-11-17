@@ -61,6 +61,7 @@ import '../features/client/heroBackground.scss';
 import '../features/client/headerAlignment.scss';
 import '../features/client/readableBackdrops.scss';
 import '../features/client/themeConsistency.scss';
+import '../features/client/search.scss';
 
 type ClientNavigationState = { returnTo?: string, returnState?: ClientNavigationState | null, restoreFocus?: boolean };
 import TonightPage from '../features/client/TonightPage';
@@ -69,6 +70,8 @@ import AmbientBackdrop from '../features/client/AmbientBackdrop';
 import { SeerrProvider, useSeerr } from '../features/client/seerr/SeerrContext';
 import { useLocalIdentities, useSeerrCatalogue, useSeerrDetail, useSeerrUpcoming } from '../features/client/seerr/queries';
 import UpcomingRow from '../features/client/UpcomingRow';
+import SearchBar from '../features/client/SearchBar';
+import { exactSearchFirst, groupSearchResults, matchesSearchTitle, searchMode } from '../features/client/searchResults';
 import SharedCatalogArtwork from '../features/client/SharedCatalogArtwork';
 import { sharedCatalogItems, useSharedCatalog } from '../features/client/sharedCatalog';
 import { ExternalDetail, RequestTracking } from '../features/client/seerr/SeerrViews';
@@ -104,8 +107,8 @@ function clientLogo(basePath: string, i: BaseItemDto) {
 function localDetailId(id: string) {
     return isExternal({ Id: id }) ? '' : id;
 }
-function allowExternalCatalogue(view: string, selectors: string[], mode: string | null) {
-    return !selectors.some(Boolean) && ['home', 'films', 'series', 'search'].includes(view)
+function allowExternalCatalogue(view: string, selectors: string[], mode: string | null, blankSearch: boolean) {
+    return !blankSearch && !selectors.some(Boolean) && ['home', 'films', 'series', 'search'].includes(view)
         && !(mode === 'library' && ['films', 'series'].includes(view));
 }
 
@@ -146,10 +149,16 @@ function clientBrowseInput(view: string, search: string, filters: Parameters<typ
     return ['mine', 'tonight'].includes(view) ? { search: '', filters: {} } : { search, filters };
 }
 
-function useSharedBrowse(view: string, id: string) {
+function clientBrowseView(view: string, id: string, emptySearch: boolean) {
+    return id || view === 'settings' || emptySearch ? 'disabled' : view;
+}
+
+function useSharedBrowse(view: string, id: string, search: string) {
     const shared = useSharedCatalog();
-    const sharedLocal = useLocalIdentities(!!shared.data?.length && ['films', 'series'].includes(view) && !id);
-    const sharedItems = sharedLocal.isSuccess ? sharedCatalogItems(shared.data || [], sharedLocal.data) : [];
+    const entries = shared.data || [];
+    const matching = view === 'search' ? entries.filter(entry => matchesSearchTitle(entry.title, search)) : entries;
+    const sharedLocal = useLocalIdentities(matching.length > 0 && ['films', 'series', 'search'].includes(view) && !id);
+    const sharedItems = sharedCatalogItems(sharedLocal.isSuccess ? matching : [], sharedLocal.data || []);
     return { shared, sharedItems, sharedLocal };
 }
 
@@ -201,13 +210,14 @@ function useClientController() {
     const surface = useRef<HTMLDivElement>(null);
     const profileMenu = useRef<HTMLDivElement>(null);
     const browseInput = clientBrowseInput(view, search, { genre, sort, person, audio, collection });
-    const media = useClientMedia(id || view === 'settings' ? 'disabled' : view, browseInput.search, 0, browseInput.filters);
+    const { standaloneSearch, blankSearch } = searchMode(view, [collection, person, audio], search);
+    const media = useClientMedia(clientBrowseView(view, id, blankSearch), browseInput.search, 0, browseInput.filters);
     const remote = isExternal({ Id: id });
     const remoteIdentity = externalIdentity({ Id: id });
     const remoteDetails = useSeerrDetail(remoteIdentity?.type, remoteIdentity?.id, false);
-    const allowCatalogue = allowExternalCatalogue(view, [id, collection, person, audio], params.get('mode'));
+    const allowCatalogue = allowExternalCatalogue(view, [id, collection, person, audio], params.get('mode'), blankSearch);
     const catalogue = useSeerrCatalogue(view, search, allowCatalogue, genre);
-    const { shared, sharedItems, sharedLocal } = useSharedBrowse(view, id);
+    const { shared, sharedItems, sharedLocal } = useSharedBrowse(view, id, search);
     const upcoming = useSeerrUpcoming(plainHome(view, [id, genre, audio]));
     const details = useClientDetails(localDetailId(id), season);
     const item = details.item.data;
@@ -388,7 +398,7 @@ function useClientController() {
     const backdrop = ambient || pageBackdrop(id, view, hero, pageAmbient, media.data?.items || [], entry => image(entry, true));
     return { api, user, params, location, setParams, view, id, search, browseInput, media, details, item, preferences, actionError, busy,
         searchInput, setSearchInput, genres, genre, sort, savePreference, image, play, updateState, cards, row, playItem, hero, error,
-        prepareDetail, releaseDetail, prepareTab, seerr, catalogue, shared, sharedItems, sharedLocal, upcoming, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, previewProviderAvailable, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent, backdrop, setPageAmbient };
+        standaloneSearch, prepareDetail, releaseDetail, prepareTab, seerr, catalogue, shared, sharedItems, sharedLocal, upcoming, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, previewProviderAvailable, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent, backdrop, setPageAmbient };
 }
 
 type ClientModel = ReturnType<typeof useClientController>;
@@ -581,6 +591,7 @@ function ContentView({ model }: ViewProps) {
     if (view === 'tonight') return <TonightPage items={media.data?.items || []} loading={media.isPending} image={item => artworkUrl(model.api?.basePath || '', item, 'draw')} onPrepare={model.prepareDetail} onRelease={model.releaseDetail} onFeature={entry => model.setPageAmbient(entry ? image(entry, true) : '')} />;
     if (model.discovery) return <DiscoveryView model={model} />;
     if (view === 'mine') return <PersonalView model={model} />;
+    if (model.standaloneSearch) return <SearchView model={model} />;
     return <LibraryView model={model} />;
 }
 function SettingsView({ model }: ViewProps) {
@@ -699,8 +710,64 @@ function LibraryResultCount({ model, embedded, loaded, extra, onlyMissing }: Vie
     return <SearchResultCount model={model} embedded={embedded} count={loaded + extra} />;
 }
 
+function SearchView({ model }: ViewProps) {
+    const { search, searchInput, setSearchInput, setParams, params, cards, media, catalogue, genre, sort, genres } = model;
+    const query = search.trim();
+    const more = useMoreBrowse('search', search, model.browseInput.filters || {}, media.data);
+    const tracked = genre ? model.sharedItems.filter(item => item.Genres?.includes(genre)) : model.sharedItems;
+    const results = groupSearchResults(more.pages.flat(), tracked, catalogue.items);
+    const shown = sort === 'name' ? exactSearchFirst(results.own, query) : results.own;
+    const count = results.own.length + results.saved.length + results.suggestion.length;
+    const waiting = !!query && (media.isPending || model.shared.isPending || model.sharedLocal.isFetching || catalogue.loading
+        || (model.seerr.enabled && (model.seerr.status.isPending || model.seerr.me.isFetching)));
+
+    const noun = count === 1 ? 'résultat affiché' : 'résultats affichés';
+    const setFilter = (key: string, value: string) => {
+        const next = new URLSearchParams(params);
+        if (value) next.set(key, value);
+        else next.delete(key);
+        setParams(next);
+    };
+
+    return <section className='client-library client-search-page'>
+        <header className='client-search-heading'><h1>Rechercher</h1></header>
+        <SearchBar value={searchInput} onChange={setSearchInput} onSubmit={value => setFilter('q', value)} />
+        {query ? <>
+            <div className='client-filter-options client-search-controls'>
+                <label>Genre <select value={genre} onChange={event => setFilter('genre', event.target.value)}>
+                    <option value=''>Tous les genres</option>
+                    {genres.data?.filter(entry => entry.Name).map(entry => <option key={entry.Id || entry.Name} value={entry.Name!}>{entry.Name}</option>)}
+                </select></label>
+                <label>Bibliothèque <select aria-label='Trier les titres de la bibliothèque' value={sort} onChange={event => setFilter('sort', event.target.value)}>
+                    <option value='name'>Par titre</option><option value='recent'>Ajouts récents</option>
+                </select></label>
+                <span className='client-result-count' role='status'>
+                    {waiting ? 'Recherche en cours…' : `${count} ${noun}`}
+                </span>
+            </div>
+            <SearchGroup title='Dans ta bibliothèque' count={results.own.length}>
+                <div className='client-grid'>{cards(shown)}</div>
+                {more.hasMore && <LoadMore loading={more.isFetching} failed={more.isError} pages={more.pages.length} load={() => { void more.fetchMore(); }} />}
+            </SearchGroup>
+            <SearchGroup title='Catalogue partagé' count={results.saved.length}><div className='client-grid'>{cards(results.saved)}</div></SearchGroup>
+            <SearchGroup title='À demander' count={results.suggestion.length || Number(catalogue.hasNextPage)}>
+                <div className='client-grid'>{cards(results.suggestion)}</div>
+                {catalogue.hasNextPage && <button type='button' className='client-button' disabled={catalogue.isFetchingNextPage} onClick={() => { void catalogue.fetchNextPage(); }}>Plus de titres à demander</button>}
+            </SearchGroup>
+            {waiting && !count && <ClientSkeleton layout='grid' contained count={8} label='Recherche en cours…' />}
+            {media.isError && <p className='client-search-feedback' role='status'>Impossible de rechercher dans la bibliothèque. <button type='button' onClick={() => { void media.refetch(); }}>Réessayer</button></p>}
+            {catalogue.isError && <p className='client-search-feedback' role='status'>Les titres à demander sont temporairement indisponibles. <button type='button' onClick={() => { void catalogue.refetch(); }}>Réessayer</button></p>}
+            {!waiting && !count && !media.isError && !catalogue.isError && <p className='client-search-feedback'>Aucun résultat pour « {query} ». Essaie un autre titre ou retire un filtre.</p>}
+        </> : <p className='client-search-feedback'>Cherche un film ou une série dans ta bibliothèque et parmi les titres à demander.</p>}
+    </section>;
+}
+
+function SearchGroup({ title, count, children }: Readonly<{ title: string; count: number; children: ReactNode }>) {
+    return count > 0 ? <section className='client-search-group' aria-label={title}><h2>{title}</h2>{children}</section> : null;
+}
+
 function LibraryView({ model, embedded = false }: ViewProps & { readonly embedded?: boolean }) {
-    const { view, searchInput, setSearchInput, setParams, cards, media, genres, genre, sort, params } = model;
+    const { view, setParams, cards, media, genres, genre, sort, params } = model;
     const more = useMoreBrowse(view, model.browseInput.search, model.browseInput.filters || {}, media.data);
     const { fetchMore } = more;
     const loadMore = useCallback(() => {
@@ -712,8 +779,7 @@ function LibraryView({ model, embedded = false }: ViewProps & { readonly embedde
     const withoutFiles = availability === 'missing';
     const saved = sharedView && availability !== 'available' && (!genre || withoutFiles) && !params.get('audio') && !params.get('person') && !params.get('collection') ?
         model.sharedItems.filter(entry => isExternal(entry) && entry.Type === (view === 'films' ? 'Movie' : 'Series')) : [];
-    const external = mixCatalogue(local, !embedded && view === 'search' ? model.catalogue.items : saved).slice(local.length);
-    const externalPending = !embedded && view === 'search' && model.seerr.enabled && (model.catalogue.loading || model.seerr.status.isPending || model.seerr.me.isFetching);
+    const external = mixCatalogue(local, saved).slice(local.length);
     function browse(changes: Record<string, string>) {
         const next = new URLSearchParams(params);
         Object.entries(changes).forEach(([key, value]) => {
@@ -721,22 +787,16 @@ function LibraryView({ model, embedded = false }: ViewProps & { readonly embedde
         });
         setParams(next);
     }
-    return <section className={`client-library${view === 'search' ? ' client-search-page' : ''}${embedded ? ' embedded' : ''}`}>
-        {!embedded && <header className='client-library-heading'><h1>{params.get('collectionName') || params.get('personName') || links.find(([key]) => key === view)?.[1] || 'Bibliothèque'}</h1>{view === 'search' && <p>Un titre, une envie de cinéma : trouvez votre prochaine séance.</p>}</header>}
-        {!embedded && <>{view === 'search' && <form onSubmit={event => {
-            event.preventDefault();
-            browse({ q: searchInput });
-        }}><ClientIcon name='search' /><input type='search' aria-label='Rechercher un film ou une série' placeholder='Titre d’un film ou d’une série' value={searchInput} onChange={event => setSearchInput(event.target.value)} />{searchInput && <button type='button' aria-label='Effacer la recherche' onClick={() => {
-                setSearchInput('');
-                browse({ q: '' });
-            }}>×</button>}<button>Rechercher</button></form>}
-        <div className='client-filter-options'>
+    return <section className={`client-library${embedded ? ' embedded' : ''}`}>
+        {!embedded && <header className='client-library-heading'><h1>{params.get('collectionName') || params.get('personName') || links.find(([key]) => key === view)?.[1] || 'Bibliothèque'}</h1></header>}
+        {!embedded
+        && <div className='client-filter-options'>
             {!withoutFiles && <><label>Genre <select value={genre} onChange={event => browse({ genre: event.target.value })}><option value=''>Tous les genres</option>{genres.data?.filter(entry => entry.Name).map(entry => <option key={entry.Id || entry.Name} value={entry.Name!}>{entry.Name}</option>)}</select></label><label>Trier <select value={sort} onChange={event => browse({ sort: event.target.value })}><option value='name'>Titre</option><option value='recent'>Ajouts récents</option></select></label></>}
             {sharedView && <label>Disponibilité <select aria-label='Disponibilité' value={availability || 'all'} onChange={event => browse(event.target.value === 'missing' ? { availability: 'missing', genre: '', audio: '', person: '', collection: '' } : { availability: event.target.value })}>
                 <option value='all'>Tout</option><option value='available'>Disponible</option><option value='missing'>À télécharger</option>
             </select></label>}
             <LibraryResultCount model={model} embedded={embedded} loaded={local.length} extra={external.length} onlyMissing={withoutFiles} />
-        </div></>}
+        </div>}
         {model.sharedLocal.isError && sharedView && <p role='status'>Impossible de vérifier quels titres du catalogue sont disponibles.</p>}
         {withoutFiles && !external.length && !model.sharedLocal.isFetching && !model.sharedLocal.isError && <p>Aucun titre suivi à télécharger.</p>}
         {!withoutFiles && media.isPending && <ClientSkeleton layout='grid' count={12} contained label='Chargement des titres…' />}
@@ -745,10 +805,7 @@ function LibraryView({ model, embedded = false }: ViewProps & { readonly embedde
             {cards(external)}
         </div>
         {!withoutFiles && more.hasMore && <LoadMore loading={more.isFetching} failed={more.isError} pages={more.pages.length} load={loadMore} />}
-        {externalPending && <ClientSkeleton layout='row' contained label='Recherche dans les découvertes…' />}
-        {!embedded && view === 'search' && model.catalogue.hasNextPage && <button className='client-button' disabled={model.catalogue.isFetchingNextPage} onClick={() => { void model.catalogue.fetchNextPage(); }}>Plus de découvertes</button>}
-        {!embedded && view === 'search' && model.catalogue.isError && <p>Les résultats externes sont temporairement indisponibles. <button onClick={() => { void model.catalogue.refetch(); }}>Réessayer</button></p>}
-        {!withoutFiles && !external.length && media.data?.items.length === 0 && !model.catalogue.items.length && !externalPending && <p>{view === 'mine' ? 'Ajoutez des films et des séries à votre liste depuis leurs fiches.' : 'Aucun résultat.'}</p>}
+        {!withoutFiles && !external.length && media.data?.items.length === 0 && <p>{view === 'mine' ? 'Ajoutez des films et des séries à votre liste depuis leurs fiches.' : 'Aucun résultat.'}</p>}
     </section>;
 }
 
