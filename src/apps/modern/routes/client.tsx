@@ -69,6 +69,7 @@ import AmbientBackdrop from '../features/client/AmbientBackdrop';
 import { SeerrProvider, useSeerr } from '../features/client/seerr/SeerrContext';
 import { useLocalIdentities, useSeerrCatalogue, useSeerrDetail, useSeerrUpcoming } from '../features/client/seerr/queries';
 import UpcomingRow from '../features/client/UpcomingRow';
+import SharedCatalogArtwork from '../features/client/SharedCatalogArtwork';
 import { sharedCatalogItems, useSharedCatalog } from '../features/client/sharedCatalog';
 import { ExternalDetail, RequestTracking } from '../features/client/seerr/SeerrViews';
 import { externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
@@ -341,15 +342,19 @@ function useClientController() {
         }
     }
     function cards(items: BaseItemDto[], horizontal = false) {
-        return items.map(i => <Link className={`client-card${horizontal ? ' client-card-wide' : ''}`} key={i.Id} data-client-focus={i.Id}
-            to={`/client?id=${i.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }} aria-label={[i.SeriesName, i.Name].filter(Boolean).join(' · ')} onPointerEnter={() => prepareDetail(i)} onFocus={() => prepareDetail(i)}>
-            <Artwork source={image(i, horizontal)} />
-            {horizontal && <span className='client-card-caption'><strong>{i.SeriesName || i.Name}</strong>
-                <small>{i.Type === 'Episode' ? `${episodeLabel(i)} · ${i.Name}` : i.ProductionYear}</small></span>}
-            {progressPercent(i) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(i)}%` }} /></span>}
-            <span className='client-card-fallback'>{i.Name}</span>
-            {isExternal(i) && <span className='client-external-badge'>{sharedItems.some(entry => entry.Id === i.Id) ? 'À télécharger' : mediaLabel((i as CatalogueItem).Seerr?.mediaInfo)}</span>}
-        </Link>);
+        return items.map(i => {
+            const tracked = isExternal(i) && sharedItems.some(entry => entry.Id === i.Id);
+            const source = image(i, horizontal);
+            return <Link className={`client-card${horizontal ? ' client-card-wide' : ''}`} key={i.Id} data-client-focus={i.Id}
+                to={`/client?id=${i.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }} aria-label={[i.SeriesName, i.Name].filter(Boolean).join(' · ')} onPointerEnter={() => prepareDetail(i)} onFocus={() => prepareDetail(i)}>
+                {tracked && !source ? <SharedCatalogArtwork item={i} backdrop={horizontal} /> : <Artwork source={source} />}
+                {horizontal && <span className='client-card-caption'><strong>{i.SeriesName || i.Name}</strong>
+                    <small>{i.Type === 'Episode' ? `${episodeLabel(i)} · ${i.Name}` : i.ProductionYear}</small></span>}
+                {progressPercent(i) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(i)}%` }} /></span>}
+                <span className='client-card-fallback'>{i.Name}</span>
+                {isExternal(i) && <span className='client-external-badge'>{tracked ? 'À télécharger' : mediaLabel((i as CatalogueItem).Seerr?.mediaInfo)}</span>}
+            </Link>;
+        });
     }
     function row(title: string, items: BaseItemDto[] | undefined, horizontal = false) {
         if (!items?.length) return null;
