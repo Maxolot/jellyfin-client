@@ -12,7 +12,7 @@ namespace Jellyfin.Plugin.SharedCatalog;
 [Authorize]
 [ApiController]
 [Route("SharedCatalog")]
-public sealed class CatalogController(IUserManager users) : ControllerBase
+public sealed partial class CatalogController(IUserManager users, ILibraryManager library, MediaBrowser.Controller.Session.ISessionManager sessions) : ControllerBase
 {
     private static readonly SemaphoreSlim Gate = new(1);
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
@@ -37,11 +37,19 @@ public sealed class CatalogController(IUserManager users) : ControllerBase
     }
 
     [HttpDelete("Items/{type}/{id:int}")]
-    public Task<IActionResult> Remove(string type, int id, CancellationToken cancellation)
+    public async Task<IActionResult> Remove(string type, int id, CancellationToken cancellation)
     {
         if (CurrentUser() is not { } user || !user.HasPermission(PermissionKind.IsAdministrator))
-            return Task.FromResult<IActionResult>(Forbid());
-        return Access(items => (items.RemoveAll(item => item.Type == type && item.Id == id) > 0, NoContent()), cancellation);
+            return Forbid();
+        if (!await RemovalGate.WaitAsync(0, cancellation)) return Conflict(new { code = "busy" });
+        try
+        {
+            return await Access(items => (items.RemoveAll(item => item.Type == type && item.Id == id) > 0, NoContent()), cancellation);
+        }
+        finally
+        {
+            RemovalGate.Release();
+        }
     }
 
     private User? CurrentUser() =>

@@ -12,6 +12,7 @@ import MediaInfoDialog from './MediaInfoDialog';
 import { externalIdentity } from './seerr/model';
 import { useSeerr } from './seerr/SeerrContext';
 import { canRequestSeasons, RequestDialog, useMissingSeasons } from './seerr/SeerrViews';
+import StorageRemoval, { useStorageRemovalAvailable } from './StorageRemoval';
 import { FollowCatalogAction } from './sharedCatalog';
 import { choiceSummary, readTrackChoice, saveTrackChoice, type TrackChoice } from './trackChoice';
 import TrackMenu from './TrackMenu';
@@ -22,10 +23,11 @@ export default function DetailMenu({ item, basePath, play }: Readonly<{ item: Ba
     const root = useRef<HTMLDivElement>(null);
     const trigger = useRef<HTMLButtonElement>(null);
     const [open, setOpen] = useState(false);
-    const [dialog, setDialog] = useState<'cast' | 'request' | 'info' | 'download' | null>(null);
+    const [dialog, setDialog] = useState<'cast' | 'request' | 'info' | 'download' | 'storage' | null>(null);
     const [tracksOpen, setTracksOpen] = useState(false);
     const { api, user } = useApi();
     const tracks = useFileTracks(item);
+    const storage = useStorageRemovalAvailable(item, open && user?.Policy?.IsAdministrator === true);
     const [choice, setChoice] = useState(() => readTrackChoice(api?.basePath, user?.Id, item.Id));
     const canChooseTracks = tracks.audio.length > 1 || tracks.subtitles.length > 0;
     const chooseTracks = (next: TrackChoice) => {
@@ -61,7 +63,7 @@ export default function DetailMenu({ item, basePath, play }: Readonly<{ item: Ba
         setTracksOpen(false);
         if (restoreFocus) trigger.current?.focus();
     };
-    const openDialog = (name: 'cast' | 'request' | 'info' | 'download') => {
+    const openDialog = (name: 'cast' | 'request' | 'info' | 'download' | 'storage') => {
         setOpen(false);
         setDialog(name);
     };
@@ -90,10 +92,12 @@ export default function DetailMenu({ item, basePath, play }: Readonly<{ item: Ba
                 {canChooseTracks && <button type='button' role='menuitem' onClick={() => setTracksOpen(true)}><ClientIcon name='volume' /><span className='client-more-text'>Audio et sous-titres<span>{choiceSummary(choice)}</span></span></button>}
                 {request && <button type='button' role='menuitem' onClick={() => openDialog('request')}><ClientIcon name='plus' />Demander des saisons{missing > 0 && <small>{missing}</small>}</button>}
                 {user?.Policy?.EnableContentDownloading && ['Movie', 'Series', 'Episode'].includes(item.Type || '') && <button type='button' role='menuitem' onClick={() => openDialog('download')}><ClientIcon name='download' />Télécharger</button>}
+                {storage && <button type='button' role='menuitem' onClick={() => openDialog('storage')}>Retirer les fichiers du disque</button>}
                 {hasCast(item) && <button type='button' role='menuitem' onClick={() => openDialog('cast')}><ClientIcon name='collection' />Distribution et réalisation</button>}
                 <button type='button' role='menuitem' onClick={() => openDialog('info')}><ClientIcon name='info' />Informations</button>
             </>}
         </div>}
+        {dialog === 'storage' && <StorageRemoval item={item} onClose={() => setDialog(null)} />}
         <DownloadDialog item={item} open={dialog === 'download'} onClose={() => setDialog(null)} />
         <MediaInfoDialog item={item} basePath={basePath} open={dialog === 'info'} onClose={() => setDialog(null)} play={play} choice={choice} chooseVersion={version => chooseTracks({ ...choice, version })} />
         <CastDialog item={item} basePath={basePath} open={dialog === 'cast'} onClose={() => setDialog(null)} />

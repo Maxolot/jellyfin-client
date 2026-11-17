@@ -4,9 +4,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="tests/**/*" />
     <FrameworkReference Include="Microsoft.AspNetCore.App"/>
     <PackageReference Include="Jellyfin.Controller" Version="12.0.0" ExcludeAssets="runtime"/>
   </ItemGroup>

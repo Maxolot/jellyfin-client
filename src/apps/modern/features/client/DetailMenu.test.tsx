@@ -17,6 +17,7 @@ const noTracks = { languages: [], audio: [], subtitles: [] };
 let tracks: typeof fileTracks | typeof noTracks = noTracks;
 vi.mock('hooks/useApi', () => ({ useApi: () => ({ api: { basePath: 's' }, user: { Id: 'u' } }) }));
 vi.mock('./languageTags', () => ({ useFileTracks: () => tracks }));
+vi.mock('./StorageRemoval', () => ({ default: () => null, useStorageRemovalAvailable: () => false }));
 vi.mock('./MediaInfoDialog', () => ({ default: () => null }));
 vi.mock('./DetailExtras', () => ({ CastDialog: () => null, hasCast: (item: BaseItemDto) => !!item.People?.length }));
 
