@@ -9,8 +9,10 @@ import ClientIcon from './ClientIcon';
 import DownloadDialog from './offline/DownloadDialog';
 import { useFileTracks } from './languageTags';
 import MediaInfoDialog from './MediaInfoDialog';
+import { externalIdentity } from './seerr/model';
 import { useSeerr } from './seerr/SeerrContext';
 import { canRequestSeasons, RequestDialog, useMissingSeasons } from './seerr/SeerrViews';
+import { FollowCatalogAction } from './sharedCatalog';
 import { choiceSummary, readTrackChoice, saveTrackChoice, type TrackChoice } from './trackChoice';
 import TrackMenu from './TrackMenu';
 
@@ -84,6 +86,7 @@ export default function DetailMenu({ item, basePath, play }: Readonly<{ item: Ba
         <button ref={trigger} type='button' className='client-button client-action-circle' aria-label={triggerLabel} title={missing ? 'Des saisons peuvent être demandées' : 'Plus d’actions'} aria-haspopup='menu' aria-expanded={open} onClick={() => setOpen(!open)}><ClientIcon name='more' />{missing > 0 && <span className='client-more-badge' aria-hidden='true' />}</button>
         {open && <div className='client-more-menu' role='menu' aria-label={tracksOpen ? 'Audio et sous-titres' : 'Plus d’actions'}>
             {tracksOpen ? <TrackMenu audio={tracks.audio} subtitles={tracks.subtitles} choice={choice} onChange={chooseTracks} onBack={() => setTracksOpen(false)} /> : <>
+                {externalIdentity(item) && <FollowCatalogAction key={item.Id} item={item} menu />}
                 {canChooseTracks && <button type='button' role='menuitem' onClick={() => setTracksOpen(true)}><ClientIcon name='volume' /><span className='client-more-text'>Audio et sous-titres<span>{choiceSummary(choice)}</span></span></button>}
                 {request && <button type='button' role='menuitem' onClick={() => openDialog('request')}><ClientIcon name='plus' />Demander des saisons{missing > 0 && <small>{missing}</small>}</button>}
                 {user?.Policy?.EnableContentDownloading && ['Movie', 'Series', 'Episode'].includes(item.Type || '') && <button type='button' role='menuitem' onClick={() => openDialog('download')}><ClientIcon name='download' />Télécharger</button>}

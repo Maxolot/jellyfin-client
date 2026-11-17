@@ -1,5 +1,6 @@
 /* eslint-disable react/jsx-no-bind -- These controls belong to the current request form. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
+import { FollowCatalogAction, sharedCatalogItems, useSharedCatalog } from '../sharedCatalog';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -210,11 +211,14 @@ export function ExternalDetail({ id, row, image }: Readonly<{ id: string; row: (
     const identity = externalIdentity({ Id: id });
     const seerr = useSeerr();
     const detail = useSeerrDetail(identity?.type, identity?.id);
+    const shared = useSharedCatalog();
     const local = useLocalIdentities(seerr.connected);
     const location = useLocation();
     const navigation = location.state as { returnTo?: string; returnState?: object } | null;
     const back = navigation?.returnTo || '/client';
     const backState = { ...navigation?.returnState, restoreFocus: true };
+    const saved = sharedCatalogItems(shared.data || [], []).find(entry => entry.Id === id);
+    if (saved && (!seerr.connected || detail.isError)) return <section className='client-settings'><Link className='client-back' to={back} state={backState}>← Retour</Link><h1>{saved.Name}</h1><p>{saved.Overview}</p><p>Les demandes sont temporairement indisponibles.</p><FollowCatalogAction item={saved} /></section>;
     if (!seerr.connected) return <section className='client-settings'><Link to={back} state={backState}>← Retour</Link><h1>Découvertes et demandes</h1><p>Activez la connexion aux demandes pour retrouver cette fiche.</p><SeerrSettings /></section>;
     if (detail.isPending) return <section className='client-detail-pending'><Link className='client-back' to={back} state={backState}>← Retour</Link><ClientSkeleton layout='detail' label='Chargement de la fiche…' /></section>;
     if (!detail.data || !identity) {
@@ -224,7 +228,7 @@ export function ExternalDetail({ id, row, image }: Readonly<{ id: string; row: (
     }
     const data = detail.data;
     const match = localMatch(data, identity.type, local.data || []);
-    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><div className='client-detail-readability' aria-hidden='true' /><Link className='client-back' to={back} state={backState}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{[releaseLabel(data.releaseDate || data.firstAirDate), ...(data.genres || []).map(genre => genre.name)].filter(Boolean).join(' · ')}</p><ExternalSource data={data} identity={identity} owned={!!match} /><p className='client-overview'>{data.overview}</p><div className='client-actions'>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}<AvailabilityAction identity={identity} localItem={match} /></div></div></section><ExternalRecommendations identity={identity} local={local.data || []} row={row} data={data} image={image} /></>;
+    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><div className='client-detail-readability' aria-hidden='true' /><Link className='client-back' to={back} state={backState}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{[releaseLabel(data.releaseDate || data.firstAirDate), ...(data.genres || []).map(genre => genre.name)].filter(Boolean).join(' · ')}</p><ExternalSource data={data} identity={identity} owned={!!match} /><p className='client-overview'>{data.overview}</p><div className='client-actions'>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}<AvailabilityAction identity={identity} localItem={match} /><FollowCatalogAction item={catalogueItem(data, identity.type, [])} remote={data} /></div></div></section><ExternalRecommendations identity={identity} local={local.data || []} row={row} data={data} image={image} /></>;
 }
 
 function ExternalSource({ data, identity, owned }: Readonly<{ data: ExternalMedia; identity: SeerrIdentity; owned: boolean }>) {

@@ -67,8 +67,9 @@ import TonightPage from '../features/client/TonightPage';
 import CollectionCard from '../features/client/CollectionCard';
 import AmbientBackdrop from '../features/client/AmbientBackdrop';
 import { SeerrProvider, useSeerr } from '../features/client/seerr/SeerrContext';
-import { useSeerrCatalogue, useSeerrDetail, useSeerrUpcoming } from '../features/client/seerr/queries';
+import { useLocalIdentities, useSeerrCatalogue, useSeerrDetail, useSeerrUpcoming } from '../features/client/seerr/queries';
 import UpcomingRow from '../features/client/UpcomingRow';
+import { sharedCatalogItems, useSharedCatalog } from '../features/client/sharedCatalog';
 import { ExternalDetail, RequestTracking } from '../features/client/seerr/SeerrViews';
 import { externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
 
@@ -144,6 +145,13 @@ function clientBrowseInput(view: string, search: string, filters: Parameters<typ
     return ['mine', 'tonight'].includes(view) ? { search: '', filters: {} } : { search, filters };
 }
 
+function useSharedBrowse(view: string, id: string) {
+    const shared = useSharedCatalog();
+    const sharedLocal = useLocalIdentities(!!shared.data?.length && ['films', 'series'].includes(view) && !id);
+    const sharedItems = sharedLocal.isSuccess ? sharedCatalogItems(shared.data || [], sharedLocal.data) : [];
+    return { shared, sharedItems, sharedLocal };
+}
+
 function useClientController() {
     const { api, user } = useApi();
     const seerr = useSeerr();
@@ -198,6 +206,7 @@ function useClientController() {
     const remoteDetails = useSeerrDetail(remoteIdentity?.type, remoteIdentity?.id, false);
     const allowCatalogue = allowExternalCatalogue(view, [id, collection, person, audio], params.get('mode'));
     const catalogue = useSeerrCatalogue(view, search, allowCatalogue, genre);
+    const { shared, sharedItems, sharedLocal } = useSharedBrowse(view, id);
     const upcoming = useSeerrUpcoming(plainHome(view, [id, genre, audio]));
     const details = useClientDetails(localDetailId(id), season);
     const item = details.item.data;
@@ -339,7 +348,7 @@ function useClientController() {
                 <small>{i.Type === 'Episode' ? `${episodeLabel(i)} · ${i.Name}` : i.ProductionYear}</small></span>}
             {progressPercent(i) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(i)}%` }} /></span>}
             <span className='client-card-fallback'>{i.Name}</span>
-            {isExternal(i) && <span className='client-external-badge'>{mediaLabel((i as CatalogueItem).Seerr?.mediaInfo)}</span>}
+            {isExternal(i) && <span className='client-external-badge'>{sharedItems.some(entry => entry.Id === i.Id) ? 'À télécharger' : mediaLabel((i as CatalogueItem).Seerr?.mediaInfo)}</span>}
         </Link>);
     }
     function row(title: string, items: BaseItemDto[] | undefined, horizontal = false) {
@@ -374,7 +383,7 @@ function useClientController() {
     const backdrop = ambient || pageBackdrop(id, view, hero, pageAmbient, media.data?.items || [], entry => image(entry, true));
     return { api, user, params, location, setParams, view, id, search, browseInput, media, details, item, preferences, actionError, busy,
         searchInput, setSearchInput, genres, genre, sort, savePreference, image, play, updateState, cards, row, playItem, hero, error,
-        prepareDetail, releaseDetail, prepareTab, seerr, catalogue, upcoming, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, previewProviderAvailable, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent, backdrop, setPageAmbient };
+        prepareDetail, releaseDetail, prepareTab, seerr, catalogue, shared, sharedItems, sharedLocal, upcoming, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, previewProviderAvailable, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent, backdrop, setPageAmbient };
 }
 
 type ClientModel = ReturnType<typeof useClientController>;
@@ -604,7 +613,7 @@ function DiscoveryView({ model }: ViewProps) {
         });
         return row(genre, selected);
     }).filter(Boolean).slice(0, 4);
-    return <div className='client-discovery'>{row(view === 'films' ? 'À découvrir dans vos films' : 'À découvrir dans vos séries', items.slice(0, 12))}{row('À découvrir aussi', model.catalogue.items.filter(entry => !used.has(entry.Id || '')))}{groups}
+    return <div className='client-discovery'>{row(view === 'films' ? 'À découvrir dans vos films' : 'À découvrir dans vos séries', items.slice(0, 12))}{row('À découvrir aussi', model.catalogue.items.filter(entry => !used.has(entry.Id || '')))}{row('Catalogue partagé', model.sharedItems.filter(entry => entry.Type === (view === 'films' ? 'Movie' : 'Series') && !used.has(entry.Id || '')))}{groups}
         {model.catalogue.loading && !model.catalogue.items.length && <ClientSkeleton layout='row' label='Chargement des découvertes…' />}
         {media.isSuccess && items.length === 0 && model.catalogue.items.length === 0 && !model.catalogue.loading && <p className='client-message'>Aucun titre pour cette sélection.</p>}
         <button className='client-explore-library' onClick={() => setParams({ view, mode: 'library' })}>Explorer toute la bibliothèque ›</button>
@@ -674,6 +683,17 @@ function LoadMore({ loading, failed, pages, load }: Readonly<{ loading: boolean;
     </div>;
 }
 
+function LibraryResultCount({ model, embedded, loaded, extra, onlyMissing }: ViewProps & Readonly<{
+    embedded: boolean; loaded: number; extra: number; onlyMissing: boolean;
+}>) {
+    if (onlyMissing && model.sharedLocal.isFetching) return <span className='client-result-count' aria-busy='true'>Vérification…</span>;
+    if (onlyMissing || (['films', 'series'].includes(model.view) && extra > 0)) {
+        const count = (onlyMissing ? 0 : (model.media.data?.total || 0)) + extra;
+        return <span className='client-result-count' aria-live='polite'>{count} titre{count === 1 ? '' : 's'}</span>;
+    }
+    return <SearchResultCount model={model} embedded={embedded} count={loaded + extra} />;
+}
+
 function LibraryView({ model, embedded = false }: ViewProps & { readonly embedded?: boolean }) {
     const { view, searchInput, setSearchInput, setParams, cards, media, genres, genre, sort, params } = model;
     const more = useMoreBrowse(view, model.browseInput.search, model.browseInput.filters || {}, media.data);
@@ -682,7 +702,12 @@ function LibraryView({ model, embedded = false }: ViewProps & { readonly embedde
         void fetchMore();
     }, [fetchMore]);
     const local = more.pages.flat();
-    const external = mixCatalogue(local, !embedded && view === 'search' ? model.catalogue.items : []).slice(local.length);
+    const sharedView = ['films', 'series'].includes(view) && model.shared.data != null;
+    const availability = sharedView ? params.get('availability') : null;
+    const withoutFiles = availability === 'missing';
+    const saved = sharedView && availability !== 'available' && (!genre || withoutFiles) && !params.get('audio') && !params.get('person') && !params.get('collection') ?
+        model.sharedItems.filter(entry => isExternal(entry) && entry.Type === (view === 'films' ? 'Movie' : 'Series')) : [];
+    const external = mixCatalogue(local, !embedded && view === 'search' ? model.catalogue.items : saved).slice(local.length);
     const externalPending = !embedded && view === 'search' && model.seerr.enabled && (model.catalogue.loading || model.seerr.status.isPending || model.seerr.me.isFetching);
     function browse(changes: Record<string, string>) {
         const next = new URLSearchParams(params);
@@ -700,17 +725,25 @@ function LibraryView({ model, embedded = false }: ViewProps & { readonly embedde
                 setSearchInput('');
                 browse({ q: '' });
             }}>×</button>}<button>Rechercher</button></form>}
-        <div className='client-filter-options'><label>Genre <select value={genre} onChange={event => browse({ genre: event.target.value })}><option value=''>Tous les genres</option>{genres.data?.filter(entry => entry.Name).map(entry => <option key={entry.Id || entry.Name} value={entry.Name!}>{entry.Name}</option>)}</select></label><label>Trier <select value={sort} onChange={event => browse({ sort: event.target.value })}><option value='name'>Titre</option><option value='recent'>Ajouts récents</option></select></label><SearchResultCount model={model} embedded={embedded} count={local.length + external.length} /></div></>}
-        {media.isPending && <ClientSkeleton layout='grid' count={12} contained label='Chargement des titres…' />}
+        <div className='client-filter-options'>
+            {!withoutFiles && <><label>Genre <select value={genre} onChange={event => browse({ genre: event.target.value })}><option value=''>Tous les genres</option>{genres.data?.filter(entry => entry.Name).map(entry => <option key={entry.Id || entry.Name} value={entry.Name!}>{entry.Name}</option>)}</select></label><label>Trier <select value={sort} onChange={event => browse({ sort: event.target.value })}><option value='name'>Titre</option><option value='recent'>Ajouts récents</option></select></label></>}
+            {sharedView && <label>Disponibilité <select aria-label='Disponibilité' value={availability || 'all'} onChange={event => browse(event.target.value === 'missing' ? { availability: 'missing', genre: '', audio: '', person: '', collection: '' } : { availability: event.target.value })}>
+                <option value='all'>Tout</option><option value='available'>Disponible</option><option value='missing'>À télécharger</option>
+            </select></label>}
+            <LibraryResultCount model={model} embedded={embedded} loaded={local.length} extra={external.length} onlyMissing={withoutFiles} />
+        </div></>}
+        {model.sharedLocal.isError && sharedView && <p role='status'>Impossible de vérifier quels titres du catalogue sont disponibles.</p>}
+        {withoutFiles && !external.length && !model.sharedLocal.isFetching && !model.sharedLocal.isError && <p>Aucun titre suivi à télécharger.</p>}
+        {!withoutFiles && media.isPending && <ClientSkeleton layout='grid' count={12} contained label='Chargement des titres…' />}
         <div className='client-grid'>
-            {more.pages.filter(page => page.length).map(page => <GridChunk key={page[0].Id} items={page} render={cards} />)}
+            {!withoutFiles && more.pages.filter(page => page.length).map(page => <GridChunk key={page[0].Id} items={page} render={cards} />)}
             {cards(external)}
         </div>
-        {more.hasMore && <LoadMore loading={more.isFetching} failed={more.isError} pages={more.pages.length} load={loadMore} />}
+        {!withoutFiles && more.hasMore && <LoadMore loading={more.isFetching} failed={more.isError} pages={more.pages.length} load={loadMore} />}
         {externalPending && <ClientSkeleton layout='row' contained label='Recherche dans les découvertes…' />}
         {!embedded && view === 'search' && model.catalogue.hasNextPage && <button className='client-button' disabled={model.catalogue.isFetchingNextPage} onClick={() => { void model.catalogue.fetchNextPage(); }}>Plus de découvertes</button>}
         {!embedded && view === 'search' && model.catalogue.isError && <p>Les résultats externes sont temporairement indisponibles. <button onClick={() => { void model.catalogue.refetch(); }}>Réessayer</button></p>}
-        {media.data?.items.length === 0 && !model.catalogue.items.length && !externalPending && <p>{view === 'mine' ? 'Ajoutez des films et des séries à votre liste depuis leurs fiches.' : 'Aucun résultat.'}</p>}
+        {!withoutFiles && !external.length && media.data?.items.length === 0 && !model.catalogue.items.length && !externalPending && <p>{view === 'mine' ? 'Ajoutez des films et des séries à votre liste depuis leurs fiches.' : 'Aucun résultat.'}</p>}
     </section>;
 }
 
