@@ -48,6 +48,8 @@ import { useProfileGate } from '../features/client/profiles/useProfileGate';
 import { chosenTracks } from '../features/client/languageTags';
 import { RecentPage } from '../features/client/LocalDiscoveryPages';
 import MediaRow from '../features/client/MediaRow';
+import AdvancedLibraryFilters from '../features/client/AdvancedLibraryFilters';
+import { countLibraryFilters, isFullLibrary, readLibraryFilters } from '../features/client/libraryFilters';
 import WatchedMarker, { watchedLabel } from '../features/client/WatchedMarker';
 import { episodeLabel, isWatchedCard, progressPercent, uniqueItems } from '../features/client/model';
 import { clientRequest } from '../features/client/session';
@@ -215,7 +217,7 @@ function useClientController() {
     const profileButton = useRef<HTMLButtonElement>(null);
     const surface = useRef<HTMLDivElement>(null);
     const profileMenu = useRef<HTMLDivElement>(null);
-    const browseInput = clientBrowseInput(view, search, { genre, sort, person, audio, collection });
+    const browseInput = clientBrowseInput(view, search, { genre, sort, person, audio, collection, advanced: readLibraryFilters(view, params) });
     const { standaloneSearch, blankSearch } = searchMode(view, [collection, person, audio], search);
     const media = useClientMedia(clientBrowseView(view, id, blankSearch), browseInput.search, 0, browseInput.filters);
     const remote = isExternal({ Id: id });
@@ -801,13 +803,16 @@ function LibraryView({ model, embedded = false }: ViewProps & { readonly embedde
     const sharedView = ['films', 'series'].includes(view) && model.shared.data != null;
     const availability = sharedView ? params.get('availability') : null;
     const withoutFiles = availability === 'missing';
-    const saved = sharedView && availability !== 'available' && (!genre || withoutFiles) && !params.get('audio') && !params.get('person') && !params.get('collection') ?
+    const advanced = model.browseInput.filters?.advanced || {};
+    const hasAdvanced = countLibraryFilters(advanced) > 0;
+    const saved = sharedView && !hasAdvanced && availability !== 'available' && (!genre || withoutFiles) && !params.get('audio') && !params.get('person') && !params.get('collection') ?
         model.sharedItems.filter(entry => isExternal(entry) && entry.Type === (view === 'films' ? 'Movie' : 'Series')) : [];
     const external = mixCatalogue(local, saved).slice(local.length);
     function browse(changes: Record<string, string>) {
         const next = new URLSearchParams(params);
         Object.entries(changes).forEach(([key, value]) => {
-            next.set(key, value);
+            if (value) next.set(key, value);
+            else next.delete(key);
         });
         setParams(next);
     }
@@ -821,6 +826,8 @@ function LibraryView({ model, embedded = false }: ViewProps & { readonly embedde
             </select></label>}
             <LibraryResultCount model={model} embedded={embedded} loaded={local.length} extra={external.length} onlyMissing={withoutFiles} />
         </div>}
+        {!embedded && !withoutFiles && isFullLibrary(view, params.get('mode'))
+            && <AdvancedLibraryFilters key={view} view={view} filters={advanced} onChange={browse} />}
         {model.sharedLocal.isError && sharedView && <p role='status'>Impossible de vérifier quels titres du catalogue sont disponibles.</p>}
         {withoutFiles && !external.length && !model.sharedLocal.isFetching && !model.sharedLocal.isError && <p>Aucun titre suivi à télécharger.</p>}
         {!withoutFiles && media.isPending && <ClientSkeleton layout='grid' count={12} contained label='Chargement des titres…' />}

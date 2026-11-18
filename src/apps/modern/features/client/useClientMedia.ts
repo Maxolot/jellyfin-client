@@ -13,6 +13,7 @@ import { useMemo } from 'react';
 import { useApi } from 'hooks/useApi';
 import * as userSettings from 'scripts/settings/userSettings';
 
+import { libraryFilterQuery, type LibraryFilters } from './libraryFilters';
 import { uniqueItems } from './model';
 import { clientRequest } from './session';
 
@@ -29,14 +30,14 @@ function nextUpOptions() {
         nextUpDateCutoff: days > 0 ? new Date(Date.now() - days * 864e5).toISOString() : undefined };
 }
 
-export type BrowseFilters = { genre?: string; sort?: string; person?: string; audio?: string; collection?: string };
+export type BrowseFilters = { genre?: string; sort?: string; person?: string; audio?: string; collection?: string; advanced?: LibraryFilters };
 
 type Connection = { api?: Api; user?: { Id?: string | null; Configuration?: { HidePlayedInLatest?: boolean } | null } };
 
 /** One description of a page's data, shared by the page itself and by whatever prepares it in advance. */
-export function browseQuery({ api, user }: Connection, view: string, search: string, offset: number, { genre = '', sort = 'name', person = '', audio = '', collection = '' }: BrowseFilters = {}) {
+export function browseQuery({ api, user }: Connection, view: string, search: string, offset: number, { genre = '', sort = 'name', person = '', audio = '', collection = '', advanced = {} }: BrowseFilters = {}) {
     return {
-        queryKey: ['Client', api?.basePath, user?.Id, 'Browse', view, search, offset, genre, sort, person, audio, collection],
+        queryKey: ['Client', api?.basePath, user?.Id, 'Browse', view, search, offset, genre, sort, person, audio, collection, libraryFilterQuery(advanced)],
         staleTime: 30000,
         queryFn: ({ signal }: { signal: AbortSignal }) => clientRequest(async () => {
             const library = getLibraryApi(api!);
@@ -49,7 +50,7 @@ export function browseQuery({ api, user }: Connection, view: string, search: str
             if (view !== 'home') {
                 const result = await library.getItems({ ...common, limit: view === 'tonight' ? 192 : 48, startIndex: offset,
                     personIds: person ? [person] : undefined, searchTerm: search || undefined, genres: genre ? [genre] : undefined, isFavorite: view === 'mine' ? true : undefined,
-                    ...browseOrder(view, sort) }, request);
+                    ...libraryFilterQuery(advanced), ...browseOrder(view, sort) }, request);
                 return { items: result.data.Items || [], total: result.data.TotalRecordCount || 0,
                     resume: [], next: [], movies: [], series: [], picks: [] };
             }
