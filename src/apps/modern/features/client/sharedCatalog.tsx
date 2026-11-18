@@ -15,7 +15,12 @@ type Entry = {
     year?: number;
     posterPath?: string;
     backdropPath?: string;
+    /** Account that added the title and when, absent from entries made before plugin 0.3.0. */
+    addedBy?: string;
+    addedAt?: string;
 };
+
+export type SharedCatalogEntry = Entry;
 
 export function useSharedCatalog() {
     const { api, user } = useApi();

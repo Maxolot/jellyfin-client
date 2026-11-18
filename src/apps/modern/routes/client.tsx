@@ -71,6 +71,9 @@ import { SeerrProvider, useSeerr } from '../features/client/seerr/SeerrContext';
 import { useLocalIdentities, useSeerrCatalogue, useSeerrDetail, useSeerrUpcoming } from '../features/client/seerr/queries';
 import UpcomingRow from '../features/client/UpcomingRow';
 import SearchBar from '../features/client/SearchBar';
+import Spotlight, { type SpotlightHandle } from '../features/client/spotlight/Spotlight';
+import PlaybackStarting from '../features/client/player/PlaybackStarting';
+import '../features/client/player/player.scss';
 import { exactSearchFirst, groupSearchResults, matchesSearchTitle, searchMode } from '../features/client/searchResults';
 import SharedCatalogArtwork from '../features/client/SharedCatalogArtwork';
 import { sharedCatalogItems, useSharedCatalog } from '../features/client/sharedCatalog';
@@ -191,6 +194,8 @@ function useClientController() {
     const hasPreviews = hasStaticPreviews || previewProviderAvailable;
     const [actionError, setActionError] = useState('');
     const [busy, setBusy] = useState(false);
+    // What is starting to play, shown by name until the player opens.
+    const [starting, setStarting] = useState<BaseItemDto | null>(null);
     const [searchInput, setSearchInput] = useState(search);
     const [heroIndex, setHeroIndex] = useState(0);
     const [ambient, setAmbient] = useState('');
@@ -229,6 +234,17 @@ function useClientController() {
         Events.on(playbackManager, 'playbackstop', refresh);
         return () => Events.off(playbackManager, 'playbackstop', refresh);
     }, [cache, api?.basePath, user?.Id]);
+    useEffect(() => {
+        if (!starting) return;
+        const started = () => setStarting(null);
+        Events.on(playbackManager, 'playbackstart', started);
+        // Never left on screen if the start is abandoned without any event.
+        const timer = window.setTimeout(started, 45000);
+        return () => {
+            Events.off(playbackManager, 'playbackstart', started);
+            window.clearTimeout(timer);
+        };
+    }, [starting]);
     useEffect(() => setAmbient(''), [id, view, genre, audio]);
 
     useEffect(() => {
@@ -329,9 +345,11 @@ function useClientController() {
         }
         setActionError('');
         setPreviewSuspended(true);
+        setStarting(i);
         try {
             await playbackManager.play({ items: [i as ItemDto], startPositionTicks: startTicks ?? (i.UserData?.PlaybackPositionTicks || 0), ...await chosenTracks(api, user?.Id, i) });
         } catch {
+            setStarting(null);
             setPreviewSuspended(false);
             setActionError('La lecture n’a pas pu démarrer. Réessayez dans un instant.');
         }
@@ -397,7 +415,7 @@ function useClientController() {
     const error = id ? details.item.isError : media.isError;
     const backdrop = ambient || pageBackdrop(id, view, hero, pageAmbient, media.data?.items || [], entry => image(entry, true));
     return { api, user, params, location, setParams, view, id, search, browseInput, media, details, item, preferences, actionError, busy,
-        searchInput, setSearchInput, genres, genre, sort, savePreference, image, play, updateState, cards, row, playItem, hero, error,
+        searchInput, setSearchInput, starting, genres, genre, sort, savePreference, image, play, updateState, cards, row, playItem, hero, error,
         standaloneSearch, prepareDetail, releaseDetail, prepareTab, seerr, catalogue, shared, sharedItems, sharedLocal, upcoming, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, previewProviderAvailable, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent, backdrop, setPageAmbient };
 }
 
@@ -443,6 +461,7 @@ const NavLinks = memo(function ClientNavLinks({ view, detail, prepare }: NavProp
 
 function ClientView({ model }: ViewProps) {
     const { preferences, id, view, user, actionError, error, media, details, profileOpen, setProfileOpen, profileButton, profileMenu, accent } = model;
+    const spotlight = useRef<SpotlightHandle>(null);
     return <PreviewProvider serverAvailable={model.previewProviderAvailable} surface={model.surface} enabled={preferences.previews} muted={preferences.previewMuted} suspended={model.previewSuspended} toggleMuted={() => model.savePreference({ ...preferences, previewMuted: !preferences.previewMuted })} onPlayingChange={model.setPreviewPlaying}><Page id='clientPage' title={APP_NAME} className='client-page' isBackButtonEnabled={false}>
         <div ref={model.surface} className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} ${preferences.chromatic ? 'client-chromatic' : ''} ${preferences.hero === 'background' ? 'client-hero-background' : ''} client-treatment-${preferences.detailTreatment} client-layout-${preferences.detail} ${id ? 'client-detail-page' : ''}`} style={{ '--client-accent': accent, '--detail-blur': `${preferences.detailBlur}px`, '--detail-shade': preferences.detailShade / 100, '--detail-width': `${preferences.detailWidth}%` } as CSSProperties}>
             <ProfileEntrance />
@@ -453,7 +472,7 @@ function ClientView({ model }: ViewProps) {
                 {/* À gauche de la loupe : envoyer la lecture vers un autre appareil, regarder à plusieurs. */}
                 <button type='button' className='client-nav-tool' aria-label='Lire sur un autre appareil' title='Lire sur un autre appareil' onClick={() => openConnectivity('targets')}><RemoteIcon name='cast' /></button>
                 <button type='button' className='client-nav-tool' aria-label='Regarder ensemble' title='Regarder ensemble' onClick={() => openConnectivity('together')}><RemoteIcon name='people' /></button>
-                <Link to='/client?view=search' className='client-brand client-search-shortcut' aria-label='Rechercher' aria-current={!id && view === 'search' ? 'page' : undefined}><ClientIcon name='search' /></Link>
+                <button type='button' className='client-brand client-search-shortcut' aria-label='Rechercher' title='Rechercher (⌘K ou Ctrl+K)' aria-haspopup='dialog' aria-current={!id && view === 'search' ? 'page' : undefined} onClick={event => spotlight.current?.open(event.currentTarget)}><ClientIcon name='search' /></button>
                 {profileOpen && <div ref={profileMenu} className='client-profile-menu' role='dialog' aria-label='Menu du profil'>
                     <strong>{user?.Name}</strong><Link to='/client?view=profiles' onClick={() => setProfileOpen(false)}>Changer de profil</Link><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><Link to='/offline' onClick={() => setProfileOpen(false)}>Hors ligne</Link><QuickConnectMenuItem /><button onClick={() => {
                         void signOut(model.api?.basePath, user?.Id);
@@ -467,6 +486,8 @@ function ClientView({ model }: ViewProps) {
             {!id && media.isPending && (view === 'home' || model.discovery) && <ClientSkeleton layout='hero' label='Chargement de la sélection…' />}
             <HeroView model={model} />
             <ContentView model={model} />
+            <Spotlight ref={spotlight} glass={preferences.glass} image={model.image} play={model.play} />
+            <PlaybackStarting item={model.starting} basePath={model.api?.basePath || ''} />
         </div>
     </Page></PreviewProvider>;
 }

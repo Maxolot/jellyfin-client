@@ -31,7 +31,9 @@ public sealed partial class CatalogController(IUserManager users, ILibraryManage
         {
             if (items.Any(item => item.Type == type && item.Id == id)) return (false, NoContent());
             if (items.Count >= 10000) return (false, Conflict());
-            items.Insert(0, new(type, id, input.Title.Trim(), input.Overview, input.Year, input.PosterPath, input.BackdropPath));
+            // Who followed the title and when: the client shows what the other accounts followed lately.
+            items.Insert(0, new(type, id, input.Title.Trim(), input.Overview, input.Year, input.PosterPath, input.BackdropPath,
+                CurrentUser()?.Id.ToString("N"), DateTimeOffset.UtcNow));
             return (true, NoContent());
         }, cancellation);
     }
@@ -92,5 +94,7 @@ public sealed partial class CatalogController(IUserManager users, ILibraryManage
         [RegularExpression("^/[a-zA-Z0-9._-]{1,180}$")] string? PosterPath,
         [RegularExpression("^/[a-zA-Z0-9._-]{1,180}$")] string? BackdropPath);
 
-    private sealed record Entry(string Type, int Id, string Title, string? Overview, int? Year, string? PosterPath, string? BackdropPath);
+    // AddedBy and AddedAt are absent from entries saved before 0.3.0 and stay empty for them.
+    private sealed record Entry(string Type, int Id, string Title, string? Overview, int? Year, string? PosterPath, string? BackdropPath,
+        string? AddedBy = null, DateTimeOffset? AddedAt = null);
 }

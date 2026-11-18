@@ -1,0 +1,641 @@
+// Recherche façon Spotlight : posée au-dessus de toutes les pages, sortie de la loupe.
+.client-spotlight {
+    position: fixed;
+    z-index: 1200;
+    inset: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #f4f5f8;
+
+    &[hidden] {
+        display: none;
+    }
+
+    kbd {
+        display: inline-block;
+        min-width: 20px;
+        padding: 1px 5px;
+        border: 1px solid #ffffff2e;
+        border-radius: 5px;
+        background: #ffffff14;
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 16px;
+        text-align: center;
+    }
+}
+
+body.client-spotlight-open {
+    overflow: hidden;
+}
+
+.client-spotlight-backdrop {
+    position: absolute;
+    inset: 0;
+    background: #05070bb3;
+    animation: client-spotlight-fade 0.24s ease-out;
+    backdrop-filter: blur(14px) saturate(120%);
+}
+
+@keyframes client-spotlight-fade {
+    from {
+        opacity: 0;
+    }
+}
+
+.client-spotlight-panel {
+    position: relative;
+    display: flex;
+    width: min(780px, calc(100vw - 32px));
+    max-height: min(760px, calc(100vh - 14vh - 24px));
+    flex-direction: column;
+    margin: 11vh auto 0;
+    overflow: hidden;
+    border: 1px solid #ffffff1f;
+    border-radius: 22px;
+    background: #12151cf7;
+    box-shadow: 0 30px 90px #000a, 0 0 0 1px #0006;
+    transform-origin: 50% 28px;
+}
+
+.client-spotlight-glass .client-spotlight-panel {
+    border-color: #ffffff38;
+    background: linear-gradient(180deg, #2a2f3cb8, #161a24c7);
+    box-shadow: 0 30px 90px #0009, inset 0 1px 0 #ffffff2e;
+    backdrop-filter: blur(30px) saturate(160%);
+}
+
+.client-spotlight-field {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 1px solid #ffffff14;
+
+    > svg {
+        width: 24px;
+        height: 24px;
+        flex: none;
+        opacity: 0.75;
+    }
+
+    input {
+        min-width: 0;
+        flex: 1;
+        padding: 6px 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: inherit;
+        font-family: inherit;
+        font-size: 22px;
+        font-weight: 400;
+        line-height: 1.3;
+
+        &::placeholder {
+            color: #ffffff6b;
+        }
+
+        &::-webkit-search-cancel-button {
+            display: none;
+        }
+    }
+}
+
+.client-spotlight-clear-all {
+    margin-left: auto;
+    padding: 2px 8px;
+    font-size: 12px;
+}
+
+.client-spotlight-forget {
+    margin: -4px -6px -4px 0;
+    padding: 3px;
+}
+
+.client-spotlight-clear,
+.client-spotlight-close,
+.client-spotlight-forget,
+.client-spotlight-clear-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #ffffffb3;
+    cursor: pointer;
+    font: inherit;
+
+    &:hover,
+    &:focus-visible {
+        background: #ffffff1a;
+        color: #fff;
+    }
+
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.client-spotlight-close span {
+    font-size: 12px;
+}
+
+.client-spotlight-filters {
+    display: flex;
+    gap: 8px;
+    padding: 10px 18px;
+    overflow-x: auto;
+
+    button {
+        flex: none;
+        padding: 6px 14px;
+        border: 1px solid #ffffff26;
+        border-radius: 999px;
+        background: transparent;
+        color: #ffffffc7;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.2;
+
+        &[aria-pressed='true'] {
+            border-color: #f0f1f4;
+            background: #f0f1f4;
+            color: #15191e;
+        }
+
+        &:focus-visible {
+            outline: 2px solid #fff;
+            outline-offset: 2px;
+        }
+    }
+}
+
+.client-spotlight-field,
+.client-spotlight-filters,
+.client-spotlight-hints {
+    flex: none;
+}
+
+.client-spotlight-body {
+    min-height: 0;
+    flex: 1;
+    padding: 4px 10px 14px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.client-spotlight-group {
+    padding: 8px 8px 4px;
+
+    header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 8px;
+    }
+
+    h2 {
+        margin: 0;
+        color: #ffffff8c;
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.4;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+}
+
+.client-spotlight-status {
+    color: #ffffff8c;
+    font-size: 12px;
+}
+
+.client-spotlight-option {
+    position: relative;
+    border-radius: 12px;
+    cursor: pointer;
+    outline: 0;
+    transition: background-color 0.12s ease, box-shadow 0.12s ease;
+
+    &.active {
+        background: #ffffff1f;
+        box-shadow: inset 0 0 0 1px #ffffff2e;
+    }
+}
+
+.client-spotlight-glass .client-spotlight-option.active {
+    background: #ffffff26;
+    box-shadow: inset 0 1px 0 #fff3, inset 0 0 0 1px #ffffff26;
+}
+
+// Lignes de résultats, comme la liste de Spotlight.
+.client-spotlight-list .client-spotlight-options {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.client-spotlight-list .client-spotlight-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 10px;
+}
+
+.client-spotlight-thumb,
+.client-spotlight-avatar {
+    position: relative;
+    width: 34px;
+    height: 51px;
+    flex: none;
+    overflow: hidden;
+    border-radius: 6px;
+    background: #ffffff12;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.client-spotlight-avatar {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border-radius: 50%;
+    font-weight: 700;
+}
+
+.client-spotlight-text {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+
+    strong,
+    small {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    strong {
+        font-size: 15px;
+    }
+
+    small {
+        color: #ffffff8c;
+        font-size: 12px;
+    }
+}
+
+.client-spotlight-badge {
+    flex: none;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: #ffffff14;
+    color: #ffffffb3;
+    font-size: 11px;
+    font-weight: 700;
+
+    &.available {
+        background: #3ddc8424;
+        color: #8ef0b8;
+    }
+}
+
+// Meilleur résultat : grande carte avec ses actions.
+.client-spotlight-best .client-spotlight-option {
+    display: flex;
+    align-items: stretch;
+    gap: 16px;
+    padding: 10px;
+}
+
+.client-spotlight-best-art {
+    position: relative;
+    width: 220px;
+    flex: none;
+    overflow: hidden;
+    border-radius: 10px;
+    aspect-ratio: 16 / 9;
+    background: #ffffff12;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.client-spotlight-best-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+
+    strong {
+        font-size: 22px;
+        line-height: 1.15;
+    }
+
+    small {
+        color: #ffffffa6;
+        font-size: 13px;
+    }
+}
+
+.client-spotlight-best-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+
+    .client-play {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 18px;
+        border: 0;
+        border-radius: 999px;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .client-action-circle {
+        display: inline-grid;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        place-items: center;
+        border: 1px solid #ffffff4d;
+        border-radius: 50%;
+        background: #ffffff14;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+// Rangées d'affiches de l'ouverture (Pour toi, tendances…).
+.client-spotlight-posters .client-spotlight-options,
+.client-spotlight-wide .client-spotlight-options,
+.client-spotlight-chips .client-spotlight-options {
+    display: flex;
+    gap: 10px;
+    padding: 2px 2px 6px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.client-spotlight-art {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: 8px;
+    aspect-ratio: 2 / 3;
+    background: #ffffff14;
+
+    img {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .client-progress {
+        position: absolute;
+        right: 8px;
+        bottom: 8px;
+        left: 8px;
+    }
+}
+
+.client-spotlight-posters .client-spotlight-option {
+    width: 104px;
+    flex: none;
+    padding: 5px;
+}
+
+.client-spotlight-poster-title {
+    display: block;
+    margin-top: 6px;
+    overflow: hidden;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.client-spotlight-poster-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: #000000b3;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.client-spotlight-wide .client-spotlight-option {
+    position: relative;
+    width: 210px;
+    flex: none;
+    padding: 5px;
+
+    .client-spotlight-art {
+        aspect-ratio: 16 / 9;
+    }
+}
+
+.client-spotlight-resume-play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: grid;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    border-radius: 50%;
+    background: #000000a6;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+
+    svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+.client-spotlight-option.active .client-spotlight-resume-play,
+.client-spotlight-option:hover .client-spotlight-resume-play {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+}
+
+.client-spotlight-resume-copy {
+    display: flex;
+    flex-direction: column;
+    margin-top: 6px;
+
+    strong,
+    small {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    strong {
+        font-size: 13px;
+    }
+
+    small {
+        color: #ffffff8c;
+        font-size: 11px;
+    }
+}
+
+.client-spotlight-chips .client-spotlight-options {
+    flex-wrap: wrap;
+}
+
+.client-spotlight-chips .client-spotlight-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid #ffffff24;
+    border-radius: 999px;
+    font-size: 13px;
+
+    svg {
+        width: 14px;
+        height: 14px;
+        opacity: 0.7;
+    }
+}
+
+.client-spotlight-more .client-spotlight-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    color: #ffffffd9;
+    font-size: 14px;
+
+    svg {
+        width: 16px;
+        height: 16px;
+
+        &:last-child {
+            margin-left: auto;
+        }
+    }
+}
+
+.client-spotlight-empty {
+    margin: 26px 16px;
+    color: #ffffffa6;
+    text-align: center;
+}
+
+.client-spotlight-hints {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 10px 18px;
+    border-top: 1px solid #ffffff14;
+    color: #ffffff80;
+    font-size: 12px;
+
+    span {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+}
+
+.client-spotlight-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+// Téléphone : plein écran, clavier déjà ouvert.
+@media (max-width: 700px) {
+    .client-spotlight-panel {
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        max-height: none;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+    }
+
+    .client-spotlight-close kbd,
+    .client-spotlight-hints {
+        display: none;
+    }
+
+    .client-spotlight-field input {
+        font-size: 18px;
+    }
+
+    .client-spotlight-best-art {
+        width: 120px;
+    }
+
+    .client-spotlight-best-copy strong {
+        font-size: 17px;
+    }
+
+    .client-spotlight-best-actions {
+        flex-wrap: nowrap;
+        gap: 6px;
+
+        .client-play {
+            padding: 8px 14px;
+        }
+
+        .client-action-circle {
+            width: 34px;
+            height: 34px;
+            flex: none;
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .client-spotlight-backdrop {
+        animation: none;
+    }
+
+    .client-spotlight-option,
+    .client-spotlight-resume-play {
+        transition: none;
+    }
+}

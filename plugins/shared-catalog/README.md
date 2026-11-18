@@ -12,6 +12,12 @@ For a test instance, place the resulting `Jellyfin.Plugin.SharedCatalog.dll` in 
 
 In the client, use **Garder dans le catalogue** on a discovery or in the menu of a movie or series with a TMDb ID. In **Films** or **Séries**, use **Explorer toute la bibliothèque → Disponibilité**. The client reconciles tracked entries against Jellyfin items visible to the current user. If the matching Jellyfin item disappears, the tracked entry remains, using the saved metadata and the existing request flow when available. Full series and season availability use the existing Jellyfin and request screens.
 
+## Who followed a title (0.3.0)
+
+New entries record `addedBy` (Jellyfin user ID) and `addedAt` (UTC). Entries saved by
+0.2.0 keep both fields empty; the client then shows them as the latest followed titles
+instead of « followed by the other accounts ».
+
 ## Remove files and keep the catalog entry (0.2.0)
 
 The optional storage integration is disabled until an administrator provides a server-side

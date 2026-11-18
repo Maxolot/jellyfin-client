@@ -26,6 +26,7 @@ import { Select } from '../settings/controls';
 import './player.scss';
 import './polish.scss';
 import { isPlayingOffline } from '../offline/playback';
+import LoadingTitle from './LoadingTitle';
 
 type Panel = 'audio' | 'subtitles' | 'chapters' | 'settings' | 'appearance' | 'episodes' | 'technical' | 'tools' | 'sleep' | 'help';
 const SEEK_BURST_MS = 1100;
@@ -335,9 +336,12 @@ export default function CustomVideoPlayer() {
         setEnded(false);
         await playbackManager.play({ items: [snapshot.item], startPositionTicks: 0 });
     });
+    let loadingLabel = '';
+    if (!hasPlayer && !ended) loadingLabel = 'Préparation de la lecture…';
+    else if (snapshot?.buffering && hasPlayer && !paused) loadingLabel = 'Chargement de la vidéo…';
     return <Page id='customVideoPage' className='client-video-page' isNowPlayingBarEnabled={false} isThemeMediaSupported>
         <style>{`html.client-video-active video::cue { font-size: ${preferences.subtitleSize}%; background-color: ${preferences.subtitleBackground ? 'rgba(0,0,0,.7)' : 'transparent'}; }`}</style>
-        <div ref={root} className={`client-player style-${preferences.style} accent-${preferences.accent} ${visible || paused || panel || ended ? 'controls-visible' : 'controls-hidden'}`} style={{ '--player-scale': preferences.size / 100 } as CSSProperties} onPointerMove={wake} onPointerDown={() => { keyboardFocus.current = false; }} onFocusCapture={wake}>
+        <div ref={root} className={`client-player style-${preferences.style} accent-${preferences.accent} ${visible || paused || panel || ended ? 'controls-visible' : 'controls-hidden'}${loadingLabel ? ' is-loading' : ''}`} style={{ '--player-scale': preferences.size / 100 } as CSSProperties} onPointerMove={wake} onPointerDown={() => { keyboardFocus.current = false; }} onFocusCapture={wake}>
             <button className='client-player-surface' tabIndex={-1} aria-label='Afficher les commandes' onClick={wake} onDoubleClick={event => {
                 if (event.detail > 0) action(() => playbackManager.playPause());
             }} onTouchEnd={event => {
@@ -360,8 +364,7 @@ export default function CustomVideoPlayer() {
                 <button type='button' aria-label='Lire sur un autre appareil' title='Lire sur…' onClick={() => openConnectivity('targets')}><RemoteIcon name='cast' /></button>
                 {button('Personnaliser le lecteur', 'settings', () => openPanel('appearance'))}
             </header>
-            {!hasPlayer && !ended && <p className='client-player-loading' role='status'>Préparation de la lecture…</p>}
-            {snapshot?.buffering && hasPlayer && !paused && <p className='client-player-loading' role='status'>Chargement de la vidéo…</p>}
+            {loadingLabel && <LoadingTitle item={item} basePath={api?.basePath || ''} label={loadingLabel} />}
             {ended ? <div className='client-player-ended'><h2>{error ? 'Lecture interrompue' : 'Lecture terminée'}</h2><button type='button' onClick={replay}>{error ? 'Réessayer' : 'Revoir'}</button>{next && <button type='button' onClick={() => action(() => {
                 setEnded(false);
                 return playbackManager.play({ items: [next] });

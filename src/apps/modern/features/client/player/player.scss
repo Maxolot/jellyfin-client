@@ -635,3 +635,117 @@ html.client-video-active {
     .client-player * { transition: none !important; }
 }
 /* stylelint-enable no-descending-specificity */
+
+// Chargement : le nom du film au centre à la place du rond de chargement de Jellyfin.
+html.client-video-active .docspinner {
+    display: none !important;
+}
+
+.client-player.is-loading .client-player-center {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.client-player-loading-title {
+    position: absolute;
+    z-index: 4;
+    top: 50%;
+    left: 50%;
+    display: flex;
+    width: min(80vw, 760px);
+    flex-direction: column;
+    align-items: center;
+    gap: 0.7em;
+    color: #fff;
+    pointer-events: none;
+    text-align: center;
+    transform: translate(-50%, -50%);
+
+    img {
+        max-width: min(70vw, 560px);
+        max-height: min(26vh, 220px);
+        object-fit: contain;
+        filter: drop-shadow(0 4px 24px #000c);
+        animation: client-player-title-pulse 1.8s ease-in-out infinite;
+    }
+
+    strong {
+        font-size: clamp(28px, 5vw, 64px);
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        line-height: 1.05;
+        text-shadow: 0 4px 30px #000d;
+        animation: client-player-title-pulse 1.8s ease-in-out infinite;
+    }
+}
+
+.client-player-loading-episode {
+    color: #ffffffc7;
+    font-size: clamp(14px, 1.6vw, 20px);
+    text-shadow: 0 2px 12px #000c;
+}
+
+// Fine barre indéterminée sous le titre : la lecture se prépare.
+.client-player-loading-bar {
+    position: relative;
+    width: min(220px, 40vw);
+    height: 3px;
+    margin-top: 0.4em;
+    overflow: hidden;
+    border-radius: 3px;
+    background: #ffffff2e;
+
+    i {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 35%;
+        height: 100%;
+        border-radius: 3px;
+        background: #fff;
+        animation: client-player-loading-slide 1.2s ease-in-out infinite;
+    }
+}
+
+@keyframes client-player-title-pulse {
+    50% {
+        opacity: 0.6;
+    }
+}
+
+@keyframes client-player-loading-slide {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(290%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .client-player-loading-title img,
+    .client-player-loading-title strong,
+    .client-player-loading-bar i {
+        animation: none;
+    }
+}
+
+// Entre « Lecture » et l'ouverture du lecteur : écran noir et nom du titre, sans le rond de Jellyfin.
+body.client-playback-starting-active .docspinner {
+    display: none !important;
+}
+
+.client-playback-starting {
+    position: fixed;
+    z-index: 1100;
+    inset: 0;
+    background: #000;
+    animation: client-playback-starting-in 0.2s ease-out;
+}
+
+@keyframes client-playback-starting-in {
+    from {
+        opacity: 0;
+    }
+}
