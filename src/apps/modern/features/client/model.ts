@@ -22,6 +22,13 @@ export function progressPercent(item: BaseItemDto): number {
         0;
 }
 
+/** Films and completed series use Jellyfin's per-account state. A resumed title keeps its progress bar. */
+export function isWatchedCard(item: BaseItemDto, enabled = true): boolean {
+    const data = item.UserData;
+    if (!enabled || data?.Played !== true || (data.PlaybackPositionTicks || 0) > 0) return false;
+    return item.Type === 'Movie' || (item.Type === 'Series' && (data.UnplayedItemCount || 0) === 0);
+}
+
 export function runtimeLabel(ticks?: number | null): string {
     if (!ticks) return '';
     const minutes = Math.round(ticks / 6e8);

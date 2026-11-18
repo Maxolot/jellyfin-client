@@ -14,6 +14,11 @@ describe('interface preference restoration', () => {
         localStorage.setItem('broken', '{');
         expect(readInterfacePreferences('broken')).toMatchObject({ glass: true, detail: 'continuous' });
     });
+    it('enables watched markers for older settings and preserves an explicit opt-out', () => {
+        localStorage.setItem('disabled', JSON.stringify({ watchedMarkers: false }));
+        expect(readInterfacePreferences('disabled').watchedMarkers).toBe(false);
+        expect(readInterfacePreferences('new').watchedMarkers).toBe(true);
+    });
     it('does not reuse another account settings', () => {
         localStorage.setItem('first', JSON.stringify({ previews: false, glass: false, hoverDescriptions: false, headerAlignment: 'left' }));
         expect(readInterfacePreferences('other')).toMatchObject({ previews: true, glass: true, hoverDescriptions: true, headerAlignment: 'center' });

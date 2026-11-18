@@ -3,7 +3,8 @@ import React, { type MouseEvent, type ReactNode } from 'react';
 
 import Artwork from '../Artwork';
 import ClientIcon from '../ClientIcon';
-import { episodeLabel, progressPercent } from '../model';
+import WatchedMarker, { watchedLabel } from '../WatchedMarker';
+import { episodeLabel, isWatchedCard, progressPercent } from '../model';
 import { isExternal, mediaLabel, type CatalogueItem } from '../seerr/model';
 import type { Layout } from './navigation';
 import type { SpotlightResults } from './useSpotlightData';
@@ -14,6 +15,7 @@ export type Group = { id: string; title?: string; layout: Layout; options: Optio
 export type Actions = {
     image: (item: BaseItemDto, backdrop?: boolean) => string;
     basePath: string;
+    showWatched: boolean;
     shared: Set<string | null | undefined>;
     openItem: (item: BaseItemDto) => void;
     playItem: (item: BaseItemDto) => void;
@@ -49,13 +51,14 @@ function alone(action: () => void) {
 }
 
 function row(item: BaseItemDto, prefix: string, actions: Actions): Option {
+    const watched = isWatchedCard(item, actions.showWatched);
     return {
         key: `${prefix}-${item.Id}`,
-        label: [item.Name, item.ProductionYear, typeLabel(item)].filter(Boolean).join(', '),
+        label: [item.Name, item.ProductionYear, typeLabel(item), watched && watchedLabel].filter(Boolean).join(', '),
         playable: !isExternal(item),
         run: runner(item, actions),
         view: () => <>
-            <span className='client-spotlight-thumb'><Artwork source={actions.image(item)} /></span>
+            <span className='client-spotlight-thumb'><Artwork source={actions.image(item)} />{watched && <WatchedMarker />}</span>
             <span className='client-spotlight-text'><strong>{item.Name}</strong>
                 <small>{[item.ProductionYear, typeLabel(item)].filter(Boolean).join(' · ')}</small></span>
             <span className={`client-spotlight-badge${isExternal(item) ? '' : ' available'}`}>{availability(item, actions)}</span>
@@ -64,12 +67,13 @@ function row(item: BaseItemDto, prefix: string, actions: Actions): Option {
 }
 
 function poster(item: BaseItemDto, prefix: string, actions: Actions): Option {
+    const watched = isWatchedCard(item, actions.showWatched);
     return {
         key: `${prefix}-${item.Id}`,
-        label: [item.Name, item.ProductionYear].filter(Boolean).join(', '),
+        label: [item.Name, item.ProductionYear, watched && watchedLabel].filter(Boolean).join(', '),
         playable: !isExternal(item),
         run: runner(item, actions),
-        view: () => <><span className='client-spotlight-art'><Artwork source={actions.image(item)} /></span><span className='client-spotlight-poster-title'>{item.Name}</span>
+        view: () => <><span className='client-spotlight-art'><Artwork source={actions.image(item)} />{watched && <WatchedMarker />}</span><span className='client-spotlight-poster-title'>{item.Name}</span>
             {isExternal(item) && <span className='client-spotlight-poster-badge'>{availability(item, actions)}</span>}</>
     };
 }
@@ -94,13 +98,14 @@ function BestActions({ item, actions }: Readonly<{ item: BaseItemDto; actions: A
 }
 
 function best(item: BaseItemDto, actions: Actions): Option {
+    const watched = isWatchedCard(item, actions.showWatched);
     return {
         key: `best-${item.Id}`,
-        label: `${item.Name}, meilleur résultat`,
+        label: [item.Name, 'meilleur résultat', watched && watchedLabel].filter(Boolean).join(', '),
         playable: !isExternal(item),
         run: runner(item, actions),
         view: () => <>
-            <span className='client-spotlight-best-art'><Artwork source={actions.image(item, true)} /></span>
+            <span className='client-spotlight-best-art'><Artwork source={actions.image(item, true)} />{watched && <WatchedMarker />}</span>
             <span className='client-spotlight-best-copy'>
                 <strong>{item.Name}</strong>
                 <small>{[item.ProductionYear, typeLabel(item), availability(item, actions)].filter(Boolean).join(' · ')}</small>

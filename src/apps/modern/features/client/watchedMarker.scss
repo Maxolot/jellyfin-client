@@ -1,0 +1,40 @@
+.client-watched-marker {
+    position: absolute;
+    z-index: 5;
+    top: 8px;
+    left: 8px;
+    display: grid;
+    width: 24px;
+    height: 24px;
+    place-items: center;
+    border: 1px solid #fff5;
+    border-radius: 50%;
+    background: #18232c;
+    color: #eef8f5;
+    box-shadow: 0 2px 6px #0005;
+    pointer-events: none;
+
+    .client-icon {
+        width: 14px;
+        height: 14px;
+    }
+}
+
+.client-classic .client-watched-marker,
+.client-spotlight-classic .client-watched-marker {
+    border-color: #ffffff80;
+    background: #202124;
+    color: #fff;
+}
+
+.client-spotlight-thumb .client-watched-marker {
+    top: 3px;
+    left: 3px;
+    width: 17px;
+    height: 17px;
+
+    .client-icon {
+        width: 10px;
+        height: 10px;
+    }
+}

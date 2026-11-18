@@ -11,20 +11,22 @@ import useArtworkColor from './useArtworkColor';
 
 import { isExternal, mediaLabel, type CatalogueItem } from './seerr/model';
 
-import { episodeLabel, progressPercent } from './model';
+import { episodeLabel, isWatchedCard, progressPercent } from './model';
+import WatchedMarker, { watchedLabel } from './WatchedMarker';
 
 type Props = {
     title: string;
     items: BaseItemDto[];
     continuation?: boolean;
     showDescription?: boolean;
+    showWatched?: boolean;
     image: (item: BaseItemDto, backdrop?: boolean) => string;
     logo: (item: BaseItemDto) => string | undefined;
     onPrepare: (item: BaseItemDto) => void;
     onRelease?: () => void;
 };
 
-export default function MediaRow({ title, items, continuation, showDescription = true, image, logo, onPrepare, onRelease }: Readonly<Props>) {
+export default function MediaRow({ title, items, continuation, showDescription = true, showWatched = true, image, logo, onPrepare, onRelease }: Readonly<Props>) {
     const [readyBackdrops, setReadyBackdrops] = useState<Partial<Record<string, boolean>>>({});
     const preparedSources = useRef<Partial<Record<string, boolean>>>({});
     const [active, setActive] = useState(-1);
@@ -190,6 +192,7 @@ export default function MediaRow({ title, items, continuation, showDescription =
                 const media = items[index % count];
                 const copy = looping ? Math.floor(index / count) : 1;
                 const backdrop = image(media, true);
+                const watched = isWatchedCard(media, showWatched);
                 return <article className={`client-media-card${active === index ? ' active' : ''}${readyBackdrops[backdrop] ? ' has-backdrop' : ''}`} key={copy === 1 ? media.Id : `${media.Id}:${copy}`} onPointerLeave={event => {
                     if (event.pointerType !== 'touch' && intent.current === index) release();
                 }} onBlur={event => {
@@ -208,7 +211,7 @@ export default function MediaRow({ title, items, continuation, showDescription =
                         select(index);
                     }
                 }}>
-                    <Link className='client-card' data-client-focus={copy === 1 ? media.Id : undefined} aria-label={[media.SeriesName, media.Name].filter(Boolean).join(' · ')} to={`/client?id=${media.Type === 'Episode' ? media.SeriesId || media.Id : media.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }} onPointerDown={event => { touchOpens.current = event.pointerType === 'touch' && intent.current !== index; }} onClick={event => {
+                    <Link className='client-card' data-client-focus={copy === 1 ? media.Id : undefined} aria-label={[media.SeriesName, media.Name, watched && watchedLabel].filter(Boolean).join(' · ')} to={`/client?id=${media.Type === 'Episode' ? media.SeriesId || media.Id : media.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }} onPointerDown={event => { touchOpens.current = event.pointerType === 'touch' && intent.current !== index; }} onClick={event => {
                         if (touchOpens.current) {
                             event.preventDefault();
                             select(index);
@@ -227,6 +230,7 @@ export default function MediaRow({ title, items, continuation, showDescription =
                         {continuation && media.Type === 'Episode' && <span className='client-episode-pill'><b>S{media.ParentIndexNumber ?? 1}</b><i aria-hidden='true' />É{media.IndexNumber ?? 1}</span>}
                         {progressPercent(media) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(media)}%` }} /></span>}
                     </span>
+                    {watched && <WatchedMarker />}
                     <span className='client-availability' role='img' aria-label={isExternal(media) ? mediaLabel((media as CatalogueItem).Seerr?.mediaInfo) : 'Disponible dans votre bibliothèque'} title={isExternal(media) ? mediaLabel((media as CatalogueItem).Seerr?.mediaInfo) : 'Disponible dans votre bibliothèque'}><ClientIcon name={isExternal(media) ? 'plus' : 'check'} /></span>
                 </article>;
             })}</div>

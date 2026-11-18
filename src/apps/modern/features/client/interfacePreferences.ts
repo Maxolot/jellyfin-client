@@ -7,6 +7,7 @@ export type Preferences = {
     chromatic: boolean;
     ambient: boolean;
     hoverDescriptions: boolean;
+    watchedMarkers: boolean;
     hero: 'framed' | 'background';
     detailTreatment: 'progressive' | 'cinema' | 'clear';
     detailBlur: number;
@@ -16,7 +17,7 @@ export type Preferences = {
     previewMuted: boolean;
     detail: 'continuous' | 'fade' | 'immersive';
 };
-const defaults: Preferences = { detailTreatment: 'progressive', detailBlur: 24, detailShade: 75, detailWidth: 58, glass: true, floating: false, headerAlignment: 'center', chromatic: false, ambient: true, hoverDescriptions: true, hero: 'framed', previews: true, previewMuted: true, detail: 'continuous' };
+const defaults: Preferences = { detailTreatment: 'progressive', detailBlur: 24, detailShade: 75, detailWidth: 58, glass: true, floating: false, headerAlignment: 'center', chromatic: false, ambient: true, hoverDescriptions: true, watchedMarkers: true, hero: 'framed', previews: true, previewMuted: true, detail: 'continuous' };
 
 function bounded(value: unknown, fallback: number, min: number, max: number) {
     return typeof value === 'number' && Number.isFinite(value) ? Math.max(min, Math.min(max, value)) : fallback;
@@ -30,7 +31,7 @@ export function readInterfacePreferences(key: string): Preferences {
             floating: saved.floating === true, chromatic: saved.chromatic === true,
             headerAlignment: ['left', 'center', 'right'].includes(saved.headerAlignment) ? saved.headerAlignment : 'center',
             ambient: saved.ambient !== false, previews: saved.previews !== false,
-            hoverDescriptions: saved.hoverDescriptions !== false,
+            hoverDescriptions: saved.hoverDescriptions !== false, watchedMarkers: saved.watchedMarkers !== false,
             hero: saved.hero === 'background' ? 'background' : 'framed',
             detailTreatment: ['progressive', 'cinema', 'clear'].includes(saved.detailTreatment) ? saved.detailTreatment : 'progressive',
             detailBlur: bounded(saved.detailBlur, 24, 0, 48),

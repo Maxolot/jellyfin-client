@@ -48,7 +48,8 @@ import { useProfileGate } from '../features/client/profiles/useProfileGate';
 import { chosenTracks } from '../features/client/languageTags';
 import { RecentPage } from '../features/client/LocalDiscoveryPages';
 import MediaRow from '../features/client/MediaRow';
-import { episodeLabel, progressPercent, uniqueItems } from '../features/client/model';
+import WatchedMarker, { watchedLabel } from '../features/client/WatchedMarker';
+import { episodeLabel, isWatchedCard, progressPercent, uniqueItems } from '../features/client/model';
 import { clientRequest } from '../features/client/session';
 import { useClientCollections, useClientDetails, useClientFilters, useClientMedia, useMoreBrowse } from '../features/client/useClientMedia';
 import '../features/client/client.scss';
@@ -373,20 +374,22 @@ function useClientController() {
         return items.map(i => {
             const tracked = isExternal(i) && sharedItems.some(entry => entry.Id === i.Id);
             const source = image(i, horizontal);
+            const watched = isWatchedCard(i, preferences.watchedMarkers);
             return <Link className={`client-card${horizontal ? ' client-card-wide' : ''}`} key={i.Id} data-client-focus={i.Id}
-                to={`/client?id=${i.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }} aria-label={[i.SeriesName, i.Name].filter(Boolean).join(' · ')} onPointerEnter={() => prepareDetail(i)} onFocus={() => prepareDetail(i)}>
+                to={`/client?id=${i.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }} aria-label={[i.SeriesName, i.Name, watched && watchedLabel].filter(Boolean).join(' · ')} onPointerEnter={() => prepareDetail(i)} onFocus={() => prepareDetail(i)}>
                 {tracked && !source ? <SharedCatalogArtwork item={i} backdrop={horizontal} /> : <Artwork source={source} />}
                 {horizontal && <span className='client-card-caption'><strong>{i.SeriesName || i.Name}</strong>
                     <small>{i.Type === 'Episode' ? `${episodeLabel(i)} · ${i.Name}` : i.ProductionYear}</small></span>}
                 {progressPercent(i) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(i)}%` }} /></span>}
                 <span className='client-card-fallback'>{i.Name}</span>
+                {watched && <WatchedMarker />}
                 {isExternal(i) && <span className='client-external-badge'>{tracked ? 'À télécharger' : mediaLabel((i as CatalogueItem).Seerr?.mediaInfo)}</span>}
             </Link>;
         });
     }
     function row(title: string, items: BaseItemDto[] | undefined, horizontal = false) {
         if (!items?.length) return null;
-        return <MediaRow key={`${title}:${items.map(entry => entry.Id).join('|')}`} title={title} items={items} continuation={horizontal} showDescription={preferences.hoverDescriptions} image={image} logo={logo} onPrepare={prepareDetail} onRelease={releaseDetail} />;
+        return <MediaRow key={`${title}:${items.map(entry => entry.Id).join('|')}`} title={title} items={items} continuation={horizontal} showDescription={preferences.hoverDescriptions} showWatched={preferences.watchedMarkers} image={image} logo={logo} onPrepare={prepareDetail} onRelease={releaseDetail} />;
     }
     const heroItems = heroCandidates(discovery, media.data);
     const lead = heroItems[heroIndex % Math.max(1, heroItems.length)];
@@ -486,7 +489,7 @@ function ClientView({ model }: ViewProps) {
             {!id && media.isPending && (view === 'home' || model.discovery) && <ClientSkeleton layout='hero' label='Chargement de la sélection…' />}
             <HeroView model={model} />
             <ContentView model={model} />
-            <Spotlight ref={spotlight} glass={preferences.glass} image={model.image} play={model.play} />
+            <Spotlight ref={spotlight} glass={preferences.glass} showWatched={preferences.watchedMarkers} image={model.image} play={model.play} />
             <PlaybackStarting item={model.starting} basePath={model.api?.basePath || ''} />
         </div>
     </Page></PreviewProvider>;
@@ -822,7 +825,7 @@ function LibraryView({ model, embedded = false }: ViewProps & { readonly embedde
         {withoutFiles && !external.length && !model.sharedLocal.isFetching && !model.sharedLocal.isError && <p>Aucun titre suivi à télécharger.</p>}
         {!withoutFiles && media.isPending && <ClientSkeleton layout='grid' count={12} contained label='Chargement des titres…' />}
         <div className='client-grid'>
-            {!withoutFiles && more.pages.filter(page => page.length).map(page => <GridChunk key={page[0].Id} items={page} render={cards} />)}
+            {!withoutFiles && more.pages.filter(page => page.length).map(page => <GridChunk key={`${page[0].Id}:${model.preferences.watchedMarkers}`} items={page} render={cards} />)}
             {cards(external)}
         </div>
         {!withoutFiles && more.hasMore && <LoadMore loading={more.isFetching} failed={more.isError} pages={more.pages.length} load={loadMore} />}
