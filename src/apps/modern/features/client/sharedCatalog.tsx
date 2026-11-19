@@ -7,7 +7,7 @@ import { useApi } from 'hooks/useApi';
 
 import { catalogueItem, externalIdentity, type ExternalMedia, type MediaType } from './seerr/model';
 
-type Entry = {
+export type SharedCatalogEntry = {
     type: MediaType;
     id: number;
     title: string;
@@ -20,8 +20,6 @@ type Entry = {
     addedAt?: string;
 };
 
-export type SharedCatalogEntry = Entry;
-
 export function useSharedCatalog() {
     const { api, user } = useApi();
     return useQuery({
@@ -31,7 +29,7 @@ export function useSharedCatalog() {
         staleTime: 30000,
         queryFn: async ({ signal }) => {
             try {
-                const response = await api!.axiosInstance.get<Entry[]>(api!.basePath + '/SharedCatalog/Items', {
+                const response = await api!.axiosInstance.get<SharedCatalogEntry[]>(api!.basePath + '/SharedCatalog/Items', {
                     signal,
                     headers: { Authorization: `MediaBrowser Token="${api!.accessToken}"` }
                 });
@@ -44,7 +42,7 @@ export function useSharedCatalog() {
     });
 }
 
-export function sharedCatalogItems(entries: Entry[], local: BaseItemDto[]) {
+export function sharedCatalogItems(entries: SharedCatalogEntry[], local: BaseItemDto[]) {
     return entries.map(entry => catalogueItem({
         id: entry.id,
         title: entry.title,
