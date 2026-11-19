@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-no-bind -- Player controls dispatch their own typed actions. */
-import React, { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import React, { useCallback, useEffect, useRef, useState, type CSSProperties, type FocusEvent as ReactFocusEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { BaseItemDto, MediaSegmentDto, MediaStream } from '@jellyfin/sdk/lib/generated-client';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
@@ -74,6 +74,9 @@ export default function CustomVideoPlayer() {
     const ownedPlayer = useRef<ReturnType<typeof playbackManager.getCurrentPlayer>>();
     const skipped = useRef(new Set<string>());
     const lastTouch = useRef({ time: 0, side: 0 });
+    const lastJump = useRef(0);
+    const shownAt = useRef(0);
+    const visibleNow = useRef(true);
     const latest = useRef({ preferences, snapshot, panel, cache, server: api?.basePath, userId: user?.Id });
     latest.current = { preferences, snapshot, panel, cache, server: api?.basePath, userId: user?.Id };
     const itemId = snapshot?.item?.Id || '';
@@ -83,6 +86,14 @@ export default function CustomVideoPlayer() {
     const position = (playState?.PositionTicks || 0) / SECOND;
     const duration = snapshot?.duration || 0;
     const paused = playState?.IsPaused !== false;
+    useEffect(() => {
+        if (visible && !visibleNow.current) shownAt.current = Date.now();
+        visibleNow.current = visible;
+    }, [visible]);
+    // Pausing brings the controls back; a tap can still hide them while paused.
+    useEffect(() => {
+        if (paused) setVisible(true);
+    }, [paused]);
     const hasPlayer = !!snapshot && !ended;
     const canSeek = hasPlayer && playState?.CanSeek === true && duration > 0;
     const next = snapshot?.next;
@@ -94,8 +105,28 @@ export default function CustomVideoPlayer() {
     const commands: string[] = hasPlayer ? playbackManager.getSupportedCommands() : [];
     const wake = useCallback(() => {
         activity.current = Date.now();
+        // Noted at once: a click right behind the mouse move that revealed the controls must not hide them.
+        if (!visibleNow.current) shownAt.current = Date.now();
+        visibleNow.current = true;
         setVisible(true);
     }, []);
+    // A tap or click outside the buttons shows the controls, the next one hides them, on every device.
+    const toggleControls = useCallback(() => {
+        activity.current = Date.now();
+        // Controls that just appeared (the mouse moved to click, a double tap jumped) stay up.
+        const fresh = Date.now() - Math.max(lastJump.current, shownAt.current) < 400;
+        const show = fresh || !visibleNow.current;
+        if (show && !visibleNow.current) shownAt.current = Date.now();
+        visibleNow.current = show;
+        setVisible(show);
+    }, []);
+    const wakeFromPointer = useCallback((event: ReactPointerEvent) => {
+        if (event.pointerType !== 'touch') wake();
+    }, [wake]);
+    const wakeFromFocus = useCallback((event: ReactFocusEvent) => {
+        // Tapping the video focuses its surface: that must not reopen what the same tap closes.
+        if (!(event.target as HTMLElement).classList.contains('client-player-surface')) wake();
+    }, [wake]);
     const action = useCallback((run: () => unknown) => {
         setError('');
         try {
@@ -343,8 +374,8 @@ export default function CustomVideoPlayer() {
     else if (snapshot?.buffering && hasPlayer && !paused) loadingLabel = 'Chargement de la vidéo…';
     return <Page id='customVideoPage' className='client-video-page' isNowPlayingBarEnabled={false} isThemeMediaSupported>
         <style>{`html.client-video-active video::cue { font-size: ${preferences.subtitleSize}%; background-color: ${preferences.subtitleBackground ? 'rgba(0,0,0,.7)' : 'transparent'}; }`}</style>
-        <div ref={root} className={`client-player style-${preferences.style} accent-${preferences.accent} ${visible || paused || panel || ended ? 'controls-visible' : 'controls-hidden'}${loadingLabel ? ' is-loading' : ''}`} style={{ '--player-scale': preferences.size / 100 } as CSSProperties} onPointerMove={wake} onPointerDown={() => { keyboardFocus.current = false; }} onFocusCapture={wake}>
-            <button className='client-player-surface' tabIndex={-1} aria-label='Afficher les commandes' onClick={wake} onDoubleClick={event => {
+        <div ref={root} className={`client-player style-${preferences.style} accent-${preferences.accent} ${visible || panel || ended ? 'controls-visible' : 'controls-hidden'}${loadingLabel ? ' is-loading' : ''}`} style={{ '--player-scale': preferences.size / 100 } as CSSProperties} onPointerMove={wakeFromPointer} onPointerDown={() => { keyboardFocus.current = false; }} onFocusCapture={wakeFromFocus}>
+            <button className='client-player-surface' tabIndex={-1} aria-label={visible ? 'Masquer les commandes' : 'Afficher les commandes'} onClick={toggleControls} onDoubleClick={event => {
                 if (event.detail > 0) action(() => playbackManager.playPause());
             }} onTouchEnd={event => {
                 const x = event.changedTouches[0]?.clientX || 0;
@@ -353,11 +384,11 @@ export default function CustomVideoPlayer() {
                 if (side && lastTouch.current.side === side && Date.now() - lastTouch.current.time < 350) {
                     event.preventDefault();
                     jump(side * preferences.skip);
+                    lastJump.current = Date.now();
                     lastTouch.current.time = 0;
                 } else {
                     lastTouch.current = { time: Date.now(), side };
                 }
-                wake();
             }} />
             <header className='client-player-top'>
                 <button type='button' onClick={leave} aria-label='Quitter le lecteur' title='Retour'><ClientIcon name='back' /></button>
