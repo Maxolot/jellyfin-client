@@ -40,6 +40,8 @@ await remaining.Remove(remainingPlan.Revision, fixture.Keep, () => { }, ct);
 Require(!fixture.SeriesMonitored && !fixture.SeasonTwo && !fixture.EpisodeTwo
     && fixture.Deleted.SequenceEqual([35, 41, 42]), "The whole series must be unmonitored before removal");
 Console.WriteLine("Storage checks passed: queue, stale preview, failed monitoring, playback, film, season and entire series.");
+await FolderChecks.Run();
+await FolderApiChecks.Run();
 
 static async Task ExpectConflict(Func<Task> action, string code)
 {
