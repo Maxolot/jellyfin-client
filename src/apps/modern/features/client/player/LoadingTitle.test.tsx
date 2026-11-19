@@ -38,10 +38,12 @@ describe('LoadingTitle', () => {
         expect(status().querySelector('strong')?.textContent).toBe('Dune');
     });
 
-    it('names the series and the episode', () => {
+    it('shows only the series logo for an episode, and no loading bar', () => {
         act(() => root.render(<LoadingTitle basePath={basePath} label='Préparation de la lecture…' item={{ Id: 'ep', Name: 'Pilote', SeriesName: 'Severance', SeriesId: 'sev', Type: 'Episode', ParentIndexNumber: 1, IndexNumber: 1 }} />));
-        expect(status().querySelector('.client-player-loading-episode')?.textContent).toBe('S1:E1 · Pilote');
-        expect(status().getAttribute('aria-label')).toContain('Severance');
+        expect(status().querySelector('img')?.getAttribute('src')).toContain('/Items/sev/Images/Logo');
+        expect(status().textContent).toBe('');
+        expect(status().querySelector('.client-player-loading-bar')).toBeNull();
+        expect(status().getAttribute('aria-label')).toBe('Préparation de la lecture… Severance S1:E1 · Pilote');
     });
 
     it('still says what happens before the title is known', () => {

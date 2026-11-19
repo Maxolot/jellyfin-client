@@ -685,54 +685,17 @@ html.client-video-active .docspinner {
     }
 }
 
-.client-player-loading-episode {
-    color: #ffffffc7;
-    font-size: clamp(14px, 1.6vw, 20px);
-    text-shadow: 0 2px 12px #000c;
-}
-
-// Fine barre indéterminée sous le titre : la lecture se prépare.
-.client-player-loading-bar {
-    position: relative;
-    width: min(220px, 40vw);
-    height: 3px;
-    margin-top: 0.4em;
-    overflow: hidden;
-    border-radius: 3px;
-    background: #ffffff2e;
-
-    i {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 35%;
-        height: 100%;
-        border-radius: 3px;
-        background: #fff;
-        animation: client-player-loading-slide 1.2s ease-in-out infinite;
-    }
-}
-
+// Respiration lente du titre : seule indication du chargement.
 @keyframes client-player-title-pulse {
     50% {
-        opacity: 0.6;
-    }
-}
-
-@keyframes client-player-loading-slide {
-    from {
-        transform: translateX(-100%);
-    }
-
-    to {
-        transform: translateX(290%);
+        opacity: 0.55;
+        transform: scale(0.97);
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .client-player-loading-title img,
-    .client-player-loading-title strong,
-    .client-player-loading-bar i {
+    .client-player-loading-title strong {
         animation: none;
     }
 }

@@ -8,7 +8,8 @@ type Props = Readonly<{ item?: BaseItemDto; basePath: string; label: string }>;
 
 /**
  * Shown in the middle of the screen while the video prepares or buffers, instead of a spinner:
- * the title logo when the library has one, otherwise the title itself, gently pulsing.
+ * only the title logo (the series logo for an episode), otherwise the title itself. Its slow
+ * breathing is the only sign of loading: no bar, no episode line on screen.
  */
 export default function LoadingTitle({ item, basePath, label }: Props) {
     const series = item?.Type === 'Episode';
@@ -18,10 +19,10 @@ export default function LoadingTitle({ item, basePath, label }: Props) {
     useEffect(() => setFailed(''), [logo]);
     const showLogo = !!logo && failed !== logo;
     const onError = useCallback(() => setFailed(logo), [logo]);
-    return <div className='client-player-loading-title' role='status' aria-label={title ? `${label} ${title}` : label}>
+    // Screen readers still hear which episode starts; the screen only shows the title.
+    const spoken = [label, title, series && item ? `${episodeLabel(item)} · ${item.Name || ''}` : ''].filter(Boolean).join(' ');
+    return <div className='client-player-loading-title' role='status' aria-label={spoken}>
         {showLogo && <img src={logo} alt='' onError={onError} />}
         {!showLogo && <strong>{title || label}</strong>}
-        {series && item && <small className='client-player-loading-episode'>{`${episodeLabel(item)} · ${item.Name || ''}`}</small>}
-        <span className='client-player-loading-bar' aria-hidden='true'><i /></span>
     </div>;
 }
