@@ -127,3 +127,17 @@ every 25 seconds while anything is active, and checked on demand while idle.
 The ETA is an interval based on observed byte progress with an import and scan
 allowance. A configured VPN health failure, blocked import or unmeasurable
 speed suppresses it.
+
+### In-app notifications
+
+The notification center stores request events per Jellyfin account in
+`notifications.json` and expires entries after 30 days. The owner can fetch
+their events at `GET /SharedCatalog/Notifications` and mark specific IDs or
+all of their entries via `POST /SharedCatalog/Notifications/Read`. This release
+has no browser or phone push integration. Seerr retains its notification setup.
+
+For optional administrator alerts only, place a private `notify.json` file
+with `enabled` (defaults to false), `url` (the homelab ntfy base URL),
+`token` (write-only credential for the `media-stack` topic) and optionally
+`clickUrl` (the request tracking page). The topic is fixed. Delivery runs
+independently of reads, with a ten-second timeout and status-only logging.

@@ -23,7 +23,9 @@ public sealed class RequestServiceRegistrator : MediaBrowser.Controller.Plugins.
 {
     public void RegisterServices(IServiceCollection services, MediaBrowser.Controller.IServerApplicationHost applicationHost)
     {
+        services.AddSingleton<NotificationStore>();
         services.AddSingleton<RequestRuntime>();
         services.AddHostedService(provider => provider.GetRequiredService<RequestRuntime>());
+        services.AddHostedService(provider => provider.GetRequiredService<NotificationStore>());
     }
 }

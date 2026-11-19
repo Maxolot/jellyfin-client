@@ -1,0 +1,105 @@
+.client-notification-count {
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    right: 0;
+    display: grid;
+    min-width: 17px;
+    min-height: 17px;
+    place-items: center;
+    padding: 1px 3px;
+    border: 1px solid #441e2a;
+    border-radius: 12px;
+    background: #ffb1bc;
+    color: #321622;
+    font-size: 10px;
+    font-weight: 760;
+}
+
+.client-detail-dialog.client-notifications-panel {
+    position: fixed;
+    inset: 72px var(--client-margin, 18px) auto auto;
+    width: min(490px, calc(100vw - 30px));
+    max-height: min(690px, calc(100dvh - 90px));
+    margin: 0;
+
+    .client-detail-dialog-body { padding: 14px 17px 17px; }
+}
+
+.client-notifications-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 13px;
+
+    .client-button {
+        min-height: 40px;
+        padding: 5px 11px;
+        font-size: 13px;
+    }
+}
+
+.client-notifications-list {
+    display: grid;
+    gap: 7px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.client-notification {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid #b7c4db2e;
+    border-radius: 12px;
+    background: #121923;
+
+    &.is-unread {
+        border-color: #88cbdc6b;
+        background: #202f3d;
+    }
+
+    > a {
+        display: grid;
+        flex: 1 1 165px;
+        gap: 4px;
+        color: inherit;
+        text-decoration: none;
+        overflow-wrap: anywhere;
+    }
+
+    time {
+        color: #bac9dd;
+        font-size: 11px;
+    }
+}
+
+.client-notification-event,
+.client-notification-detail {
+    color: #cfdfec;
+    font-size: 12px;
+}
+
+.client-notification-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+
+    .client-button {
+        min-height: 34px;
+        padding: 3px 9px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 700px) {
+    .client-detail-dialog.client-notifications-panel {
+        inset: 61px 9px auto;
+        width: calc(100vw - 18px);
+        max-height: calc(100dvh - 73px);
+    }
+}

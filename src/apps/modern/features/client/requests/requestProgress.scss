@@ -85,10 +85,19 @@
 }
 
 @media (max-width: 410px) {
-    .client-nav:has(.client-request-bell) { column-gap: 3px; }
+    .client-interface .client-nav:has(.client-request-bell) {
+        column-gap: 3px;
+
+        > :is(.client-nav-tool, .client-brand.client-search-shortcut) { width: 33px; }
+
+        .client-nav-links {
+            column-gap: 3px;
+
+            > a { padding-inline: 7px; }
+        }
+    }
 
     .client-nav .client-request-bell {
-        width: 30px;
         min-width: 30px;
 
         .client-request-ring {

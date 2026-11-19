@@ -102,7 +102,8 @@ import { exactSearchFirst, groupSearchResults, matchesSearchTitle, searchMode } 
 import SharedCatalogArtwork from '../features/client/SharedCatalogArtwork';
 import { latestFollowed } from '../features/client/spotlight/sharedRecent';
 import { sharedCatalogItems, useSharedCatalog } from '../features/client/sharedCatalog';
-import { CompactRequest, RequestBell } from '../features/client/requests/RequestInline';
+import NotificationCenter from '../features/client/requests/NotificationCenter';
+import { CompactRequest } from '../features/client/requests/RequestInline';
 import { useRequestProgress } from '../features/client/requests/queries';
 import { ExternalDetail, RequestDialog, RequestTracking } from '../features/client/seerr/SeerrViews';
 import { canRequest, externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
@@ -563,7 +564,7 @@ function ClientView({ model }: ViewProps) {
                     {/* À gauche de la loupe : envoyer la lecture vers un autre appareil, regarder à plusieurs. */}
                     <button type='button' className='client-nav-tool' aria-label='Lire sur un autre appareil' title='Lire sur un autre appareil' onClick={() => openConnectivity('targets')}><RemoteIcon name='cast' /></button>
                     <button type='button' className='client-nav-tool' aria-label='Regarder ensemble' title='Regarder ensemble' onClick={() => openConnectivity('together')}><RemoteIcon name='people' /></button>
-                    <RequestBell />
+                    <NotificationCenter play={model.play} />
                     <button type='button' className='client-brand client-search-shortcut' aria-label='Rechercher' title='Rechercher (⌘K ou Ctrl+K)' aria-haspopup='dialog' aria-current={!id && view === 'search' ? 'page' : undefined} onClick={event => spotlight.current?.open(event.currentTarget)}><ClientIcon name='search' /></button>
                     {profileOpen && <div ref={profileMenu} className='client-profile-menu' role='dialog' aria-label='Menu du profil'>
                         <strong>{user?.Name}</strong><Link to='/client?view=profiles' onClick={() => setProfileOpen(false)}><ActionLabel icon='people'>Changer de profil</ActionLabel></Link><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}><ActionLabel icon='profile'>Mon espace</ActionLabel></Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}><ActionLabel icon='settings'>Paramètres</ActionLabel></Link><Link to='/offline' onClick={() => setProfileOpen(false)}><ActionLabel icon='download'>Hors ligne</ActionLabel></Link><QuickConnectMenuItem /><button onClick={() => {

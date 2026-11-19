@@ -75,6 +75,7 @@ internal static class FolderApiChecks
             nameof(ILibraryManager.GetItemById) => (Guid)arguments![0]! == movie.Id && (Guid)arguments[1]! == owner.Id ? movie : null,
             _ => throw new NotSupportedException(method.Name)
         }));
+        builder.Services.AddSingleton<NotificationStore>();
         builder.Services.AddSingleton<RequestRuntime>();
         builder.Services.AddSingleton(FixtureProxy.Make<ISessionManager>((method, _) => throw new NotSupportedException(method.Name)));
 
@@ -89,6 +90,9 @@ internal static class FolderApiChecks
         await Request(http, HttpMethod.Get, "/SharedCatalog/Requests", null, null, HttpStatusCode.Unauthorized);
         await Request(http, HttpMethod.Get, "/SharedCatalog/Requests", disabled.Id, null, HttpStatusCode.Forbidden);
         await Request(http, HttpMethod.Get, "/SharedCatalog/Requests", owner.Id, null, HttpStatusCode.NotFound);
+        await Request(http, HttpMethod.Get, "/SharedCatalog/Notifications", null, null, HttpStatusCode.Unauthorized);
+        await Request(http, HttpMethod.Get, "/SharedCatalog/Notifications", owner.Id, null, HttpStatusCode.NotFound);
+        await NotificationChecks.Run(app.Services.GetRequiredService<NotificationStore>(), owner.Id, recipient.Id);
         await Request(http, HttpMethod.Get, Root, null, null, HttpStatusCode.Unauthorized);
         await Request(http, HttpMethod.Get, Root, Guid.NewGuid(), null, HttpStatusCode.Forbidden);
         await Request(http, HttpMethod.Get, Root, disabled.Id, null, HttpStatusCode.Forbidden);

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 import ClientIcon from '../ClientIcon';
 import type { SeerrIdentity } from '../seerr/model';
-import { latestRequest, requestEta, requestReason, requestRing, requestStageLabel, type RequestProgress } from './model';
+import { latestRequest, requestEta, requestReason, requestStageLabel, type RequestProgress } from './model';
 import { useRequestProgress } from './queries';
 import './requestProgress.scss';
 
@@ -12,16 +12,6 @@ export function ProgressRing({ progress }: Readonly<{ progress: number }>) {
         <circle cx='18' cy='18' r='15' pathLength='100' className='client-request-ring-track' />
         <circle cx='18' cy='18' r='15' pathLength='100' strokeDasharray={`${Math.max(4, Math.min(100, progress))} 100`} />
     </svg>;
-}
-
-export function RequestBell() {
-    const query = useRequestProgress();
-    const ring = requestRing(query.data || []);
-    if (!ring) return null;
-    const label = `Mes demandes, ${ring.count} en cours`;
-    return <Link className='client-nav-tool client-request-bell' to='/client?view=requests' aria-label={label} title={label}>
-        <ProgressRing progress={ring.percent} /><ClientIcon name='bell' />
-    </Link>;
 }
 
 export function RequestProgressNote({ request }: Readonly<{ request: RequestProgress }>) {

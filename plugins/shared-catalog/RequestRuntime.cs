@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.SharedCatalog;
 
-public sealed class RequestRuntime(ILibraryManager library, ILogger<RequestRuntime> logger) : BackgroundService
+public sealed class RequestRuntime(ILibraryManager library, NotificationStore notifications, ILogger<RequestRuntime> logger) : BackgroundService
 {
     private static readonly TimeSpan Interval = TimeSpan.FromSeconds(25);
     private static readonly RequestArr NoArr = new([], [], null, false);
@@ -40,7 +40,8 @@ public sealed class RequestRuntime(ILibraryManager library, ILogger<RequestRunti
             using var timer = new PeriodicTimer(Interval);
             while (await timer.WaitForNextTickAsync(stoppingToken))
             {
-                if (_items.Any(item => item.Result.Active)) await Refresh(stoppingToken);
+                if (_items.Any(item => item.Result.Active) || _items.Length > 0 && _indexed != Volatile.Read(ref _changes))
+                    await Refresh(stoppingToken);
             }
         }
         finally
@@ -54,6 +55,12 @@ public sealed class RequestRuntime(ILibraryManager library, ILogger<RequestRunti
     {
         if (args.Item is Episode or Series or MediaBrowser.Controller.Entities.Movies.Movie)
             Interlocked.Increment(ref _changes);
+    }
+
+    internal async Task<bool> IsEnabled(CancellationToken ct)
+    {
+        await Refresh(ct);
+        return _enabled;
     }
 
     internal async Task<RequestSnapshot[]?> Read(Guid userId, bool admin, CancellationToken ct)
@@ -88,6 +95,7 @@ public sealed class RequestRuntime(ILibraryManager library, ILogger<RequestRunti
             {
                 RefreshLibrary();
                 _items = _items.Select(item => Recheck(item, now)).ToArray();
+                await CaptureNotifications(ct);
             }
         }
         catch (Exception exception) when (Recoverable(exception, ct))
@@ -146,7 +154,11 @@ public sealed class RequestRuntime(ILibraryManager library, ILogger<RequestRunti
             });
         _items = results;
         _stale = false;
+        await CaptureNotifications(ct);
     }
+
+    private Task CaptureNotifications(CancellationToken ct) =>
+        notifications.Capture(_items.Select(item => (item.Source.Owner, item.Result)), ct);
 
     private async Task<RequestTitle> Title(SeerrRequest request, RequestServiceConnection connection, CancellationToken ct)
     {

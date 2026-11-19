@@ -38,7 +38,7 @@ const reasons: Record<string, string> = {
     trackingUnavailable: 'Le serveur ne peut pas vérifier la file pour le moment.'
 };
 
-export function requestReason(request: RequestProgress) {
+export function requestReason(request: Pick<RequestProgress, 'reason'>) {
     return request.reason ? reasons[request.reason] : undefined;
 }
 
@@ -55,7 +55,7 @@ export function requestStep(request: RequestProgress) {
     return steps.findIndex(([stage]) => stage === request.stage);
 }
 
-export function requestEta(request: RequestProgress, now = Date.now()) {
+export function requestEta(request: Pick<RequestProgress, 'stage' | 'etaFrom' | 'etaTo'>, now = Date.now()) {
     const from = Date.parse(request.etaFrom || '');
     const to = Date.parse(request.etaTo || '');
     if (request.stage !== 'downloading' || !Number.isFinite(from) || !Number.isFinite(to) || to <= now || to <= from) return undefined;
