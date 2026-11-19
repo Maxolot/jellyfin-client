@@ -272,7 +272,7 @@ export default function MediaRow({ title, items, kind, continuation, showDescrip
                         }
                         touchOpens.current = false;
                     }}>
-                        {tracked && !poster ? <SharedCatalogArtwork item={media} backdrop={false} className='client-card-poster' /> :
+                        {tracked ? <SharedCatalogArtwork item={media} backdrop={false} className='client-card-poster' /> :
                             <Artwork className='client-card-poster' source={poster} />}
                         <Artwork className='client-card-backdrop' source={backdrop} eager={pending === index} rootMargin='180px 180px' onReady={() => prepared(index, backdrop, true)} onFailure={() => prepared(index, backdrop, false)} />
                         <span className='client-card-fallback'>{media.SeriesName || media.Name}</span>

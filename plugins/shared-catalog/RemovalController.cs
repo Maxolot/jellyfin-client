@@ -29,14 +29,14 @@ public sealed partial class CatalogController
     [HttpPost("Storage/{itemId:guid}")]
     [RequestSizeLimit(4096)]
     public Task<IActionResult> RemoveFiles(Guid itemId, RemovalConfirmation input, CancellationToken ct) =>
-        StorageAction(itemId, input.Season, input.Revision, ct);
+        StorageAction(itemId, input.Season, input, ct);
 
     public sealed record RemovalConfirmation(
-        [Required, RegularExpression("^[0-9A-F]{64}$")] string Revision, int? Season);
+        [Required, RegularExpression("^[0-9A-F]{64}$")] string Revision, int? Season, ArtworkInput? Artwork = null);
 
     private bool IsAdministrator() => CurrentUser()?.HasPermission(PermissionKind.IsAdministrator) == true;
 
-    private async Task<IActionResult> StorageAction(Guid itemId, int? season, string? revision, CancellationToken ct)
+    private async Task<IActionResult> StorageAction(Guid itemId, int? season, RemovalConfirmation? confirmation, CancellationToken ct)
     {
         if (CurrentUser() is not { } user || !user.HasPermission(PermissionKind.IsAdministrator)) return Forbid();
         Response.Headers.CacheControl = "no-store";
@@ -53,7 +53,7 @@ public sealed partial class CatalogController
             var connection = series ? settings?.Sonarr : settings?.Radarr;
             if (!IsConfigured(connection)) return StatusCode(503, new { code = "notConfigured" });
             var arr = new ArrRemoval(connection!, series, providerId, season);
-            if (revision is null)
+            if (confirmation is null)
             {
                 CheckPlayback(item);
                 return new JsonResult(await arr.Preview(ct), Json);
@@ -64,7 +64,7 @@ public sealed partial class CatalogController
             {
                 // Finish an accepted operation even if the browser disconnects. Keep an upper time limit.
                 using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(3));
-                await arr.Remove(revision, () => KeepEntry(item, series ? "tv" : "movie", tmdb, deadline.Token),
+                await arr.Remove(confirmation.Revision, () => KeepEntry(item, series ? "tv" : "movie", tmdb, confirmation.Artwork, deadline.Token),
                     () => CheckPlayback(item), deadline.Token);
                 library.QueueLibraryScan();
                 return NoContent();
@@ -80,7 +80,7 @@ public sealed partial class CatalogController
         }
         catch (Exception ex) when (ex is HttpRequestException or JsonException or IOException or InvalidOperationException or OperationCanceledException)
         {
-            return StatusCode(503, new { code = revision is null ? "arrUnavailable" : "checkPartial" });
+            return StatusCode(503, new { code = confirmation is null ? "arrUnavailable" : "checkPartial" });
         }
     }
 
@@ -91,14 +91,15 @@ public sealed partial class CatalogController
             throw new RemovalConflict("playing");
     }
 
-    private async Task KeepEntry(BaseItem item, string type, int id, CancellationToken ct)
+    private async Task KeepEntry(BaseItem item, string type, int id, ArtworkInput? artwork, CancellationToken ct)
     {
         var result = await Access(items =>
         {
-            if (items.Any(entry => entry.Type == type && entry.Id == id)) return (false, NoContent());
+            var index = items.FindIndex(entry => entry.Type == type && entry.Id == id);
+            if (index >= 0) return (FillArtwork(items, index, artwork), NoContent());
             if (items.Count >= 10000) throw new RemovalConflict("catalogFull");
             items.Insert(0, new(type, id, Limit(item.Name, 300) ?? $"TMDb {id}", Limit(item.Overview, 6000),
-                item.ProductionYear, null, null));
+                item.ProductionYear, artwork?.PosterPath, artwork?.BackdropPath));
             return (true, NoContent());
         }, ct);
         if (result is not NoContentResult) throw new RemovalConflict("catalogUnavailable");

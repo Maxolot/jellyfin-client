@@ -9,6 +9,10 @@ import { useApi } from 'hooks/useApi';
 import { ChoiceSelect, type Option } from './settings/controls';
 import ClientDialog from './ClientDialog';
 import { formatSize } from './mediaInfo';
+import { resolveCatalogueArtwork } from './catalogArtwork';
+import { externalIdentity } from './seerr/model';
+import { useSharedCatalog } from './sharedCatalog';
+import { useCatalogArtworkLookup } from './useCatalogArtwork';
 import { useLocalSeasons } from './seerr/queries';
 
 type Plan = { revision: string; bytes: number; files: { id: number; name: string; size: number }[] };
@@ -70,6 +74,8 @@ export default function StorageRemoval({ item, onClose }: Props & Readonly<{ onC
     const season = selection === '' ? undefined : Number(selection);
     const storage = useStorageApi();
     const cache = useQueryClient();
+    const catalogue = useSharedCatalog();
+    const lookup = useCatalogArtworkLookup();
     const target = season === undefined ? item.Id || '' : item.Id + '?season=' + season;
     const plan = useQuery({
         queryKey: [...storage.key, item.Id, season],
@@ -79,7 +85,12 @@ export default function StorageRemoval({ item, onClose }: Props & Readonly<{ onC
         retry: false
     });
     const removal = useMutation({
-        mutationFn: (selected: Plan) => storage.call<void>(item.Id!, undefined, { revision: selected.revision, season }),
+        mutationFn: async (selected: Plan) => {
+            const identity = externalIdentity(item);
+            const existing = catalogue.data?.find(entry => entry.type === identity?.type && entry.id === identity.id);
+            const artwork = identity ? await resolveCatalogueArtwork(identity, existing, lookup) : undefined;
+            return storage.call<void>(item.Id!, undefined, { revision: selected.revision, season, artwork });
+        },
         onSuccess: () => {
             void cache.invalidateQueries({ queryKey: ['SharedCatalog'] });
             void cache.invalidateQueries({ queryKey: ['Client'] });

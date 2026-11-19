@@ -5,6 +5,8 @@ import React from 'react';
 
 import { useApi } from 'hooks/useApi';
 
+import { resolveCatalogueArtwork } from './catalogArtwork';
+import { useCatalogArtworkLookup } from './useCatalogArtwork';
 import { catalogueItem, externalIdentity, type ExternalMedia, type MediaType } from './seerr/model';
 
 export type SharedCatalogEntry = {
@@ -56,6 +58,7 @@ export function sharedCatalogItems(entries: SharedCatalogEntry[], local: BaseIte
 export function FollowCatalogAction({ item, remote, menu = false }: Readonly<{ item: BaseItemDto; remote?: ExternalMedia; menu?: boolean }>) {
     const { api, user } = useApi();
     const query = useSharedCatalog();
+    const artwork = useCatalogArtworkLookup();
     const cache = useQueryClient();
     const identity = externalIdentity(item);
     const followed = query.data?.some(entry => entry.id === identity?.id && entry.type === identity?.type);
@@ -63,6 +66,7 @@ export function FollowCatalogAction({ item, remote, menu = false }: Readonly<{ i
     const mutation = useMutation({
         mutationFn: async () => {
             if (!api || !identity || !item.Name) throw new Error('Missing catalog identity');
+            const paths = followed ? undefined : await resolveCatalogueArtwork(identity, remote, artwork);
             await api.axiosInstance.request({
                 url: `${api.basePath}/SharedCatalog/Items/${identity.type}/${identity.id}`,
                 method: followed ? 'DELETE' : 'PUT',
@@ -71,8 +75,7 @@ export function FollowCatalogAction({ item, remote, menu = false }: Readonly<{ i
                     title: item.Name.slice(0, 300),
                     overview: item.Overview?.slice(0, 6000),
                     year: item.ProductionYear || undefined,
-                    posterPath: remote?.posterPath || undefined,
-                    backdropPath: remote?.backdropPath || undefined
+                    ...paths
                 }
             });
             await cache.invalidateQueries({ queryKey: ['SharedCatalog', api.basePath] });

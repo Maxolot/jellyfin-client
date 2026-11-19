@@ -54,7 +54,7 @@ function alone(action: () => void) {
 
 function optionArtwork(item: BaseItemDto, actions: Actions, backdrop = false) {
     const source = actions.image(item, backdrop);
-    if (!source && actions.shared.has(item.Id || '')) return <SharedCatalogArtwork item={item} backdrop={backdrop} />;
+    if (actions.shared.has(item.Id || '')) return <SharedCatalogArtwork item={item} backdrop={backdrop} />;
     return <Artwork source={source} />;
 }
 

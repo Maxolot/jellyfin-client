@@ -20,9 +20,9 @@ vi.mock('hooks/useApi', () => ({ useApi: () => ({ api: { basePath: 'https://medi
 vi.mock('../seerr/SeerrContext', () => ({ useSeerr: () => ({ connected: false }) }));
 vi.mock('components/playback/playbackmanager', () => ({ playbackManager: { isPlayingVideo: () => false } }));
 vi.mock('../Artwork', () => ({ default: ({ source }: { source: string }) => <img alt='' src={source || undefined} /> }));
-vi.mock('../seerr/queries', () => ({
-    useSeerrDetail: (_type: string | undefined, id: number | undefined) => ({
-        data: id ? { posterPath: `/poster-${id}.jpg`, backdropPath: `/backdrop-${id}.jpg` } : undefined
+vi.mock('../useCatalogArtwork', () => ({
+    useRepairCatalogArtwork: (identity?: { id: number }) => ({
+        data: identity ? { posterPath: `/poster-${identity.id}.jpg`, backdropPath: `/backdrop-${identity.id}.jpg` } : undefined
     })
 }));
 vi.mock('../session', () => ({ clientRequest: (request: () => Promise<unknown>) => request() }));

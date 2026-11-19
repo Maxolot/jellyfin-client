@@ -8,7 +8,7 @@ Build with the .NET 10 SDK:
 dotnet build plugins/shared-catalog -c Release
 ```
 
-For a test instance, place the resulting `Jellyfin.Plugin.SharedCatalog.dll` in the Jellyfin plugin directory under `SharedCatalog_0.4.0` before starting the test server. The plugin stores `catalog.json` in its Jellyfin data directory. Include that file in backups.
+For a test instance, place the resulting `Jellyfin.Plugin.SharedCatalog.dll` in the Jellyfin plugin directory under `SharedCatalog_0.4.1` before starting the test server. The plugin stores `catalog.json` in its Jellyfin data directory. Include that file in backups.
 
 In the client, use **Garder dans le catalogue** on a discovery or in the menu of a movie or series with a TMDb ID. In **Films** or **Séries**, use **Explorer toute la bibliothèque → Disponibilité**. The client reconciles tracked entries against Jellyfin items visible to the current user. If the matching Jellyfin item disappears, the tracked entry remains, using the saved metadata and the existing request flow when available. Full series and season availability use the existing Jellyfin and request screens.
 
@@ -94,3 +94,10 @@ Run the folder persistence and authorization checks, the in-process folder API t
 ```sh
 dotnet run --project plugins/shared-catalog/tests -c Release
 ```
+
+## Catalogue artwork (0.4.1)
+
+A signed-in account can fill missing TMDb image paths on an existing entry with
+`PUT /SharedCatalog/Items/{type}/{id}/Artwork`. Previously stored paths are kept.
+The storage confirmation can carry the same image paths, persisted before the
+storage operation removes any files.

@@ -443,7 +443,7 @@ function useClientController() {
             const watched = isWatchedCard(i, preferences.watchedMarkers);
             const card = <Link className={`client-card${horizontal ? ' client-card-wide' : ''}`} key={i.Id} data-client-focus={i.Id}
                 to={`/client?id=${i.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }} aria-label={[i.SeriesName, i.Name, watched && watchedLabel].filter(Boolean).join(' · ')} onPointerEnter={() => prepareDetail(i)} onFocus={() => prepareDetail(i)}>
-                {tracked && !source ? <SharedCatalogArtwork item={i} backdrop={horizontal} /> : <Artwork source={source} />}
+                {tracked ? <SharedCatalogArtwork item={i} backdrop={horizontal} /> : <Artwork source={source} />}
                 {horizontal && <span className='client-card-caption'><strong>{i.SeriesName || i.Name}</strong>
                     <small>{i.Type === 'Episode' ? `${episodeLabel(i)} · ${i.Name}` : i.ProductionYear}</small></span>}
                 {progressPercent(i) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(i)}%` }} /></span>}

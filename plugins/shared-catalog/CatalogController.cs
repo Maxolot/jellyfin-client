@@ -29,13 +29,41 @@ public sealed partial class CatalogController(IUserManager users, ILibraryManage
             return Task.FromResult<IActionResult>(BadRequest());
         return Access(items =>
         {
-            if (items.Any(item => item.Type == type && item.Id == id)) return (false, NoContent());
+            var index = items.FindIndex(item => item.Type == type && item.Id == id);
+            if (index >= 0) return (FillArtwork(items, index, new(input.PosterPath, input.BackdropPath)), NoContent());
             if (items.Count >= 10000) return (false, Conflict());
             // Who followed the title and when: the client shows what the other accounts followed lately.
             items.Insert(0, new(type, id, input.Title.Trim(), input.Overview, input.Year, input.PosterPath, input.BackdropPath,
                 CurrentUser()?.Id.ToString("N"), DateTimeOffset.UtcNow));
             return (true, NoContent());
         }, cancellation);
+    }
+
+    [HttpPut("Items/{type}/{id:int}/Artwork")]
+    [RequestSizeLimit(4096)]
+    public Task<IActionResult> CompleteArtwork(string type, int id, ArtworkInput input, CancellationToken cancellation)
+    {
+        if (type is not ("movie" or "tv") || id <= 0) return Task.FromResult<IActionResult>(BadRequest());
+        return Access(items =>
+        {
+            var index = items.FindIndex(item => item.Type == type && item.Id == id);
+            if (index < 0) return (false, NotFound());
+            return (FillArtwork(items, index, input), NoContent());
+        }, cancellation);
+    }
+
+    private static bool FillArtwork(List<Entry> items, int index, ArtworkInput? input)
+    {
+        if (input is null) return false;
+        var old = items[index];
+        var next = old with
+        {
+            PosterPath = string.IsNullOrWhiteSpace(old.PosterPath) && !string.IsNullOrWhiteSpace(input.PosterPath) ? input.PosterPath : old.PosterPath,
+            BackdropPath = string.IsNullOrWhiteSpace(old.BackdropPath) && !string.IsNullOrWhiteSpace(input.BackdropPath) ? input.BackdropPath : old.BackdropPath
+        };
+        if (next == old) return false;
+        items[index] = next;
+        return true;
     }
 
     [HttpDelete("Items/{type}/{id:int}")]
@@ -91,6 +119,10 @@ public sealed partial class CatalogController(IUserManager users, ILibraryManage
         [Required, StringLength(300)] string Title,
         [StringLength(6000)] string? Overview,
         [Range(1, 9999)] int? Year,
+        [RegularExpression("^/[a-zA-Z0-9._-]{1,180}$")] string? PosterPath,
+        [RegularExpression("^/[a-zA-Z0-9._-]{1,180}$")] string? BackdropPath);
+
+    public sealed record ArtworkInput(
         [RegularExpression("^/[a-zA-Z0-9._-]{1,180}$")] string? PosterPath,
         [RegularExpression("^/[a-zA-Z0-9._-]{1,180}$")] string? BackdropPath);
 

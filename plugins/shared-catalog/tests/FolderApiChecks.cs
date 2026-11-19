@@ -122,6 +122,19 @@ internal static class FolderApiChecks
         await Request(http, HttpMethod.Delete, $"{folder}/Items/{movie.Id:D}", owner.Id, null, HttpStatusCode.NoContent);
         await Request(http, HttpMethod.Delete, folder, owner.Id, null, HttpStatusCode.NoContent);
         await Request(http, HttpMethod.Get, folder, owner.Id, null, HttpStatusCode.NotFound);
+        const string title = "/SharedCatalog/Items/movie/123";
+        await Request(http, HttpMethod.Put, title, owner.Id, new { title = "Fixture film" }, HttpStatusCode.NoContent);
+        await Request(http, HttpMethod.Put, title + "/Artwork", null, new { posterPath = "/fixture.jpg" }, HttpStatusCode.Unauthorized);
+        await Request(http, HttpMethod.Put, title + "/Artwork", disabled.Id, new { posterPath = "/fixture.jpg" }, HttpStatusCode.Forbidden);
+        await Request(http, HttpMethod.Put, title + "/Artwork", recipient.Id, new { posterPath = "https://example.test/bad.jpg" }, HttpStatusCode.BadRequest);
+        await Request(http, HttpMethod.Put, title + "/Artwork", recipient.Id, new { posterPath = "/fixture.jpg" }, HttpStatusCode.NoContent);
+        await Request(http, HttpMethod.Put, title + "/Artwork", owner.Id, new { posterPath = "/ignored.jpg", backdropPath = "/wall.jpg" }, HttpStatusCode.NoContent);
+        await Request(http, HttpMethod.Put, "/SharedCatalog/Items/movie/999/Artwork", owner.Id, new { posterPath = "/missing.jpg" }, HttpStatusCode.NotFound);
+        var catalogue = await Request(http, HttpMethod.Get, "/SharedCatalog/Items", recipient.Id, null, HttpStatusCode.OK);
+        var entry = catalogue.Body!.Value.EnumerateArray().Single();
+        Check(entry.GetProperty("posterPath").GetString() == "/fixture.jpg" && entry.GetProperty("backdropPath").GetString() == "/wall.jpg",
+            "Completing artwork can fill either field but never overwrite an existing path.");
+        Check(entry.GetProperty("title").GetString() == "Fixture film", "Completing artwork preserves the rest of the entry.");
         Console.WriteLine("Folder HTTP checks passed: authentication, ownership, routing, JSON, no-store and media visibility.");
     }
 
