@@ -101,3 +101,29 @@ A signed-in account can fill missing TMDb image paths on an existing entry with
 `PUT /SharedCatalog/Items/{type}/{id}/Artwork`. Previously stored paths are kept.
 The storage confirmation can carry the same image paths, persisted before the
 storage operation removes any files.
+
+## Request progress (0.6.0)
+
+Optional server-side tracking. Add `requests.json` to Shared Catalog's private
+data directory with these fields:
+
+| Field | Value |
+| --- | --- |
+| `seerr.url` | Internal Seerr base URL, without `/api/v1` |
+| `seerr.apiKey` | Private Seerr API key with request visibility |
+| `vpnHealthUrl` | Optional internal HTTP health endpoint, where a non-2xx response indicates an unhealthy VPN |
+
+Read access to Radarr and Sonarr reuses `storage.json`. The services have
+short timeouts, no redirects, and no write requests. The configured Arr
+instances must match those selected for requests in Seerr. Unlinked Seerr
+requests are visible only to Jellyfin administrators. For linked requests the
+owner is matched by Jellyfin user ID.
+
+`GET /SharedCatalog/Requests` returns scoped, cache-disabled snapshots.
+`GET /SharedCatalog/Requests/{id}` returns a single scoped snapshot. Arr queue
+items and history inform progress, while Jellyfin item additions and removals
+invalidate playback availability. Request data is shared in memory, refreshed
+every 25 seconds while anything is active, and checked on demand while idle.
+The ETA is an interval based on observed byte progress with an import and scan
+allowance. A configured VPN health failure, blocked import or unmeasurable
+speed suppresses it.

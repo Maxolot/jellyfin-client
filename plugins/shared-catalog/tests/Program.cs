@@ -42,6 +42,7 @@ Require(!fixture.SeriesMonitored && !fixture.SeasonTwo && !fixture.EpisodeTwo
 Console.WriteLine("Storage checks passed: queue, stale preview, failed monitoring, playback, film, season and entire series.");
 await FolderChecks.Run();
 await FolderApiChecks.Run();
+await RequestChecks.Run();
 
 static async Task ExpectConflict(Func<Task> action, string code)
 {

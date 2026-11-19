@@ -75,6 +75,7 @@ internal static class FolderApiChecks
             nameof(ILibraryManager.GetItemById) => (Guid)arguments![0]! == movie.Id && (Guid)arguments[1]! == owner.Id ? movie : null,
             _ => throw new NotSupportedException(method.Name)
         }));
+        builder.Services.AddSingleton<RequestRuntime>();
         builder.Services.AddSingleton(FixtureProxy.Make<ISessionManager>((method, _) => throw new NotSupportedException(method.Name)));
 
         await using var app = builder.Build();
@@ -85,6 +86,9 @@ internal static class FolderApiChecks
         var address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
         using var http = new HttpClient { BaseAddress = new Uri(address) };
 
+        await Request(http, HttpMethod.Get, "/SharedCatalog/Requests", null, null, HttpStatusCode.Unauthorized);
+        await Request(http, HttpMethod.Get, "/SharedCatalog/Requests", disabled.Id, null, HttpStatusCode.Forbidden);
+        await Request(http, HttpMethod.Get, "/SharedCatalog/Requests", owner.Id, null, HttpStatusCode.NotFound);
         await Request(http, HttpMethod.Get, Root, null, null, HttpStatusCode.Unauthorized);
         await Request(http, HttpMethod.Get, Root, Guid.NewGuid(), null, HttpStatusCode.Forbidden);
         await Request(http, HttpMethod.Get, Root, disabled.Id, null, HttpStatusCode.Forbidden);
