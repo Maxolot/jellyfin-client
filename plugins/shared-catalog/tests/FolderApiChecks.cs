@@ -9,6 +9,7 @@ using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Database.Implementations.Enums;
 using Jellyfin.Plugin.SharedCatalog;
 using MediaBrowser.Common.Configuration;
+using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
@@ -72,7 +73,15 @@ internal static class FolderApiChecks
         }));
         builder.Services.AddSingleton(FixtureProxy.Make<ILibraryManager>((method, arguments) => method.Name switch
         {
+            nameof(ILibraryManager.GetItemList) => ((InternalItemsQuery)arguments![0]!).IncludeItemTypes.Contains(Jellyfin.Data.Enums.BaseItemKind.Movie)
+                ? new List<BaseItem> { movie }
+                : new List<BaseItem>(),
             nameof(ILibraryManager.GetItemById) => (Guid)arguments![0]! == movie.Id && (Guid)arguments[1]! == owner.Id ? movie : null,
+            _ => throw new NotSupportedException(method.Name)
+        }));
+        builder.Services.AddSingleton(FixtureProxy.Make<IUserDataManager>((method, _) => method.Name switch
+        {
+            nameof(IUserDataManager.GetUserDataBatch) => new Dictionary<Guid, UserItemData>(),
             _ => throw new NotSupportedException(method.Name)
         }));
         builder.Services.AddSingleton<NotificationStore>();
@@ -114,6 +123,7 @@ internal static class FolderApiChecks
         Check(restricted.Body!.Value.GetProperty("results").EnumerateArray().Select(item => item.GetProperty("title").GetString())
             .SequenceEqual(["Série suivie"]), "Items outside the caller's library and untracked results are filtered.");
         File.Delete(Path.Combine(plugin.DataFolderPath, "catalog.json"));
+        await TonightChecks(http, owner.Id, recipient.Id, movie.Id);
         await Request(http, HttpMethod.Get, Root, null, null, HttpStatusCode.Unauthorized);
         await Request(http, HttpMethod.Get, Root, Guid.NewGuid(), null, HttpStatusCode.Forbidden);
         await Request(http, HttpMethod.Get, Root, disabled.Id, null, HttpStatusCode.Forbidden);
@@ -165,6 +175,35 @@ internal static class FolderApiChecks
             "Completing artwork can fill either field but never overwrite an existing path.");
         Check(entry.GetProperty("title").GetString() == "Fixture film", "Completing artwork preserves the rest of the entry.");
         Console.WriteLine("Folder HTTP checks passed: authentication, ownership, routing, JSON, no-store and media visibility.");
+    }
+
+    private static async Task TonightChecks(HttpClient http, Guid owner, Guid recipient, Guid movie)
+    {
+        const string path = "/SharedCatalog/Tonight";
+        await Request(http, HttpMethod.Get, path, null, null, HttpStatusCode.Unauthorized);
+        var initial = await Request(http, HttpMethod.Get, path, owner, null, HttpStatusCode.OK);
+        Check(!initial.Body!.Value.GetProperty("allowTogether").GetBoolean() && initial.NoStore, "Tonight consent defaults to off.");
+        var together = path + $"/Together?partner={recipient:N}";
+        await Request(http, HttpMethod.Get, together, owner, null, HttpStatusCode.NotFound);
+        await Request(http, HttpMethod.Put, path + "/Privacy", recipient, new { allowTogether = true }, HttpStatusCode.NoContent);
+        var options = await Request(http, HttpMethod.Get, path, owner, null, HttpStatusCode.OK);
+        Check(options.Body!.Value.GetProperty("partners")[0].GetProperty("id").GetGuid() == recipient, "Only opt-in partners are listed.");
+        var joint = await Request(http, HttpMethod.Get, together, owner, null, HttpStatusCode.OK);
+        var result = joint.Body!.Value.GetProperty("results")[0];
+        Check(result.GetProperty("itemId").GetString() == movie.ToString("N") &&
+            result.EnumerateObject().Count() == 2 && joint.NoStore, "Together only returns an item ID and an aggregate reason.");
+        await Request(http, HttpMethod.Put, path + "/Privacy", recipient, new { allowTogether = false }, HttpStatusCode.NoContent);
+        await Request(http, HttpMethod.Get, together, owner, null, HttpStatusCode.NotFound);
+        await Request(http, HttpMethod.Put, path + "/Hide", owner, new { key = movie.ToString("N") }, HttpStatusCode.NoContent);
+        var ownerState = await Request(http, HttpMethod.Get, path, owner, null, HttpStatusCode.OK);
+        var otherState = await Request(http, HttpMethod.Get, path, recipient, null, HttpStatusCode.OK);
+        Check(ownerState.Body!.Value.GetProperty("hidden").GetArrayLength() == 1 &&
+            otherState.Body!.Value.GetProperty("hidden").GetArrayLength() == 0, "Dismissal belongs to the caller.");
+        await Request(http, HttpMethod.Put, path + $"/Later/{movie:N}", recipient, new { }, HttpStatusCode.NotFound);
+        var saved = await Request(http, HttpMethod.Put, path + $"/Later/{movie:N}", owner, new { }, HttpStatusCode.OK);
+        var repeated = await Request(http, HttpMethod.Put, path + $"/Later/{movie:N}", owner, new { }, HttpStatusCode.OK);
+        Check(saved.Body!.Value.GetProperty("folderId").GetGuid() == repeated.Body!.Value.GetProperty("folderId").GetGuid(),
+            "Saving twice reuses the caller's folder.");
     }
 
     private static async Task<(JsonElement? Body, string? Location, bool NoStore)> Request(

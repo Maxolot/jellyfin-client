@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace Jellyfin.Plugin.SharedCatalog;
 
-internal sealed record FolderItem(Guid ItemId, string Type, int? TmdbId);
+internal sealed record FolderItem(Guid ItemId, string Type, int? TmdbId, DateTimeOffset? AddedAt = null);
 internal sealed record FolderShare(Guid UserId, bool CanEdit);
 internal sealed record FolderSummary(Guid Id, string Name, Guid OwnerId, string Access);
 internal sealed record FolderDetails(FolderSummary Folder, IReadOnlyList<FolderItem> Items, IReadOnlyList<FolderShare>? Shares);
@@ -72,8 +72,31 @@ internal sealed class FolderCatalog(string path, Guid actor, Func<Guid, FolderIt
             throw new FolderProblem(404, "itemNotFound");
         if (folder.Items.Any(entry => entry.ItemId == itemId)) return (false, false);
         if (folder.Items.Count >= MaxItems) throw new FolderProblem(409, "itemLimit");
-        folder.Items.Add(item);
+        folder.Items.Add(item with { AddedAt = DateTimeOffset.UtcNow });
         return (true, true);
+    }, ct);
+
+    public Task<Dictionary<Guid, DateTimeOffset?>> Filed(CancellationToken ct) => Read(folders => folders
+        .Where(folder => folder.OwnerId == actor).SelectMany(folder => folder.Items)
+        .Where(item => resolveItem(item.ItemId) is not null)
+        .GroupBy(item => item.ItemId).ToDictionary(group => group.Key, group => group.Min(item => item.AddedAt)), ct);
+
+    public Task<Guid> SaveForLater(Guid itemId, CancellationToken ct) => Edit(folders =>
+    {
+        var item = resolveItem(itemId) ?? throw new FolderProblem(404, "itemNotFound");
+        const string name = "À voir plus tard";
+        var folder = folders.Find(candidate => candidate.OwnerId == actor && string.Equals(candidate.Name, name, StringComparison.OrdinalIgnoreCase));
+        if (folder is null)
+        {
+            if (folders.Count >= MaxFolders || folders.Count(candidate => candidate.OwnerId == actor) >= MaxOwned)
+                throw new FolderProblem(409, "folderLimit");
+            folder = new SavedFolder(Guid.NewGuid(), name, actor, [], []);
+            folders.Add(folder);
+        }
+        if (folder.Items.Any(entry => entry.ItemId == itemId)) return (false, folder.Id);
+        if (folder.Items.Count >= MaxItems) throw new FolderProblem(409, "itemLimit");
+        folder.Items.Add(item with { AddedAt = DateTimeOffset.UtcNow });
+        return (true, folder.Id);
     }, ct);
 
     public Task Remove(Guid id, Guid itemId, CancellationToken ct) => Edit(folders =>

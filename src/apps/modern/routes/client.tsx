@@ -179,7 +179,7 @@ function clientScrollKey(prefKey: string | undefined, location: ReturnType<typeo
 }
 
 function clientPageReady(id: string, view: string, item: BaseItemDto | undefined, mediaReady: boolean, externalReady: boolean) {
-    return externalReady || (id ? !!item : ['settings', 'collections', 'folder', 'person', 'requests'].includes(view) || mediaReady);
+    return externalReady || (id ? !!item : ['settings', 'collections', 'folder', 'person', 'requests', 'tonight'].includes(view) || mediaReady);
 }
 
 /** What the blurred page background shows when no card is hovered. */
@@ -205,7 +205,7 @@ function routedView(params: URLSearchParams, folderId?: string, personId?: strin
 }
 
 function clientBrowseView(view: string, id: string, emptySearch: boolean) {
-    return id || ['settings', 'collections', 'folder', 'person', 'requests'].includes(view) || emptySearch ? 'disabled' : view;
+    return id || ['settings', 'collections', 'folder', 'person', 'requests', 'tonight'].includes(view) || emptySearch ? 'disabled' : view;
 }
 
 function useSharedBrowse(view: string, id: string, search: string) {
@@ -773,7 +773,7 @@ function ContentView({ model }: ViewProps) {
             playQueue={model.playQueue} queueBusy={model.queueBusy} prepare={model.prepareDetail} release={model.releaseDetail} />;
     }
     if (view === 'recent') return <RecentPage items={media.data?.items || []} row={row} />;
-    if (view === 'tonight') return <TonightPage items={media.data?.items || []} loading={media.isPending} image={item => artworkUrl(model.api?.basePath || '', item, 'draw')} onPrepare={model.prepareDetail} onRelease={model.releaseDetail} onFeature={entry => model.setPageAmbient(entry ? image(entry, true) : '')} />;
+    if (view === 'tonight') return <TonightPage play={(item, start) => item.Type === 'Series' ? model.playQueue([item], false) : model.play(item, start)} image={(item, backdrop) => backdrop ? image(item, true) : artworkUrl(model.api?.basePath || '', item, 'draw')} onPrepare={model.prepareDetail} onRelease={model.releaseDetail} onFeature={entry => model.setPageAmbient(entry ? image(entry, true) : '')} />;
     if (model.discovery) return <DiscoveryView model={model} />;
     if (view === 'mine') return <PersonalView model={model} />;
     if (model.standaloneSearch) return <SearchView model={model} />;

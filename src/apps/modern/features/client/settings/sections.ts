@@ -1,6 +1,6 @@
 import type { SettingsIconName } from './SettingsIcon';
 
-export type SectionKey = 'apparence' | 'lecteur' | 'langues' | 'qualite' | 'bibliotheque' | 'demandes' | 'compte'
+export type SectionKey = 'apparence' | 'lecteur' | 'langues' | 'qualite' | 'bibliotheque' | 'demandes' | 'compte' | 'confidentialite'
     | 'serveur' | 'serveur-extraits' | 'serveur-demandes' | 'serveur-sources';
 
 export type SettingsSection = { key: SectionKey; title: string; summary: string; icon: SettingsIconName };
@@ -14,6 +14,7 @@ export const SETTINGS_GROUPS: SettingsGroup[] = [
         { key: 'qualite', title: 'Qualité', summary: 'Débit, résolution et compatibilité de cet appareil', icon: 'quality' },
         { key: 'bibliotheque', title: 'Bibliothèque', summary: 'Épisodes manquants, Continuer à regarder', icon: 'library' },
         { key: 'demandes', title: 'Demandes', summary: 'Découvertes et demandes avec Seerr', icon: 'requests' },
+        { key: 'confidentialite', title: 'Confidentialité', summary: 'Suggestions personnalisées à deux', icon: 'lock' },
         { key: 'compte', title: 'Compte', summary: 'Photo, mot de passe, autres appareils', icon: 'account' }
     ] },
     { title: 'Serveur', admin: true, sections: [

@@ -7,6 +7,7 @@ import { DeviceSettings, LanguageSettings, LibrarySettings, ProfileSettings, Sub
 import type { Preferences } from '../interfacePreferences';
 import PlayerSettings from '../player/PlayerSettings';
 import { SeerrSettings } from '../seerr/SeerrViews';
+import TonightPrivacy from '../tonight/TonightPrivacy';
 import AppearanceSettings from './AppearanceSettings';
 import { resolveSection, SETTINGS_GROUPS, type SectionKey } from './sections';
 import PreviewsServer from './server/PreviewsServer';
@@ -25,6 +26,7 @@ function Content({ section, preferences, savePreference, hasPreviews }: Readonly
         case 'qualite': return <DeviceSettings />;
         case 'bibliotheque': return <LibrarySettings />;
         case 'demandes': return <SeerrSettings />;
+        case 'confidentialite': return <TonightPrivacy />;
         case 'compte': return <ProfileSettings />;
         case 'serveur': return <ServerOverview />;
         case 'serveur-extraits': return <PreviewsServer />;
