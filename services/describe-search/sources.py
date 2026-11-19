@@ -93,7 +93,7 @@ def shared_document(row: dict, extra: dict) -> Document | None:
 
 
 class Sources:
-    def __init__(self, url: str, key: str, catalog: Path | None, metadata: Path | None):
+    def __init__(self, url: str, key: str, catalog: Path | None, metadata: Path | None, user: str | None = None):
         parsed = urlsplit(url)
         if parsed.scheme not in ("http", "https") or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
             raise ValueError("Invalid Jellyfin base URL")
@@ -103,6 +103,8 @@ class Sources:
         self.key = key
         self.catalog = catalog
         self.metadata = metadata
+        # Without a user, Jellyfin 12 returns only part of the library: index as an account that sees everything.
+        self.user = guid(user) if user else None
         self.http = build_opener(NoRedirect())
 
     def local(self, extra: dict):
@@ -111,8 +113,9 @@ class Sources:
         while True:
             query = urlencode({"recursive": "true", "includeItemTypes": "Movie,Series", "fields": FIELDS,
                                "enableImages": "false", "enableUserData": "false", "startIndex": offset,
-                               "limit": page_size, "sortBy": "SortName", "sortOrder": "Ascending"})
-            request = Request(f"{self.url}/Items?{query}", headers={"X-Emby-Token": self.key, "Accept": "application/json"})
+                               "limit": page_size, "sortBy": "SortName", "sortOrder": "Ascending",
+                               **({"userId": self.user} if self.user else {})})
+            request = Request(f"{self.url}/Items?{query}", headers={"Authorization": f'MediaBrowser Token="{self.key}"', "Accept": "application/json"})
             with self.http.open(request, timeout=12) as response:
                 payload = json.load(response)
             items = payload.get("Items")

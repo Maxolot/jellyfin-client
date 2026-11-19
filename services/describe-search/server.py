@@ -79,7 +79,8 @@ def reindex(index: Index, sources: Sources, interval: int, stop: Event):
 def main():
     logging.basicConfig(level=logging.INFO)
     sources = Sources(os.environ["JELLYFIN_URL"], os.environ["JELLYFIN_KEY"],
-                      optional_path("SHARED_CATALOG_PATH"), optional_path("METADATA_PATH"))
+                      optional_path("SHARED_CATALOG_PATH"), optional_path("METADATA_PATH"),
+                      os.getenv("JELLYFIN_USER_ID"))
     encoder = FastEmbedEncoder(Path(os.getenv("MODEL_CACHE", "/opt/describe-model")))
     index = Index(Path(os.getenv("INDEX_PATH", "/data/catalog.sqlite3")), encoder)
     interval = max(60, int(os.getenv("REINDEX_SECONDS", "900")))

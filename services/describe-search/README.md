@@ -19,6 +19,7 @@ partagé avec Jellyfin. Le port HTTP reste sur ce réseau.
 | `JELLYFIN_URL` | URL interne de Jellyfin |
 | `JELLYFIN_KEY` | Clé privée permettant de lire la bibliothèque |
 | `DESCRIBE_SERVICE_TOKEN` | Jeton privé partagé avec le plugin |
+| `JELLYFIN_USER_ID` | Compte qui voit toute la bibliothèque (sans lui, Jellyfin 12 n’en renvoie qu’une partie) ; le plugin refiltre chaque résultat selon l’appelant |
 | `SHARED_CATALOG_PATH` | Chemin du `catalog.json` du plugin, monté en lecture seule |
 | `METADATA_PATH` | Export facultatif de métadonnées locales, monté en lecture seule |
 | `INDEX_PATH` | Base SQLite persistante, par défaut `/data/catalog.sqlite3` |
