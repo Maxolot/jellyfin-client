@@ -83,11 +83,14 @@
     border-radius: 11px;
     background: #1b1c22;
     isolation: isolate;
-    transition: flex-basis 0.55s var(--client-ease), box-shadow 0.3s;
+    contain: layout paint;
+    transform-origin: left center;
+
+    .client-card:focus-visible { outline-offset: -4px; }
 
     &.active {
         flex-basis: min(var(--client-card-expanded), calc(100vw - 2 * var(--client-margin)));
-        box-shadow: 0 0 0 2px #fff;
+        box-shadow: inset 0 0 0 2px #fff;
     }
 
     &.active .client-card-poster {
@@ -247,7 +250,7 @@
     z-index: -1;
     top: 50px;
     right: auto;
-    left: var(--client-margin);
+    left: 0;
     height: var(--client-card-height);
     border-radius: 22px;
     background: rgb(var(--client-media-color, 115 139 175) / 0.24);

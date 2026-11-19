@@ -4,12 +4,13 @@ import { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-ite
 import { ItemFields } from '@jellyfin/sdk/lib/generated-client/models/item-fields';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
 import { useQuery } from '@tanstack/react-query';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 import { useApi } from 'hooks/useApi';
 
 import Artwork from './Artwork';
+import { captureCardLayout, animateCardLayout, stopCardLayout, CARD_HOVER_DELAY, type CardLayout } from './cardMotion';
 import { catalogueItem, isExternal, mediaLabel, providerKey, type CatalogueItem, type ExternalMedia } from './seerr/model';
 import { useSeerr } from './seerr/SeerrContext';
 
@@ -55,32 +56,70 @@ export default function SagaSection({ item, image, saga }: Readonly<{ item: Base
     const [active, setActive] = useState<string>();
     const [ready, setReady] = useState<Set<string | undefined>>(new Set());
     const strip = useRef<HTMLDivElement>(null);
+    const hover = useRef<{ id: string; timer: number }>();
+    const pointer = useRef<{ x: number; y: number }>();
+    const previousLayout = useRef<CardLayout>();
+    const motion = useRef<Animation[]>([]);
     const current = items.find(entry => entry.Id === item.Id || (providerKey(item) && providerKey(entry) === providerKey(item)))?.Id;
     useEffect(() => {
         const card = strip.current?.querySelector<HTMLElement>('[aria-current=page]');
         if (card && strip.current) strip.current.scrollLeft = Math.max(0, card.offsetLeft - 4);
     }, [current, items.length]);
+    useLayoutEffect(() => {
+        const list = strip.current;
+        const previous = previousLayout.current;
+        previousLayout.current = undefined;
+        const expanded = list?.querySelector('.client-saga-card.active');
+        if (list && expanded && previous) motion.current = animateCardLayout(list, previous, expanded);
+        const focused = document.activeElement;
+        if (active && expanded === focused) {
+            focused?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+        }
+    }, [active]);
+    useEffect(() => () => {
+        window.clearTimeout(hover.current?.timer);
+        stopCardLayout(motion.current);
+    }, []);
+    function cancelHover() {
+        window.clearTimeout(hover.current?.timer);
+        hover.current = undefined;
+    }
+    function expand(id?: string) {
+        cancelHover();
+        if (id === active) return;
+        previousLayout.current = id && strip.current ? captureCardLayout(strip.current) : undefined;
+        stopCardLayout(motion.current);
+        motion.current = [];
+        setActive(id);
+    }
+    function point(event: React.PointerEvent, id?: string) {
+        if (event.pointerType === 'touch' || !id) return;
+        if (pointer.current?.x === event.clientX && pointer.current.y === event.clientY) return;
+        pointer.current = { x: event.clientX, y: event.clientY };
+        if (open === id || hover.current?.id === id) return;
+        expand();
+        hover.current = { id, timer: window.setTimeout(() => expand(id), CARD_HOVER_DELAY) };
+    }
     if (item.Type !== 'Movie' || items.length < 2) return null;
     const open = active || current || items[0].Id;
     const available = items.filter(entry => !isExternal(entry)).length;
     const title = sagaTitle(name || item.Name || '');
     return <section className='client-saga' aria-label={`La saga ${title}`}>
         <header><div><span className='client-saga-eyebrow'>LA SAGA</span><h2>{title}</h2><p className='client-saga-count'>{items.length} films · {available} disponible{available > 1 ? 's' : ''}</p></div><small className='client-saga-order'>Ordre de sortie</small></header>
-        <div ref={strip} className='client-saga-strip' role='group' aria-label='Films dans l’ordre de sortie' onPointerLeave={() => setActive(undefined)}>{items.map((entry, index) => {
+        <div ref={strip} className='client-saga-strip' role='group' aria-label='Films dans l’ordre de sortie' onPointerLeave={() => expand()}>{items.map((entry, index) => {
             const isCurrent = entry.Id === current;
             const status = isExternal(entry) ? mediaLabel(entry.Seerr?.mediaInfo) : 'Disponible';
             return <Link key={entry.Id} className={`client-saga-card${entry.Id === open ? ' active' : ''}${ready.has(entry.Id) ? ' backdrop-ready' : ''}`} to={`/client?id=${entry.Id}`} aria-current={isCurrent ? 'page' : undefined}
                 state={{ returnTo: location.pathname + location.search, returnState: location.state as NavigationState | null }}
                 aria-label={[`${index + 1}. ${entry.Name}`, entry.ProductionYear, status, isCurrent ? 'Film ouvert' : ''].filter(Boolean).join(' · ')}
-                onTransitionEnd={event => {
-                    if (event.propertyName === 'flex-basis' && document.activeElement === event.currentTarget) {
-                        event.currentTarget.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
-                    }
+                onPointerMove={event => point(event, entry.Id)}
+                onPointerLeave={event => {
+                    if (event.pointerType === 'touch') return;
+                    if (hover.current?.id === entry.Id) cancelHover();
+                    if (active === entry.Id && document.activeElement !== event.currentTarget) expand();
                 }}
-                onPointerEnter={event => event.pointerType !== 'touch' && setActive(entry.Id)} onFocus={event => {
-                    setActive(entry.Id);
-                    event.currentTarget.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
-                }}>
+                onFocus={() => expand(entry.Id)}
+                onBlur={() => expand()}>
                 <Artwork className='client-saga-poster' source={image(entry)} />
                 <Artwork className='client-saga-backdrop' source={image(entry, true)} onReady={() => setReady(previous => new Set([...previous, entry.Id]))} />
                 <span className='client-saga-shade' aria-hidden='true' />

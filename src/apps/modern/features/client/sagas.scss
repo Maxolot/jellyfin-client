@@ -60,7 +60,8 @@
     background: #191e26;
     color: #fff;
     isolation: isolate;
-    transition: flex-basis 0.55s var(--client-ease, ease);
+    contain: layout paint;
+    transform-origin: left center;
 
     &.active {
         flex-basis: min(calc(var(--saga-height) * 1.7778), 100%);
@@ -69,7 +70,7 @@
 
     &:focus-visible {
         outline: 2px solid #fff;
-        outline-offset: 2px;
+        outline-offset: -3px;
     }
 
     .client-saga-poster,

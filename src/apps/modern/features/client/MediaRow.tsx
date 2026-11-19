@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-no-bind -- Row interactions are local to this component. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
-import React, { type CSSProperties, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import React, { type CSSProperties, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ResizeObserver from 'resize-observer-polyfill';
 
@@ -13,6 +13,7 @@ import { isExternal, mediaLabel, type CatalogueItem } from './seerr/model';
 
 import { episodeLabel, isWatchedCard, progressPercent } from './model';
 import WatchedMarker, { watchedLabel } from './WatchedMarker';
+import { captureCardLayout, animateCardLayout, stopCardLayout, CARD_HOVER_DELAY, type CardLayout } from './cardMotion';
 
 type Props = {
     title: string;
@@ -32,18 +33,43 @@ export default function MediaRow({ title, items, continuation, showDescription =
     const [active, setActive] = useState(-1);
     const [pending, setPending] = useState(-1);
     const intent = useRef(-1);
+    const hover = useRef<{ index: number; timer: number }>();
+    const previousLayout = useRef<CardLayout>();
+    const motion = useRef<Animation[]>([]);
     // Last card the row showed, kept after it folds back so the arrows continue from there.
     const cursor = useRef(-1);
     const owner = useId();
     const releaseCallback = useRef(onRelease);
     releaseCallback.current = onRelease;
+    const cancelHover = useCallback(() => {
+        if (!hover.current) return;
+        window.clearTimeout(hover.current.timer);
+        hover.current = undefined;
+    }, []);
+    const stopMotion = useCallback(() => {
+        stopCardLayout(motion.current);
+        motion.current = [];
+    }, []);
+    const release = useCallback(() => {
+        cancelHover();
+        if (intent.current < 0) return;
+        stopMotion();
+        intent.current = -1;
+        setPending(-1);
+        setActive(-1);
+        releaseCallback.current?.();
+    }, [cancelHover, stopMotion]);
     useEffect(() => {
         const dismissOther = (event: Event) => {
-            if ((event as CustomEvent<string>).detail !== owner && intent.current >= 0) release();
+            if ((event as CustomEvent<string>).detail !== owner && (intent.current >= 0 || hover.current)) release();
         };
         window.addEventListener('client-card-select', dismissOther);
-        return () => window.removeEventListener('client-card-select', dismissOther);
-    }, [owner]);
+        return () => {
+            window.removeEventListener('client-card-select', dismissOther);
+            cancelHover();
+            stopMotion();
+        };
+    }, [cancelHover, owner, release, stopMotion]);
     const strip = useRef<HTMLDivElement>(null);
     const touchOpens = useRef(false);
     const pointer = useRef<{ x: number; y: number }>();
@@ -60,25 +86,38 @@ export default function MediaRow({ title, items, continuation, showDescription =
     const glow = useRef<HTMLDivElement>(null);
     useLayoutEffect(() => {
         const list = strip.current;
+        const previous = previousLayout.current;
+        previousLayout.current = undefined;
+        if (list && previous && active >= 0) motion.current = animateCardLayout(list, previous, list.children[active]);
+
         const card = list?.children[active];
         if (!(card instanceof HTMLElement) || !glow.current || !list) return;
+        let frame = 0;
         const update = () => {
-            const rect = card.getBoundingClientRect();
             const parent = list.parentElement!.getBoundingClientRect();
-            if (glow.current) {
-                glow.current.style.left = `${rect.left - parent.left}px`;
-                glow.current.style.top = `${rect.top - parent.top}px`;
-                glow.current.style.width = `${rect.width}px`;
-                glow.current.style.height = `${rect.height}px`;
-            }
+            const viewport = list.getBoundingClientRect();
+            const offset = card.offsetLeft - (list.children[0] as HTMLElement).offsetLeft;
+            const start = viewport.left - parent.left + (Number.parseFloat(getComputedStyle(list).paddingLeft) || 0);
+            const width = card.offsetWidth;
+            const outside = Math.max(0, start - list.scrollLeft + offset);
+            glow.current?.style.setProperty('width', `${width}px`);
+            glow.current?.style.setProperty('transform', `translateX(${outside}px) scale(1.04)`);
+        };
+        const schedule = () => {
+            if (frame) return;
+            frame = requestAnimationFrame(() => {
+                frame = 0;
+                update();
+            });
         };
         update();
-        const resize = new ResizeObserver(update);
-        resize.observe(card);
-        list.addEventListener('scroll', update, { passive: true });
+        const resize = new ResizeObserver(schedule);
+        resize.observe(list);
+        list.addEventListener('scroll', schedule, { passive: true });
         return () => {
             resize.disconnect();
-            list.removeEventListener('scroll', update);
+            list.removeEventListener('scroll', schedule);
+            cancelAnimationFrame(frame);
         };
     }, [active]);
     useLayoutEffect(() => {
@@ -97,29 +136,33 @@ export default function MediaRow({ title, items, continuation, showDescription =
         const original = list.children[count];
         return first instanceof HTMLElement && original instanceof HTMLElement ? original.offsetLeft - first.offsetLeft : 0;
     }
-    function release() {
-        intent.current = -1;
-        pointer.current = undefined;
-        setPending(-1);
-        setActive(-1);
-        releaseCallback.current?.();
+    function unfold(index: number) {
+        previousLayout.current = strip.current ? captureCardLayout(strip.current) : undefined;
+        stopMotion();
+        setActive(index);
     }
     function select(index: number) {
+        cancelHover();
         if (intent.current === index) return;
         window.dispatchEvent(new CustomEvent('client-card-select', { detail: owner }));
         intent.current = index;
         cursor.current = index;
         setPending(index);
-        // Index in the repeated row: the title is the same in every copy.
         const media = items[index % count];
         const source = image(media, true);
-        if (!source || preparedSources.current[source] !== undefined) setActive(index);
+        if (!source || preparedSources.current[source] !== undefined) unfold(index);
+        else setActive(-1);
         onPrepare(media);
+    }
+    function hoverCard(index: number) {
+        if (intent.current === index || hover.current?.index === index) return;
+        release();
+        hover.current = { index, timer: window.setTimeout(() => select(index), CARD_HOVER_DELAY) };
     }
     function prepared(index: number, source: string, success: boolean) {
         preparedSources.current = { ...preparedSources.current, [source]: success };
         setReadyBackdrops(preparedSources.current);
-        if (intent.current === index) setActive(index);
+        if (intent.current === index && active !== index) unfold(index);
     }
     function move(index: number) {
         const next = Math.max(0, Math.min(count * copies - 1, index));
@@ -194,7 +237,7 @@ export default function MediaRow({ title, items, continuation, showDescription =
                 const backdrop = image(media, true);
                 const watched = isWatchedCard(media, showWatched);
                 return <article className={`client-media-card${active === index ? ' active' : ''}${readyBackdrops[backdrop] ? ' has-backdrop' : ''}`} key={copy === 1 ? media.Id : `${media.Id}:${copy}`} onPointerLeave={event => {
-                    if (event.pointerType !== 'touch' && intent.current === index) release();
+                    if (event.pointerType !== 'touch' && (intent.current === index || hover.current?.index === index)) release();
                 }} onBlur={event => {
                     // Pressing the row's arrows must not fold the card first, the arrow picks the next one itself.
                     const heading = event.currentTarget.closest('.client-row')?.querySelector('.client-row-heading');
@@ -205,7 +248,7 @@ export default function MediaRow({ title, items, continuation, showDescription =
                     if (event.pointerType === 'touch') return;
                     if (pointer.current?.x === event.clientX && pointer.current?.y === event.clientY) return;
                     pointer.current = { x: event.clientX, y: event.clientY };
-                    select(index);
+                    hoverCard(index);
                 }} onFocus={() => {
                     if (!touchOpens.current) {
                         select(index);

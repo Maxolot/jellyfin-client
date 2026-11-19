@@ -92,6 +92,43 @@ describe('prepared landscape handoff', () => {
         await decode(0);
         expect(container.querySelector('.active')).toBeNull();
     });
+    it('waits for hover intent, folds on leave and ignores a sweep across cards', async () => {
+        await decode(0);
+        await decode(1);
+        vi.useFakeTimers();
+        const point = (index: number, type: string) => {
+            const event = new MouseEvent(type, { bubbles: true, clientX: index * 100 + 20, clientY: 25 });
+            Object.defineProperty(event, 'pointerType', { value: 'mouse' });
+            card(index).dispatchEvent(event);
+        };
+        try {
+            await act(async () => {
+                point(0, 'pointermove');
+                await vi.advanceTimersByTimeAsync(40);
+                point(0, 'pointerout');
+                point(1, 'pointermove');
+                await vi.advanceTimersByTimeAsync(40);
+                point(1, 'pointerout');
+                await vi.advanceTimersByTimeAsync(120);
+            });
+            expect(container.querySelector('.active')).toBeNull();
+            await act(async () => {
+                point(0, 'pointermove');
+                await vi.advanceTimersByTimeAsync(120);
+            });
+            expect(card(0).classList.contains('active')).toBe(true);
+            await act(async () => {
+                point(0, 'pointerout');
+                point(1, 'pointermove');
+            });
+            expect(container.querySelector('.active')).toBeNull();
+            await act(async () => vi.advanceTimersByTimeAsync(120));
+            expect(card(1).classList.contains('active')).toBe(true);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
     it('closes this row when another row claims selection', async () => {
         await decode(0);
         await focus(0);
