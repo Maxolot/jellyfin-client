@@ -8,7 +8,7 @@ import { useInfiniteQuery, useQuery, type QueryClient } from '@tanstack/react-qu
 import { useApi } from 'hooks/useApi';
 
 import { genreIds, matchesCatalogueGenre, type Genre } from './genres';
-import { catalogueItem, type ExternalMedia, type MediaType, type Results } from './model';
+import { catalogueItem, externalIdentity, requestableSeasons, withLocalAvailability, type ExternalMedia, type MediaType, type Results } from './model';
 import { useSeerr } from './SeerrContext';
 
 export function useLocalIdentities(enabled: boolean) {
@@ -95,6 +95,19 @@ export function useLocalSeasons(item?: BaseItemDto) {
         enabled: !!api && !!user?.Id && item?.Type === 'Series', staleTime: 30000,
         queryFn: async ({ signal }) => (await getShowApi(api!).getSeasons({ seriesId: item!.Id!, userId: user!.Id,
             fields: [ItemFields.ChildCount] }, { signal })).data.Items || [] });
+}
+
+export function canRequestSeasons(item: BaseItemDto, connected: boolean) {
+    return connected && item.Type === 'Series' && !!externalIdentity(item);
+}
+
+/** Number of seasons still requestable for a local series. */
+export function useMissingSeasons(item: BaseItemDto, enabled: boolean) {
+    const identity = enabled ? externalIdentity(item) : undefined;
+    const detail = useSeerrDetail(identity?.type, identity?.id, false);
+    const local = useLocalSeasons(enabled ? item : undefined);
+    if (!identity || !detail.data || local.isPending || local.isError) return 0;
+    return requestableSeasons(withLocalAvailability(detail.data, item, local.data)).length;
 }
 
 // « Bientôt à découvrir » : films et séries annoncés dans les 60 prochains jours, du plus proche au plus lointain.

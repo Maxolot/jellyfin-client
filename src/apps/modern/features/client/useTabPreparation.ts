@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef } from 'react';
 
 import { useApi } from 'hooks/useApi';
 
-import { artworkUrl, preloadArtwork } from './artwork';
+import { artworkUrl, heroArtworkSizes, preloadArtwork, rowPosterSizes } from './artwork';
 import { prepareCatalogue } from './seerr/queries';
 import { useSeerr } from './seerr/SeerrContext';
 import { browseQuery } from './useClientMedia';
@@ -54,7 +54,11 @@ export default function useTabPreparation(pageReady: boolean) {
                 prepared.current.delete(view);
                 return;
             }
-            for (const picture of firstPictures(api.basePath, data)) void preloadArtwork(picture).catch(() => undefined);
+            const pictures = firstPictures(api.basePath, data);
+            const posterSizes = view === 'home' ? rowPosterSizes : undefined;
+            for (const [index, picture] of pictures.entries()) {
+                void preloadArtwork(picture, index === 0 ? heroArtworkSizes : posterSizes).catch(() => undefined);
+            }
         }).catch(() => prepared.current.delete(view));
         if (seerr.connected && DISCOVERY_TABS.has(view)) void prepareCatalogue(cache, seerr, view === 'home' ? 'home' : view).catch(() => undefined);
     }, [api, user, cache, seerr]);

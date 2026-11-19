@@ -2,7 +2,7 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 
-import useMediaQuery from '@mui/material/useMediaQuery';
+import useClientMediaQuery from './useClientMediaQuery';
 import { useServerPreview } from './previews/provider';
 import { compactPreview } from './previews/model';
 import { createPreviewVideo, growFrom, prepareUpgrade, sameFile, type HandedClip } from './previews/handoff';
@@ -29,7 +29,7 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
     const staticSource = preview ? previewSource(preview.sources, item, document.baseURI, surface !== 'episode', surface) : undefined;
     const key = `${surface}:${item.Id}`;
     const started = startedKey === key;
-    const small = useMediaQuery('(max-width: 700px)');
+    const small = useClientMediaQuery('(max-width: 700px)');
     const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
     const claim = preview?.claim;
     const release = preview?.release;

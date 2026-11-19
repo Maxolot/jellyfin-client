@@ -9,9 +9,8 @@ import DetailMenu from './DetailMenu';
 import { useTitleTrackChoice } from './useTitleTrackChoice';
 
 vi.mock('./seerr/SeerrContext', () => ({ useSeerr: () => ({ connected: true }) }));
-vi.mock('./seerr/SeerrViews', () => ({
+vi.mock('./seerr/queries', () => ({
     canRequestSeasons: (item: BaseItemDto) => item.Type === 'Series',
-    RequestDialog: () => null,
     useMissingSeasons: (item: BaseItemDto) => item.Type === 'Series' ? 2 : 0
 }));
 const fileTracks = { languages: [], audio: [{ key: 'eng', label: 'Anglais' }, { key: 'fra', label: 'Français' }], subtitles: [{ key: 'fra', label: 'Français' }] };

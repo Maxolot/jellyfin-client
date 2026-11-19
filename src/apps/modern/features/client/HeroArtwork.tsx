@@ -1,6 +1,7 @@
 /* eslint-disable react/jsx-no-bind -- Image lifecycle is local to this component. */
 import React, { useEffect, useRef, useState } from 'react';
 
+import { heroArtworkSizes, responsiveArtworkSet } from './artwork';
 import { ImageSkeleton } from './ClientSkeleton';
 
 type Frame = { source: string; visible: boolean; failed?: boolean };
@@ -76,7 +77,7 @@ export default function HeroArtwork({ source, fadeMs = 900, fullBackground = fal
     // The wanted image once loaded, otherwise the newest one already shown, so the page never goes blank meanwhile.
     const wanted = frames.findIndex(frame => frame.source === source && frame.visible && !frame.failed);
     const front = crossfade && wanted < 0 ? frames.reduce((found, frame, index) => (frame.visible && !frame.failed ? index : found), -1) : wanted;
-    const artwork = <>{source && !frames.some(frame => frame.visible || frame.failed) && <ImageSkeleton />}{frames.map(frame => <img key={frame.source} ref={element => element?.setAttribute('fetchpriority', 'high')} className={`client-background${frame.visible && (!crossfade || frames.indexOf(frame) === front) ? ' artwork-loaded' : ''}`} src={frame.source} alt='' decoding='async' hidden={frame.failed} onLoad={event => {
+    const artwork = <>{source && !frames.some(frame => frame.visible || frame.failed) && <ImageSkeleton />}{frames.map(frame => <img key={frame.source} ref={element => element?.setAttribute('fetchpriority', 'high')} className={`client-background${frame.visible && (!crossfade || frames.indexOf(frame) === front) ? ' artwork-loaded' : ''}`} srcSet={responsiveArtworkSet(frame.source, heroArtworkSizes)} sizes={heroArtworkSizes} src={frame.source} alt='' decoding='async' hidden={frame.failed} onLoad={event => {
         void loaded(frame.source, event.currentTarget);
     }} onError={() => failed(frame.source)} />)}</>;
     return fullBackground ? <div className='client-hero-image-layer'>{artwork}</div> : artwork;

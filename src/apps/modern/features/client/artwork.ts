@@ -46,6 +46,17 @@ export function artworkUrl(basePath: string, item: BaseItemDto, kind: ArtworkKin
     return `${basePath}/Items/${id}/Images/${type}?maxWidth=${artworkWidth(kind)}&quality=85${version}`;
 }
 
+export const heroArtworkSizes = '100vw';
+export const rowPosterSizes = '(max-width: 960px) 144px, (min-width: 1560px) 234px, 15vw';
+
+export function responsiveArtworkSet(source: string, sizes?: string) {
+    if (!sizes || !/\/Items\/[^/]+\/Images\//.test(source)) return undefined;
+    const resize = /([?&]maxWidth=)\d+/;
+    if (!resize.test(source)) return undefined;
+    const options = sizes === rowPosterSizes ? [160, 240, 320, 480, 640] : widths;
+    return options.map(width => `${source.replace(resize, (_, key: string) => key + width)} ${width}w`).join(', ');
+}
+
 const decodedArtwork = new Set<string>();
 const MAX_REMEMBERED = 800;
 
@@ -62,12 +73,14 @@ export function wasDecoded(source: string) {
 
 // Only the next hero / deliberate navigation intent is warmed, never the whole library.
 const warmed = new Map<string, Promise<void>>();
-export function preloadArtwork(source: string) {
+export function preloadArtwork(source: string, sizes?: string) {
     if (!source) return Promise.resolve();
-    const existing = warmed.get(source);
+    const key = sizes ? source + ' ' + sizes : source;
+    const existing = warmed.get(key);
     if (existing) return existing;
     const image = new Image();
     image.decoding = 'async';
+    const srcSet = responsiveArtworkSet(source, sizes);
     image.setAttribute('fetchpriority', 'low');
     const pending = new Promise<void>((resolve, reject) => {
         image.onload = () => {
@@ -78,11 +91,15 @@ export function preloadArtwork(source: string) {
             }, reject);
         };
         image.onerror = () => reject(new Error('Artwork unavailable'));
+        if (srcSet && sizes) {
+            image.sizes = sizes;
+            image.srcset = srcSet;
+        }
         image.src = source;
     });
-    warmed.set(source, pending);
+    warmed.set(key, pending);
     if (warmed.size > 32) warmed.delete(warmed.keys().next().value!);
     // A failed request must be retryable on the next visit.
-    void pending.catch(() => warmed.delete(source));
+    void pending.catch(() => warmed.delete(key));
     return pending;
 }

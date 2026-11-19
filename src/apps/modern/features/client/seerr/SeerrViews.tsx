@@ -18,7 +18,7 @@ import HeroArtwork from '../HeroArtwork';
 import ClientIcon from '../ClientIcon';
 import { withLocalAvailability, externalIdentity, catalogueItem, providerKey, canRequest, imageUrl, localMatch, mediaLabel, orderedRequestSeasons, requestableSeasons, requestLabel, requestQuotaLabel, requestSeasonNumbersLabel,
     releaseLabel, type ExternalMedia, type MediaRequest, type MediaType, type Quota, type Results, type SeerrIdentity } from './model';
-import { useLocalIdentities, useLocalSeasons, useSeerrDetail } from './queries';
+import { canRequestSeasons, useLocalIdentities, useLocalSeasons, useSeerrDetail } from './queries';
 import { useSeerr } from './SeerrContext';
 import { SettingCard, StatusBadge, Toggle } from '../settings/controls';
 import seerrLogo from '../settings/logos/seerr.svg';
@@ -117,19 +117,6 @@ export function AvailabilityAction({ identity: supplied, localItem }: Readonly<{
     // A local movie is already downloaded: nothing left to request.
     if (localItem && localItem.Type !== 'Series') return null;
     return <ClientDialog key={`${identity.type}-${identity.id}`} label='Disponibilité' title='Disponibilité et demandes' subtitle={localItem?.Name || ''} buttonClassName='client-button client-availability-action'><RequestPanel identity={identity} localItem={localItem} /></ClientDialog>;
-}
-
-export function canRequestSeasons(item: BaseItemDto, connected: boolean) {
-    return connected && item.Type === 'Series' && !!externalIdentity(item);
-}
-
-/** Number of seasons still requestable for a local series; 0 while loading or when everything is present. */
-export function useMissingSeasons(item: BaseItemDto, enabled: boolean) {
-    const identity = enabled ? externalIdentity(item) : undefined;
-    const detail = useSeerrDetail(identity?.type, identity?.id, false);
-    const localSeasons = useLocalSeasons(enabled ? item : undefined);
-    if (!identity || !detail.data || localSeasons.isPending || localSeasons.isError) return 0;
-    return requestableSeasons(withLocalAvailability(detail.data, item, localSeasons.data)).length;
 }
 
 type InitialSeason = { number: number; quality: 'standard' | '4k' };

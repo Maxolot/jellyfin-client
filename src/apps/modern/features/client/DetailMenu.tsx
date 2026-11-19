@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-no-bind -- Menu handlers are local to this component. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 
 import { useApi } from 'hooks/useApi';
 
@@ -12,11 +12,14 @@ import { useFileTracks } from './languageTags';
 import MediaInfoDialog from './MediaInfoDialog';
 import { externalIdentity } from './seerr/model';
 import { useSeerr } from './seerr/SeerrContext';
-import { canRequestSeasons, RequestDialog, useMissingSeasons } from './seerr/SeerrViews';
+import { canRequestSeasons, useMissingSeasons } from './seerr/queries';
 import StorageRemoval, { useStorageRemovalAvailable } from './StorageRemoval';
 import { FollowCatalogAction } from './sharedCatalog';
 import { choiceSummary, type TrackChoice } from './trackChoice';
 import TrackMenu from './TrackMenu';
+
+const RequestDialog = lazy(() => import(/* webpackChunkName: "client-seerr" */ './seerr/SeerrViews')
+    .then(module => ({ default: module.RequestDialog })));
 
 /** Secondary actions of a media page, kept behind one "more" button so the main row stays minimal. */
 export default function DetailMenu({ item, basePath, play, choice, chooseTracks }: Readonly<{ item: BaseItemDto; basePath: string; play: (item: BaseItemDto, startTicks?: number) => void; choice: TrackChoice; chooseTracks: (choice: TrackChoice) => void }>) {
@@ -97,7 +100,9 @@ export default function DetailMenu({ item, basePath, play, choice, chooseTracks 
         <DownloadDialog item={item} open={dialog === 'download'} onClose={() => setDialog(null)} />
         <MediaInfoDialog item={item} basePath={basePath} open={dialog === 'info'} onClose={() => setDialog(null)} play={play} choice={choice} chooseVersion={version => chooseTracks({ ...choice, version })} />
         <CastDialog item={item} basePath={basePath} open={dialog === 'cast'} onClose={() => setDialog(null)} />
-        {request && <RequestDialog item={item} open={dialog === 'request'} onClose={() => setDialog(null)} />}
+        {request && dialog === 'request' && <Suspense fallback={null}>
+            <RequestDialog item={item} open onClose={() => setDialog(null)} />
+        </Suspense>}
     </div>;
 }
 

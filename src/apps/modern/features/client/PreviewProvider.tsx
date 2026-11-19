@@ -1,4 +1,4 @@
-import useMediaQuery from '@mui/material/useMediaQuery';
+import useClientMediaQuery from './useClientMediaQuery';
 import React, { createContext, type PropsWithChildren, type RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { playbackManager } from 'components/playback/playbackmanager';
@@ -44,7 +44,7 @@ export default function PreviewProvider({ children, surface, serverAvailable, en
     const config = useWebConfig();
     const { user } = useApi();
     const sources = config.clientPreviews?.[user?.ServerId || ''] || noSources;
-    const reduced = useMediaQuery('(prefers-reduced-motion: reduce)');
+    const reduced = useClientMediaQuery('(prefers-reduced-motion: reduce)');
     const [hidden, setHidden] = useState(false);
     const [realPlayback, setRealPlayback] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);

@@ -2170,6 +2170,9 @@ export class PlaybackManager {
                 })).Items;
             }
 
+            // Defer built-in media engines until a local playback or remote command actually needs them.
+            await pluginManager.loadLocalPlayers();
+
             // Prepare the list of items
             items = await translateItemsForPlayback(items, options);
             // Add any additional parts for movies or episodes

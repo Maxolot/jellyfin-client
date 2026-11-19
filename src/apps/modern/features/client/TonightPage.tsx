@@ -36,7 +36,7 @@ function usePreparedDraw(selection: BaseItemDto[], seed: number, image: (item: B
     useEffect(() => {
         let disposed = false;
         const next = latest.current;
-        void Promise.allSettled(currentSources.current.map(preloadArtwork)).then(() => {
+        void Promise.allSettled(currentSources.current.map(source => preloadArtwork(source))).then(() => {
             if (!disposed) setDraw(next);
         });
         return () => {

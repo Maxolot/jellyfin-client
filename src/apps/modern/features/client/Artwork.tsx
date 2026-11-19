@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-no-bind -- Decoding belongs to the individual image lifecycle. */
 import React, { useEffect, useRef, useState } from 'react';
 
-import { rememberDecoded, wasDecoded } from './artwork';
+import { rememberDecoded, responsiveArtworkSet, wasDecoded } from './artwork';
 import { ImageSkeleton } from './ClientSkeleton';
 
 type Props = {
@@ -13,10 +13,11 @@ type Props = {
     onReady?: () => void;
     onFailure?: () => void;
     rootMargin?: string;
+    sizes?: string;
 };
 
 /** Reveal decoded pixels, rather than exposing a progressive JPEG as it arrives. */
-export default function Artwork({ source, className = '', alt = '', eager = false, enabled = true, onReady, onFailure, rootMargin = '600px 300px' }: Readonly<Props>) {
+export default function Artwork({ source, className = '', alt = '', eager = false, enabled = true, onReady, onFailure, rootMargin = '600px 300px', sizes }: Readonly<Props>) {
     const ref = useRef<HTMLImageElement>(null);
     const known = !!source && wasDecoded(source);
     const [nearby, setNearby] = useState(eager || known);
@@ -40,7 +41,7 @@ export default function Artwork({ source, className = '', alt = '', eager = fals
     const ready = decoded === source || known;
     const requested = (enabled && (eager || nearby)) || ready ? source : undefined;
     const pending = !!requested && !ready && failed !== source && !className.includes('logo');
-    return <>{pending && <ImageSkeleton />}<img ref={ref} className={`client-artwork ${className}${ready ? ' artwork-ready' : ''}`} src={requested || undefined}
+    return <>{pending && <ImageSkeleton />}<img ref={ref} className={`client-artwork ${className}${ready ? ' artwork-ready' : ''}`} srcSet={responsiveArtworkSet(requested || '', sizes)} sizes={sizes} src={requested || undefined}
         alt={alt} decoding='async' hidden={failed === source} onLoad={async event => {
             const element = event.currentTarget;
             const loadedSource = source;

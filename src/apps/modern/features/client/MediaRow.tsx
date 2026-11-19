@@ -6,6 +6,7 @@ import ResizeObserver from 'resize-observer-polyfill';
 
 import ClientIcon from './ClientIcon';
 import Artwork from './Artwork';
+import { rowPosterSizes } from './artwork';
 import PreviewClip from './PreviewClip';
 import SharedCatalogArtwork from './SharedCatalogArtwork';
 import { episodeDateLabel } from './personalUpcoming';
@@ -273,7 +274,7 @@ export default function MediaRow({ title, items, kind, continuation, showDescrip
                         touchOpens.current = false;
                     }}>
                         {tracked ? <SharedCatalogArtwork item={media} backdrop={false} className='client-card-poster' /> :
-                            <Artwork className='client-card-poster' source={poster} />}
+                            <Artwork className='client-card-poster' source={poster} sizes={rowPosterSizes} />}
                         <Artwork className='client-card-backdrop' source={backdrop} eager={pending === index} rootMargin='180px 180px' onReady={() => prepared(index, backdrop, true)} onFailure={() => prepared(index, backdrop, false)} />
                         <span className='client-card-fallback'>{media.SeriesName || media.Name}</span>
                     </Link>

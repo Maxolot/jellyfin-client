@@ -1,6 +1,4 @@
 import { usePreviewCapabilities } from '../features/client/previews/provider';
-import { QuickConnectMenuItem } from '../features/client/account/AccountSettings';
-import SettingsPage from '../features/client/settings/SettingsPage';
 /* eslint-disable react/jsx-no-bind -- View-local closures do not cross memoized component boundaries. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-item-kind';
@@ -8,7 +6,7 @@ import { ItemSortBy } from '@jellyfin/sdk/lib/generated-client/models/item-sort-
 import { getShowApi } from '@jellyfin/sdk/lib/utils/api/show-api';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
 import { getUserDataApi } from '@jellyfin/sdk/lib/utils/api/user-data-api';
-import useMediaQuery from '@mui/material/useMediaQuery';
+import useClientMediaQuery from '../features/client/useClientMediaQuery';
 import { useQueryClient } from '@tanstack/react-query';
 import { APP_NAME } from 'constants/branding';
 import React, { type CSSProperties, lazy, memo, Suspense, type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -36,7 +34,7 @@ import useTabPreparation from '../features/client/useTabPreparation';
 import Artwork from '../features/client/Artwork';
 import useClientMotion from '../features/client/useClientMotion';
 import useHeroBackground from '../features/client/useHeroBackground';
-import { artworkUrl, preloadArtwork } from '../features/client/artwork';
+import { artworkUrl, heroArtworkSizes, preloadArtwork } from '../features/client/artwork';
 import ClientIcon from '../features/client/ClientIcon';
 import useArtworkColor from '../features/client/useArtworkColor';
 import PersonalRating from '../features/client/PersonalRating';
@@ -50,7 +48,6 @@ import DetailMenu from '../features/client/DetailMenu';
 import { openConnectivity } from '../features/client/remote/ConnectivityLayer';
 import RemoteIcon from '../features/client/remote/RemoteIcon';
 import ProfileEntrance from '../features/client/profiles/ProfileEntrance';
-import ProfilePage from '../features/client/profiles/ProfilePage';
 import { signOut } from '../features/client/profiles/profileSession';
 import { useProfileGate } from '../features/client/profiles/useProfileGate';
 import { mediaVersions } from '../features/client/mediaVersions';
@@ -65,8 +62,6 @@ import { countLibraryFilters, isFullLibrary, readLibraryFilters } from '../featu
 import { QueueAction, QueueActions } from '../features/client/QueueActions';
 import { buildMediaQueue, type PlayQueue } from '../features/client/mediaQueue';
 import GridLoadMore from '../features/client/GridLoadMore';
-import FolderPage from '../features/client/folders/FolderPage';
-import FolderPanel from '../features/client/folders/FolderPanel';
 import { FolderPickerProvider, ListAction, useFolderPicker } from '../features/client/folders/FolderPicker';
 import { canFile } from '../features/client/folders/model';
 import WatchedMarker, { watchedLabel } from '../features/client/WatchedMarker';
@@ -88,8 +83,6 @@ import '../features/client/mediaVersions.scss';
 import '../features/client/detailInfoPosition.scss';
 
 type ClientNavigationState = { returnTo?: string, returnState?: ClientNavigationState | null, restoreFocus?: boolean, episodeDrawer?: boolean };
-import TonightPage from '../features/client/TonightPage';
-import PublicCollections from '../features/client/collections/PublicCollections';
 import AmbientBackdrop from '../features/client/AmbientBackdrop';
 import { SeerrProvider, useSeerr } from '../features/client/seerr/SeerrContext';
 import { useLocalIdentities, useSeerrCatalogue, useSeerrDetail, useSeerrUpcoming } from '../features/client/seerr/queries';
@@ -105,9 +98,20 @@ import { sharedCatalogItems, useSharedCatalog } from '../features/client/sharedC
 import NotificationCenter from '../features/client/requests/NotificationCenter';
 import { CompactRequest } from '../features/client/requests/RequestInline';
 import { useRequestProgress } from '../features/client/requests/queries';
-import { ExternalDetail, RequestDialog, RequestTracking } from '../features/client/seerr/SeerrViews';
 import { canRequest, externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
 
+const SettingsPage = lazy(() => import(/* webpackChunkName: "client-settings" */ '../features/client/settings/SettingsPage'));
+const ProfilePage = lazy(() => import(/* webpackChunkName: "client-profiles" */ '../features/client/profiles/ProfilePage'));
+const FolderPage = lazy(() => import(/* webpackChunkName: "client-folder" */ '../features/client/folders/FolderPage'));
+const FolderPanel = lazy(() => import(/* webpackChunkName: "client-folder-panel" */ '../features/client/folders/FolderPanel'));
+const PublicCollections = lazy(() => import(/* webpackChunkName: "client-collections" */ '../features/client/collections/PublicCollections'));
+const TonightPage = lazy(() => import(/* webpackChunkName: "client-tonight" */ '../features/client/TonightPage'));
+const QuickConnectMenuItem = lazy(() => import(/* webpackChunkName: "client-account" */ '../features/client/account/AccountSettings')
+    .then(module => ({ default: module.QuickConnectMenuItem })));
+const seerrViews = () => import(/* webpackChunkName: "client-seerr" */ '../features/client/seerr/SeerrViews');
+const ExternalDetail = lazy(() => seerrViews().then(module => ({ default: module.ExternalDetail })));
+const RequestDialog = lazy(() => seerrViews().then(module => ({ default: module.RequestDialog })));
+const RequestTracking = lazy(() => seerrViews().then(module => ({ default: module.RequestTracking })));
 const RequestPage = lazy(() => import(/* webpackChunkName: "client-requests" */ '../features/client/requests/RequestPage'));
 const PersonPage = lazy(() => import(/* webpackChunkName: "client-person" */ '../features/client/person/PersonPage'));
 
@@ -218,7 +222,7 @@ function useClientController() {
     const hasStaticPreviews = Object.keys(clientPreviews?.[user?.ServerId || ''] || {}).length > 0;
     const [params, setParams] = useSearchParams();
     const location = useLocation();
-    const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+    const reducedMotion = useClientMediaQuery('(prefers-reduced-motion: reduce)');
     const restoreFocus = useNavigationType() === 'POP' || (location.state as ClientNavigationState | null)?.restoreFocus === true;
     const restoration = useRef(restoreFocus);
     restoration.current = restoreFocus;
@@ -381,7 +385,7 @@ function useClientController() {
         }, 160);
     }
     function warmDetail(i: BaseItemDto) {
-        void preloadArtwork(image(i, true, true)).catch(() => undefined);
+        void preloadArtwork(image(i, true, true), heroArtworkSizes).catch(() => undefined);
         const targetId = i.Type === 'Episode' ? i.SeriesId || i.Id : i.Id;
         if (!targetId || !api || !user?.Id || isExternal(i)) return;
         void cache.prefetchQuery({
@@ -487,7 +491,7 @@ function useClientController() {
     useEffect(() => {
         if (!nextArtwork) return;
         const timer = window.setTimeout(() => {
-            void preloadArtwork(nextArtwork).catch(() => undefined);
+            void preloadArtwork(nextArtwork, heroArtworkSizes).catch(() => undefined);
         }, 1200);
         return () => window.clearTimeout(timer);
     }, [nextArtwork]);
@@ -516,7 +520,11 @@ type ViewProps = { readonly model: ClientModel };
 
 export default function Client() {
     const { showing, revision } = useProfileGate();
-    if (showing) return <ProfilePage revision={revision} />;
+    if (showing) {
+        return <Suspense fallback={<ClientSkeleton layout='settings' contained count={3} label='Chargement des profils…' />}>
+            <ProfilePage revision={revision} />
+        </Suspense>;
+    }
     return <SeerrProvider><ClientSurface /></SeerrProvider>;
 }
 
@@ -567,7 +575,7 @@ function ClientView({ model }: ViewProps) {
                     <NotificationCenter play={model.play} />
                     <button type='button' className='client-brand client-search-shortcut' aria-label='Rechercher' title='Rechercher (⌘K ou Ctrl+K)' aria-haspopup='dialog' aria-current={!id && view === 'search' ? 'page' : undefined} onClick={event => spotlight.current?.open(event.currentTarget)}><ClientIcon name='search' /></button>
                     {profileOpen && <div ref={profileMenu} className='client-profile-menu' role='dialog' aria-label='Menu du profil'>
-                        <strong>{user?.Name}</strong><Link to='/client?view=profiles' onClick={() => setProfileOpen(false)}><ActionLabel icon='people'>Changer de profil</ActionLabel></Link><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}><ActionLabel icon='profile'>Mon espace</ActionLabel></Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}><ActionLabel icon='settings'>Paramètres</ActionLabel></Link><Link to='/offline' onClick={() => setProfileOpen(false)}><ActionLabel icon='download'>Hors ligne</ActionLabel></Link><QuickConnectMenuItem /><button onClick={() => {
+                        <strong>{user?.Name}</strong><Link to='/client?view=profiles' onClick={() => setProfileOpen(false)}><ActionLabel icon='people'>Changer de profil</ActionLabel></Link><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}><ActionLabel icon='profile'>Mon espace</ActionLabel></Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}><ActionLabel icon='settings'>Paramètres</ActionLabel></Link><Link to='/offline' onClick={() => setProfileOpen(false)}><ActionLabel icon='download'>Hors ligne</ActionLabel></Link><Suspense fallback={null}><QuickConnectMenuItem /></Suspense><button onClick={() => {
                             void signOut(model.api?.basePath, user?.Id);
                         }}><ActionLabel icon='signOut'>Se déconnecter</ActionLabel></button>
                     </div>}
@@ -579,7 +587,9 @@ function ClientView({ model }: ViewProps) {
                 <BrowseControls model={model} />
                 {!id && media.isPending && (view === 'home' || model.discovery) && <ClientSkeleton layout='hero' label='Chargement de la sélection…' />}
                 <HeroView model={model} />
-                <ContentView model={model} />
+                <Suspense fallback={<ClientSkeleton layout='grid' contained count={6} label='Chargement de la page…' />}>
+                    <ContentView model={model} />
+                </Suspense>
                 <Spotlight ref={spotlight} glass={preferences.glass} showWatched={preferences.watchedMarkers} image={model.image} play={model.play} />
                 <PlaybackStarting item={model.starting} basePath={model.api?.basePath || ''} />
             </FolderPickerProvider>
@@ -628,8 +638,8 @@ function HeroView({ model }: ViewProps) {
             basePath={model.api?.basePath || ''} missing={missing} detail={detail} requestSeason={requestSeason}
             select={season => model.setParams({ id, season }, { state: location.state })} />}
     </section>{series && <EpisodesView model={model} missing={missing} requestSeason={requestSeason} />}
-    {!!requested && requested.id === id && <RequestDialog key={`${id}-${requested.number}`} item={hero} open initialSeason={requested}
-        onClose={() => setRequested(undefined)} />}</>;
+    {!!requested && requested.id === id && <Suspense fallback={null}><RequestDialog key={`${id}-${requested.number}`} item={hero} open initialSeason={requested}
+        onClose={() => setRequested(undefined)} /></Suspense>}</>;
 }
 
 function HeroCopyView({ model, dots }: ViewProps & { dots: ReactNode }) {
@@ -847,7 +857,7 @@ function PersonalView({ model }: ViewProps) {
             <header><h2>Ma liste</h2>{!!media.data?.total && <div className='client-queue-actions'>
                 <QueueActions source='favorites' playQueue={playQueue} pending={queueBusy} />
             </div>}</header>
-            <FolderPanel image={image} />
+            <Suspense fallback={null}><FolderPanel image={image} /></Suspense>
             <LibraryView model={model} embedded />
         </div>
         {row('Vus récemment', history.data)}

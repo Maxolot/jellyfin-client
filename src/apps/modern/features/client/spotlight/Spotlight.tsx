@@ -2,7 +2,7 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import { getShowApi } from '@jellyfin/sdk/lib/utils/api/show-api';
 import { getUserDataApi } from '@jellyfin/sdk/lib/utils/api/user-data-api';
-import useMediaQuery from '@mui/material/useMediaQuery';
+import useClientMediaQuery from '../useClientMediaQuery';
 import { useQueryClient } from '@tanstack/react-query';
 import React, { forwardRef, type KeyboardEvent, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal, flushSync } from 'react-dom';
@@ -60,7 +60,7 @@ function animateOpening(element: HTMLElement, from: DOMRect | null, reducedMotio
 }
 
 function useOpening(reset: () => void, prepare: () => void) {
-    const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+    const reducedMotion = useClientMediaQuery('(prefers-reduced-motion: reduce)');
     const [open, setOpen] = useState(false);
     const [seed, setSeed] = useState(() => Date.now() % 100000);
     const input = useRef<HTMLInputElement>(null);
