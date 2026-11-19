@@ -639,27 +639,10 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
 
 .client-filter-options {
     display: flex;
+    align-items: center;
     flex-wrap: wrap;
     gap: 18px;
     margin-bottom: 25px;
-}
-
-.client-filter-options label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #b9c3d1;
-    font-size: 12px;
-}
-
-.client-filter-options select {
-    max-width: 65vw;
-    padding: 10px 15px;
-    border: 1px solid #ffffff40;
-    border-radius: 99px;
-    background: #171b24;
-    color: #f4f4f5;
-    font: inherit;
 }
 
 .client-logout {

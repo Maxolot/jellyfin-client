@@ -1,0 +1,107 @@
+.client-select {
+    position: relative;
+    min-width: 0;
+    max-width: 100%;
+
+    > button {
+        display: flex;
+        width: 100%;
+        min-width: min(var(--client-choice-width, 124px), 100%);
+        max-width: min(320px, 70vw);
+        min-height: 44px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 14px;
+        border: 1px solid #fff3;
+        border-radius: 12px;
+        background: var(--client-control-surface, #1c2027);
+        color: #f2f3f5;
+        font: inherit;
+        font-size: 14px;
+        text-align: start;
+        cursor: pointer;
+
+        span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        &:focus-visible {
+            outline: 2px solid #dce5fb;
+            outline-offset: 2px;
+        }
+
+        &:hover:not(:disabled) {
+            border-color: #ffffff70;
+        }
+    }
+
+    .client-icon {
+        width: 16px;
+        height: 16px;
+        flex: none;
+    }
+
+    &.is-open {
+        z-index: 12;
+
+        > button .client-icon {
+            transform: rotate(180deg);
+        }
+    }
+
+    ul {
+        position: absolute;
+        inset: calc(100% + 6px) 0 auto;
+        min-width: 100%;
+        max-height: min(270px, 36vh);
+        margin: 0;
+        padding: 5px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        border: 1px solid #fff3;
+        border-radius: 14px;
+        background: var(--client-control-menu, #212631);
+        box-shadow: 0 14px 30px #0008;
+        list-style: none;
+    }
+
+    li {
+        display: flex;
+        min-height: 42px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 7px 10px;
+        border-radius: 8px;
+        color: #e3e5e9;
+        font-size: 14px;
+        line-height: 1.3;
+        overflow-wrap: anywhere;
+        cursor: pointer;
+
+        &.is-active {
+            background: #ffffff20;
+        }
+
+        &[aria-selected='true'] {
+            color: #fff;
+            font-weight: 650;
+        }
+    }
+}
+
+.client-interface.client-classic {
+    --client-control-surface: #242424;
+    --client-control-menu: #242424;
+}
+
+.client-setting-control .client-select {
+    --client-choice-width: min(200px, 62vw);
+}
+
+@media (pointer: coarse) {
+    .client-select li { min-height: 44px; }
+}

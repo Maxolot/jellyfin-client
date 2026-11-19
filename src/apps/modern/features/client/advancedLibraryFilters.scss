@@ -32,29 +32,14 @@
         margin: 0;
         line-height: 1.45;
     }
-
-    select {
-        box-sizing: border-box;
-        width: 100%;
-        min-width: 0;
-        min-height: 44px;
-        padding: 8px 10px;
-        border: 1px solid #ffffff50;
-        border-radius: 8px;
-        background: #202731;
-        color: #f4f7fc;
-        font: inherit;
-        text-overflow: ellipsis;
-    }
 }
 
-.client-classic .client-advanced-panel {
-    background: #181818;
-
-    select {
-        background: #252525;
-    }
+.client-advanced-panel .client-select > button {
+    min-width: 0;
+    max-width: none;
 }
+
+.client-classic .client-advanced-panel { background: #181818; }
 
 .client-advanced-controls {
     display: grid;

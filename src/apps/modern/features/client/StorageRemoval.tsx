@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 
 import { useApi } from 'hooks/useApi';
 
+import { ChoiceSelect, type Option } from './settings/controls';
 import ClientDialog from './ClientDialog';
 import { formatSize } from './mediaInfo';
 import { useLocalSeasons } from './seerr/queries';
@@ -96,14 +97,14 @@ export default function StorageRemoval({ item, onClose }: Props & Readonly<{ onC
         label='Retirer les fichiers' title='Retirer les fichiers' subtitle={item.Name || ''}>
         <div className='client-media-info'>
             {done ? <p role='status'>Les fichiers ont été retirés. La fiche reste dans le catalogue partagé. La disponibilité se mettra à jour après l’analyse de la bibliothèque.</p> : <>
-                {series && <label>Saisons à retirer <select value={selection} disabled={pending} onChange={event => {
+                {series && <ChoiceSelect label='Saisons à retirer' value={selection} disabled={pending} options={[
+                    ['', 'Série entière'],
+                    ...(seasons.data || []).flatMap((entry): Option<string>[] => entry.IndexNumber == null ? [] :
+                        [[String(entry.IndexNumber), entry.Name || `Saison ${entry.IndexNumber}`]])
+                ]} onChange={value => {
                     removal.reset();
-                    select(event.target.value);
-                }}>
-                    <option value=''>Série entière</option>
-                    {seasons.data?.filter(entry => entry.IndexNumber != null).map(entry =>
-                        <option key={entry.Id} value={entry.IndexNumber ?? undefined}>{entry.Name || `Saison ${entry.IndexNumber}`}</option>)}
-                </select></label>}
+                    select(value);
+                }} />}
                 <p>La fiche restera dans le catalogue. Radarr ou Sonarr arrêtera de surveiller cette sélection avant de supprimer ses fichiers.</p>
                 {plan.isFetching && <p role='status'>Vérification des fichiers et des téléchargements…</p>}
                 {plan.isError && <p role='alert'>{message(plan.error)}</p>}

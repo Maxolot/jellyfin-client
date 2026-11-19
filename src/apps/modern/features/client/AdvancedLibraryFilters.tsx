@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { useApi } from 'hooks/useApi';
 
 import ClientIcon from './ClientIcon';
+import { ChoiceSelect, type Option } from './settings/controls';
 import { countLibraryFilters, libraryFilterKeys, type LibraryFilters } from './libraryFilters';
 import './advancedLibraryFilters.scss';
 
@@ -49,14 +50,12 @@ function FilterSelect({ label, value, empty, choices, unknownLabel, onChange }: 
     label: string; value?: string | number; empty: string; choices: Choice[]; unknownLabel?: string; onChange: (value: string) => void;
 }>) {
     const selected = value === undefined ? '' : String(value);
-    return <label className='client-advanced-field'>
-        <span>{label}</span>
-        <select value={selected} onChange={event => onChange(event.target.value)}>
-            <option value=''>{empty}</option>
-            {selected && !choices.some(choice => choice.value === selected) && <option value={selected}>{unknownLabel || selected}</option>}
-            {choices.map(choice => <option key={choice.value} value={choice.value}>{choice.label}</option>)}
-        </select>
-    </label>;
+    const options: Option<string>[] = [['', empty], ...choices.map(({ value: key, label: name }): Option<string> => [key, name])];
+    if (selected && !options.some(([key]) => key === selected)) options.push([selected, unknownLabel || selected]);
+    return <div className='client-advanced-field'>
+        <span aria-hidden='true'>{label}</span>
+        <ChoiceSelect label={label} value={selected} options={options} onChange={onChange} />
+    </div>;
 }
 
 export default function AdvancedLibraryFilters({ view, filters, onChange }: Readonly<{

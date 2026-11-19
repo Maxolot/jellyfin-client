@@ -48,6 +48,7 @@ import { useProfileGate } from '../features/client/profiles/useProfileGate';
 import { chosenTracks } from '../features/client/languageTags';
 import { RecentPage } from '../features/client/LocalDiscoveryPages';
 import MediaRow from '../features/client/MediaRow';
+import { ChoiceSelect, type Option } from '../features/client/settings/controls';
 import AdvancedLibraryFilters from '../features/client/AdvancedLibraryFilters';
 import { countLibraryFilters, isFullLibrary, readLibraryFilters } from '../features/client/libraryFilters';
 import WatchedMarker, { watchedLabel } from '../features/client/WatchedMarker';
@@ -625,21 +626,32 @@ function SettingsView({ model }: ViewProps) {
     if (!model.api || !user?.Id) return <section className='client-settings'><h1>Paramètres</h1><ClientSkeleton layout='settings' contained count={3} label='Chargement des préférences…' /></section>;
     return <SettingsPage section={params.get('section')} preferences={preferences} savePreference={savePreference} hasPreviews={model.hasPreviews} />;
 }
+function changeBrowseParams(params: URLSearchParams, changes: Record<string, string>) {
+    const next = new URLSearchParams(params);
+    Object.entries(changes).forEach(([key, value]) => {
+        if (value) next.set(key, value);
+        else next.delete(key);
+    });
+    return next;
+}
+
+function genreChoices(entries: readonly { Name?: string | null }[] | null | undefined, value: string) {
+    const names = [...new Set([...(entries || []).map(entry => entry.Name || ''), value])].filter(Boolean);
+    return [['', 'Tous les genres'], ...names.map((name): Option<string> => [name, name])] as const;
+}
+
+const titleOrder = [['name', 'Par titre'], ['recent', 'Ajouts récents']] as const;
+const availabilityChoices = [['all', 'Tout'], ['available', 'Disponible'], ['missing', 'À télécharger']] as const;
+
 function BrowseControls({ model }: ViewProps) {
     const { id, view, discovery, params, setParams, genres, genre, filters, audio } = model;
     if (id || !['home', 'films', 'series'].includes(view)) return null;
+    const languages = filters.data?.AudioLanguages?.flatMap((entry): Option<string>[] => entry.Value ? [[entry.Value, entry.Name || entry.Value]] : []) || [];
+    if (audio && !languages.some(([key]) => key === audio)) languages.push([audio, audio]);
     return <div className='client-browse-controls'>
         {view !== 'home' && <div className='client-catalogue-switch' aria-label='Présentation du catalogue'><button aria-pressed={discovery} onClick={() => setParams({ view })}>Découvrir</button><button aria-pressed={!discovery} onClick={() => setParams({ view, mode: 'library' })}>Toute la bibliothèque</button></div>}
-        <label className='client-genre-control'>{genre || 'Genres'}<ClientIcon name='down' /><select aria-label='Genres' value={genre} onChange={event => {
-            const next = new URLSearchParams(params);
-            next.set('genre', event.target.value);
-            setParams(next);
-        }}><option value=''>Tous les genres</option>{genres.data?.map(entry => <option key={entry.Id || entry.Name} value={entry.Name || ''}>{entry.Name}</option>)}</select></label>
-        <label className='client-genre-control'>{audio || 'Langues'}<ClientIcon name='down' /><select aria-label='Langues audio' value={audio} onChange={event => {
-            const next = new URLSearchParams(params);
-            next.set('audio', event.target.value);
-            setParams(next);
-        }}><option value=''>Toutes les langues</option>{filters.data?.AudioLanguages?.map(entry => <option key={entry.Value} value={entry.Value || ''}>{entry.Name || entry.Value}</option>)}</select></label>
+        {(view === 'home' || discovery) && <ChoiceSelect label='Genres' value={genre} options={genreChoices(genres.data, genre)} onChange={value => setParams(changeBrowseParams(params, { genre: value }))} />}
+        <ChoiceSelect label='Langues audio' value={audio} options={[['', 'Toutes les langues'], ...languages]} onChange={value => setParams(changeBrowseParams(params, { audio: value }))} />
     </div>;
 }
 
@@ -748,25 +760,15 @@ function SearchView({ model }: ViewProps) {
         || (model.seerr.enabled && (model.seerr.status.isPending || model.seerr.me.isFetching)));
 
     const noun = count === 1 ? 'résultat affiché' : 'résultats affichés';
-    const setFilter = (key: string, value: string) => {
-        const next = new URLSearchParams(params);
-        if (value) next.set(key, value);
-        else next.delete(key);
-        setParams(next);
-    };
+    const setFilter = (key: string, value: string) => setParams(changeBrowseParams(params, { [key]: value }));
 
     return <section className='client-library client-search-page'>
         <header className='client-search-heading'><h1>Rechercher</h1></header>
         <SearchBar value={searchInput} onChange={setSearchInput} onSubmit={value => setFilter('q', value)} />
         {query ? <>
             <div className='client-filter-options client-search-controls'>
-                <label>Genre <select value={genre} onChange={event => setFilter('genre', event.target.value)}>
-                    <option value=''>Tous les genres</option>
-                    {genres.data?.filter(entry => entry.Name).map(entry => <option key={entry.Id || entry.Name} value={entry.Name!}>{entry.Name}</option>)}
-                </select></label>
-                <label>Bibliothèque <select aria-label='Trier les titres de la bibliothèque' value={sort} onChange={event => setFilter('sort', event.target.value)}>
-                    <option value='name'>Par titre</option><option value='recent'>Ajouts récents</option>
-                </select></label>
+                <ChoiceSelect label='Genre' value={genre} options={genreChoices(genres.data, genre)} onChange={value => setFilter('genre', value)} />
+                <ChoiceSelect label='Trier les titres de la bibliothèque' value={sort} options={titleOrder} onChange={value => setFilter('sort', value)} />
                 <span className='client-result-count' role='status'>
                     {waiting ? 'Recherche en cours…' : `${count} ${noun}`}
                 </span>
@@ -808,22 +810,17 @@ function LibraryView({ model, embedded = false }: ViewProps & { readonly embedde
     const saved = sharedView && !hasAdvanced && availability !== 'available' && (!genre || withoutFiles) && !params.get('audio') && !params.get('person') && !params.get('collection') ?
         model.sharedItems.filter(entry => isExternal(entry) && entry.Type === (view === 'films' ? 'Movie' : 'Series')) : [];
     const external = mixCatalogue(local, saved).slice(local.length);
-    function browse(changes: Record<string, string>) {
-        const next = new URLSearchParams(params);
-        Object.entries(changes).forEach(([key, value]) => {
-            if (value) next.set(key, value);
-            else next.delete(key);
-        });
-        setParams(next);
-    }
+    const browse = (changes: Record<string, string>) => setParams(changeBrowseParams(params, changes));
     return <section className={`client-library${embedded ? ' embedded' : ''}`}>
         {!embedded && <header className='client-library-heading'><h1>{params.get('collectionName') || params.get('personName') || links.find(([key]) => key === view)?.[1] || 'Bibliothèque'}</h1></header>}
         {!embedded
         && <div className='client-filter-options'>
-            {!withoutFiles && <><label>Genre <select value={genre} onChange={event => browse({ genre: event.target.value })}><option value=''>Tous les genres</option>{genres.data?.filter(entry => entry.Name).map(entry => <option key={entry.Id || entry.Name} value={entry.Name!}>{entry.Name}</option>)}</select></label><label>Trier <select value={sort} onChange={event => browse({ sort: event.target.value })}><option value='name'>Titre</option><option value='recent'>Ajouts récents</option></select></label></>}
-            {sharedView && <label>Disponibilité <select aria-label='Disponibilité' value={availability || 'all'} onChange={event => browse(event.target.value === 'missing' ? { availability: 'missing', genre: '', audio: '', person: '', collection: '' } : { availability: event.target.value })}>
-                <option value='all'>Tout</option><option value='available'>Disponible</option><option value='missing'>À télécharger</option>
-            </select></label>}
+            {!withoutFiles && <>
+                <ChoiceSelect label='Genre' value={genre} options={genreChoices(genres.data, genre)} onChange={value => browse({ genre: value })} />
+                <ChoiceSelect label='Trier' value={sort} options={titleOrder} onChange={value => browse({ sort: value })} />
+            </>}
+            {sharedView && <ChoiceSelect label='Disponibilité' value={availability || 'all'} options={availabilityChoices} onChange={value => browse(value === 'missing' ?
+                { availability: value, genre: '', audio: '', person: '', collection: '' } : { availability: value })} />}
             <LibraryResultCount model={model} embedded={embedded} loaded={local.length} extra={external.length} onlyMissing={withoutFiles} />
         </div>}
         {!embedded && !withoutFiles && isFullLibrary(view, params.get('mode'))
