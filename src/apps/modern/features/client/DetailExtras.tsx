@@ -5,6 +5,7 @@ import { Link, useLocation } from 'react-router-dom';
 import Artwork from './Artwork';
 import ClientDialog from './ClientDialog';
 import SagaSection, { useSaga } from './SagaSection';
+import { personPath } from './person/model';
 import { providerKey } from './seerr/model';
 
 type Props = { item: BaseItemDto; similar: BaseItemDto[]; image: (item: BaseItemDto, backdrop?: boolean) => string };
@@ -14,12 +15,13 @@ export function hasCast(item: BaseItemDto) {
 }
 
 export function CastDialog({ item, basePath, open, onClose }: Readonly<{ item: BaseItemDto; basePath: string; open: boolean; onClose: () => void }>) {
+    const location = useLocation();
     const people = (item.People || []).filter(person => person.Id);
     if (!people.length) return null;
     function personCard(person: BaseItemPerson, close: () => void) {
         const roles: Record<string, string> = { Director: 'Réalisation', Writer: 'Scénario', Actor: 'Interprétation', GuestStar: 'Interprétation' };
         const role = person.Role || roles[person.Type || ''] || person.Type;
-        return <Link className='client-person' key={`${person.Id}-${person.Role || person.Type}`} to={`/client?view=search&person=${person.Id}&personName=${encodeURIComponent(person.Name || '')}`} onClick={close}>
+        return <Link className='client-person' key={`${person.Id}-${person.Role || person.Type}`} to={personPath(person.Id, person.Name)} state={{ returnTo: location.pathname + location.search, returnState: location.state }} onClick={close}>
             <span className='client-person-portrait'>{person.PrimaryImageTag && <Artwork source={`${basePath}/Items/${person.Id}/Images/Primary?maxWidth=320&quality=85&tag=${encodeURIComponent(person.PrimaryImageTag)}`} />}<span>{person.Name?.slice(0, 1)}</span></span>
             <strong>{person.Name}</strong><small>{role}</small>
         </Link>;

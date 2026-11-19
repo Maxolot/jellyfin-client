@@ -1,0 +1,236 @@
+.client-person-page {
+    margin: 0 var(--client-margin) 60px;
+}
+
+.client-person-hero {
+    padding: 20px 0 clamp(28px, 5vw, 68px);
+
+    > .client-shelf-back { margin: 0 0 14px; }
+}
+
+.client-person-intro {
+    display: grid;
+    grid-template-columns: clamp(105px, 20vw, 248px) minmax(0, 1fr);
+    align-items: start;
+    gap: clamp(16px, 4vw, 58px);
+
+    h1 {
+        margin: 0;
+        font-size: clamp(34px, 6.4vw, 91px);
+        font-weight: 740;
+        letter-spacing: -0.038em;
+        line-height: 1;
+        overflow-wrap: anywhere;
+    }
+}
+
+.client-person-new-portrait {
+    position: relative;
+    display: grid;
+    isolation: isolate;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid #eee3;
+    border-radius: 16px;
+    background: linear-gradient(145deg, #2b415c, #162030);
+    font-size: clamp(30px, 10vw, 104px);
+    font-weight: 700;
+
+    > .client-artwork {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.client-person-job {
+    margin: 12px 0 10px;
+    color: #dbe4f1;
+    font-size: clamp(14px, 1.65vw, 21px);
+}
+
+.client-person-dates {
+    display: grid;
+    width: fit-content;
+    max-width: 100%;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 4px 9px;
+    margin: 14px 0;
+    color: #d8deea;
+    font-size: 13px;
+
+    dt { color: #aeb9cb; }
+
+    dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+}
+
+.client-person-count {
+    margin: 10px 0 16px;
+    color: #d5e9e8;
+    font-weight: 650;
+}
+
+.client-person-biography {
+    max-width: 65ch;
+    margin-top: 12px;
+
+    summary {
+        min-height: 40px;
+        align-content: center;
+        text-decoration: underline;
+        text-underline-offset: 4px;
+        cursor: pointer;
+    }
+
+    p {
+        margin: 4px 0;
+        color: #cbd3e0;
+        line-height: 1.55;
+        white-space: pre-line;
+    }
+}
+
+.client-person-filmography > header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 24px;
+
+    h2 {
+        margin: 0;
+        font-size: clamp(25px, 3.2vw, 40px);
+    }
+
+    .client-filter-options { margin: 10px 0; }
+}
+
+.client-person-appearances {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+    gap: 6px;
+    color: #d5ddea;
+    font-size: 13px;
+}
+
+.client-person-role-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0 18px;
+
+    button {
+        min-height: 40px;
+        padding: 4px 12px;
+        border: 1px solid #f0f5ff2b;
+        border-radius: 999px;
+        background: #e2eaf016;
+        color: #e2eaf0;
+
+        &[aria-pressed='true'] {
+            background: #ecf3fa;
+            color: #182235;
+        }
+    }
+}
+
+.client-credit-section {
+    margin: 18px 0 clamp(22px, 3vw, 44px);
+    padding: clamp(13px, 2.2vw, 28px);
+    border: 1px solid #d2e5fe2e;
+    border-radius: 17px;
+    background: linear-gradient(145deg, #233f4938, #191b240b);
+
+    h3 {
+        margin: 0 0 16px;
+        font-size: clamp(19px, 2.3vw, 29px);
+        font-weight: 660;
+    }
+
+    &.is-tracked { background: linear-gradient(145deg, #48363860, #191b240b); }
+
+    &.is-requestable {
+        border-color: #d2e5fe20;
+        background: #131823;
+    }
+}
+
+.client-credit-card {
+    display: grid;
+    min-width: 0;
+    align-content: start;
+    gap: 6px;
+
+    > button {
+        min-height: 40px;
+        justify-content: center;
+        padding: 4px 5px;
+        font-size: 12px;
+    }
+}
+
+.client-credit-poster {
+    position: relative;
+    display: block;
+}
+
+.client-credit-badge {
+    position: absolute;
+    z-index: 1;
+    top: 6px;
+    left: 6px;
+    max-width: calc(100% - 12px);
+    padding: 4px 6px;
+    border-radius: 9px;
+    background: #0d1b20ea;
+    color: #e4faf7;
+    font-size: clamp(9px, 0.92vw, 12px);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+.is-tracked .client-credit-badge {
+    background: #342523eb;
+    color: #ffe8cf;
+}
+
+.is-requestable .client-credit-badge {
+    background: #202734eb;
+    color: #eef2fb;
+}
+
+.client-credit-copy {
+    position: absolute;
+    z-index: 1;
+    inset: auto 0 0;
+    display: grid;
+    gap: 4px;
+    padding: 20px 8px 9px;
+    background: linear-gradient(transparent, #0c131deb 46%);
+    color: #fff;
+    font-size: clamp(11px, 1.2vw, 15px);
+    strong { display: none; }
+
+    small {
+        display: -webkit-box;
+        overflow: hidden;
+        color: #e0e7f5;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+}
+
+.client-credit-poster:where(:hover, :focus-visible) .client-credit-copy strong { display: block; }
+.client-person-note { color: #bbc6d7; }
+
+@media (max-width: 700px) {
+    .client-person-hero { padding-top: 8px; }
+    .client-credit-section .client-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

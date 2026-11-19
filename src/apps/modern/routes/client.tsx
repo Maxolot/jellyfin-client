@@ -11,7 +11,7 @@ import { getUserDataApi } from '@jellyfin/sdk/lib/utils/api/user-data-api';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useQueryClient } from '@tanstack/react-query';
 import { APP_NAME } from 'constants/branding';
-import React, { type CSSProperties, memo, type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { type CSSProperties, lazy, memo, Suspense, type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigationType, useSearchParams, useNavigate, useParams } from 'react-router-dom';
 
 import Page from 'components/Page';
@@ -104,6 +104,8 @@ import { sharedCatalogItems, useSharedCatalog } from '../features/client/sharedC
 import { ExternalDetail, RequestTracking } from '../features/client/seerr/SeerrViews';
 import { externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
 
+const PersonPage = lazy(() => import(/* webpackChunkName: "client-person" */ '../features/client/person/PersonPage'));
+
 const links = [['home', 'Accueil'], ['series', 'Séries'], ['films', 'Films'], ['recent', 'Nouveautés'], ['tonight', 'Ce soir'], ['search', 'Rechercher'], ['mine', 'Mon espace']];
 
 function plainHome(view: string, filters: (string | undefined)[]) {
@@ -165,7 +167,7 @@ function clientScrollKey(prefKey: string | undefined, location: ReturnType<typeo
 }
 
 function clientPageReady(id: string, view: string, item: BaseItemDto | undefined, mediaReady: boolean, externalReady: boolean) {
-    return externalReady || (id ? !!item : ['settings', 'collections', 'folder'].includes(view) || mediaReady);
+    return externalReady || (id ? !!item : ['settings', 'collections', 'folder', 'person'].includes(view) || mediaReady);
 }
 
 /** What the blurred page background shows when no card is hovered. */
@@ -184,8 +186,14 @@ function clientBrowseInput(view: string, search: string, filters: Parameters<typ
     return ['mine', 'tonight'].includes(view) ? { search: '', filters: {} } : { search, filters };
 }
 
+function routedView(params: URLSearchParams, folderId?: string, personId?: string) {
+    if (folderId) return 'folder';
+    if (personId) return 'person';
+    return params.get('view') || 'home';
+}
+
 function clientBrowseView(view: string, id: string, emptySearch: boolean) {
-    return id || ['settings', 'collections', 'folder'].includes(view) || emptySearch ? 'disabled' : view;
+    return id || ['settings', 'collections', 'folder', 'person'].includes(view) || emptySearch ? 'disabled' : view;
 }
 
 function useSharedBrowse(view: string, id: string, search: string) {
@@ -209,8 +217,8 @@ function useClientController() {
     const restoreFocus = useNavigationType() === 'POP' || (location.state as ClientNavigationState | null)?.restoreFocus === true;
     const restoration = useRef(restoreFocus);
     restoration.current = restoreFocus;
-    const { folderId } = useParams();
-    const view = folderId ? 'folder' : params.get('view') || 'home';
+    const { folderId, personId } = useParams();
+    const view = routedView(params, folderId, personId);
     const discovery = (view === 'films' || view === 'series') && params.get('mode') !== 'library';
     const id = params.get('id') || '';
     const search = params.get('q') || '';
@@ -220,7 +228,7 @@ function useClientController() {
     const audio = params.get('audio') || '';
     const collection = params.get('collection') || '';
     const sort = params.get('sort') === 'recent' ? 'recent' : 'name';
-    const filters = useClientFilters(['mine', 'tonight', 'collections', 'folder'].includes(view) ? 'disabled' : view);
+    const filters = useClientFilters(['mine', 'tonight', 'collections', 'folder', 'person'].includes(view) ? 'disabled' : view);
     const genres = { ...filters, data: filters.data?.Genres };
     const cache = useQueryClient();
     const prefKey = interfacePreferenceKey(api?.basePath, user?.Id);
@@ -493,7 +501,7 @@ function useClientController() {
     const accent = useArtworkColor(preferences.chromatic && hero ? image(hero, true) : undefined);
     const error = id ? details.item.isError : media.isError;
     const backdrop = ambient || pageBackdrop(id, view, hero, pageAmbient, media.data?.items || [], entry => image(entry, true));
-    return { api, user, params, location, setParams, view, id, folderId, search, browseInput, media, details, item, preferences, actionError, busy,
+    return { api, user, params, location, setParams, view, id, folderId, personId, search, browseInput, media, details, item, preferences, actionError, busy,
         searchInput, setSearchInput, starting, genres, genre, sort, savePreference, image, play, playQueue, queueBusy, updateState, cards, row, playItem, hero, error,
         standaloneSearch, prepareDetail, releaseDetail, prepareTab, seerr, catalogue, shared, sharedItems, sharedLocal, upcoming, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, previewProviderAvailable, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent, backdrop, setPageAmbient };
 }
@@ -702,6 +710,11 @@ function ContentView({ model }: ViewProps) {
             <UpcomingRow items={model.upcoming.items.filter(({ item }) => !used.has(item.Id || ''))} />
             {media.data && !media.data.movies.length && !media.data.series.length && !media.data.resume.length && <p className='client-message'>Votre bibliothèque est vide pour le moment.</p>}
         </>;
+    }
+    if (model.personId) {
+        return <Suspense fallback={<ClientSkeleton layout='grid' count={6} contained label='Chargement de la personne…' />}>
+            <PersonPage key={model.personId} id={model.personId} basePath={api?.basePath || ''} image={image} play={model.play} />
+        </Suspense>;
     }
     if (model.folderId) {
         return <FolderPage key={model.folderId} id={model.folderId} image={image} full={model.preferences.hero === 'background'} showWatched={model.preferences.watchedMarkers}

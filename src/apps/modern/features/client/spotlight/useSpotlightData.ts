@@ -1,4 +1,5 @@
 import type { Api } from '@jellyfin/sdk';
+import { uniquePersonResults } from '../person/model';
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-item-kind';
 import { ItemFields } from '@jellyfin/sdk/lib/generated-client/models/item-fields';
@@ -165,7 +166,7 @@ export function useSpotlightData(open: boolean, query: string, filter: SearchFil
         sharedIds,
         requestable: without(requestable).slice(0, 6),
         requestLoading: searching && seerr.connected && filter !== 'available' && (!settled || remote.loading),
-        people: all ? rankNames(sources.people.data || [], entry => entry.Name, server, 5) : [],
+        people: all ? rankNames(uniquePersonResults(sources.people.data || [], remote.people), entry => entry.Name, server, 8) : [],
         groups: all ? namedGroups(query, sources.collections.data || [], sources.genres.data?.Genres || []) : [],
         resume,
         forYou: seededPick(unseen, seed, 6),

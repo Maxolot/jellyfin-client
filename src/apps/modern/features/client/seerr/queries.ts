@@ -71,13 +71,16 @@ export function useSeerrCatalogue(view: string, search: string, enabled: boolean
         queryFn: ({ signal, pageParam }) => seerr.call<Results<ExternalMedia>>(`Api/${endpoint}&page=${pageParam}`, signal),
         getNextPageParam: last => (last.page || 1) < (last.totalPages || 1) ? (last.page || 1) + 1 : undefined });
     const pages = ready ? query.data?.pages : undefined;
-    const mapped = (pages?.flatMap(page => page.results) || []).filter(entry => entry.mediaType !== 'person').map(entry => {
+    const results = pages?.flatMap(page => page.results) || [];
+    const people = results.filter(entry => entry.mediaType === 'person' && entry.id > 0 && entry.name)
+        .map(entry => ({ Id: `tmdb-${entry.id}`, Name: entry.name, profilePath: entry.profilePath }));
+    const mapped = results.filter(entry => entry.mediaType !== 'person').map(entry => {
         const type: MediaType = entry.mediaType === 'tv' || view === 'series' ? 'tv' : 'movie';
         return catalogueItem(entry, type, local.data || []);
     });
     const items = mapped.filter(item => !genre || matchesCatalogueGenre(item, genre, lists));
     const loading = enabled && seerr.connected && [local, movieGenres, tvGenres, query].some(observer => observer.isFetching);
-    return { ...query, hasNextPage: ready && query.hasNextPage, isError: ready && query.isError, items, local, loading, matchesGenre: (item: BaseItemDto, name: string) => matchesCatalogueGenre(item, name, lists) };
+    return { ...query, hasNextPage: ready && query.hasNextPage, isError: ready && query.isError, items, people, local, loading, matchesGenre: (item: BaseItemDto, name: string) => matchesCatalogueGenre(item, name, lists) };
 }
 export function useSeerrDetail(type: MediaType | undefined, id: number | undefined, poll = true) {
     const seerr = useSeerr();

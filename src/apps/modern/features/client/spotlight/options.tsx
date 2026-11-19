@@ -4,10 +4,11 @@ import React, { type MouseEvent, type ReactNode } from 'react';
 import Artwork from '../Artwork';
 import ClientIcon from '../ClientIcon';
 import SharedCatalogArtwork from '../SharedCatalogArtwork';
+import { personPath, type PersonSearchResult } from '../person/model';
 import { ListAction } from '../folders/FolderPicker';
 import WatchedMarker, { watchedLabel } from '../WatchedMarker';
 import { episodeLabel, isWatchedCard, progressPercent } from '../model';
-import { isExternal, mediaLabel, type CatalogueItem } from '../seerr/model';
+import { imageUrl, isExternal, mediaLabel, type CatalogueItem } from '../seerr/model';
 import type { Layout } from './navigation';
 import type { SpotlightResults } from './useSpotlightData';
 
@@ -124,15 +125,16 @@ function best(item: BaseItemDto, actions: Actions): Option {
     };
 }
 
-function person(entry: BaseItemDto, actions: Actions): Option {
+function person(entry: PersonSearchResult, actions: Actions): Option {
     const tag = entry.ImageTags?.Primary;
+    const photo = imageUrl(entry.profilePath);
     return {
         key: `person-${entry.Id}`,
         label: `${entry.Name}, personne`,
-        run: () => actions.go(`/client?view=search&person=${entry.Id}&personName=${encodeURIComponent(entry.Name || '')}`),
+        run: () => actions.go(personPath(entry.Id, entry.Name)),
         view: () => <>
-            <span className='client-spotlight-avatar'>{tag ?
-                <img src={`${actions.basePath}/Items/${entry.Id}/Images/Primary?maxWidth=120&quality=85&tag=${encodeURIComponent(tag)}`} alt='' loading='lazy' /> :
+            <span className='client-spotlight-avatar'>{(tag || photo) ?
+                <img src={photo || `${actions.basePath}/Items/${entry.Id}/Images/Primary?maxWidth=120&quality=85&tag=${encodeURIComponent(tag || '')}`} alt='' loading='lazy' /> :
                 (entry.Name || '?').slice(0, 1)}</span>
             <span className='client-spotlight-text'><strong>{entry.Name}</strong><small>Voir ses films et séries</small></span>
         </>

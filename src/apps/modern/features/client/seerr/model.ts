@@ -30,6 +30,7 @@ export type ExternalMedia = {
     name?: string;
     overview?: string;
     posterPath?: string;
+    profilePath?: string;
     backdropPath?: string;
     releaseDate?: string;
     firstAirDate?: string;
