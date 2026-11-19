@@ -7,7 +7,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import MediaRow from './MediaRow';
 
 vi.mock('./PreviewClip', () => ({ default: () => null }));
+vi.mock('./SharedCatalogArtwork', () => ({
+    default: ({ className }: { className?: string }) => <span className={className} data-shared-art='' />
+}));
 const noLogo = () => undefined;
+const noImage = () => '';
 const prepare = () => undefined;
 const items = ['a', 'b', 'c'].map(Id => ({ Id, Name: Id, Type: 'Movie' as const }));
 const image = (item: BaseItemDto, wide = false) => `https://media.example.test/${item.Id}-${wide ? 'wide' : 'poster'}.jpg`;
@@ -184,5 +188,26 @@ describe('endless row', () => {
         expect(prepared.slice(-3)).toEqual(['a', 'b', 'c']);
         // Only the original copy can restore keyboard focus after visiting a page.
         expect(container.querySelectorAll('[data-client-focus="a"]')).toHaveLength(1);
+    });
+});
+
+describe('catalogue and upcoming rows', () => {
+    it('uses the shared artwork fallback for a tracked title with no poster', async () => {
+        const shared: BaseItemDto[] = [{ Id: 'seerr-movie-1', Name: 'Suivi', Type: 'Movie' }];
+        await act(async () => root.render(<MemoryRouter><MediaRow title='Récemment suivis' kind='shared-catalog'
+            items={shared} image={noImage} logo={noLogo} onPrepare={prepare} /></MemoryRouter>));
+        expect(card(0).querySelector('.client-card-poster[data-shared-art]')).not.toBeNull();
+        expect(card(0).querySelector('.client-availability')?.getAttribute('aria-label')).toBe('À télécharger');
+    });
+
+    it('shows the release date and links to the series without marking an unaired episode available', async () => {
+        const upcoming: BaseItemDto[] = [{ Id: 'episode', Name: 'Retour', Type: 'Episode', SeriesId: 'series', SeriesName: 'Série',
+            PremiereDate: '2099-11-19T00:00:00Z', ParentIndexNumber: 2, IndexNumber: 3 }];
+        await act(async () => root.render(<MemoryRouter><MediaRow title='Épisodes à venir' kind='upcoming-episodes'
+            items={upcoming} image={image} logo={noLogo} onPrepare={prepare} /></MemoryRouter>));
+        expect(card(0).querySelector('time')?.getAttribute('datetime')).toBe('2099-11-19');
+        expect(card(0).querySelector('.client-upcoming-episode-caption')?.textContent).toContain('S2:E3');
+        expect(card(0).querySelector('a.client-card')?.getAttribute('href')).toContain('?id=series');
+        expect(card(0).querySelector('.client-availability')).toBeNull();
     });
 });

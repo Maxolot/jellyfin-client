@@ -13,7 +13,7 @@ import { clientRequest } from './session';
 export function usePersonalStats() {
     const { api, user } = useApi();
     return useQuery({
-        queryKey: ['Client', api?.basePath, user?.Id, 'PersonalStats'],
+        queryKey: ['Client', api?.basePath, user?.Id, 'PersonalStats', 'WithSeriesIds'],
         staleTime: 60000,
         enabled: !!api && !!user?.Id,
         queryFn: ({ signal }) => clientRequest(async () => {
@@ -27,7 +27,7 @@ export function usePersonalStats() {
             const seriesIds = [...new Set(episodeItems.map(episode => episode.SeriesId).filter((id): id is string => !!id))];
             const series = seriesIds.length ? (await library.getItems({ userId: user!.Id, ids: seriesIds, enableUserData: true,
                 enableImages: false, fields: [ItemFields.Genres] }, { signal })).data.Items || [] : [];
-            return summarizeViewing(movies.data.Items || [], episodeItems, series);
+            return { ...summarizeViewing(movies.data.Items || [], episodeItems, series), watchedSeriesIds: seriesIds };
         })
     });
 }

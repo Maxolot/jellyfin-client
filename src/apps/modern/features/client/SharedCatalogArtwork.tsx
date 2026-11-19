@@ -6,7 +6,7 @@ import { externalIdentity, imageUrl } from './seerr/model';
 import { useSeerrDetail } from './seerr/queries';
 
 /** Resolve posters for older catalog entries saved before their local copy was removed. */
-export default function SharedCatalogArtwork({ item, backdrop }: Readonly<{ item: BaseItemDto; backdrop: boolean }>) {
+export default function SharedCatalogArtwork({ item, backdrop, className }: Readonly<{ item: BaseItemDto; backdrop: boolean; className?: string }>) {
     const anchor = useRef<HTMLSpanElement>(null);
     const [nearby, setNearby] = useState(false);
     useEffect(() => {
@@ -29,5 +29,5 @@ export default function SharedCatalogArtwork({ item, backdrop }: Readonly<{ item
     const detail = useSeerrDetail(identity?.type, identity?.id, false);
     const images = detail.data;
     const source = imageUrl(backdrop ? images?.backdropPath || images?.posterPath : images?.posterPath, backdrop);
-    return <><span ref={anchor} hidden /><Artwork source={source} /></>;
+    return <><span ref={anchor} hidden /><Artwork source={source} className={className} /></>;
 }

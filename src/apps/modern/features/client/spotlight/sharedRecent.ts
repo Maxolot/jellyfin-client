@@ -2,6 +2,12 @@ import type { SharedCatalogEntry } from '../sharedCatalog';
 
 export type SharedEntry = SharedCatalogEntry;
 
+/** Dated follows come first. Older entries without dates keep their server order. */
+export function latestFollowed(entries: SharedEntry[]) {
+    const timestamp = (entry: SharedEntry) => Date.parse(entry.addedAt || '') || 0;
+    return entries.slice().sort((left, right) => timestamp(right) - timestamp(left));
+}
+
 const account = (id: string | null | undefined) => (id || '').replace(/-/g, '').toLowerCase();
 
 /** Titles lately followed by the other accounts of the server, newest first (the catalogue keeps that order). */

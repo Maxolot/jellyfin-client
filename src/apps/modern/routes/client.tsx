@@ -35,6 +35,7 @@ import useArtworkColor from '../features/client/useArtworkColor';
 import PersonalRating from '../features/client/PersonalRating';
 import RatingsOverview from '../features/client/RatingsOverview';
 import { GenreTaste, PersonalStatsBand } from '../features/client/PersonalOverview';
+import usePersonalUpcoming from '../features/client/usePersonalUpcoming';
 import { usePersonalStats, useViewingHistory } from '../features/client/usePersonalStats';
 import HeroMetadata from '../features/client/HeroMetadata';
 import DetailExtras from '../features/client/DetailExtras';
@@ -50,7 +51,7 @@ import TrailerAction from '../features/client/trailers/TrailerAction';
 import { useTitleTrackChoice } from '../features/client/useTitleTrackChoice';
 import { chosenTracks } from '../features/client/languageTags';
 import { RecentPage } from '../features/client/LocalDiscoveryPages';
-import MediaRow from '../features/client/MediaRow';
+import MediaRow, { type MediaRowKind } from '../features/client/MediaRow';
 import { ChoiceSelect, type Option } from '../features/client/settings/controls';
 import AdvancedLibraryFilters from '../features/client/AdvancedLibraryFilters';
 import { countLibraryFilters, isFullLibrary, readLibraryFilters } from '../features/client/libraryFilters';
@@ -87,6 +88,7 @@ import PlaybackStarting from '../features/client/player/PlaybackStarting';
 import '../features/client/player/player.scss';
 import { exactSearchFirst, groupSearchResults, matchesSearchTitle, searchMode } from '../features/client/searchResults';
 import SharedCatalogArtwork from '../features/client/SharedCatalogArtwork';
+import { latestFollowed } from '../features/client/spotlight/sharedRecent';
 import { sharedCatalogItems, useSharedCatalog } from '../features/client/sharedCatalog';
 import { ExternalDetail, RequestTracking } from '../features/client/seerr/SeerrViews';
 import { externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
@@ -171,8 +173,9 @@ function useSharedBrowse(view: string, id: string, search: string) {
     const shared = useSharedCatalog();
     const entries = shared.data || [];
     const matching = view === 'search' ? entries.filter(entry => matchesSearchTitle(entry.title, search)) : entries;
-    const sharedLocal = useLocalIdentities(matching.length > 0 && ['films', 'series', 'search'].includes(view) && !id);
-    const sharedItems = sharedCatalogItems(sharedLocal.isSuccess ? matching : [], sharedLocal.data || []);
+    const sharedLocal = useLocalIdentities(matching.length > 0 && ['home', 'films', 'series', 'search'].includes(view) && !id);
+    const selected = view === 'home' ? latestFollowed(entries).slice(0, 12) : matching;
+    const sharedItems = sharedCatalogItems(sharedLocal.isSuccess || (view === 'home' && sharedLocal.isError) ? selected : [], sharedLocal.data || []);
     return { shared, sharedItems, sharedLocal };
 }
 
@@ -398,9 +401,9 @@ function useClientController() {
             return withFolders && canFile(i) ? <div className='client-folder-search-card' key={i.Id}>{card}<ListAction item={i} /></div> : card;
         });
     }
-    function row(title: string, items: BaseItemDto[] | undefined, horizontal = false) {
+    function row(title: string, items: BaseItemDto[] | undefined, horizontal = false, kind?: MediaRowKind) {
         if (!items?.length) return null;
-        return <MediaRow key={`${title}:${items.map(entry => entry.Id).join('|')}`} title={title} items={items} continuation={horizontal} showDescription={preferences.hoverDescriptions} showWatched={preferences.watchedMarkers} image={image} logo={logo} onPrepare={prepareDetail} onRelease={releaseDetail} />;
+        return <MediaRow key={`${title}:${items.map(entry => entry.Id).join('|')}`} title={title} items={items} kind={kind} continuation={horizontal} showDescription={preferences.hoverDescriptions} showWatched={preferences.watchedMarkers} image={image} logo={logo} onPrepare={prepareDetail} onRelease={releaseDetail} />;
     }
     const heroItems = heroCandidates(discovery, media.data);
     const lead = heroItems[heroIndex % Math.max(1, heroItems.length)];
@@ -609,9 +612,9 @@ function ContentView({ model }: ViewProps) {
     if (model.remote) return <ExternalDetail key={id} id={id} row={row} image={image} />;
     if (id) return details.item.data && api ? <DetailExtras item={details.item.data} similar={details.similar.data || []} image={image} /> : null;
     if (view === 'home') {
-        // Ordre de la maquette : reprise, sélection, ajouts récents, tendances, puis sorties à venir ; chaque titre n'apparaît qu'une fois.
+        // Keep the shared catalogue in its own order and avoid repeating its titles in the discovery rows.
         const continuing = uniqueItems([...(media.data?.resume || []), ...(media.data?.next || [])]).filter((entry, index, all) => !entry.SeriesId || all.findIndex(other => other.SeriesId === entry.SeriesId) === index);
-        const used = new Set([...model.heroItems, ...continuing].map(entry => entry.SeriesId || entry.Id || ''));
+        const used = new Set([...model.heroItems, ...continuing, ...model.sharedItems].map(entry => entry.SeriesId || entry.Id || ''));
         const take = (items: BaseItemDto[], limit: number) => items.filter(entry => !used.has(entry.Id || '')).slice(0, limit).map(entry => {
             used.add(entry.Id || '');
             return entry;
@@ -624,6 +627,7 @@ function ContentView({ model }: ViewProps) {
             {row('Continuer à regarder', continuing, true)}
             {row('À découvrir', picks)}
             {row('Ajouts récents', recent)}
+            {row('Récemment suivis', model.sharedItems, false, 'shared-catalog')}
             {row('Tendances', trends)}
             {model.catalogue.loading && !trends.length && <ClientSkeleton layout='row' label='Chargement des tendances…' />}
             {model.catalogue.isError && <p className='client-message'>Les tendances sont temporairement indisponibles. Votre bibliothèque reste accessible.</p>}
@@ -699,6 +703,9 @@ function PersonalView({ model }: ViewProps) {
     const home = useClientMedia('home', '', 0);
     const stats = usePersonalStats();
     const history = useViewingHistory();
+    const watched = stats.isPending ? undefined : stats.data?.watchedSeriesIds || [];
+    const catalog = model.shared.isPending ? undefined : model.shared.data || [];
+    const upcoming = usePersonalUpcoming(watched, catalog);
     const resume = home.data?.resume || [];
     const lead = resume[0];
     const leadBackdrop = lead ? image(lead, true) : '';
@@ -713,6 +720,7 @@ function PersonalView({ model }: ViewProps) {
             {progressPercent(lead) > 0 && <span className='client-spotlight-progress' aria-label={`Vu à ${Math.round(progressPercent(lead))} %`}><i style={{ width: `${progressPercent(lead)}%` }} /></span>}
             <button className='client-play' onClick={() => play(lead)}><ClientIcon name='play' />Reprendre</button><Link className='client-button' to={`/client?id=${lead.SeriesId || lead.Id}`}>Voir la fiche</Link></div></section>}
         <div id='client-resume'>{row('Continuer à regarder', resume.slice(1), true)}</div>
+        {row('Épisodes à venir', upcoming.data, false, 'upcoming-episodes')}
         <div className='client-personal-favorites' id='client-favorites'><header><h2>Ma liste</h2></header><FolderPanel image={image} /><LibraryView model={model} embedded /></div>
         {row('Vus récemment', history.data)}
         {!!stats.data?.genres.length && <div className='client-personal-columns'><GenreTaste stats={stats.data} /></div>}
