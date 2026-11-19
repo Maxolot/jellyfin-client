@@ -18,6 +18,30 @@
     }
 }
 
+.client-episode-remote {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    margin: 12px 0;
+    color: #d1d9ea;
+
+    p { margin: 0; }
+}
+
+.client-season-rail > header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 3px 12px;
+}
+
+.client-season-count {
+    margin: 0;
+    color: #c7cede;
+    font-size: 12px;
+}
+
 .client-season-rail-list {
     display: flex;
     align-items: end;
@@ -415,3 +439,42 @@
     .client-season-poster { transition: none; }
     .client-detail-dialog.client-episodes-drawer[open] { animation: none; }
 }
+
+.client-season-poster.is-remote {
+    border-color: #c2ccde42;
+
+    .client-artwork {
+        opacity: 0.6;
+        filter: saturate(0.28);
+    }
+
+    &.is-requestable:hover { border-color: #f0f3ff; }
+
+    .client-season-poster-label { bottom: 8px; }
+}
+
+.client-season-status {
+    position: absolute;
+    z-index: 2;
+    inset: 5px auto auto 5px;
+    display: inline-flex;
+    max-width: calc(100% - 10px);
+    align-items: center;
+    gap: 3px;
+    padding: 4px 5px;
+    border: 1px solid #c2ccd84d;
+    border-radius: 8px;
+    background: #111925ec;
+    color: #f1f5fb;
+    font-size: 10px;
+    font-weight: 650;
+    line-height: 1.15;
+
+    svg {
+        width: 12px;
+        height: 12px;
+        flex: none;
+    }
+}
+
+.client-episode-editorial-seasons .is-remote { border-style: dashed; }

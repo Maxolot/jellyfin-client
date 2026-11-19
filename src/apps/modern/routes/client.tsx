@@ -24,6 +24,7 @@ import Events from 'utils/events';
 import ActionLabel from '../features/client/ActionLabel';
 import DetailSynopsis from '../features/client/DetailSynopsis';
 import SeriesEpisodesPanel, { SeasonRail } from '../features/client/SeriesEpisodes';
+import { remoteSeasonChoices, type RemoteSeason } from '../features/client/seriesEpisodesModel';
 import HeroArtwork from '../features/client/HeroArtwork';
 import ClientSkeleton from '../features/client/ClientSkeleton';
 import PreviewProvider, { usePreviews } from '../features/client/PreviewProvider';
@@ -101,8 +102,8 @@ import { exactSearchFirst, groupSearchResults, matchesSearchTitle, searchMode } 
 import SharedCatalogArtwork from '../features/client/SharedCatalogArtwork';
 import { latestFollowed } from '../features/client/spotlight/sharedRecent';
 import { sharedCatalogItems, useSharedCatalog } from '../features/client/sharedCatalog';
-import { ExternalDetail, RequestTracking } from '../features/client/seerr/SeerrViews';
-import { externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
+import { ExternalDetail, RequestDialog, RequestTracking } from '../features/client/seerr/SeerrViews';
+import { canRequest, externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
 
 const PersonPage = lazy(() => import(/* webpackChunkName: "client-person" */ '../features/client/person/PersonPage'));
 
@@ -586,6 +587,18 @@ function HeroView({ model }: ViewProps) {
     const region = useRef<HTMLElement>(null);
     const marker = useRef<MarkerPosition | null>(null);
     const previews = usePreviews();
+    const series = !!id && hero?.Type === 'Series';
+    const identity = series ? externalIdentity(hero) : undefined;
+    const seasonsQuery = model.details.seasons;
+    const { connected, permissions } = model.seerr;
+    const remote = useSeerrDetail(identity?.type, identity?.id);
+    const [requested, setRequested] = useState<{ id: string; number: number; quality: 'standard' | '4k' }>();
+    const seasons = seasonsQuery.data || [];
+    const detail = connected && seasonsQuery.isSuccess ? remote.data : undefined;
+    const missing = remoteSeasonChoices(seasons, detail, canRequest(permissions, 'tv'), canRequest(permissions, 'tv', true));
+    const requestSeason = (season: RemoteSeason) => {
+        if (season.quality) setRequested({ id, number: season.number, quality: season.quality });
+    };
     useHeroBackground(region, !id && preferences.hero === 'background', !!hero);
     if (!hero) return null;
     function selectHero(index: number) {
@@ -596,9 +609,7 @@ function HeroView({ model }: ViewProps) {
         previews?.playback.stop();
         setHeroIndex(index => (index + heroItems.length + delta) % heroItems.length);
     }
-    const series = !!id && hero.Type === 'Series';
-    const seasons = model.details.seasons.data || [];
-    const layout = seasons.length > 1 ? ' client-series-seasons' : ' client-series-single';
+    const layout = seasons.length + missing.length > 1 ? ' client-series-seasons' : ' client-series-single';
     return <><section ref={region} className={`client-hero${id ? ' client-detail' : ' client-home-hero'}${series ? ' client-series-detail' + layout : ''}`} onPointerEnter={() => setHeroPaused(true)} onPointerLeave={() => setHeroPaused(false)} onFocus={() => setHeroPaused(true)} onBlur={event => {
         if (!event.currentTarget.contains(event.relatedTarget)) setHeroPaused(false);
     }}>
@@ -609,8 +620,11 @@ function HeroView({ model }: ViewProps) {
         <HeroCopyView key={hero.Id} model={model} dots={!id && heroItems.length > 1 ? <HeroPagination items={heroItems} index={Math.max(0, heroItems.findIndex(entry => entry.Id === hero.Id))} select={selectHero} position={marker} /> : null} />
         {!id && heroItems.length > 1 && <div className='client-hero-arrows'><button aria-label='Média précédent' onClick={() => advanceHero(-1)}><ClientIcon name='back' /></button><button aria-label='Média suivant' onClick={() => advanceHero(1)}><ClientIcon name='next' /></button></div>}
         {series && <SeasonRail series={hero} seasons={seasons} selected={model.details.selected} episodes={model.details.episodes.data}
-            basePath={model.api?.basePath || ''} select={season => model.setParams({ id, season }, { state: location.state })} />}
-    </section>{series && <EpisodesView model={model} />}</>;
+            basePath={model.api?.basePath || ''} missing={missing} detail={detail} requestSeason={requestSeason}
+            select={season => model.setParams({ id, season }, { state: location.state })} />}
+    </section>{series && <EpisodesView model={model} missing={missing} requestSeason={requestSeason} />}
+    {!!requested && requested.id === id && <RequestDialog key={`${id}-${requested.number}`} item={hero} open initialSeason={requested}
+        onClose={() => setRequested(undefined)} />}</>;
 }
 
 function HeroCopyView({ model, dots }: ViewProps & { dots: ReactNode }) {
@@ -653,7 +667,7 @@ function HeroActions({ model, dots }: ViewProps & { dots: ReactNode }) {
     </div>;
 }
 
-function EpisodesView({ model }: ViewProps) {
+function EpisodesView({ model, missing, requestSeason }: ViewProps & { missing: RemoteSeason[]; requestSeason: (season: RemoteSeason) => void }) {
     const { id, details, params, setParams, location, api, play, playQueue, queueBusy } = model;
     const navigate = useNavigate();
     const state = location.state as ClientNavigationState | null;
@@ -666,7 +680,7 @@ function EpisodesView({ model }: ViewProps) {
         else setParams({ id, season: details.selected }, { replace: true, state });
     };
     const choose = (season: string) => setParams({ id, season, episodes: 'all' }, { replace: true, state });
-    return <SeriesEpisodesPanel seasons={seasons} selected={details.selected} select={choose} items={details.episodes.data}
+    return <SeriesEpisodesPanel seasons={seasons} missing={missing} requestSeason={requestSeason} selected={details.selected} select={choose} items={details.episodes.data}
         loading={details.seasons.isPending || (!!details.selected && details.episodes.isPending)}
         failed={details.seasons.isError || details.episodes.isError} retry={() => {
             if (details.seasons.isError) void details.seasons.refetch();

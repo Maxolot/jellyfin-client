@@ -127,13 +127,16 @@ export function useMissingSeasons(item: BaseItemDto, enabled: boolean) {
     return requestableSeasons(withLocalAvailability(detail.data, item, localSeasons.data)).length;
 }
 
-export function RequestDialog({ item, open, onClose }: Readonly<{ item: BaseItemDto; open: boolean; onClose: () => void }>) {
+type InitialSeason = { number: number; quality: 'standard' | '4k' };
+
+export function RequestDialog({ item, open, onClose, initialSeason }: Readonly<{ item: BaseItemDto; open: boolean; onClose: () => void; initialSeason?: InitialSeason }>) {
     const identity = externalIdentity(item);
     if (!identity) return null;
-    return <ClientDialog controlled={{ open, onClose }} label='Demander des saisons' title='Saisons et demandes' subtitle={item.Name || ''}><RequestPanel identity={identity} localItem={item} /></ClientDialog>;
+    return <ClientDialog controlled={{ open, onClose }} label='Demander des saisons' title='Saisons et demandes' subtitle={item.Name || ''}>{open
+        && <RequestPanel identity={identity} localItem={item} initialSeason={initialSeason} />}</ClientDialog>;
 }
 
-export function RequestPanel({ identity, localItem }: Readonly<{ identity: SeerrIdentity; localItem?: BaseItemDto }>) {
+export function RequestPanel({ identity, localItem, initialSeason }: Readonly<{ identity: SeerrIdentity; localItem?: BaseItemDto; initialSeason?: InitialSeason }>) {
     const seerr = useSeerr();
     const detail = useSeerrDetail(identity.type, identity.id);
     const localSeasons = useLocalSeasons(localItem);
@@ -149,7 +152,7 @@ export function RequestPanel({ identity, localItem }: Readonly<{ identity: Seerr
             void localSeasons.refetch();
         }}>Réessayer</button></section>;
     }
-    return <RequestForm identity={identity} data={withLocalAvailability(detail.data, localItem, localSeasons.data)} />;
+    return <RequestForm identity={identity} data={withLocalAvailability(detail.data, localItem, localSeasons.data)} initialSeason={initialSeason} />;
 }
 
 /** Source lookups for the open request dialog: per requestable season for a series, once for a film. */
@@ -161,10 +164,12 @@ function useRequestSources(identity: SeerrIdentity, data: ExternalMedia, is4k: b
     return { seasonSources, movieSource };
 }
 
-function RequestForm({ identity, data }: Readonly<{ identity: SeerrIdentity; data: ExternalMedia }>) {
+function RequestForm({ identity, data, initialSeason }: Readonly<{ identity: SeerrIdentity; data: ExternalMedia; initialSeason?: InitialSeason }>) {
     const seerr = useSeerr();
     const cache = useQueryClient();
-    const [is4k, set4k] = useState(false);
+    const initial4k = initialSeason?.quality === '4k';
+    const preselected = initialSeason?.number;
+    const [is4k, set4k] = useState(initial4k);
     const [selected, setSelected] = useState<number[]>([]);
     const [confirm, setConfirm] = useState(false);
     const quota = useQuery({ queryKey: [...seerr.root, 'Quota', seerr.me.data?.id], enabled: seerr.connected,
@@ -182,9 +187,9 @@ function RequestForm({ identity, data }: Readonly<{ identity: SeerrIdentity; dat
         await cache.invalidateQueries({ queryKey: seerr.root });
     }, onError: () => { void cache.invalidateQueries({ queryKey: [...seerr.root, 'Detail'] }); } });
     useEffect(() => {
-        setSelected([]);
+        setSelected(preselected == null || is4k !== initial4k ? [] : [preselected]);
         setConfirm(false);
-    }, [identity.id, identity.type, is4k]);
+    }, [identity.id, identity.type, initial4k, is4k, preselected]);
     const { info, state, currentQuota, remaining, permitted, restricted, filmRequested, disabled } = requestState({ data, identity, is4k, selected, permissions: seerr.permissions, quotaData: quota.data, quotaReady: quota.isSuccess, pending: mutation.isPending });
     const { seasonSources, movieSource } = useRequestSources(identity, data, is4k, !filmRequested && !!permitted);
     const quotaUnit = identity.type === 'tv' ? 'saison(s)' : 'film(s)';

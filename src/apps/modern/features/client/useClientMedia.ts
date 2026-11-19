@@ -139,7 +139,7 @@ export function useClientDetails(id: string, season: string) {
         enabled: !!api && !!user?.Id && item.data?.Type === BaseItemKind.Series,
         queryFn: ({ signal }) => clientRequest(async () => orderSeasons((await getShowApi(api!).getSeasons({
             seriesId: id, userId: user!.Id, fields: [ItemFields.ChildCount], enableUserData: true
-        }, { signal })).data.Items || []))
+        }, { signal })).data.Items?.filter(entry => entry.LocationType !== 'Virtual' && !entry.IsPlaceHolder) || []))
     });
     const selected = seasons.data?.find(entry => entry.Id === season)?.Id || seasons.data?.[0]?.Id || '';
     const episodes = useQuery({

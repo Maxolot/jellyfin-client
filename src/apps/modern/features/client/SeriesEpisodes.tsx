@@ -11,28 +11,54 @@ import { isQueuedVideo, type PlayQueue } from './mediaQueue';
 import { episodeLabel, progressPercent, runtimeLabel } from './model';
 import PreviewClip from './PreviewClip';
 import { QueueAction } from './QueueActions';
-import { episodeCount, seasonLabel, seasonProgress } from './seriesEpisodesModel';
+import type { ExternalMedia } from './seerr/model';
+import { episodeCount, partialSeason, seasonChoices, seasonLabel, seasonProgress, seasonSummary, type RemoteSeason } from './seriesEpisodesModel';
 import './seriesEpisodes.scss';
 
 type SeasonSelection = {
     seasons: BaseItemDto[];
     selected: string;
     select: (id: string) => void;
+    missing: RemoteSeason[];
+    requestSeason: (season: RemoteSeason) => void;
 };
 
-type SeasonRailProps = SeasonSelection & { series: BaseItemDto; basePath: string; episodes?: BaseItemDto[] };
+type SeasonRailProps = SeasonSelection & { series: BaseItemDto; basePath: string; episodes?: BaseItemDto[]; detail?: ExternalMedia };
 
-export function SeasonRail({ series, basePath, seasons, selected, select, episodes }: Readonly<SeasonRailProps>) {
-    if (seasons.length < 2) return null;
+export function SeasonRail({ series, basePath, seasons, selected, select, episodes, missing, requestSeason, detail }: Readonly<SeasonRailProps>) {
+    const choices = seasonChoices(seasons, missing);
+    if (choices.length < 2) return null;
     return <section className='client-season-rail' aria-labelledby='client-season-heading'>
-        <h2 id='client-season-heading'>Saisons</h2>
-        <div className='client-season-rail-list'>{seasons.map(season => <SeasonPoster key={season.Id} season={season} series={series}
-            basePath={basePath} active={selected === season.Id} episodes={selected === season.Id ? episodes : undefined} select={select} />)}</div>
+        <header><h2 id='client-season-heading'>Saisons</h2>
+            {!!missing.length && <p className='client-season-count'>{seasonSummary(seasons, missing)}</p>}
+        </header>
+        <div className='client-season-rail-list'>{choices.map(({ key, season, remote }) => season ?
+            <SeasonPoster key={key} season={season} series={series} basePath={basePath} active={selected === key} select={select}
+                partial={partialSeason(season, detail)} episodes={selected === key ? episodes : undefined} /> :
+            remote && <RemoteSeasonPoster key={key} season={remote} series={series} basePath={basePath} requestSeason={requestSeason} />)}</div>
     </section>;
 }
 
-function SeasonPoster({ season, series, basePath, active, episodes, select }: Readonly<{
-    season: BaseItemDto; series: BaseItemDto; basePath: string; active: boolean; episodes?: BaseItemDto[]; select: (id: string) => void;
+function RemoteSeasonPoster({ season, series, basePath, requestSeason }: Readonly<{
+    season: RemoteSeason; series: BaseItemDto; basePath: string; requestSeason: (season: RemoteSeason) => void;
+}>) {
+    const [failed, setFailed] = useState(false);
+    const poster = !failed && season.poster;
+    const label = seasonLabel({ IndexNumber: season.number });
+    const art = <span className={`client-season-poster-art${poster ? '' : ' is-fallback'}`}>
+        <Artwork source={poster || artworkUrl(basePath, series)} onFailure={poster ? () => setFailed(true) : undefined} />
+        {!poster && <span className='client-season-mark' aria-hidden='true'>S{season.number}</span>}
+        <span className='client-season-poster-label'>{label}</span>
+        <span className='client-season-status'>{season.quality && <ClientIcon name='plus' />}{season.status}</span>
+    </span>;
+    return season.quality ?
+        <button type='button' className='client-season-poster is-remote is-requestable' aria-haspopup='dialog'
+            onClick={() => requestSeason(season)}>{art}</button> :
+        <div className='client-season-poster is-remote'>{art}</div>;
+}
+
+function SeasonPoster({ season, series, basePath, active, episodes, select, partial }: Readonly<{
+    season: BaseItemDto; series: BaseItemDto; basePath: string; active: boolean; episodes?: BaseItemDto[]; select: (id: string) => void; partial: boolean;
 }>) {
     const [failed, setFailed] = useState(false);
     const primary = !!season.ImageTags?.Primary && !failed;
@@ -40,11 +66,12 @@ function SeasonPoster({ season, series, basePath, active, episodes, select }: Re
     const { total, seen } = seasonProgress(season, episodes);
     const identifier = season.IndexNumber === 0 ? 'S0' : `S${season.IndexNumber ?? '?'}`;
     return <button type='button' className={`client-season-poster${active ? ' is-active' : ''}`} aria-pressed={active} aria-controls='client-episodes-panel'
-        aria-label={total ? `${label}, ${seen} sur ${episodeCount(total)} vus` : label} onClick={() => select(season.Id || '')}>
+        aria-label={[label, total ? `${seen} sur ${episodeCount(total)} vus` : '', partial ? 'Partielle' : ''].filter(Boolean).join(', ')} onClick={() => select(season.Id || '')}>
         <span className={`client-season-poster-art${primary ? '' : ' is-fallback'}`}>
             <Artwork source={artworkUrl(basePath, primary ? season : series)} onFailure={primary ? () => setFailed(true) : undefined} />
             {!primary && <span className='client-season-mark' aria-hidden='true'>{identifier}</span>}
             <span className='client-season-poster-label' aria-hidden='true'>{label}</span>
+            {partial && <span className='client-season-status' aria-hidden='true'>Partielle</span>}
             {total > 0 && <span className='client-season-progress' aria-hidden='true'><i style={{ width: `${seen / total * 100}%` }} /></span>}
         </span>
     </button>;
@@ -62,7 +89,7 @@ type PanelProps = SeasonSelection & EpisodeState & {
 };
 
 export default function SeriesEpisodesPanel(props: Readonly<PanelProps>) {
-    const { seasons, selected, items, loading, failed, retry, playQueue, queueBusy, drawer, openDrawer, closeDrawer } = props;
+    const { seasons, missing, selected, items, loading, failed, retry, playQueue, queueBusy, drawer, openDrawer, closeDrawer } = props;
     const trigger = useRef<HTMLButtonElement>(null);
     const lastDrawer = useRef(false);
     useEffect(() => {
@@ -85,7 +112,7 @@ export default function SeriesEpisodesPanel(props: Readonly<PanelProps>) {
             </div>
             <div className='client-series-controls'>
                 {playing && <QueueAction source={available} playQueue={playQueue} pending={queueBusy} label='Lire la saison' />}
-                {(playing || seasons.length > 1) && <button ref={trigger} type='button' className='client-button' aria-haspopup='dialog' onClick={openDrawer}><ClientIcon name='chapter' />Tous les épisodes</button>}
+                {(playing || seasons.length + missing.length > 1) && <button ref={trigger} type='button' className='client-button' aria-haspopup='dialog' onClick={openDrawer}><ClientIcon name='chapter' />Tous les épisodes</button>}
             </div>
         </header>
         {loading && <ClientSkeleton layout='episodes' count={4} contained label='Chargement des épisodes…' />}
@@ -120,17 +147,35 @@ function EpisodeCard({ episode, basePath, nextId, play }: Readonly<EpisodeState 
     </button>;
 }
 
-function EpisodeList({ seasons, selected, select, items, loading, failed, retry, ...media }: Readonly<PanelProps>) {
+function EpisodeList({ seasons, missing, requestSeason, selected, select, items, loading, failed, retry, ...media }: Readonly<PanelProps>) {
+    const [number, setNumber] = useState<number>();
+    const remoteSeason = missing.find(season => season.number === number);
+    const choices = seasonChoices(seasons, missing);
     return <div className='client-episode-editorial'>
-        {seasons.length > 1 && <div className='client-series-controls client-episode-editorial-seasons' role='group' aria-label='Saison'>
-            {seasons.map(season => <button key={season.Id} type='button' className='client-button' aria-pressed={selected === season.Id}
-                onClick={() => select(season.Id || '')}>{seasonLabel(season)}</button>)}
+        {choices.length > 1 && <div className='client-series-controls client-episode-editorial-seasons' role='group' aria-label='Saison'>
+            {choices.map(({ key, season, remote }) => season ?
+                <button key={key} type='button' className='client-button' aria-pressed={!remoteSeason && selected === key} onClick={() => {
+                    setNumber(undefined);
+                    select(key);
+                }}>{seasonLabel(season)}</button> :
+                remote && <button key={key} type='button' className='client-button is-remote' aria-pressed={remoteSeason?.number === remote.number}
+                    onClick={() => setNumber(remote.number)}>{seasonLabel({ IndexNumber: remote.number })}</button>)}
         </div>}
+        {remoteSeason ? <div className='client-episode-remote'>
+            <p>{remoteSeason.status}</p>
+            {remoteSeason.quality && <button type='button' className='client-button' aria-haspopup='dialog'
+                onClick={() => requestSeason(remoteSeason)}><ClientIcon name='plus' />Demander</button>}
+        </div> : <EditorialEpisodes items={items} loading={loading} failed={failed} retry={retry} {...media} />}
+    </div>;
+}
+
+function EditorialEpisodes({ items, loading, failed, retry, ...media }: Readonly<EpisodeState & Pick<PanelProps, 'items' | 'loading' | 'failed' | 'retry'>>) {
+    return <>
         {loading && <p role='status'>Chargement des épisodes…</p>}
         {failed && <p role='alert'>Impossible de charger les épisodes. <button type='button' className='client-button' onClick={retry}>Réessayer</button></p>}
         {!loading && !failed && !items?.length && <p>Aucun épisode disponible.</p>}
         <ol>{items?.map(episode => <EpisodeListItem key={episode.Id} episode={episode} {...media} />)}</ol>
-    </div>;
+    </>;
 }
 
 function EpisodeListItem({ episode, basePath, nextId, play }: Readonly<EpisodeState & { episode: BaseItemDto }>) {

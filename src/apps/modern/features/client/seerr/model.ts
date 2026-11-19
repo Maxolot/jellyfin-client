@@ -2,6 +2,8 @@ import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 
 export type MediaType = 'movie' | 'tv';
 export type RequestStatus = 1 | 2 | 3 | 4 | 5;
+type SeasonTransfer = { downloadId?: string; size?: number; sizeLeft?: number; status?: string; episode?: { seasonNumber?: number } };
+
 export type MediaInfo = {
     id?: number;
     tmdbId?: number;
@@ -10,6 +12,8 @@ export type MediaInfo = {
     status4k?: number;
     seasons?: { seasonNumber: number; status: number; status4k?: number }[];
     requests?: MediaRequest[];
+    downloadStatus?: SeasonTransfer[];
+    downloadStatus4k?: SeasonTransfer[];
 };
 export type MediaRequest = {
     id: number;
