@@ -31,7 +31,7 @@ export default function PublicCollections({ image }: Readonly<{ image: Image }>)
     const selected = id ? collections.data?.find(item => item.Id === id) : undefined;
     if (selected) return <CollectionDetail key={selected.Id} collection={selected} image={image} {...rights} />;
     return <section className='client-collections'>
-        <header className='client-collections-heading'>
+        <header className='client-library-heading client-collections-heading'>
             <h1>Collections publiques</h1>
             {!id && rights.canManage && <CreateCollection onForbidden={rights.onForbidden} onCreate={collection => setParams({ view: 'collections', collection })} />}
         </header>
@@ -87,14 +87,14 @@ function CollectionDetail({ collection, image, canManage, onForbidden }: Readonl
     const change = useCollectionChanges(onForbidden);
     const [adding, setAdding] = useState(false);
     const trigger = useRef<HTMLButtonElement>(null);
-    const items = titles.data || [];
+    const items = titles.data?.items || [];
     const noun = items.length === 1 ? 'titre' : 'titres';
     function remove(itemId: string) {
         change.mutate({ type: 'remove', collectionId: collection.Id!, itemId }, { onSuccess: () => trigger.current?.focus({ preventScroll: true }) });
     }
     return <section className='client-collections'>
         <Link className='client-collections-back' to={collectionsPath}><ClientIcon name='back' />Collections publiques</Link>
-        <header className='client-collections-heading'>
+        <header className='client-library-heading client-collections-heading'>
             <div><h1>{collection.Name}</h1>{titles.isSuccess && <p>{items.length} {noun}{!canManage && ' · Lecture seule'}</p>}</div>
             {canManage && titles.isSuccess && <button ref={trigger} type='button' className='client-button' aria-haspopup='dialog' onClick={() => setAdding(true)}><ClientIcon name='plus' />Ajouter des titres</button>}
         </header>
