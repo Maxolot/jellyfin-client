@@ -9,7 +9,7 @@ import { AppFeature } from 'constants/appFeature';
 import { useApi } from 'hooks/useApi';
 import { useWebConfig } from 'hooks/useWebConfig';
 
-import SessionPage from '../session/SessionPage';
+import SessionPage, { SessionNotice } from '../session/SessionPage';
 import { useLoginInfo } from '../session/useLoginInfo';
 
 import ClientIcon from '../ClientIcon';
@@ -219,6 +219,7 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
 
     const tiles = managing ? profiles : [...profiles, ...publicUsers];
     const formTitle = signedOut ? 'Connexion' : 'Ajouter un profil';
+    const submitLabel = signedOut ? 'Se connecter' : 'Continuer';
     const title = managing ? 'Gérer les profils' : 'Qui regarde ?';
     let content;
     if (picking && clientAvatars) {
@@ -231,14 +232,15 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
     } else if (quick && legacy) {
         content = <QuickConnectPanel legacy={legacy} done={quickDone} cancel={() => setQuick(false)} />;
     } else if (form) {
-        content = <form ref={formElement} className='client-profile-form' onSubmit={signIn}>
+        content = <form ref={formElement} className='client-profile-form' onSubmit={signIn} aria-busy={busy}>
             <h1>{form.locked ? form.name : formTitle}</h1>
             {form.note && <p>{form.note}</p>}
             {!form.locked && <label>Nom d’utilisateur<input autoComplete='username' value={form.name} disabled={busy} onChange={event => setForm({ ...form, name: event.target.value })} /></label>}
             <label>Mot de passe<input type='password' autoComplete='current-password' value={password} disabled={busy} onChange={event => setPassword(event.target.value)} /></label>
             {message && <p role='alert' className='client-profile-error'>{message}</p>}
+            {busy && <span className='client-session-progress' aria-hidden='true' />}
             <div>
-                <button type='submit' className='client-profile-primary' disabled={busy || !form.name.trim()}>{signedOut ? 'Se connecter' : 'Continuer'}</button>
+                <button type='submit' className='client-profile-primary' disabled={busy || !form.name.trim()}>{busy ? 'Connexion…' : submitLabel}</button>
                 {!!tiles.length && <button type='button' disabled={busy} onClick={closeForm}>Annuler</button>}
             </div>
             {quickAvailable && <button type='button' className='client-profile-quick' disabled={busy} onClick={() => {
@@ -270,9 +272,9 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
             {!!profiles.length && <button type='button' className='client-profile-manage' disabled={busy} onClick={() => setManaging(!managing)}>{managing ? 'Terminé' : 'Gérer les profils'}</button>}
         </>;
     }
-    return <SessionPage title={signedOut ? 'Connexion' : title} background={login?.background}>
-        {basePath && (!signedOut || login) ? content : null}
-        {/* eslint-disable-next-line sonarjs/disabled-auto-escaping -- Sanitized by useLoginInfo. */}
+    return <SessionPage title={signedOut ? 'Connexion' : title} background={login?.background} variant={signedOut ? 'login' : 'profiles'}>
+        {basePath && (!signedOut || login) ? content : <SessionNotice title='Connexion' message='Chargement des profils…' busy />}
+        {/* The server notice is sanitized by useLoginInfo. */}
         {login?.disclaimer && <div className='client-session-disclaimer' dangerouslySetInnerHTML={{ __html: login.disclaimer }} />}
     </SessionPage>;
 }

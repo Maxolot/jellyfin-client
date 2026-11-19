@@ -51,7 +51,7 @@ export default function QuickConnectPanel({ legacy, done, cancel }: Readonly<{ l
         <h1>Quick Connect</h1>
         {problem ? <p role='alert' className='client-profile-error'>{problem}</p> : <>
             <p>Sur un appareil déjà connecté, ouvrez Quick Connect depuis le menu du profil et saisissez ce code.</p>
-            <output className='client-quick-code' aria-live='polite'>{code || '…'}</output>
+            {code ? <output className='client-quick-code' aria-live='polite'>{code}</output> : <p role='status'>Création du code…</p>}
         </>}
         <div><button type='button' onClick={cancel}>Annuler</button></div>
     </div>;

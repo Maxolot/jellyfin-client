@@ -5,7 +5,7 @@ import type { ApiClient, ConnectResponse } from 'jellyfin-apiclient';
 import { ConnectionState, ServerConnections } from 'lib/jellyfin-apiclient';
 
 import ConnectionErrorPage from './ConnectionErrorPage';
-import Loading from './loading/LoadingComponent';
+import { SessionLoadingPage } from 'apps/modern/features/client/session/SessionPage';
 import { isPlayingOffline } from 'apps/modern/features/client/offline/playback';
 
 enum AccessLevel {
@@ -226,7 +226,7 @@ const ConnectionRequired: FunctionComponent<ConnectionRequiredProps> = ({
     }
 
     if (isLoading) {
-        return <Loading />;
+        return <SessionLoadingPage />;
     }
 
     return <Outlet />;

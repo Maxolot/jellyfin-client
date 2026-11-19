@@ -7,6 +7,7 @@ import { useApi } from 'hooks/useApi';
 
 import ClientDialog from '../ClientDialog';
 import ClientIcon from '../ClientIcon';
+import { readInterfacePreferences } from '../interfacePreferences';
 import { downloader, posterName } from './downloader';
 import { offlineIdentity, rememberOfflineIdentity } from './identity';
 import { episodeLabel, formatBytes, progressOf, type OfflineEntry } from './model';
@@ -56,7 +57,8 @@ function LocalEntry({ entry, remove, action }: Readonly<{ entry: OfflineEntry; r
 }
 
 export default function OfflinePage() {
-    const { user } = useApi();
+    const { api, user } = useApi();
+    const classic = user?.Id && !readInterfacePreferences(`client-interface-${api?.basePath}-${user.Id}`).glass;
     const entries = useSyncExternalStore(downloader.subscribe, downloader.list, downloader.list);
     const [identity, setIdentity] = useState(offlineIdentity);
     const [space, setSpace] = useState<DeviceSpace>();
@@ -103,7 +105,7 @@ export default function OfflinePage() {
             setSpace(await deviceSpace());
         } finally { setPreparing(undefined); }
     };
-    return <Page id='offlinePage' title='Hors ligne' className='client-offline-page' isBackButtonEnabled={false} isNowPlayingBarEnabled={false}>
+    return <Page id='offlinePage' title='Hors ligne' className={`client-offline-page${classic ? ' client-offline-classic' : ''}`} isBackButtonEnabled={false} isNowPlayingBarEnabled={false}>
         <section className='client-offline-shell'><header className='client-offline-header'><Link to='/client' className='client-offline-button'><ClientIcon name='back' />Médiathèque</Link><span>{online ? 'Connecté' : 'Sans connexion'}</span></header>
             <div className='client-offline-heading'><ClientIcon name='download' /><div><h1>À emporter</h1><p>{identity ? `Les téléchargements de ${identity.name}, sur cet appareil.` : 'Connectez-vous une fois pour retrouver vos téléchargements.'}</p></div></div>
             {identity && <><div className='client-offline-space'><div><strong>{formatBytes(mine.reduce((sum, entry) => sum + entry.bytes, 0))}</strong><span> de vidéos · {downloaded.length} titre{downloaded.length > 1 ? 's' : ''} prêt{downloaded.length > 1 ? 's' : ''}</span></div>
@@ -113,7 +115,7 @@ export default function OfflinePage() {
             </div>
             {error && <p role='alert' className='client-offline-error'>{error}</p>}
             {queue.length > 0 && <section aria-label='File de téléchargement'><h2 className='client-offline-section-title'>En préparation <small>{queue.length}</small></h2><p className='client-offline-note'>Gardez l’application ouverte. Les téléchargements se font un par un et reprennent après une coupure.</p>{queue.map(entry => <LocalEntry key={entry.key} entry={entry} remove={setRemoving} action={action} />)}</section>}
-            <section aria-label='Titres disponibles hors ligne'><h2 className='client-offline-section-title'>Prêts à regarder <small>{downloaded.length}</small></h2>{downloaded.map(entry => <LocalEntry key={entry.key} entry={entry} remove={setRemoving} action={action} />)}{!mine.length && <div className='client-offline-empty'><ClientIcon name='download' /><h2>Votre prochain voyage commence ici</h2><p>Ouvrez le menu ⋯ d’un film ou d’une série, puis choisissez Télécharger. Les vidéos complètes apparaîtront ici.</p><Link to='/client' className='client-offline-button'>Parcourir la médiathèque</Link></div>}</section>
+            <section aria-label='Titres disponibles hors ligne'><h2 className='client-offline-section-title'>Prêts à regarder <small>{downloaded.length}</small></h2>{downloaded.map(entry => <LocalEntry key={entry.key} entry={entry} remove={setRemoving} action={action} />)}{!mine.length && <div className='client-offline-empty'><ClientIcon name='download' /><h2>Aucun titre téléchargé</h2><p>Ouvrez le menu ⋯ d’un film ou d’une série, puis choisissez Télécharger. Les vidéos complètes apparaîtront ici.</p><Link to='/client' className='client-offline-button'>Parcourir la médiathèque</Link></div>}</section>
             <p className='client-offline-note'>Les téléchargements appartiennent au compte actif. Se déconnecter ferme leur accès jusqu’à la prochaine connexion de ce compte. Sur iPad et Safari, gardez l’application au premier plan pendant le téléchargement ; le mode privé et le manque d’espace peuvent empêcher leur conservation. La progression sera synchronisée au retour du serveur.</p></>}
             {!identity && <Link className='client-offline-button is-primary' to='/login'>Se connecter</Link>}
             <ClientDialog controlled={{ open: !!removing, onClose: () => setRemoving(undefined) }} label='Retirer le téléchargement' title='Retirer de cet appareil ?' subtitle={removing?.name}>

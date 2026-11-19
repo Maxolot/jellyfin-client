@@ -26,6 +26,17 @@ export function connectionTarget(result: Pick<ConnectResponse, 'State'> & { Serv
     }
 }
 
+function displayServerAddress(server: SavedServer) {
+    const address = server.ManualAddress || server.LocalAddress || server.RemoteAddress;
+    if (!address) return '';
+    try {
+        const url = new URL(address);
+        return url.host + (url.pathname === '/' ? '' : url.pathname);
+    } catch {
+        return '';
+    }
+}
+
 export function connectionProblem(state: ConnectionState) {
     return state === ConnectionState.ServerUpdateNeeded ? 'La version de ce serveur est trop ancienne pour cette application.' : 'Impossible de joindre ce serveur. Vérifiez l’adresse.';
 }
@@ -66,7 +77,7 @@ export function AddServerPage() {
             <h1>Ajouter un serveur</h1>
             <label>Adresse du serveur<input type='url' inputMode='url' autoComplete='url' placeholder='https://…' value={address} disabled={busy} onChange={event => setAddress(event.target.value)} /></label>
             {problem && <p role='alert' className='client-profile-error'>{problem}</p>}
-            <button type='submit' className='client-profile-primary' disabled={busy || !address.trim()}>Se connecter</button>
+            <button type='submit' className='client-profile-primary' disabled={busy || !address.trim()}>{busy ? 'Connexion…' : 'Se connecter'}</button>
             <Link className='client-session-link' to='/selectserver'>Voir les serveurs enregistrés</Link>
         </form>
     </SessionPage>;
@@ -86,23 +97,29 @@ export function SelectServerPage() {
     }, [navigate]);
     useEffect(load, [load]);
     return <SessionPage title='Choisir un serveur'>
-        <h1>{managing ? 'Retirer un serveur' : 'Choisir un serveur'}</h1>
-        {problem && <p role='alert' className='client-profile-error'>{problem}</p>}
-        <ul className='client-server-list'>
-            {servers?.map(server => <li key={server.Id}>
-                <button type='button' className='client-profile-tile' disabled={busy} aria-label={managing ? `Retirer ${server.Name}` : server.Name} onClick={() => {
-                    if (managing) ServerConnections.deleteServer(server.Id).then(load).catch(load);
-                    else follow(ServerConnections.connectToServer(server, { enableAutoLogin: appSettings.enableAutoLogin() }));
-                }}>
-                    <span className='client-profile-avatar'><ClientIcon name={managing ? 'close' : 'collection'} /></span>
-                    <strong>{server.Name || server.ManualAddress}</strong>
-                </button>
-            </li>)}
-        </ul>
-        <div className='client-session-footer'>
-            <Link className='client-profile-manage' to='/addserver'>Ajouter un serveur</Link>
-            {!!servers?.length && <button type='button' className='client-profile-manage' onClick={() => setManaging(!managing)}>{managing ? 'Terminé' : 'Retirer un serveur'}</button>}
-        </div>
+        <section className='client-session-card client-server-picker' aria-busy={busy || !servers}>
+            <h1>{managing ? 'Retirer un serveur' : 'Choisir un serveur'}</h1>
+            {problem && <p role='alert' className='client-profile-error'>{problem}</p>}
+            {!servers && <p role='status'>Recherche des serveurs…</p>}
+            {busy && <p role='status'>Connexion au serveur…</p>}
+            <ul className='client-server-list'>
+                {servers?.map(server => <li key={server.Id}>
+                    <button type='button' className='client-profile-tile' disabled={busy} aria-label={managing ? `Retirer ${server.Name || 'le serveur'}` : server.Name || 'Serveur Jellyfin'} onClick={() => {
+                        if (managing) ServerConnections.deleteServer(server.Id).then(load).catch(load);
+                        else follow(ServerConnections.connectToServer(server, { enableAutoLogin: appSettings.enableAutoLogin() }));
+                    }}>
+                        <span className='client-profile-avatar'><ClientIcon name={managing ? 'close' : 'collection'} /></span>
+                        <span><strong>{server.Name || 'Serveur Jellyfin'}</strong>
+                            <small>{displayServerAddress(server)}</small>
+                        </span>
+                    </button>
+                </li>)}
+            </ul>
+            <div className='client-session-footer'>
+                <Link className='client-profile-manage' to='/addserver'>Ajouter un serveur</Link>
+                {!!servers?.length && <button type='button' className='client-profile-manage' onClick={() => setManaging(!managing)}>{managing ? 'Terminé' : 'Retirer un serveur'}</button>}
+            </div>
+        </section>
     </SessionPage>;
 }
 /* eslint-enable react/jsx-no-bind */

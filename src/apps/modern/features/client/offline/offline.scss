@@ -1,8 +1,18 @@
 /* stylelint-disable no-descending-specificity -- Components and their responsive variants have independent scoped selectors. */
 .client-offline-page {
+    --offline-panel: #181e29;
+    --offline-muted: #b4bdd0;
+
     min-height: 100vh;
-    color: #f5f5f5;
-    background: #0b0b0d;
+    color: #f4f6fc;
+    background: #0d1119;
+
+    &.client-offline-classic {
+        --offline-panel: #191a1e;
+        --offline-muted: #bbc0cb;
+
+        background: #0d0f13;
+    }
     font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -23,8 +33,8 @@
 
 .client-offline-header {
     justify-content: space-between;
-    margin-bottom: 60px;
-    color: #aaa;
+    margin-bottom: clamp(30px, 5vw, 50px);
+    color: var(--offline-muted, #bbc0cb);
 }
 
 .client-offline-heading {
@@ -38,12 +48,14 @@
 
     h1 {
         margin: 0 0 10px;
-        font-size: clamp(30px, 5vw, 48px);
+        font-size: clamp(28px, 3.25vw, 43px);
+        line-height: 1.1;
+        letter-spacing: -0.025em;
     }
 
     p {
         margin: 0;
-        color: #aaa;
+        color: var(--offline-muted, #bbc0cb);
         line-height: 1.5;
     }
 }
@@ -107,7 +119,7 @@
     padding: 24px;
     border: 1px solid rgb(255 255 255 / 10%);
     border-radius: 18px;
-    background: rgb(255 255 255 / 3%);
+    background: var(--offline-panel, #181e29);
 
     strong {
         font-size: 24px;
@@ -115,7 +127,7 @@
 
     small,
     span {
-        color: #aaa;
+        color: var(--offline-muted, #bbc0cb);
         line-height: 1.5;
     }
 
@@ -211,7 +223,7 @@
 
     small,
     p {
-        color: #aaa;
+        color: var(--offline-muted, #bbc0cb);
     }
 
     p {
@@ -231,8 +243,9 @@
 
 .client-offline-empty {
     padding: 50px 24px;
-    border: 1px dashed #333;
+    border: 1px solid #ffffff20;
     border-radius: 18px;
+    background: var(--offline-panel, #181e29);
     text-align: center;
 
     > .client-icon {
@@ -248,7 +261,7 @@
     p {
         max-width: 480px;
         margin: 16px auto 24px;
-        color: #aaa;
+        color: var(--offline-muted, #bbc0cb);
         line-height: 1.6;
     }
 }
