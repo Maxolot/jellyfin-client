@@ -9,8 +9,13 @@ import { useApi } from 'hooks/useApi';
 
 import ClientDialog from '../ClientDialog';
 import ClientIcon from '../ClientIcon';
+import { canManageCollections } from '../collections/access';
+import { useFollowedMemberships } from '../collections/followed';
+import { useClientCollections, useCollectionChanges } from '../collections/queries';
+import { isExternal, type SeerrIdentity } from '../seerr/model';
+import { useSharedCatalog } from '../sharedCatalog';
 import { clientRequest } from '../session';
-import { canEditFolder, canFile, type Folder } from './model';
+import { canEditFolder, canFile, followedMember, followedPath, type Folder } from './model';
 import { useFolderChange, useFolders } from './queries';
 import './folders.scss';
 
@@ -48,6 +53,8 @@ function PickerChoices({ item, folders, close }: Readonly<{ item: BaseItemDto; f
     const { api, user } = useApi();
     const cache = useQueryClient();
     const change = useFolderChange();
+    const catalog = useSharedCatalog(isExternal(item));
+    const member = followedMember(item, catalog.data);
     const [added, setAdded] = useState<string[]>([]);
     const [savedFavorite, setSavedFavorite] = useState(!!item.UserData?.IsFavorite);
     const favorite = useMutation({
@@ -62,14 +69,15 @@ function PickerChoices({ item, folders, close }: Readonly<{ item: BaseItemDto; f
         }
     });
     function addTo(folder: Folder) {
-        change.mutate({ method: 'PUT', path: `/${folder.id}/Items/${item.Id}` }, {
+        const path = member ? followedPath(member.type, member.id) : `/Items/${item.Id}`;
+        change.mutate({ method: 'PUT', path: `/${folder.id}${path}` }, {
             onSuccess: () => setAdded(current => [...current, folder.id])
         });
     }
     return <div className='client-folder-dialog'>
-        <button type='button' className='client-button client-folder-choice' aria-pressed={savedFavorite} disabled={favorite.isPending} onClick={() => favorite.mutate()}>
+        {!isExternal(item) && <button type='button' className='client-button client-folder-choice' aria-pressed={savedFavorite} disabled={favorite.isPending} onClick={() => favorite.mutate()}>
             <ClientIcon name={savedFavorite ? 'check' : 'plus'} />Favoris
-        </button>
+        </button>}
         <h3>Dossiers</h3>
         {folders.length ? <ul className='client-folder-choices'>{folders.map(folder => <li key={folder.id}>
             <button type='button' className='client-button client-folder-choice' aria-label={added.includes(folder.id) ? `Ajouté à ${folder.name}` : `Ajouter à ${folder.name}`}
@@ -78,15 +86,50 @@ function PickerChoices({ item, folders, close }: Readonly<{ item: BaseItemDto; f
                 <ClientIcon name={added.includes(folder.id) ? 'check' : 'plus'} />
             </button>
         </li>)}</ul> : <p>Aucun dossier modifiable. <Link to='/client?view=mine' onClick={close}>Gérer mes dossiers</Link></p>}
+        {member && canManageCollections(user?.Policy) && <CollectionChoices member={member} />}
         {(change.isError || favorite.isError) && <p role='alert'>Le changement n’a pas été enregistré. Réessayez.</p>}
         {!!added.length && <p role='status'>Ajouté à {folders.find(folder => folder.id === added.at(-1))?.name || 'un dossier'}.</p>}
     </div>;
 }
 
+function CollectionChoices({ member }: Readonly<{ member: SeerrIdentity }>) {
+    const collections = useClientCollections(true, null);
+    const [denied, setDenied] = useState(false);
+    const change = useCollectionChanges(() => setDenied(true));
+    const [added, setAdded] = useState<string[]>([]);
+    if (denied) return null;
+    const choices = collections.data || [];
+    function add(collectionId: string) {
+        change.mutate({ type: 'add-followed', collectionId, member }, {
+            onSuccess: () => setAdded(current => [...current, collectionId])
+        });
+    }
+    return <>
+        <h3>Collections publiques</h3>
+        {collections.isPending && <p role='status'>Chargement des collections…</p>}
+        {collections.isError && <p role='alert'>Impossible de charger les collections.</p>}
+        {collections.isSuccess && !choices.length && <p>Aucune collection publique.</p>}
+        {!!choices.length && <ul className='client-folder-choices'>{choices.map(collection => collection.Id && <li key={collection.Id}>
+            <button type='button' className='client-button client-folder-choice'
+                aria-label={added.includes(collection.Id) ? `Ajouté à la collection ${collection.Name}` : `Ajouter à la collection ${collection.Name}`}
+                disabled={change.isPending || added.includes(collection.Id)} onClick={() => add(collection.Id!)}>
+                <ClientIcon name='collection' /><span>{collection.Name}</span>
+                <ClientIcon name={added.includes(collection.Id) ? 'check' : 'plus'} />
+            </button>
+        </li>)}</ul>}
+        {change.isError && <p role='alert'>Impossible d’ajouter le titre à la collection.</p>}
+        {!!added.length && <p role='status'>Ajouté à la collection {choices.find(collection => collection.Id === added.at(-1))?.Name}.</p>}
+    </>;
+}
+
 type ButtonProps = { item: BaseItemDto; fallback?: () => void; disabled?: boolean; tabIndex?: number; favorite?: boolean };
 export function ListAction({ item, fallback, disabled, tabIndex, favorite = !!item.UserData?.IsFavorite }: Readonly<ButtonProps>) {
     const picker = useFolderPicker();
-    const available = !!picker?.folders && canFile(item);
+    const external = isExternal(item);
+    const catalog = useSharedCatalog(external);
+    const member = followedMember(item, catalog.data);
+    const memberships = useFollowedMemberships(!!member);
+    const available = !!picker?.folders && (canFile(item) || (!!member && memberships.data === true));
     if (!available && !fallback) return null;
     const favoriteLabel = favorite ? 'Retirer de ma liste' : 'Ajouter à ma liste';
     const label = available ? `Choisir où ajouter ${item.Name || 'ce titre'}` : favoriteLabel;

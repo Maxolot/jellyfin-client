@@ -17,8 +17,8 @@ public sealed partial class CatalogController
         Folders(async store => new JsonResult(await store.List(ct), Json));
 
     [HttpGet("Folders/{folderId:guid}")]
-    public Task<IActionResult> GetFolder(Guid folderId, CancellationToken ct) =>
-        Folders(async store => new JsonResult(await store.Get(folderId, ct), Json));
+    public Task<IActionResult> GetFolder(Guid folderId, CancellationToken ct, [FromQuery] bool includeFollowed = false) =>
+        Folders(async store => new JsonResult(await store.Get(folderId, ct), Json), ct, includeFollowed);
 
     [HttpGet("Folders/ShareTargets")]
     public IActionResult FolderShareTargets()
@@ -58,6 +58,19 @@ public sealed partial class CatalogController
     public Task<IActionResult> RemoveFolderItem(Guid folderId, Guid itemId, CancellationToken ct) =>
         ChangeFolder(store => store.Remove(folderId, itemId, ct));
 
+    [HttpPut("Folders/{folderId:guid}/Followed/{type}/{tmdbId:int}")]
+    public Task<IActionResult> AddFollowedFolderItem(Guid folderId, string type, int tmdbId, CancellationToken ct) =>
+        ChangeFolder(store => store.AddFollowed(folderId, new(type, tmdbId), ct), ct, true);
+
+    [HttpDelete("Folders/{folderId:guid}/Followed/{type}/{tmdbId:int}")]
+    public Task<IActionResult> RemoveFollowedFolderItem(Guid folderId, string type, int tmdbId, CancellationToken ct) =>
+        ChangeFolder(store => store.RemoveFollowed(folderId, new(type, tmdbId), ct));
+
+    [HttpPut("Folders/{folderId:guid}/MemberOrder")]
+    [RequestSizeLimit(24576)]
+    public Task<IActionResult> OrderFolderMembers(Guid folderId, FolderMemberOrder input, CancellationToken ct) =>
+        ChangeFolder(store => store.ReorderFollowed(folderId, input.Keys, ct), ct, true);
+
     [HttpPut("Folders/{folderId:guid}/Order")]
     [RequestSizeLimit(24576)]
     public Task<IActionResult> OrderFolder(Guid folderId, FolderOrder input, CancellationToken ct) =>
@@ -69,23 +82,25 @@ public sealed partial class CatalogController
         ChangeFolder(store => store.Share(folderId, input.Shares?.Select(share => share is null
             ? null : new FolderShare(share.UserId, share.CanEdit)).ToArray(), ct));
 
-    private Task<IActionResult> ChangeFolder(Func<FolderCatalog, Task> action) =>
+    private Task<IActionResult> ChangeFolder(Func<FolderCatalog, Task> action, CancellationToken ct = default, bool includeFollowed = false) =>
         Folders(async store =>
         {
             await action(store);
             return NoContent();
-        });
+        }, ct, includeFollowed);
 
-    private async Task<IActionResult> Folders(Func<FolderCatalog, Task<IActionResult>> action)
+    private async Task<IActionResult> Folders(Func<FolderCatalog, Task<IActionResult>> action, CancellationToken ct = default, bool includeFollowed = false)
     {
         Response.Headers.CacheControl = "no-store";
         if (CurrentUser() is not { } actor) return Forbid();
         if (Plugin.Instance is not { } plugin) return StatusCode(503);
-        var store = new FolderCatalog(Path.Combine(plugin.DataFolderPath, "folders.json"), actor.Id,
-            itemId => ResolveFolderItem(itemId, actor.Id),
-            userId => users.GetUserById(userId) is { } recipient && IsShareTarget(recipient, actor.Id));
         try
         {
+            var followed = includeFollowed ? await ReadFollowed(plugin.DataFolderPath, ct) : null;
+            var store = new FolderCatalog(Path.Combine(plugin.DataFolderPath, "folders.json"), actor.Id,
+                itemId => ResolveFolderItem(itemId, actor.Id),
+                userId => users.GetUserById(userId) is { } recipient && IsShareTarget(recipient, actor.Id),
+                followed, includeFollowed ? keys => FindFollowedLocal(actor, keys) : null);
             return await action(store);
         }
         catch (FolderProblem problem)
@@ -110,6 +125,7 @@ public sealed partial class CatalogController
 
     public sealed record FolderName([Required, StringLength(FolderCatalog.MaxNameLength)] string Name);
     public sealed record FolderOrder([Required, MaxLength(FolderCatalog.MaxItems)] Guid[] ItemIds);
+    public sealed record FolderMemberOrder([Required, MaxLength(FolderCatalog.MaxItems)] string[] Keys);
     public sealed record FolderShares([Required, MaxLength(FolderCatalog.MaxShares)] ShareInput?[] Shares);
     public sealed record ShareInput(Guid UserId, bool CanEdit);
 }

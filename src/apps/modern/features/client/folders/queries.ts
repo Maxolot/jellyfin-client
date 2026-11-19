@@ -5,9 +5,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 
 import { useApi } from 'hooks/useApi';
+import { useMemo } from 'react';
 
 import { buildMediaQueue } from '../mediaQueue';
-import type { Folder, FolderDetail, FolderItem, FolderShare, FolderTarget } from './model';
+import { isExternal } from '../seerr/model';
+import { sharedCatalogItems, useSharedCatalog } from '../sharedCatalog';
+import { folderMemberKey, type Folder, type FolderDetail, type FolderItem, type FolderShare, type FolderTarget } from './model';
 
 function useFolderApi() {
     const { api, user } = useApi();
@@ -51,7 +54,7 @@ export function useFolderDetail(id: string | undefined) {
         queryKey: [...key, 'Detail', id],
         enabled: enabled && !!id,
         retry: false,
-        queryFn: ({ signal }) => request<FolderDetail>(`/${id}`, 'GET', undefined, signal)
+        queryFn: ({ signal }) => request<FolderDetail>(`/${id}?includeFollowed=true`, 'GET', undefined, signal)
     });
 }
 
@@ -68,8 +71,11 @@ export function useFolderTargets(active = true) {
 
 export function useFolderTitles(entries: FolderItem[] | undefined) {
     const { api, user } = useApi();
-    const ids = entries?.map(entry => entry.itemId) || [];
-    return useQuery({
+    const ids = entries?.flatMap(entry => entry.itemId || []) || [];
+    const followedKeys = entries?.filter(entry => entry.followed).map(folderMemberKey).join(',') || '';
+    const virtual = !!followedKeys;
+    const followed = useSharedCatalog(virtual);
+    const local = useQuery({
         queryKey: ['ClientFolders', api?.basePath, user?.Id, 'Titles', ids],
         enabled: !!api && !!user?.Id && ids.length > 0,
         queryFn: async ({ signal }) => {
@@ -81,13 +87,26 @@ export function useFolderTitles(entries: FolderItem[] | undefined) {
             return results.flatMap(({ data }) => data.Items || []);
         }
     });
+    const data = useMemo(() => {
+        const localItems = local.data || [];
+        if (!followedKeys || !followed.data?.length) return localItems;
+        const keys = new Set(followedKeys.split(','));
+        const entriesToLoad = followed.data.filter(entry => keys.has(`seerr-${entry.type}-${entry.id}`));
+        return [...localItems, ...sharedCatalogItems(entriesToLoad, [])];
+    }, [local.data, followed.data, followedKeys]);
+    return {
+        data, isPending: (ids.length > 0 && local.isPending) || (virtual && followed.isPending),
+        isSuccess: (!ids.length || local.isSuccess) && (!virtual || followed.isSuccess),
+        isError: local.isError || (virtual && followed.isError),
+        refetch: () => Promise.all([ids.length && local.refetch(), virtual && followed.refetch()])
+    };
 }
 
 type FolderChange =
     | { method: 'POST'; path: ''; data: { name: string } }
     | { method: 'PATCH'; path: string; data: { name: string } }
     | { method: 'DELETE'; path: string }
-    | { method: 'PUT'; path: string; data?: { shares: FolderShare[] } | { itemIds: string[] } };
+    | { method: 'PUT'; path: string; data?: { shares: FolderShare[] } | { itemIds: string[] } | { keys: string[] } };
 
 export function useFolderChange() {
     const { key, request } = useFolderApi();
@@ -103,14 +122,15 @@ export function useFolderChange() {
 
 export function useFolderDuration(items: BaseItemDto[]) {
     const { api, user } = useApi();
-    const ids = items.map(item => item.Id || '').sort((left, right) => left.localeCompare(right));
+    const playable = items.filter(item => !isExternal(item));
+    const ids = playable.map(item => item.Id || '').sort((left, right) => left.localeCompare(right));
     return useQuery({
         queryKey: ['ClientFolders', api?.basePath, user?.Id, 'Duration', ids],
         enabled: !!api && !!user?.Id && !!ids.length,
         staleTime: 300000,
         retry: false,
         queryFn: async ({ signal }) => {
-            const present = await buildMediaQueue(items, async seriesId => (await getShowApi(api!).getEpisodes({
+            const present = await buildMediaQueue(playable, async seriesId => (await getShowApi(api!).getEpisodes({
                 seriesId, userId: user!.Id, isMissing: false, enableImages: false, enableUserData: false
             }, { signal })).data.Items || [], false);
             const ticks = present.reduce((total, item) => total + (item.RunTimeTicks || 0), 0);

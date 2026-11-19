@@ -1,10 +1,11 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 
-import { isExternal } from '../seerr/model';
+import { externalIdentity, imageUrl, isExternal, type CatalogueItem } from '../seerr/model';
+import type { SharedCatalogEntry } from '../sharedCatalog';
 
 export type FolderAccess = 'owner' | 'editor' | 'viewer';
 export type Folder = { id: string; name: string; ownerId: string; access: FolderAccess };
-export type FolderItem = { itemId: string; type: 'movie' | 'tv'; tmdbId: number | null };
+export type FolderItem = { itemId: string | null; followed?: boolean; type: 'movie' | 'tv'; tmdbId: number | null };
 export type FolderShare = { userId: string; canEdit: boolean };
 export type FolderTarget = { userId: string; name: string };
 export type FolderDetail = { folder: Folder; items: FolderItem[]; shares: FolderShare[] | null };
@@ -17,15 +18,36 @@ export function canFile(item: BaseItemDto) {
     return !!item.Id && !isExternal(item) && (item.Type === 'Movie' || item.Type === 'Series');
 }
 
+export function followedMember(item: BaseItemDto, catalog: SharedCatalogEntry[] | null | undefined) {
+    if (!isExternal(item)) return undefined;
+    const identity = externalIdentity(item);
+    return catalog?.some(entry => entry.type === identity?.type && entry.id === identity.id) ? identity : undefined;
+}
+
+export function followedPath(type: FolderItem['type'], tmdbId: number) {
+    return `/Followed/${type}/${tmdbId}`;
+}
+
+export function folderMemberKey(entry: FolderItem) {
+    if (entry.followed && entry.tmdbId) return `seerr-${entry.type}-${entry.tmdbId}`;
+    return folderItemId(entry.itemId || '');
+}
+
+export function folderMemberPath(entry: FolderItem) {
+    if (entry.followed && entry.tmdbId) return followedPath(entry.type, entry.tmdbId);
+    return `/Items/${entry.itemId}`;
+}
+
 export function canEditFolder(folder: Folder) {
     return folder.access === 'owner' || folder.access === 'editor';
 }
 
 export function orderedFolderItems(entries: FolderItem[], items: BaseItemDto[]) {
-    const byId = new Map(items.map(item => [folderItemId(item.Id || ''), item]));
+    const byId = new Map(items.map(item => [isExternal(item) ? item.Id : folderItemId(item.Id || ''), item]));
     return entries.flatMap(entry => {
-        const item = byId.get(folderItemId(entry.itemId));
-        return item ? [{ ...entry, item }] : [];
+        const key = folderMemberKey(entry);
+        const item = byId.get(folderItemId(entry.itemId || '')) || byId.get(key);
+        return item ? [{ ...entry, item, key }] : [];
     });
 }
 
@@ -47,17 +69,23 @@ export function filterFolderItems(entries: ReturnType<typeof orderedFolderItems>
     return matches;
 }
 
-export function moveFolderItem(entries: FolderItem[], itemId: string, direction: -1 | 1) {
-    const index = entries.findIndex(entry => entry.itemId === itemId);
+export function moveFolderItem(entries: FolderItem[], key: string, direction: -1 | 1) {
+    const order = entries.map(folderMemberKey);
+    const index = order.indexOf(key.startsWith('seerr-') ? key : folderItemId(key));
     const target = index + direction;
     if (index < 0 || target < 0 || target >= entries.length) return undefined;
-    const order = entries.map(entry => entry.itemId);
     [order[index], order[target]] = [order[target], order[index]];
     return order;
 }
 
 export function hasFolderPoster(item: BaseItemDto) {
-    return !!(item.ImageTags?.Primary || item.ImageTags?.Thumb || item.BackdropImageTags?.length);
+    return !!(item.ImageTags?.Primary || item.ImageTags?.Thumb || item.BackdropImageTags?.length || (item as CatalogueItem).Seerr?.posterPath);
+}
+
+export function shelfPoster(item: BaseItemDto, image: FolderImage, backdrop = false) {
+    const external = (item as CatalogueItem).Seerr;
+    if (isExternal(item)) return imageUrl(backdrop ? external?.backdropPath || external?.posterPath : external?.posterPath, backdrop);
+    return image(item, backdrop, backdrop);
 }
 
 export function folderDuration(ticks: number) {

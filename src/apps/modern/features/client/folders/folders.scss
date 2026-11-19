@@ -120,3 +120,8 @@
 
     .client-select { min-width: 150px; }
 }
+
+.client-shelf-poster .client-external-badge {
+    z-index: 2;
+    inset: 8px 8px auto auto;
+}

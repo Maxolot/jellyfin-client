@@ -13,7 +13,7 @@ import CollectionHero from '../CollectionHero';
 import type { PlayQueue } from '../mediaQueue';
 import FolderSharing from './FolderSharing';
 import { DeleteFolder, FolderError, FolderNameForm, ShareForm } from './FolderForms';
-import { canEditFolder, type Folder, type FolderDetail, foldersPath, moveFolderItem, orderedFolderItems } from './model';
+import { canEditFolder, type Folder, type FolderDetail, folderMemberKey, folderMemberPath, foldersPath, moveFolderItem, orderedFolderItems } from './model';
 import { useFolderChange, useFolderDetail, useFolderTargets, useFolderTitles } from './queries';
 
 type Props = CollectionCardOptions & { id: string; full: boolean; playQueue: PlayQueue; queueBusy: boolean };
@@ -47,17 +47,17 @@ function FolderContent({ detail, full, playQueue, queueBusy, ...card }: Readonly
     const metadata = owner ? user?.Name || 'Personnel' : undefined;
     const actions = editable && <FolderActions folder={folder} hasTitles={entries.length > 0} organizing={organizing}
         toggle={() => setOrganizing(value => !value)} edit={setEditor} />;
-    function move(itemId: string, direction: -1 | 1) {
-        const itemIds = moveFolderItem(items, itemId, direction);
-        if (itemIds) change.mutate({ method: 'PUT', path: `/${folder.id}/Order`, data: { itemIds } });
-    }
-    function remove(itemId: string) {
-        change.mutate({ method: 'DELETE', path: `/${folder.id}/Items/${itemId}` });
+    function move(key: string, direction: -1 | 1) {
+        const order = moveFolderItem(items, key, direction);
+        if (!order) return;
+        if (items.some(item => item.followed)) change.mutate({ method: 'PUT', path: `/${folder.id}/MemberOrder`, data: { keys: order } });
+        else change.mutate({ method: 'PUT', path: `/${folder.id}/Order`, data: { itemIds: order } });
     }
 
-    const gridActions = editable && organizing ? ({ item, itemId }: typeof entries[number], manualOrder: boolean) => <FolderItemActions name={item.Name || 'ce titre'}
-        pending={change.isPending} move={manualOrder ? direction => move(itemId, direction) : undefined}
-        previous={itemId !== items[0]?.itemId} next={itemId !== items[items.length - 1]?.itemId} remove={() => remove(itemId)} /> : undefined;
+    const gridActions = editable && organizing ? (entry: typeof entries[number], manualOrder: boolean) => <FolderItemActions name={entry.item.Name || 'ce titre'}
+        pending={change.isPending} move={manualOrder ? direction => move(entry.key, direction) : undefined}
+        previous={entry.key !== folderMemberKey(items[0])} next={entry.key !== folderMemberKey(items[items.length - 1])}
+        remove={() => change.mutate({ method: 'DELETE', path: `/${folder.id}${folderMemberPath(entry)}` })} /> : undefined;
     return <CollectionHero title={folder.name} items={queue} count={items.length} metadata={metadata} metadataBadge={<FolderSharing folder={folder} shares={shares} targets={targets.data} />}
         backTo={foldersPath} backLabel='Ma liste' full={full} image={card.image} playQueue={playQueue} queueBusy={queueBusy} actions={actions}>
         {organizing && editable && <p className='client-shelf-organize' role='status'>Utilise les flèches dans l’ordre du dossier pour déplacer un titre. <button type='button' className='client-button' onClick={() => setOrganizing(false)}>Terminer</button></p>}

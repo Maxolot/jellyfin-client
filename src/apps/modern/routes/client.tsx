@@ -480,7 +480,7 @@ function useClientController() {
                 {watched && <WatchedMarker />}
                 {isExternal(i) && <span className='client-external-badge'>{tracked ? 'À télécharger' : mediaLabel((i as CatalogueItem).Seerr?.mediaInfo)}</span>}
             </Link>;
-            return withFolders && canFile(i) ? <div className='client-folder-search-card' key={i.Id}>{card}<ListAction item={i} /></div> : card;
+            return withFolders && (tracked || canFile(i)) ? <div className='client-folder-search-card' key={i.Id}>{card}<ListAction item={i} /></div> : card;
         });
     }
     function row(title: string, items: BaseItemDto[] | undefined, horizontal = false, kind?: MediaRowKind) {
@@ -941,7 +941,7 @@ function SearchView({ model }: ViewProps) {
                 <div className='client-grid'>{cards(shown, false, hasFolders)}</div>
                 {more.hasMore && <GridLoadMore loading={more.isFetching} failed={more.isError} pages={more.pages.length} load={() => { void more.fetchMore(); }} />}
             </SearchGroup>
-            <SearchGroup title='Catalogue partagé' count={results.saved.length}><div className='client-grid'>{cards(results.saved)}</div></SearchGroup>
+            <SearchGroup title='Catalogue partagé' count={results.saved.length}><div className='client-grid'>{cards(results.saved, false, hasFolders)}</div></SearchGroup>
             <SearchGroup title='À demander' count={results.suggestion.length || Number(catalogue.hasNextPage)}>
                 <div className='client-grid'>{cards(results.suggestion)}</div>
                 {catalogue.hasNextPage && <button type='button' className='client-button' disabled={catalogue.isFetchingNextPage} onClick={() => { void catalogue.fetchNextPage(); }}>Plus de titres à demander</button>}

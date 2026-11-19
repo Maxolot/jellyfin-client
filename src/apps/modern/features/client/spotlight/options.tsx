@@ -74,7 +74,7 @@ function row(item: BaseItemDto, prefix: string, actions: Actions): Option {
             <span className='client-spotlight-text'><strong>{item.Name}</strong>
                 <small>{[item.ProductionYear, typeLabel(item)].filter(Boolean).join(' · ')}</small></span>
             <span className={`client-spotlight-badge${isExternal(item) ? '' : ' available'}`}>{availability(item, actions)}</span>
-            {prefix === 'own' && <ListAction item={item} tabIndex={-1} />}
+            {(prefix === 'own' || actions.shared.has(item.Id || '')) && <ListAction item={item} tabIndex={-1} />}
         </>
     };
 }
@@ -102,7 +102,7 @@ function BestActions({ item, actions }: Readonly<{ item: BaseItemDto; actions: A
         {isExternal(item) ?
             <button type='button' className='client-play' tabIndex={-1} onClick={alone(() => actions.openItem(item))}><ClientIcon name='plus' />{requestLabel}</button> :
             <button type='button' className='client-play' tabIndex={-1} onClick={alone(() => actions.playItem(item))}><ClientIcon name='play' />Lecture</button>}
-        {!isExternal(item) && <ListAction item={item} favorite={favorite} tabIndex={-1}
+        {isExternal(item) ? <ListAction item={item} tabIndex={-1} /> : <ListAction item={item} favorite={favorite} tabIndex={-1}
             // eslint-disable-next-line react/jsx-no-bind -- This action belongs to the current search result.
             fallback={() => actions.toggleFavorite(item)} />}
         <button type='button' className='client-button client-action-circle' tabIndex={-1} aria-label='Plus d’infos' title='Plus d’infos'
@@ -175,6 +175,7 @@ export function descriptionGroup(description: { active: boolean; pending: boolea
                 <span className='client-spotlight-thumb'>{optionArtwork(item, actions)}</span>
                 <span className='client-spotlight-text'><strong>{item.Name}</strong><small>{hit.reason}</small></span>
                 <span className='client-spotlight-badge'>{playable ? 'Disponible' : 'Suivi'}</span>
+                {!playable && <ListAction item={item} tabIndex={-1} />}
             </>
         }];
     });

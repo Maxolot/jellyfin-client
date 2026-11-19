@@ -16,7 +16,8 @@ import { sharedCatalogItems, useSharedCatalog } from '../sharedCatalog';
 import { useLocalIdentities, useSeerrCatalogue } from '../seerr/queries';
 import { useSeerr } from '../seerr/SeerrContext';
 import { externalIdentity, isExternal } from '../seerr/model';
-import { useClientCollections, useClientFilters } from '../useClientMedia';
+import { useClientCollections } from '../collections/queries';
+import { useClientFilters } from '../useClientMedia';
 import { rankItems, rankNames, titleScore, parseQuery, matchesFilter, type SearchFilter } from './searchIndex';
 import { othersRecent, type SharedEntry } from './sharedRecent';
 

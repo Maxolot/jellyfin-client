@@ -9,6 +9,7 @@ vi.mock('hooks/useApi', () => ({ useApi: () => ({}) }));
 vi.mock('./SeerrContext', () => ({ useSeerr: () => ({ connected: true }) }));
 vi.mock('../DetailExtras', () => ({ default: () => null }));
 vi.mock('../HeroArtwork', () => ({ default: () => null }));
+vi.mock('../folders/FolderPicker', () => ({ ListAction: () => null }));
 vi.mock('./sources', () => ({ useMovieSource: () => undefined, useSeasonSources: () => undefined, useMovieLanguages: () => [], useSeasonLanguages: () => ({}) }));
 vi.mock('./queries', () => ({ useLocalIdentities: vi.fn(), useLocalSeasons: vi.fn(), useSeerrDetail: vi.fn() }));
 

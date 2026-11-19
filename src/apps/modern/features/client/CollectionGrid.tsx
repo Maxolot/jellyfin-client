@@ -5,6 +5,8 @@ import { Link, useLocation, useSearchParams } from 'react-router-dom';
 
 import Artwork from './Artwork';
 import ClientSkeleton from './ClientSkeleton';
+import SharedCatalogArtwork from './SharedCatalogArtwork';
+import { isExternal } from './seerr/model';
 import GridLoadMore from './GridLoadMore';
 import WatchedMarker, { watchedLabel } from './WatchedMarker';
 import { filterFolderItems, folderTitleCount, type FolderImage, type orderedFolderItems } from './folders/model';
@@ -57,7 +59,7 @@ export default function CollectionGrid({ items, pending, error, retry, empty, or
             </div>
         </header>
         {filtered.length ? <div className='client-grid'>
-            {filtered.slice(0, pages * pageSize).map(entry => <div className='client-shelf-item' key={entry.itemId}>
+            {filtered.slice(0, pages * pageSize).map(entry => <div className='client-shelf-item' key={entry.key}>
                 <CollectionTile item={entry.item} {...card} />
                 {actions?.(entry, manualOrder)}
             </div>)}
@@ -68,13 +70,15 @@ export default function CollectionGrid({ items, pending, error, retry, empty, or
 
 function CollectionTile({ item, image, showWatched, prepare, release }: Readonly<{ item: BaseItemDto } & CollectionCardOptions>) {
     const location = useLocation();
+    const followed = isExternal(item);
     const watched = isWatchedCard(item, showWatched);
     const progress = progressPercent(item);
     return <Link className='client-card client-shelf-poster' to={`/client?id=${item.Id}`} data-client-focus={item.Id}
         state={{ returnTo: location.pathname + location.search, returnState: location.state }}
-        aria-label={[item.Name, watched && watchedLabel].filter(Boolean).join(' · ')}
+        aria-label={[item.Name, followed && 'À demander', watched && watchedLabel].filter(Boolean).join(' · ')}
         onPointerEnter={() => prepare(item)} onPointerLeave={release} onFocus={() => prepare(item)} onBlur={release}>
-        <Artwork source={image(item)} />
+        {followed ? <SharedCatalogArtwork item={item} backdrop={false} /> : <Artwork source={image(item)} />}
+        {followed && <span className='client-external-badge'>À demander</span>}
         <span className='client-card-fallback'>{item.Name}</span>
         {watched && <WatchedMarker />}
         {progress > 0 && <span className='client-progress'><i style={{ width: `${progress}%` }} /></span>}

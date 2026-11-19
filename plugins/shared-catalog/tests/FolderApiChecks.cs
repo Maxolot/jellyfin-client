@@ -9,6 +9,7 @@ using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Database.Implementations.Enums;
 using Jellyfin.Plugin.SharedCatalog;
 using MediaBrowser.Common.Configuration;
+using MediaBrowser.Controller.Collections;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;
@@ -47,12 +48,36 @@ internal static class FolderApiChecks
         var outsider = new User("Outsider", "fixture", "fixture");
         var hidden = new User("Hidden", "fixture", "fixture");
         var disabled = new User("Disabled", "fixture", "fixture");
+        owner.SetPermission(PermissionKind.EnableCollectionManagement, true);
         outsider.SetPermission(PermissionKind.IsAdministrator, true);
         hidden.SetPermission(PermissionKind.IsHidden, true);
         disabled.SetPermission(PermissionKind.IsDisabled, true);
         var accounts = new[] { owner, recipient, outsider, hidden, disabled };
         var movie = new Movie { Id = Guid.NewGuid(), Name = "Fixture film" };
         movie.ProviderIds["Tmdb"] = "123";
+        var arriving = new Movie { Id = Guid.NewGuid(), Name = "Titre attendu" };
+        arriving.ProviderIds["Tmdb"] = "456";
+        var collection = new BoxSet { Id = Guid.NewGuid(), Name = "Collection fixture" };
+        var arrived = false;
+        var linked = new HashSet<Guid>();
+        var linksAdded = 0;
+
+        IReadOnlyList<BaseItem> ListItems(InternalItemsQuery query)
+        {
+            if (query.ParentId == collection.Id)
+                return linked.Contains(arriving.Id) && query.User?.Id == owner.Id ? [arriving] : [];
+            if (query.HasAnyProviderIds is not null)
+                return arrived && query.User?.Id == owner.Id ? [arriving] : [];
+            return query.IncludeItemTypes.Contains(Jellyfin.Data.Enums.BaseItemKind.Movie) ? [movie] : [];
+        }
+
+        BaseItem? GetItem(Guid id, Guid actorId)
+        {
+            if (id == collection.Id && actorId != outsider.Id) return collection;
+            if (actorId != owner.Id) return null;
+            if (id == movie.Id) return movie;
+            return id == arriving.Id && arrived ? arriving : null;
+        }
         var paths = FixtureProxy.Make<IApplicationPaths>((method, _) =>
             method.Name.StartsWith("get_", StringComparison.Ordinal) ? directory : throw new NotSupportedException(method.Name));
         var plugin = new Plugin(paths, FixtureProxy.Make<IXmlSerializer>((method, _) => throw new NotSupportedException(method.Name)));
@@ -73,11 +98,20 @@ internal static class FolderApiChecks
         }));
         builder.Services.AddSingleton(FixtureProxy.Make<ILibraryManager>((method, arguments) => method.Name switch
         {
-            nameof(ILibraryManager.GetItemList) => ((InternalItemsQuery)arguments![0]!).IncludeItemTypes.Contains(Jellyfin.Data.Enums.BaseItemKind.Movie)
-                ? new List<BaseItem> { movie }
-                : new List<BaseItem>(),
-            nameof(ILibraryManager.GetItemById) => (Guid)arguments![0]! == movie.Id && (Guid)arguments[1]! == owner.Id ? movie : null,
+            nameof(ILibraryManager.GetItemList) => ListItems((InternalItemsQuery)arguments![0]!),
+            nameof(ILibraryManager.GetItemById) => GetItem((Guid)arguments![0]!, (Guid)arguments[1]!),
             _ => throw new NotSupportedException(method.Name)
+        }));
+        builder.Services.AddSingleton(FixtureProxy.Make<ICollectionManager>((method, arguments) =>
+        {
+            if (method.Name != nameof(ICollectionManager.AddToCollectionAsync) || (Guid)arguments![0]! != collection.Id)
+                throw new NotSupportedException(method.Name);
+            foreach (var item in (IEnumerable<Guid>)arguments[1]!)
+            {
+                if (!linked.Add(item)) throw new InvalidOperationException("Native collection received a duplicate link.");
+                linksAdded++;
+            }
+            return Task.CompletedTask;
         }));
         builder.Services.AddSingleton(FixtureProxy.Make<IUserDataManager>((method, _) => method.Name switch
         {
@@ -124,6 +158,8 @@ internal static class FolderApiChecks
             .SequenceEqual(["Série suivie"]), "Items outside the caller's library and untracked results are filtered.");
         File.Delete(Path.Combine(plugin.DataFolderPath, "catalog.json"));
         await TonightChecks(http, owner.Id, recipient.Id, movie.Id);
+        await FollowedChecks(http, owner.Id, recipient.Id, outsider.Id, collection.Id, arriving.Id,
+            () => arrived = true, () => linksAdded);
         await Request(http, HttpMethod.Get, Root, null, null, HttpStatusCode.Unauthorized);
         await Request(http, HttpMethod.Get, Root, Guid.NewGuid(), null, HttpStatusCode.Forbidden);
         await Request(http, HttpMethod.Get, Root, disabled.Id, null, HttpStatusCode.Forbidden);
@@ -175,6 +211,59 @@ internal static class FolderApiChecks
             "Completing artwork can fill either field but never overwrite an existing path.");
         Check(entry.GetProperty("title").GetString() == "Fixture film", "Completing artwork preserves the rest of the entry.");
         Console.WriteLine("Folder HTTP checks passed: authentication, ownership, routing, JSON, no-store and media visibility.");
+    }
+
+    private static async Task FollowedChecks(HttpClient http, Guid owner, Guid viewer, Guid unrelated, Guid box, Guid arriving,
+        Action arrival, Func<int> promotionCount)
+    {
+        var collection = $"/SharedCatalog/Collections/{box:N}/Followed";
+        const string tracked = "/SharedCatalog/Items/movie/456";
+        const string selected = "/movie/456";
+        await Request(http, HttpMethod.Get, "/SharedCatalog/Memberships", null, null, HttpStatusCode.Unauthorized);
+        var capability = await Request(http, HttpMethod.Get, "/SharedCatalog/Memberships", owner, null, HttpStatusCode.OK);
+        Check(capability.Body!.Value.GetProperty("followed").GetBoolean(), "Membership capability is explicit.");
+        await Request(http, HttpMethod.Get, collection, unrelated, null, HttpStatusCode.NotFound);
+        await Request(http, HttpMethod.Put, collection + selected, viewer, null, HttpStatusCode.Forbidden);
+        await Request(http, HttpMethod.Put, collection + selected, owner, null, HttpStatusCode.NotFound);
+        await Request(http, HttpMethod.Put, tracked, owner, new { title = "Titre attendu" }, HttpStatusCode.NoContent);
+        await Request(http, HttpMethod.Put, collection + selected, owner, null, HttpStatusCode.NoContent);
+        await Request(http, HttpMethod.Put, collection + selected, owner, null, HttpStatusCode.NoContent);
+        var list = await Request(http, HttpMethod.Get, collection, viewer, null, HttpStatusCode.OK);
+        Check(list.Body!.Value.GetProperty("total").GetInt32() == 1 && list.Body.Value.GetProperty("items")[0].GetProperty("itemId").ValueKind == JsonValueKind.Null,
+            "A public viewer sees the tracked title only once and without a file.");
+        await Request(http, HttpMethod.Delete, collection + selected, viewer, null, HttpStatusCode.Forbidden);
+
+        var created = await Request(http, HttpMethod.Post, Root, owner, new { name = "Dossier suivi" }, HttpStatusCode.Created);
+        var folder = Root + "/" + created.Body!.Value.GetProperty("id").GetGuid();
+        var member = folder + "/Followed" + selected;
+        await Request(http, HttpMethod.Put, member, owner, null, HttpStatusCode.NoContent);
+        await Request(http, HttpMethod.Put, folder + "/Followed/movie/999", owner, null, HttpStatusCode.NotFound);
+        var legacy = await Request(http, HttpMethod.Get, folder, owner, null, HttpStatusCode.OK);
+        Check(legacy.Body!.Value.GetProperty("items").GetArrayLength() == 0, "A legacy folder client is not given a null item ID.");
+        await Request(http, HttpMethod.Put, "/SharedCatalog/Tonight/Later" + selected, owner, new { }, HttpStatusCode.OK);
+        var visible = await Request(http, HttpMethod.Get, folder + "?includeFollowed=true", owner, null, HttpStatusCode.OK);
+        Check(visible.Body!.Value.GetProperty("items")[0].GetProperty("followed").GetBoolean(), "Followed membership is distinguishable.");
+        await Request(http, HttpMethod.Put, folder + "/Shares", owner, new { shares = new[] { new { userId = viewer, canEdit = false } } }, HttpStatusCode.NoContent);
+        await Request(http, HttpMethod.Delete, member, viewer, null, HttpStatusCode.Forbidden);
+
+        arrival();
+        visible = await Request(http, HttpMethod.Get, folder + "?includeFollowed=true", owner, null, HttpStatusCode.OK);
+        Check(visible.Body!.Value.GetProperty("items")[0].GetProperty("itemId").GetGuid() == arriving, "Owner sees the newly linked item.");
+        legacy = await Request(http, HttpMethod.Get, folder, owner, null, HttpStatusCode.OK);
+        Check(legacy.Body!.Value.GetProperty("items")[0].GetProperty("itemId").GetGuid() == arriving, "The new linkage survives reopening in a legacy client.");
+        var privateView = await Request(http, HttpMethod.Get, folder + "?includeFollowed=true", viewer, null, HttpStatusCode.OK);
+        Check(privateView.Body!.Value.GetProperty("items")[0].GetProperty("itemId").ValueKind == JsonValueKind.Null, "The folder does not grant the file to a restricted viewer.");
+        await Request(http, HttpMethod.Put, folder + $"/Items/{arriving:N}", owner, null, HttpStatusCode.NoContent);
+        await Request(http, HttpMethod.Put, folder + "/MemberOrder", owner, new { keys = new[] { "seerr-movie-456" } }, HttpStatusCode.NoContent);
+        visible = await Request(http, HttpMethod.Get, folder + "?includeFollowed=true", owner, null, HttpStatusCode.OK);
+        Check(visible.Body!.Value.GetProperty("items").GetArrayLength() == 1, "Adding the real item does not duplicate its reference.");
+        await Request(http, HttpMethod.Post, collection + "/Promote", viewer, null, HttpStatusCode.Forbidden);
+        await Request(http, HttpMethod.Post, collection + "/Promote", owner, null, HttpStatusCode.NoContent);
+        await Request(http, HttpMethod.Post, collection + "/Promote", owner, null, HttpStatusCode.NoContent);
+        list = await Request(http, HttpMethod.Get, collection, owner, null, HttpStatusCode.OK);
+        Check(list.Body!.Value.GetProperty("items").GetArrayLength() == 0 && promotionCount() == 1, "Promotion makes one native link before pruning the virtual membership.");
+        await Request(http, HttpMethod.Delete, member, owner, null, HttpStatusCode.NoContent);
+        await Request(http, HttpMethod.Delete, tracked, unrelated, null, HttpStatusCode.NoContent);
     }
 
     private static async Task TonightChecks(HttpClient http, Guid owner, Guid recipient, Guid movie)

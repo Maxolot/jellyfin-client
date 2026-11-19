@@ -10,6 +10,8 @@ import Artwork from './Artwork';
 import ClientDialog from './ClientDialog';
 import ClientIcon from './ClientIcon';
 import ClientSkeleton from './ClientSkeleton';
+import { useFollowedMemberships } from './collections/followed';
+import { followedMember } from './folders/model';
 import PreviewClip from './PreviewClip';
 import { catalogueItem, canRequest, externalIdentity, isExternal, providerKey, type ExternalMedia, type Results } from './seerr/model';
 import { useSeerr } from './seerr/SeerrContext';
@@ -108,7 +110,7 @@ function TonightCard({ idea, index, count, now, image, onPrepare, onRelease, pla
                     </div>
                     <div className='client-tonight-card-actions secondary'>
                         <button type='button' className='client-button' onClick={onSkip}>Pas ce soir</button>
-                        {canSave && !absent && <button type='button' className='client-button' onClick={onLater}><ClientIcon name='bookmark' />Plus tard</button>}
+                        {canSave && <button type='button' className='client-button' onClick={onLater}><ClientIcon name='bookmark' />Plus tard</button>}
                     </div>
                 </div>
             </div>
@@ -257,6 +259,11 @@ function TonightSession({ account, onFeature, ...card }: Readonly<Props & { acco
     const [notice, setNotice] = useState('');
     const current = useIdeas(criteria, account, now, [...excluded, ...skipped], previous, seed);
     const action = useTonightAction();
+    const catalog = useSharedCatalog(criteria.includeRequests);
+    const memberships = useFollowedMemberships(criteria.includeRequests && !!current.options.data);
+    function canSave(item: BaseItemDto) {
+        return !!current.options.data && (!isExternal(item) || (memberships.data === true && !!followedMember(item, catalog.data)));
+    }
     const feature = useRef(onFeature);
     feature.current = onFeature;
     const middle = current.ideas[Math.floor(current.ideas.length / 2)]?.item;
@@ -294,8 +301,10 @@ function TonightSession({ account, onFeature, ...card }: Readonly<Props & { acco
         });
     }
 
-    function later(id: string) {
-        action.mutate({ route: `/Later/${id}`, data: {} }, {
+    function later(item: BaseItemDto) {
+        const member = followedMember(item, catalog.data);
+        const identityPath = member ? `${member.type}/${member.id}` : item.Id;
+        action.mutate({ route: `/Later/${identityPath}`, data: {} }, {
             onSuccess: () => setNotice('Ajouté à « À voir plus tard ».'),
             onError: () => setNotice('Le titre n’a pas pu être ajouté.')
         });
@@ -317,7 +326,7 @@ function TonightSession({ account, onFeature, ...card }: Readonly<Props & { acco
             {!current.pending && !current.ideas.length && <p className='client-draw-empty'>{current.error ? 'Impossible de charger les idées.' : 'Aucun autre titre pour ces critères.'}</p>}
             {!current.pending && current.ideas.length > 0 && <div className='client-draw-fan'>{current.ideas.map((idea, index) =>
                 <TonightCard key={`${seed}-${idea.item.Id}`} idea={idea} index={index} count={current.ideas.length} now={now} {...card}
-                    onRequest={() => setRequestedTitle(idea.item)} onSkip={() => skip(idea.item.Id!)} onLater={() => later(idea.item.Id!)} canSave={!!current.options.data} />
+                    onRequest={() => setRequestedTitle(idea.item)} onSkip={() => skip(idea.item.Id!)} onLater={() => later(idea.item)} canSave={canSave(idea.item)} />
             )}</div>}
         </div>
         {requestedTitle && <RequestDialog key={requestedTitle.Id} title={requestedTitle} close={() => setRequestedTitle(undefined)} />}

@@ -67,7 +67,7 @@ internal static class FolderChecks
         await Expect(() => reading.Rename(id, "No", ct), 403, "folderForbidden");
         await Expect(() => reading.Add(id, movie.ItemId, ct), 403, "folderForbidden");
         await Expect(() => reading.Remove(id, movie.ItemId, ct), 403, "folderForbidden");
-        await Expect(() => reading.Reorder(id, [edition.ItemId, movie.ItemId], ct), 403, "folderForbidden");
+        await Expect(() => reading.Reorder(id, [edition.ItemId!.Value, movie.ItemId!.Value], ct), 403, "folderForbidden");
         await Expect(() => editing.Delete(id, ct), 403, "folderForbidden");
         await Expect(() => editing.Share(id, [new(outsider, true)], ct), 403, "folderForbidden");
         await Expect(() => editing.Add(id, series.ItemId, ct), 404, "itemNotFound");
@@ -76,9 +76,9 @@ internal static class FolderChecks
         await editing.Remove(id, edition.ItemId, ct);
         await editing.Add(id, edition.ItemId, ct);
         await editing.Rename(id, "Automne partagé", ct);
-        await Expect(() => editing.Reorder(id, [movie.ItemId, series.ItemId], ct), 400, "invalidOrder");
-        await Expect(() => editing.Reorder(id, [movie.ItemId, movie.ItemId], ct), 400, "invalidOrder");
-        await editing.Reorder(id, [edition.ItemId, movie.ItemId], ct);
+        await Expect(() => editing.Reorder(id, [movie.ItemId!.Value, series.ItemId!.Value], ct), 400, "invalidOrder");
+        await Expect(() => editing.Reorder(id, [movie.ItemId!.Value, movie.ItemId!.Value], ct), 400, "invalidOrder");
+        await editing.Reorder(id, [edition.ItemId!.Value, movie.ItemId!.Value], ct);
         var ordered = await mine.Get(id, ct);
         Require(ordered.Folder.Name == "Automne partagé" && WithoutDates(ordered.Items).SequenceEqual([edition, series, movie]), "Reorder keeps the invisible title in its slot");
 

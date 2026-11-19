@@ -24,11 +24,11 @@ export type SharedCatalogEntry = {
     addedAt?: string;
 };
 
-export function useSharedCatalog() {
+export function useSharedCatalog(enabled = true) {
     const { api, user } = useApi();
     return useQuery({
         queryKey: ['SharedCatalog', api?.basePath, user?.Id],
-        enabled: !!api && !!user?.Id,
+        enabled: enabled && !!api && !!user?.Id,
         retry: false,
         staleTime: 30000,
         queryFn: async ({ signal }) => {

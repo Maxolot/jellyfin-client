@@ -29,7 +29,7 @@ public sealed partial class CatalogController
                 hidden = settings.Hidden.Where(part => part.Value > DateTimeOffset.UtcNow).Select(part => part.Key).ToArray(),
                 partners = targets,
                 filed = await store.Filed(ct)
-            }, Json)));
+            }, Json), ct, true));
         }, ct);
 
     [HttpGet("Tonight/Series")]
@@ -83,6 +83,10 @@ public sealed partial class CatalogController
     [HttpPut("Tonight/Later/{itemId:guid}")]
     public Task<IActionResult> TonightLater(Guid itemId, CancellationToken ct) =>
         Folders(async store => new JsonResult(new { folderId = await store.SaveForLater(itemId, ct) }, Json));
+
+    [HttpPut("Tonight/Later/{type}/{tmdbId:int}")]
+    public Task<IActionResult> TonightLaterFollowed(string type, int tmdbId, CancellationToken ct) =>
+        Folders(async store => new JsonResult(new { folderId = await store.SaveForLater(new FollowedTitle(type, tmdbId), ct) }, Json), ct, true);
 
     [HttpGet("Tonight/Together")]
     public Task<IActionResult> TonightTogether([FromQuery] Guid partner, [FromServices] IUserDataManager data, CancellationToken ct) =>

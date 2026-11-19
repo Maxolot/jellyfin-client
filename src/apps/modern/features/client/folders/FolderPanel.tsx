@@ -8,7 +8,7 @@ import ClientIcon from '../ClientIcon';
 import FolderSharing from './FolderSharing';
 import { FolderNameForm } from './FolderForms';
 import { useFolderPicker } from './FolderPicker';
-import { type Folder, type FolderImage, type FolderTarget, folderPath, folderTitleCount, orderedFolderItems, personalFoldersFirst } from './model';
+import { type Folder, type FolderImage, type FolderTarget, folderPath, folderTitleCount, hasFolderPoster, orderedFolderItems, personalFoldersFirst, shelfPoster } from './model';
 import { useFolderDetail, useFolderTargets, useFolderTitles } from './queries';
 
 export default function FolderPanel({ image }: Readonly<{ image: FolderImage }>) {
@@ -49,9 +49,9 @@ function FolderTile({ folder, image, targets }: Readonly<{ folder: Folder; image
     const entries = detail.data?.items.slice(0, 3);
     const preview = useFolderTitles(entries);
     const posters = entries && preview.data ? orderedFolderItems(entries, preview.data)
-        .filter(({ item }) => item.ImageTags?.Primary || item.ImageTags?.Thumb || item.BackdropImageTags?.length) : [];
+        .filter(({ item }) => hasFolderPoster(item)) : [];
     return <CollectionCover anchor={tile} className='client-folder-tile' to={folderPath(folder.id)} id={folder.id} name={folder.name}
-        count={detail.data && folderTitleCount(detail.data.items.length)} badge={folder.access !== 'owner' || !!detail.data?.shares?.length ? <FolderSharing folder={folder} shares={detail.data?.shares} targets={targets} /> : undefined} posters={posters.map(({ item }) => image(item))}
+        count={detail.data && folderTitleCount(detail.data.items.length)} badge={folder.access !== 'owner' || !!detail.data?.shares?.length ? <FolderSharing folder={folder} shares={detail.data?.shares} targets={targets} /> : undefined} posters={posters.map(({ item }) => shelfPoster(item, image)).filter(Boolean)}
         ready={detail.isSuccess && (!entries?.length || preview.isSuccess)} emptyLabel={folder.access === 'viewer' || detail.data?.items.length ? undefined : 'Ajoutez un titre'} />;
 }
 

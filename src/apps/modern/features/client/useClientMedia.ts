@@ -210,12 +210,3 @@ export function useClientFilters(view: string) {
         })
     });
 }
-
-export function useClientCollections(enabled: boolean, limit: number | null = 30) {
-    const { api, user } = useApi();
-    return useQuery({
-        queryKey: ['Client', api?.basePath, user?.Id, 'Collections', limit],
-        enabled: enabled && !!api && !!user?.Id,
-        queryFn: ({ signal }) => clientRequest(async () => (await getLibraryApi(api!).getItems({ userId: user!.Id, includeItemTypes: [BaseItemKind.BoxSet], recursive: true, limit: limit ?? undefined, imageTypeLimit: 1, sortBy: [ItemSortBy.SortName], fields: limit === null ? [ItemFields.ChildCount] : undefined }, { signal })).data.Items || [])
-    });
-}

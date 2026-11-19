@@ -6,7 +6,8 @@ import Artwork from './Artwork';
 import ClientIcon from './ClientIcon';
 import { QueueActions } from './QueueActions';
 import type { PlayQueue } from './mediaQueue';
-import { folderDuration, folderTitleCount, type FolderImage, hasFolderPoster } from './folders/model';
+import { folderDuration, folderTitleCount, type FolderImage, hasFolderPoster, shelfPoster } from './folders/model';
+import { isExternal } from './seerr/model';
 import { useFolderDuration } from './folders/queries';
 import useArtworkColor from './useArtworkColor';
 import useHeroBackground from './useHeroBackground';
@@ -22,13 +23,14 @@ export default function CollectionHero({ title, items, count, metadata, metadata
     const region = useRef<HTMLElement>(null);
     const [frozen, setFrozen] = useState(false);
     const picks = useMemo(() => items.filter(hasFolderPoster).slice(0, maxWallPosters), [items]);
-    const posters = useMemo(() => picks.map(item => image(item)), [picks, image]);
+    const posters = useMemo(() => picks.map(item => shelfPoster(item, image)).filter(Boolean), [picks, image]);
     const color = useArtworkColor(posters[0]);
     const featured = items.find(item => item.BackdropImageTags?.length || item.ParentBackdropImageTags?.length)
         ?? picks[0];
     const backdrop = !!(featured?.BackdropImageTags?.length || featured?.ParentBackdropImageTags?.length);
-    const fallback = featured ? image(featured, backdrop, backdrop) : '';
-    const duration = useFolderDuration(items);
+    const fallback = featured ? shelfPoster(featured, image, backdrop) : '';
+    const playable = useMemo(() => items.filter(item => !isExternal(item)), [items]);
+    const duration = useFolderDuration(playable);
     useHeroBackground(region, full, true);
 
     useEffect(() => {
@@ -56,8 +58,8 @@ export default function CollectionHero({ title, items, count, metadata, metadata
                     <p className='client-shelf-meta'>{meta.filter(Boolean).join(' · ')}</p>
                     {metadataBadge}
                 </div>
-                {(!!items.length || actions) && <div className='client-actions client-shelf-actions'>
-                    {!!items.length && <QueueActions source={items} playQueue={playQueue} pending={queueBusy} />}
+                {(!!playable.length || actions) && <div className='client-actions client-shelf-actions'>
+                    {!!playable.length && <QueueActions source={playable} playQueue={playQueue} pending={queueBusy} />}
                     {actions}
                 </div>}
             </div>
