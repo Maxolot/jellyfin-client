@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import React from 'react';
 
+import ActionLabel from './ActionLabel';
+
 import { useApi } from 'hooks/useApi';
 
 import { resolveCatalogueArtwork } from './catalogArtwork';
@@ -83,7 +85,11 @@ export function FollowCatalogAction({ item, remote, menu = false }: Readonly<{ i
     });
     if (!query.data || !identity || !item.Name) return null;
     let label = 'Garder dans le catalogue';
-    if (followed) label = admin ? 'Retirer du catalogue partagé' : 'Dans le catalogue partagé';
+    let icon: 'bookmark' | 'bookmarkOff' | 'check' = 'bookmark';
+    if (followed) {
+        label = admin ? 'Retirer du catalogue partagé' : 'Dans le catalogue partagé';
+        icon = admin ? 'bookmarkOff' : 'check';
+    }
     if (mutation.isPending) label = 'Enregistrement…';
     function follow() {
         mutation.mutate();
@@ -93,7 +99,7 @@ export function FollowCatalogAction({ item, remote, menu = false }: Readonly<{ i
             disabled={mutation.isPending || (followed && !admin)}
             // eslint-disable-next-line react/jsx-no-bind -- Action belongs to this button.
             onClick={follow}>
-            {label}
+            <ActionLabel icon={icon}>{label}</ActionLabel>
         </button>
         {mutation.isError && <span role='alert'>Le catalogue n’a pas été mis à jour. Réessayez.</span>}
     </>;

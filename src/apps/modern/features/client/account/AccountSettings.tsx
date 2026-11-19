@@ -238,7 +238,7 @@ function QuickConnectSettings({ account }: Readonly<{ account: Account }>) {
 export function QuickConnectMenuItem() {
     const account = useAccount();
     if (account.quickConnect.data === false) return null;
-    return <ClientDialog label='Quick Connect' title='Connecter un autre appareil' buttonClassName='client-profile-action'><QuickConnectSettings account={account} /></ClientDialog>;
+    return <ClientDialog label='Quick Connect' title='Connecter un autre appareil' buttonClassName='client-profile-action' buttonIcon='connect'><QuickConnectSettings account={account} /></ClientDialog>;
 }
 
 export function ProfileSettings() {

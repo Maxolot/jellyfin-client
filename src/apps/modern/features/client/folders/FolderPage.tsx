@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 import { useApi } from 'hooks/useApi';
 
+import ActionLabel from '../ActionLabel';
 import ClientDialog from '../ClientDialog';
 import ClientIcon from '../ClientIcon';
 import ClientSkeleton from '../ClientSkeleton';
@@ -109,9 +110,9 @@ function FolderMenu({ folder, hasTitles, organizing, toggle, edit }: Readonly<Ac
         <button ref={trigger} type='button' className='client-button' aria-label='Options du dossier' aria-expanded={open}
             onKeyDown={escape} onClick={() => setOpen(value => !value)}><ClientIcon name='more' /></button>
         {open && <div className='client-shelf-menu-list'>
-            <button type='button' onKeyDown={escape} onClick={() => choose(() => edit('rename'))}>Renommer</button>
-            {hasTitles && <button type='button' onKeyDown={escape} onClick={() => choose(toggle)}>{organizing ? 'Terminer l’organisation' : 'Organiser les titres'}</button>}
-            {folder.access === 'owner' && <button type='button' onKeyDown={escape} onClick={() => choose(() => edit('delete'))}>Supprimer le dossier</button>}
+            <button type='button' onKeyDown={escape} onClick={() => choose(() => edit('rename'))}><ActionLabel icon='edit'>Renommer</ActionLabel></button>
+            {hasTitles && <button type='button' onKeyDown={escape} onClick={() => choose(toggle)}><ActionLabel icon={organizing ? 'check' : 'settings'}>{organizing ? 'Terminer l’organisation' : 'Organiser les titres'}</ActionLabel></button>}
+            {folder.access === 'owner' && <button type='button' onKeyDown={escape} onClick={() => choose(() => edit('delete'))}><ActionLabel icon='trash'>Supprimer le dossier</ActionLabel></button>}
         </div>}
     </div>;
 }

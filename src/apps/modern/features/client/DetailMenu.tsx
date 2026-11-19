@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useApi } from 'hooks/useApi';
 
 import { CastDialog, hasCast } from './DetailExtras';
+import ActionLabel from './ActionLabel';
 import ClientIcon from './ClientIcon';
 import DownloadDialog from './offline/DownloadDialog';
 import { useFileTracks } from './languageTags';
@@ -84,12 +85,12 @@ export default function DetailMenu({ item, basePath, play, choice, chooseTracks 
         {open && <div className='client-more-menu' role='menu' aria-label={tracksOpen ? 'Audio et sous-titres' : 'Plus d’actions'}>
             {tracksOpen ? <TrackMenu audio={tracks.audio} subtitles={tracks.subtitles} choice={choice} onChange={chooseTracks} onBack={() => setTracksOpen(false)} /> : <>
                 {externalIdentity(item) && <FollowCatalogAction key={item.Id} item={item} menu />}
-                {canChooseTracks && <button type='button' role='menuitem' onClick={() => setTracksOpen(true)}><ClientIcon name='volume' /><span className='client-more-text'>Audio et sous-titres<span>{choiceSummary(choice)}</span></span></button>}
-                {request && <button type='button' role='menuitem' onClick={() => openDialog('request')}><ClientIcon name='plus' />Demander des saisons{missing > 0 && <small>{missing}</small>}</button>}
-                {user?.Policy?.EnableContentDownloading && ['Movie', 'Series', 'Episode'].includes(item.Type || '') && <button type='button' role='menuitem' onClick={() => openDialog('download')}><ClientIcon name='download' />Télécharger</button>}
-                {storage && <button type='button' role='menuitem' onClick={() => openDialog('storage')}>Retirer les fichiers du disque</button>}
-                {hasCast(item) && <button type='button' role='menuitem' onClick={() => openDialog('cast')}><ClientIcon name='collection' />Distribution et réalisation</button>}
-                <button type='button' role='menuitem' onClick={() => openDialog('info')}><ClientIcon name='info' />Informations</button>
+                {canChooseTracks && <button type='button' role='menuitem' onClick={() => setTracksOpen(true)}><ActionLabel icon='volume' hint={choiceSummary(choice)}>Audio et sous-titres</ActionLabel></button>}
+                {request && <button type='button' role='menuitem' onClick={() => openDialog('request')}><ActionLabel icon='plus'>Demander des saisons</ActionLabel>{missing > 0 && <small>{missing}</small>}</button>}
+                {user?.Policy?.EnableContentDownloading && ['Movie', 'Series', 'Episode'].includes(item.Type || '') && <button type='button' role='menuitem' onClick={() => openDialog('download')}><ActionLabel icon='download'>Télécharger</ActionLabel></button>}
+                {storage && <button type='button' role='menuitem' onClick={() => openDialog('storage')}><ActionLabel icon='drive'>Retirer les fichiers du disque</ActionLabel></button>}
+                {hasCast(item) && <button type='button' role='menuitem' onClick={() => openDialog('cast')}><ActionLabel icon='people'>Distribution et réalisation</ActionLabel></button>}
+                <button type='button' role='menuitem' onClick={() => openDialog('info')}><ActionLabel icon='info'>Informations</ActionLabel></button>
             </>}
         </div>}
         {dialog === 'storage' && <StorageRemoval item={item} onClose={() => setDialog(null)} />}

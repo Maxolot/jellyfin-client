@@ -13,6 +13,7 @@ import shell from 'scripts/shell';
 import { useApi } from 'hooks/useApi';
 import Events, { type Event as PlaybackEvent } from 'utils/events';
 import type { PlaybackStopInfo } from 'types/playbackStopInfo';
+import ActionLabel from '../ActionLabel';
 import ClientIcon from '../ClientIcon';
 import RemoteIcon from '../remote/RemoteIcon';
 import { TogetherBadge, openConnectivity } from '../remote/ConnectivityLayer';
@@ -422,12 +423,12 @@ export default function CustomVideoPlayer() {
                 wake();
             }}>
                 <header><h2 id='client-player-panel-title'>{panel ? panelNames[panel] : ''}</h2><button type='button' aria-label='Fermer le panneau' onClick={() => dialog.current?.close()}><ClientIcon name='close' /></button></header>
-                {panel === 'audio' && <div className='client-player-choices'>{audio.map(track => <button type='button' key={track.Index} aria-pressed={playState?.AudioStreamIndex === track.Index} onClick={() => action(() => playbackManager.setAudioStreamIndex(track.Index))}><TrackName track={track} />{playState?.AudioStreamIndex === track.Index && <ClientIcon name='check' />}</button>)}</div>}
-                {panel === 'subtitles' && <div className='client-player-choices'>{playbackManager.supportSubtitleOffset() && playbackManager.canHandleOffsetOnCurrentSubtitle() && <SubtitleOffset key={`${itemId}-${playState?.SubtitleStreamIndex}`} run={action} />}<button type='button' aria-pressed={(playState?.SubtitleStreamIndex ?? -1) < 0} onClick={() => action(() => playbackManager.setSubtitleStreamIndex(-1))}>Désactivés</button>{subtitles.map(track => <button type='button' key={track.Index} aria-pressed={playState?.SubtitleStreamIndex === track.Index} onClick={() => action(() => playbackManager.setSubtitleStreamIndex(track.Index))}><TrackName track={track} />{playState?.SubtitleStreamIndex === track.Index && <ClientIcon name='check' />}</button>)}</div>}
+                {panel === 'audio' && <div className='client-player-choices'>{audio.map(track => <button type='button' key={track.Index} aria-pressed={playState?.AudioStreamIndex === track.Index} onClick={() => action(() => playbackManager.setAudioStreamIndex(track.Index))}><ActionLabel icon='volume'><TrackName track={track} /></ActionLabel>{playState?.AudioStreamIndex === track.Index && <ClientIcon name='check' />}</button>)}</div>}
+                {panel === 'subtitles' && <div className='client-player-choices'>{playbackManager.supportSubtitleOffset() && playbackManager.canHandleOffsetOnCurrentSubtitle() && <SubtitleOffset key={`${itemId}-${playState?.SubtitleStreamIndex}`} run={action} />}<button type='button' aria-pressed={(playState?.SubtitleStreamIndex ?? -1) < 0} onClick={() => action(() => playbackManager.setSubtitleStreamIndex(-1))}><ActionLabel icon='close'>Désactivés</ActionLabel></button>{subtitles.map(track => <button type='button' key={track.Index} aria-pressed={playState?.SubtitleStreamIndex === track.Index} onClick={() => action(() => playbackManager.setSubtitleStreamIndex(track.Index))}><ActionLabel icon='subtitles'><TrackName track={track} /></ActionLabel>{playState?.SubtitleStreamIndex === track.Index && <ClientIcon name='check' />}</button>)}</div>}
                 {panel === 'chapters' && <div className='client-player-choices'>{chapters.map((chapter, index) => <button type='button' key={chapter.StartPositionTicks} disabled={!canSeek} onClick={() => {
                     seek((chapter.StartPositionTicks || 0) / SECOND);
                     dialog.current?.close();
-                }}><span>{chapter.Name || `Chapitre ${index + 1}`}</span><small>{formatTime((chapter.StartPositionTicks || 0) / SECOND)}</small></button>)}</div>}
+                }}><ActionLabel icon='chapter'>{chapter.Name || `Chapitre ${index + 1}`}</ActionLabel><small>{formatTime((chapter.StartPositionTicks || 0) / SECOND)}</small></button>)}</div>}
                 {panel === 'settings' && <div className='client-player-fields'>
                     <div className='client-controls client-player-preferences is-panel'>
                         <Select label='Vitesse' value={playState?.PlaybackRate || 1} options={[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(rate => [rate, rate === 1 ? 'Normale' : `${rate} ×`] as const)}
@@ -438,9 +439,9 @@ export default function CustomVideoPlayer() {
                         <Select label='Format de l’image' value={String(playbackManager.getAspectRatio())} options={playbackManager.getSupportedAspectRatios().map((ratio: { id: string; name: string }) => [ratio.id, ratio.name] as const)}
                             onChange={ratio => action(() => playbackManager.setAspectRatio(ratio))} />
                     </div>
-                    <button type='button' onClick={() => setPanel('technical')}>Informations techniques</button>
+                    <button type='button' onClick={() => setPanel('technical')}><ActionLabel icon='info'>Informations techniques</ActionLabel></button>
                     <p className='client-player-hint'>Le serveur adapte le flux aux capacités du navigateur. Une limite de débit peut déclencher un transcodage.</p>
-                    <button type='button' onClick={() => setPanel('appearance')}>Personnaliser le lecteur</button>
+                    <button type='button' onClick={() => setPanel('appearance')}><ActionLabel icon='settings'>Personnaliser le lecteur</ActionLabel></button>
                 </div>}
                 {panel === 'episodes' && <PlayerEpisodes key={item?.SeriesId} item={item} play={(items, start) => action(async () => {
                     await playbackManager.play({ items: [items[start]], startPositionTicks: items[start]?.UserData?.PlaybackPositionTicks || 0 });
@@ -449,17 +450,17 @@ export default function CustomVideoPlayer() {
                 })} />}
                 {panel === 'technical' && <PlayerTechnical key={itemId} itemId={itemId} state={snapshot?.state} />}
                 {panel === 'help' && <PlayerHelp />}
-                {panel === 'tools' && <div className='client-player-choices'><button type='button' onClick={() => setPanel('technical')}>Informations techniques</button><button type='button' onClick={() => setPanel('sleep')}>Minuterie {sleepAt ? '· activée' : timerStatus}</button><button type='button' onClick={() => setPanel('help')}>Raccourcis clavier</button></div>}
+                {panel === 'tools' && <div className='client-player-choices'><button type='button' onClick={() => setPanel('technical')}><ActionLabel icon='info'>Informations techniques</ActionLabel></button><button type='button' onClick={() => setPanel('sleep')}><ActionLabel icon='clock'>Minuterie {sleepAt ? '· activée' : timerStatus}</ActionLabel></button><button type='button' onClick={() => setPanel('help')}><ActionLabel icon='keyboard'>Raccourcis clavier</ActionLabel></button></div>}
                 {panel === 'sleep' && <div className='client-player-choices'><p>{sleepEnd ? 'Arrêt à la fin de cet épisode' : sleepLabel(sleepAt)}</p>{[15, 30, 45, 60, 90].map(minutes => <button type='button' key={minutes} onClick={() => {
                     setSleepEnd(false);
                     setSleepAt(Date.now() + minutes * 60000);
-                }}>Dans {minutes} minutes</button>)}<button type='button' aria-pressed={sleepEnd} onClick={() => {
+                }}><ActionLabel icon='clock'>Dans {minutes} minutes</ActionLabel></button>)}<button type='button' aria-pressed={sleepEnd} onClick={() => {
                     setSleepAt(undefined);
                     setSleepEnd(true);
-                }}>À la fin de cet épisode ou film</button><button type='button' onClick={() => {
+                }}><ActionLabel icon='chapter'>À la fin de cet épisode ou film</ActionLabel></button><button type='button' onClick={() => {
                     setSleepAt(undefined);
                     setSleepEnd(false);
-                }}>Désactiver la minuterie</button><p className='client-player-hint'>La minuterie met la lecture en pause. Elle reste propre à cette session du lecteur.</p></div>}
+                }}><ActionLabel icon='close'>Désactiver la minuterie</ActionLabel></button><p className='client-player-hint'>La minuterie met la lecture en pause. Elle reste propre à cette session du lecteur.</p></div>}
                 {panel === 'appearance' && <PlayerPreferenceFields value={preferences} save={savePreferences} />}
             </dialog>
         </div>
