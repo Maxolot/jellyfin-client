@@ -22,16 +22,21 @@ function dynamicRange(video: MediaStream | undefined) {
     return undefined;
 }
 
-export function versionLabel(source: MediaSourceInfo, index: number) {
-    const name = source.Name?.trim();
-    if (name && name !== source.Id) return name;
+export function versionDescription(source: MediaSourceInfo, index: number) {
     const streams = source.MediaStreams || [];
     const video = streams.find(stream => stream.Type === 'Video');
+    const resolutionLabel = resolution(video);
+    const range = dynamicRange(video);
+    const picture = [resolutionLabel, range === 'SDR' ? undefined : range].filter(Boolean).join(' ');
+    const name = source.Name?.trim();
+    const named = !!name && name !== source.Id;
     const audio = streams.filter(stream => stream.Type === 'Audio');
     const lead = audio.find(stream => stream.Index != null && stream.Index === source.DefaultAudioStreamIndex)
         || audio.find(stream => stream.IsDefault) || audio[0];
-    return [resolution(video), dynamicRange(video), lead && describeAudio({ ...lead, Title: undefined }), formatSize(source.Size)]
-        .filter(Boolean).join(' · ') || `Version ${index + 1}`;
+    return {
+        label: (named && name) || picture || `Version ${index + 1}`,
+        detail: [named && picture, lead && describeAudio({ ...lead, Title: undefined }), formatSize(source.Size)].filter(Boolean).join(' · ')
+    };
 }
 
 export function mediaVersions(sources: MediaSourceInfo[] | null | undefined) {
@@ -39,7 +44,7 @@ export function mediaVersions(sources: MediaSourceInfo[] | null | undefined) {
     for (const source of sources || []) {
         if (source.Id && !distinct.has(source.Id)) distinct.set(source.Id, source);
     }
-    return [...distinct].map(([id, source], index) => ({ id, source, label: versionLabel(source, index) }));
+    return [...distinct].map(([id, source], index) => ({ id, source, ...versionDescription(source, index) }));
 }
 
 /** Playback negotiates a source only if the selected ID still belongs to this item. */

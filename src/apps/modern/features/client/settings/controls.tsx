@@ -49,7 +49,7 @@ export function Toggle({ label, hint, checked, disabled, onChange }: Readonly<To
     </SettingRow>;
 }
 
-export type Option<T> = readonly [T, string];
+export type Option<T> = readonly [T, string, string?];
 
 /** A few choices side by side, as one radio group. */
 export function Segmented<T extends string | number | boolean>({ label, hint, value, options, disabled, onChange, stacked = false }: Readonly<{ label: string; hint?: ReactNode; value: T; options: readonly Option<T>[]; disabled?: boolean; onChange: (value: T) => void; stacked?: boolean }>) {
@@ -152,9 +152,9 @@ export function ChoiceSelect<T extends string | number>({ label, id: providedId,
             <span id={`${id}-value`}>{current}</span><ClientIcon name='down' />
         </button>
         {open && <ul ref={list} id={`${id}-list`} role='listbox' aria-label={label} aria-activedescendant={`${id}-option-${active}`} tabIndex={-1} onMouseDown={event => event.preventDefault()}>
-            {options.map(([key, name], position) => <li key={String(key)} id={`${id}-option-${position}`} role='option' aria-selected={key === value}
+            {options.map(([key, name, detail], position) => <li key={String(key)} id={`${id}-option-${position}`} role='option' aria-selected={key === value}
                 className={position === active ? 'is-active' : undefined} onPointerEnter={() => setActive(position)} onClick={() => pick(position)} onKeyDown={keys}>
-                <span>{name}</span>{key === value && <ClientIcon name='check' />}
+                <span className='client-choice-copy'>{name}{detail && <small>{detail}</small>}</span>{key === value && <ClientIcon name='check' />}
             </li>)}
         </ul>}
     </div>;

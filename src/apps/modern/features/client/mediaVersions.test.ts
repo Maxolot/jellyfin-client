@@ -1,7 +1,7 @@
 import type { BaseItemDto, MediaSourceInfo } from '@jellyfin/sdk/lib/generated-client';
 import { describe, expect, it } from 'vitest';
 
-import { filePlaybackOptions, mediaVersions, versionLabel } from './mediaVersions';
+import { filePlaybackOptions, mediaVersions, versionDescription } from './mediaVersions';
 
 describe('media versions', () => {
     it('prefers a named edition and omits missing and duplicate source IDs', () => {
@@ -19,10 +19,10 @@ describe('media versions', () => {
                 { Type: 'Audio', Index: 4, Language: 'fra', Codec: 'eac3', ChannelLayout: '5.1' }
             ]
         };
-        expect(versionLabel(source, 0)).toBe('4K · HDR10+ · Français · EAC3 · 5.1 · 14.5 Go');
-        expect(versionLabel({ MediaStreams: [{ Type: 'Video', Width: 2560, Height: 1440, VideoRangeType: 'SDR' }] }, 0)).toBe('1440p · SDR');
-        expect(versionLabel({ Id: 'id', Name: 'id' }, 1)).toBe('Version 2');
-        expect(versionLabel({ MediaStreams: [{ Type: 'Video', Height: 1080, VideoRangeType: 'DOVIWithHDR10' }] }, 0)).toBe('1080p · Dolby Vision');
+        expect(versionDescription(source, 0)).toEqual({ label: '4K HDR10+', detail: 'Français · EAC3 · 5.1 · 14.5 Go' });
+        expect(versionDescription({ MediaStreams: [{ Type: 'Video', Width: 2560, Height: 1440, VideoRangeType: 'SDR' }] }, 0).label).toBe('1440p');
+        expect(versionDescription({ Id: 'id', Name: 'id' }, 1).label).toBe('Version 2');
+        expect(versionDescription({ MediaStreams: [{ Type: 'Video', Height: 1080, VideoRangeType: 'DOVIWithHDR10' }] }, 0).label).toBe('1080p Dolby Vision');
     });
 
     it('resolves audio and subtitles against the chosen source and falls back for a removed version', () => {

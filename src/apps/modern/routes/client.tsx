@@ -559,11 +559,11 @@ function HeroActions({ model, dots }: ViewProps & { dots: ReactNode }) {
     const versions = id && playable?.Id === hero.Id ? mediaVersions(playable?.MediaSources) : [];
     const showVersions = versions.length > 1;
     const version = versions.find(entry => entry.id === choice.version)?.id || '';
-    const options: Option<string>[] = [['', 'Version automatique'], ...versions.map((entry): Option<string> => [entry.id, entry.label])];
+    const options: Option<string>[] = [['', 'Version auto'], ...versions.map((entry): Option<string> => [entry.id, entry.label, entry.detail])];
     let playLabel = 'Lecture';
     if (playable?.UserData?.PlaybackPositionTicks) playLabel = 'Reprendre';
     if (playable?.Type === 'Episode') playLabel = episodeLabel(playable);
-    return <div className='client-actions'>
+    return <div className={`client-actions${showVersions ? ' has-versions' : ''}`}>
         {playable && <button className='client-play' onClick={() => play(playable, undefined, showVersions ? version : undefined)}><ClientIcon name='play' />{playLabel}</button>}
         {showVersions && <div className='client-version-select'>
             <ChoiceSelect label='Version à lire' value={version} options={options} onChange={entry => chooseTracks({ ...choice, version: entry || undefined })} />

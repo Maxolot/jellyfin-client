@@ -91,7 +91,7 @@ export default function MediaInfoDialog({ item, basePath, open, onClose, play, c
                 </button></li>
                 {versions.map(version => <li key={version.id}>
                     <button type='button' className='client-media-row' aria-pressed={choice.version === version.id} onClick={() => chooseVersion(version.id)}>
-                        {choice.version === version.id && <ClientIcon name='check' />}{version.label}
+                        {choice.version === version.id && <ClientIcon name='check' />}{version.label}{version.detail && <small>{version.detail}</small>}
                     </button>
                 </li>)}
             </ul></section>}

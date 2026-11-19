@@ -44,6 +44,14 @@
         flex: none;
     }
 
+    .client-choice-copy small {
+        display: block;
+        margin-top: 3px;
+        color: #adb5c2;
+        font-size: 12px;
+        font-weight: 400;
+    }
+
     &.is-open {
         z-index: 12;
 
