@@ -436,15 +436,6 @@ body.client-spotlight-open {
     padding: 5px;
 }
 
-.client-spotlight-poster-title {
-    display: block;
-    margin-top: 6px;
-    overflow: hidden;
-    font-size: 12px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
 .client-spotlight-poster-badge {
     position: absolute;
     top: 10px;
@@ -493,26 +484,16 @@ body.client-spotlight-open {
     transform: translate(-50%, -50%);
 }
 
-.client-spotlight-resume-copy {
-    display: flex;
-    flex-direction: column;
-    margin-top: 6px;
-
-    strong,
-    small {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    strong {
-        font-size: 13px;
-    }
-
-    small {
-        color: #ffffff8c;
-        font-size: 11px;
-    }
+.client-spotlight-resume-episode {
+    position: absolute;
+    bottom: 16px;
+    left: 8px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: #000c;
+    color: #fff;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
 }
 
 .client-spotlight-chips .client-spotlight-options {

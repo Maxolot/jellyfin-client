@@ -11,22 +11,36 @@ import Spotlight, { type SpotlightHandle } from './Spotlight';
 const dune: BaseItemDto = { Id: 'dune', Name: 'Dune', Type: 'Movie', ProductionYear: 2021 };
 const arrival: BaseItemDto = { Id: 'arrival', Name: 'Premier Contact', Type: 'Movie', ProductionYear: 2016 };
 const episode: BaseItemDto = { Id: 'ep', Name: 'Pilote', SeriesName: 'Severance', Type: 'Episode', SeriesId: 'sev', IndexNumber: 1, ParentIndexNumber: 1 };
+const followed: BaseItemDto = { Id: 'seerr-movie-42', Name: 'Horizons', Type: 'Movie' };
+const otherFollowed: BaseItemDto = { Id: 'seerr-tv-43', Name: 'Horizons lointains', Type: 'Series' };
 const empty = { loadingLibrary: false, requestLoading: false, best: undefined, own: [], shared: [], requestable: [], people: [], groups: [],
-    resume: [], forYou: [], recentShared: { entries: [], items: [], byOthers: true }, trending: [], genreShortcuts: [] };
+    sharedIds: new Set([followed.Id!, otherFollowed.Id!]), resume: [], forYou: [], recentShared: { entries: [], items: [], byOthers: true }, trending: [], genreShortcuts: [] };
 
 vi.mock('hooks/useApi', () => ({ useApi: () => ({ api: { basePath: 'https://media.example.test' }, user: { Id: 'user-a' } }) }));
 vi.mock('../seerr/SeerrContext', () => ({ useSeerr: () => ({ connected: false }) }));
 vi.mock('components/playback/playbackmanager', () => ({ playbackManager: { isPlayingVideo: () => false } }));
-vi.mock('../Artwork', () => ({ default: () => null }));
+vi.mock('../Artwork', () => ({ default: ({ source }: { source: string }) => <img alt='' src={source || undefined} /> }));
+vi.mock('../seerr/queries', () => ({
+    useSeerrDetail: (_type: string | undefined, id: number | undefined) => ({
+        data: id ? { posterPath: `/poster-${id}.jpg`, backdropPath: `/backdrop-${id}.jpg` } : undefined
+    })
+}));
 vi.mock('../session', () => ({ clientRequest: (request: () => Promise<unknown>) => request() }));
 vi.mock('lib/jellyfin-apiclient', () => ({ ServerConnections: {} }));
 vi.mock('./useSpotlightData', () => ({
     spotlightIndexQuery: () => ({ queryKey: ['index'], queryFn: () => [] }),
     spotlightResumeQuery: () => ({ queryKey: ['resume'], queryFn: () => [] }),
     useSpotlightData: (_open: boolean, query: string) => (query.trim() ?
-        { ...empty, searching: true, best: dune, own: [arrival] } :
-        { ...empty, searching: false, resume: [episode], genreShortcuts: ['Science-fiction'] })
+        results(query) : {
+            ...empty, searching: false, resume: [episode], forYou: [arrival],
+            recentShared: { ...empty.recentShared, items: [otherFollowed] }, genreShortcuts: ['Science-fiction']
+        })
 }));
+
+function results(query: string) {
+    if (query === 'horizons') return { ...empty, searching: true, best: followed, shared: [otherFollowed] };
+    return { ...empty, searching: true, best: dune, own: [arrival] };
+}
 
 Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
 const play = vi.fn();
@@ -83,9 +97,27 @@ describe('Spotlight', () => {
         expect(dialog().hidden).toBe(false);
         expect(document.activeElement).toBe(field());
         expect(dialog().textContent).toContain('Reprendre');
-        expect(dialog().textContent).toContain('Severance');
+        const resume = dialog().querySelector('[aria-label="Reprendre Severance, S1:E1, Pilote"]');
+        expect(resume?.textContent).toBe('S1:E1');
+        expect(resume?.querySelector('.client-spotlight-art')?.textContent).toBe('S1:E1');
+        expect(dialog().querySelector('[aria-label="Premier Contact, 2016"]')?.textContent).toBe('');
         expect(dialog().textContent).toContain('Interstellar');
         expect(dialog().textContent).toContain('Science-fiction');
+    });
+
+    it('recovers artwork for older followed titles in posters, the best result and rows', () => {
+        press(window, 'k', { ctrlKey: true });
+        const poster = dialog().querySelector('[aria-label="Horizons lointains"]');
+        expect(poster?.querySelector('img')?.getAttribute('src')).toContain('/w500/poster-43.jpg');
+        expect(poster?.textContent).toBe('À télécharger');
+
+        type('horizons');
+        const best = dialog().querySelector('[aria-label="Horizons, meilleur résultat"]');
+        expect(best?.querySelector('img')?.getAttribute('src')).toContain('/w1280/backdrop-42.jpg');
+        expect(best?.textContent).toContain('Voir la fiche');
+        const row = dialog().querySelector('[aria-label="Horizons lointains, Série"]');
+        expect(row?.querySelector('img')?.getAttribute('src')).toContain('/w500/poster-43.jpg');
+        expect(row?.querySelector('strong')?.textContent).toBe('Horizons lointains');
     });
 
     it('selects the best result first, moves with the arrows and opens with Enter', () => {

@@ -140,6 +140,7 @@ export function useSpotlightData(open: boolean, query: string, filter: SearchFil
     const seerr = useSeerr();
     const sources = useSources(open, query, filter);
     const { searching, server, entries, local, remote } = sources;
+    const sharedIds = useMemo(() => new Set(entries.map(entry => `seerr-${entry.type}-${entry.id}`)), [entries]);
     const library = sources.index.data || [];
     const settled = server === query.trim();
     const all = searching && filter === 'all';
@@ -161,6 +162,7 @@ export function useSpotlightData(open: boolean, query: string, filter: SearchFil
         best,
         own: without(own.map(entry => entry.item)).slice(0, 6),
         shared: without(shared).slice(0, 4),
+        sharedIds,
         requestable: without(requestable).slice(0, 6),
         requestLoading: searching && seerr.connected && filter !== 'available' && (!settled || remote.loading),
         people: all ? rankNames(sources.people.data || [], entry => entry.Name, server, 5) : [],

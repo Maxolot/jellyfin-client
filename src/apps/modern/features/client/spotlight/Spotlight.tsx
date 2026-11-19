@@ -284,7 +284,7 @@ const Spotlight = forwardRef<SpotlightHandle, Props>(function ClientSpotlight({ 
     }, play);
     useEffect(() => setActive(query.trim() ? 0 : -1), [query, filter]);
 
-    const actions: Actions = { ...actionsBase, image, showWatched, basePath: api?.basePath || '', shared: new Set([...data.shared, ...data.recentShared.items].map(item => item.Id)) };
+    const actions: Actions = { ...actionsBase, image, showWatched, basePath: api?.basePath || '', shared: data.sharedIds };
     const focusField = () => input.current?.focus({ preventScroll: true });
     const groups = data.searching ? searchGroups(data, query, actions) : openingGroups(data, actions, {
         recent: recent.map(entry => chip(`recent-${entry}`, entry, () => {

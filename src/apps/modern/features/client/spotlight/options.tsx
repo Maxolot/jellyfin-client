@@ -3,6 +3,7 @@ import React, { type MouseEvent, type ReactNode } from 'react';
 
 import Artwork from '../Artwork';
 import ClientIcon from '../ClientIcon';
+import SharedCatalogArtwork from '../SharedCatalogArtwork';
 import WatchedMarker, { watchedLabel } from '../WatchedMarker';
 import { episodeLabel, isWatchedCard, progressPercent } from '../model';
 import { isExternal, mediaLabel, type CatalogueItem } from '../seerr/model';
@@ -16,7 +17,7 @@ export type Actions = {
     image: (item: BaseItemDto, backdrop?: boolean) => string;
     basePath: string;
     showWatched: boolean;
-    shared: Set<string | null | undefined>;
+    shared: ReadonlySet<string>;
     openItem: (item: BaseItemDto) => void;
     playItem: (item: BaseItemDto) => void;
     go: (path: string) => void;
@@ -32,7 +33,7 @@ function typeLabel(item: BaseItemDto) {
 
 function availability(item: BaseItemDto, actions: Actions) {
     if (!isExternal(item)) return 'Disponible';
-    return actions.shared.has(item.Id) ? 'À télécharger' : mediaLabel((item as CatalogueItem).Seerr?.mediaInfo);
+    return actions.shared.has(item.Id || '') ? 'À télécharger' : mediaLabel((item as CatalogueItem).Seerr?.mediaInfo);
 }
 
 function runner(item: BaseItemDto, actions: Actions) {
@@ -50,6 +51,12 @@ function alone(action: () => void) {
     };
 }
 
+function optionArtwork(item: BaseItemDto, actions: Actions, backdrop = false) {
+    const source = actions.image(item, backdrop);
+    if (!source && actions.shared.has(item.Id || '')) return <SharedCatalogArtwork item={item} backdrop={backdrop} />;
+    return <Artwork source={source} />;
+}
+
 function row(item: BaseItemDto, prefix: string, actions: Actions): Option {
     const watched = isWatchedCard(item, actions.showWatched);
     return {
@@ -58,7 +65,7 @@ function row(item: BaseItemDto, prefix: string, actions: Actions): Option {
         playable: !isExternal(item),
         run: runner(item, actions),
         view: () => <>
-            <span className='client-spotlight-thumb'><Artwork source={actions.image(item)} />{watched && <WatchedMarker />}</span>
+            <span className='client-spotlight-thumb'>{optionArtwork(item, actions)}{watched && <WatchedMarker />}</span>
             <span className='client-spotlight-text'><strong>{item.Name}</strong>
                 <small>{[item.ProductionYear, typeLabel(item)].filter(Boolean).join(' · ')}</small></span>
             <span className={`client-spotlight-badge${isExternal(item) ? '' : ' available'}`}>{availability(item, actions)}</span>
@@ -73,7 +80,7 @@ function poster(item: BaseItemDto, prefix: string, actions: Actions): Option {
         label: [item.Name, item.ProductionYear, watched && watchedLabel].filter(Boolean).join(', '),
         playable: !isExternal(item),
         run: runner(item, actions),
-        view: () => <><span className='client-spotlight-art'><Artwork source={actions.image(item)} />{watched && <WatchedMarker />}</span><span className='client-spotlight-poster-title'>{item.Name}</span>
+        view: () => <><span className='client-spotlight-art'>{optionArtwork(item, actions)}{watched && <WatchedMarker />}</span>
             {isExternal(item) && <span className='client-spotlight-poster-badge'>{availability(item, actions)}</span>}</>
     };
 }
@@ -85,7 +92,7 @@ export function chip(key: string, label: string, run: () => void, icon?: 'collec
 function BestActions({ item, actions }: Readonly<{ item: BaseItemDto; actions: Actions }>) {
     const favorite = actions.isFavorite(item);
     const favoriteLabel = favorite ? 'Retirer de ma liste' : 'Ajouter à ma liste';
-    const requestLabel = actions.shared.has(item.Id) ? 'Voir la fiche' : 'Demander';
+    const requestLabel = actions.shared.has(item.Id || '') ? 'Voir la fiche' : 'Demander';
     return <span className='client-spotlight-best-actions'>
         {isExternal(item) ?
             <button type='button' className='client-play' tabIndex={-1} onClick={alone(() => actions.openItem(item))}><ClientIcon name='plus' />{requestLabel}</button> :
@@ -105,7 +112,7 @@ function best(item: BaseItemDto, actions: Actions): Option {
         playable: !isExternal(item),
         run: runner(item, actions),
         view: () => <>
-            <span className='client-spotlight-best-art'><Artwork source={actions.image(item, true)} />{watched && <WatchedMarker />}</span>
+            <span className='client-spotlight-best-art'>{optionArtwork(item, actions, true)}{watched && <WatchedMarker />}</span>
             <span className='client-spotlight-best-copy'>
                 <strong>{item.Name}</strong>
                 <small>{[item.ProductionYear, typeLabel(item), availability(item, actions)].filter(Boolean).join(' · ')}</small>
@@ -133,15 +140,15 @@ function person(entry: BaseItemDto, actions: Actions): Option {
 function resume(item: BaseItemDto, actions: Actions): Option {
     return {
         key: `resume-${item.Id}`,
-        label: `Reprendre ${[item.SeriesName, item.Name].filter(Boolean).join(', ')}`,
+        label: `Reprendre ${[item.SeriesName, item.Type === 'Episode' && episodeLabel(item), item.Name].filter(Boolean).join(', ')}`,
         playable: true,
         // A title in progress starts again in one gesture.
         run: () => actions.playItem(item),
-        view: () => <><span className='client-spotlight-art'><Artwork source={actions.image(item, true)} />
+        view: () => <span className='client-spotlight-art'>{optionArtwork(item, actions, true)}
             <span className='client-spotlight-resume-play' aria-hidden='true'><ClientIcon name='play' /></span>
-            {progressPercent(item) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(item)}%` }} /></span>}</span>
-        <span className='client-spotlight-resume-copy'><strong>{item.SeriesName || item.Name}</strong>
-            <small>{item.Type === 'Episode' ? episodeLabel(item) : 'Film'}</small></span></>
+            {item.Type === 'Episode' && <span className='client-spotlight-resume-episode' aria-hidden='true'>{episodeLabel(item)}</span>}
+            {progressPercent(item) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(item)}%` }} /></span>}
+        </span>
     };
 }
 
