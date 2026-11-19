@@ -85,9 +85,10 @@ export default function CustomVideoPlayer() {
     const hasPlayer = !!snapshot && !ended;
     const canSeek = hasPlayer && playState?.CanSeek === true && duration > 0;
     const next = snapshot?.next;
+    const nextLabel = next?.Type === 'Episode' ? 'Épisode suivant' : 'Titre suivant';
     const nextCancelled = cancelledFor === itemId || sleepEnd;
     const secondsLeft = Math.max(0, duration - position);
-    const showNext = hasPlayer && item?.Type === 'Episode' && !!next && !nextCancelled && secondsLeft <= Math.max(30, preferences.next) && duration > 0;
+    const showNext = hasPlayer && next?.MediaType === 'Video' && !nextCancelled && secondsLeft <= Math.max(30, preferences.next) && duration > 0;
     const segment = activeSegment(segments, position);
     const commands: string[] = hasPlayer ? playbackManager.getSupportedCommands() : [];
     const wake = useCallback(() => {
@@ -367,14 +368,14 @@ export default function CustomVideoPlayer() {
             {loadingLabel && <LoadingTitle item={item} basePath={api?.basePath || ''} label={loadingLabel} />}
             {ended ? <div className='client-player-ended'><h2>{error ? 'Lecture interrompue' : 'Lecture terminée'}</h2><button type='button' onClick={replay}>{error ? 'Réessayer' : 'Revoir'}</button>{next && <button type='button' onClick={() => action(() => {
                 setEnded(false);
-                return playbackManager.play({ items: [next] });
-            })}>Épisode suivant · {next.Name}</button>}<button type='button' onClick={leave}>Retour à la fiche</button></div> : <div className='client-player-center'>
+                return playbackManager.nextTrack();
+            })}>{nextLabel} · {next.Name}</button>}<button type='button' onClick={leave}>Retour à la fiche</button></div> : <div className='client-player-center'>
                 {jumpButton(-1)}
                 <button type='button' className='client-player-main-play' aria-label={paused ? 'Reprendre la lecture' : 'Mettre en pause'} disabled={!hasPlayer} onClick={() => action(() => playbackManager.playPause())}>{paused ? <ClientIcon name='play' /> : <PlayerGlyph name='pause' />}</button>
                 {jumpButton(1)}
             </div>}
             {segment && canSeek && !(showNext && segment.Type === 'Outro') && (segment.Type !== 'Intro' || preferences.intro === 'button') && <button className='client-player-skip' type='button' onClick={() => seek((segment.EndTicks || 0) / SECOND)}>{segmentLabels[segment.Type || 'Outro']} <ClientIcon name='next' /></button>}
-            {showNext && <aside className='client-player-next'><small>À SUIVRE</small><strong>{next.SeriesName || item?.SeriesName}</strong><span>{next.Name}</span>{preferences.next > 0 && secondsLeft <= preferences.next && <span role='status'>{paused ? 'Compte à rebours en pause' : `Dans ${Math.ceil(secondsLeft)} s`}</span>}<div><button type='button' onClick={() => action(() => playbackManager.nextTrack())}>Épisode suivant <ClientIcon name='next' /></button><button type='button' onClick={() => setCancelledFor(itemId)}>Annuler</button></div></aside>}
+            {showNext && <aside className='client-player-next'><small>À SUIVRE</small><strong>{next.SeriesName}</strong><span>{next.Name}</span>{preferences.next > 0 && secondsLeft <= preferences.next && <span role='status'>{paused ? 'Compte à rebours en pause' : `Dans ${Math.ceil(secondsLeft)} s`}</span>}<div><button type='button' onClick={() => action(() => playbackManager.nextTrack())}>{nextLabel} <ClientIcon name='next' /></button><button type='button' onClick={() => setCancelledFor(itemId)}>Annuler</button></div></aside>}
             <footer className='client-player-bottom'>
                 {error && <p role='alert' className='client-player-error'>{error}</p>}
                 <div className='client-player-timeline'>

@@ -5,6 +5,8 @@ export interface PlayOptions {
     aspectRatio?: string
     /** The index of the audio stream to play */
     audioStreamIndex?: number
+    /** The supplied items already describe the complete queue. */
+    explicitQueue?: boolean
     /** Whether to play in fullscreen mode */
     fullscreen?: boolean
     /** Whether this is the first item in the play queue */

@@ -3,6 +3,9 @@ import { QuickConnectMenuItem } from '../features/client/account/AccountSettings
 import SettingsPage from '../features/client/settings/SettingsPage';
 /* eslint-disable react/jsx-no-bind -- View-local closures do not cross memoized component boundaries. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
+import { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-item-kind';
+import { ItemSortBy } from '@jellyfin/sdk/lib/generated-client/models/item-sort-by';
+import { getShowApi } from '@jellyfin/sdk/lib/utils/api/show-api';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
 import { getUserDataApi } from '@jellyfin/sdk/lib/utils/api/user-data-api';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -55,6 +58,8 @@ import MediaRow, { type MediaRowKind } from '../features/client/MediaRow';
 import { ChoiceSelect, type Option } from '../features/client/settings/controls';
 import AdvancedLibraryFilters from '../features/client/AdvancedLibraryFilters';
 import { countLibraryFilters, isFullLibrary, readLibraryFilters } from '../features/client/libraryFilters';
+import { QueueAction, QueueActions } from '../features/client/QueueActions';
+import { buildMediaQueue, isQueuedVideo, type PlayQueue } from '../features/client/mediaQueue';
 import FolderPanel from '../features/client/folders/FolderPanel';
 import { FolderPickerProvider, ListAction, useFolderPicker } from '../features/client/folders/FolderPicker';
 import { canFile } from '../features/client/folders/model';
@@ -208,6 +213,8 @@ function useClientController() {
     const hasPreviews = hasStaticPreviews || previewProviderAvailable;
     const [actionError, setActionError] = useState('');
     const [busy, setBusy] = useState(false);
+    const [queueBusy, setQueueBusy] = useState(false);
+    const queuePending = useRef(false);
     // What is starting to play, shown by name until the player opens.
     const [starting, setStarting] = useState<BaseItemDto | null>(null);
     const [searchInput, setSearchInput] = useState(search);
@@ -352,22 +359,59 @@ function useClientController() {
             queryFn: ({ signal }) => clientRequest(async () => (await getLibraryApi(api!).getItem({ itemId: targetId, userId: user!.Id! }, { signal })).data)
         });
     }
-    async function play(i: BaseItemDto, startTicks?: number, version?: string) {
-        if (isExternal(i)) {
-            setParams({ id: i.Id! }, { state: { returnTo: location.pathname + location.search, returnState: location.state } });
-            return;
-        }
+    async function startPlayback(items: BaseItemDto[], startPositionTicks: number, version?: string, explicitQueue = false) {
+        const first = items[0];
         setActionError('');
         setPreviewSuspended(true);
-        setStarting(i);
+        setStarting(first);
         try {
-            await playbackManager.play({ items: [i as ItemDto], startPositionTicks: startTicks ?? (i.UserData?.PlaybackPositionTicks || 0), ...await chosenTracks(api, user?.Id, i, version) });
+            await playbackManager.play({
+                items: items as ItemDto[], startPositionTicks, explicitQueue,
+                ...await chosenTracks(api, user?.Id, first, version)
+            });
         } catch {
             setStarting(null);
             setPreviewSuspended(false);
             setActionError('La lecture n’a pas pu démarrer. Réessayez dans un instant.');
         }
     }
+    async function play(i: BaseItemDto, startTicks?: number, version?: string) {
+        if (queuePending.current) return;
+        if (isExternal(i)) {
+            setParams({ id: i.Id! }, { state: { returnTo: location.pathname + location.search, returnState: location.state } });
+            return;
+        }
+        await startPlayback([i], startTicks ?? (i.UserData?.PlaybackPositionTicks || 0), version);
+    }
+    const playQueue: PlayQueue = async (source, shuffled) => {
+        if (!api || !user?.Id || queuePending.current) return;
+        queuePending.current = true;
+        setQueueBusy(true);
+        setActionError('');
+        try {
+            const userId = user.Id;
+            const queue = await clientRequest(async () => {
+                const titles = source === 'favorites' ? (await getLibraryApi(api).getItems({ userId, recursive: true,
+                    isFavorite: true, includeItemTypes: [BaseItemKind.Movie, BaseItemKind.Series], sortBy: [ItemSortBy.SortName],
+                    enableImages: true, imageTypeLimit: 1 })).data.Items || [] : source;
+                const episodes = async (seriesId: string) => (await getShowApi(api).getEpisodes({
+                    seriesId, userId, isMissing: false
+                })).data.Items || [];
+                return buildMediaQueue(titles, episodes, shuffled);
+            });
+            if (!queue.length) {
+                setActionError('Aucun titre disponible pour cette lecture.');
+                return;
+            }
+            // The player annotates its queue; keep query data immutable.
+            await startPlayback(queue.map(entry => ({ ...entry, ServerId: entry.ServerId || user.ServerId, MediaType: 'Video' })), 0, undefined, true);
+        } catch {
+            setActionError('Impossible de préparer la lecture. Réessayez.');
+        } finally {
+            queuePending.current = false;
+            setQueueBusy(false);
+        }
+    };
     async function updateState(kind: 'favorite' | 'played', target = item) {
         if (!api || !user?.Id || !target?.Id || busy) return;
         setBusy(true);
@@ -432,7 +476,7 @@ function useClientController() {
     const error = id ? details.item.isError : media.isError;
     const backdrop = ambient || pageBackdrop(id, view, hero, pageAmbient, media.data?.items || [], entry => image(entry, true));
     return { api, user, params, location, setParams, view, id, search, browseInput, media, details, item, preferences, actionError, busy,
-        searchInput, setSearchInput, starting, genres, genre, sort, savePreference, image, play, updateState, cards, row, playItem, hero, error,
+        searchInput, setSearchInput, starting, genres, genre, sort, savePreference, image, play, playQueue, queueBusy, updateState, cards, row, playItem, hero, error,
         standaloneSearch, prepareDetail, releaseDetail, prepareTab, seerr, catalogue, shared, sharedItems, sharedLocal, upcoming, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, previewProviderAvailable, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent, backdrop, setPageAmbient };
 }
 
@@ -555,7 +599,7 @@ function HeroCopyView({ model, dots }: ViewProps & { dots: ReactNode }) {
 }
 
 function HeroActions({ model, dots }: ViewProps & { dots: ReactNode }) {
-    const { hero, id, item, api, user, location, playItem, busy, play, image, updateState } = model;
+    const { hero, id, item, api, user, location, playItem, busy, play, playQueue, queueBusy, image, updateState } = model;
     const { choice, chooseTracks } = useTitleTrackChoice(api?.basePath, user?.Id, id ? hero?.Id : undefined);
     if (!hero) return null;
     const homePlayable = hero.Type === 'Movie' ? hero : undefined;
@@ -569,6 +613,7 @@ function HeroActions({ model, dots }: ViewProps & { dots: ReactNode }) {
     if (playable?.Type === 'Episode') playLabel = episodeLabel(playable);
     return <div className={`client-actions${showVersions ? ' has-versions' : ''}`}>
         {playable && <button className='client-play' onClick={() => play(playable, undefined, showVersions ? version : undefined)}><ClientIcon name='play' />{playLabel}</button>}
+        {id && hero.Type === 'Series' && <QueueAction source={[hero]} playQueue={playQueue} pending={queueBusy} shuffled />}
         {showVersions && <div className='client-version-select'>
             <ChoiceSelect label='Version à lire' value={version} options={options} onChange={entry => chooseTracks({ ...choice, version: entry || undefined })} />
         </div>}
@@ -581,20 +626,23 @@ function HeroActions({ model, dots }: ViewProps & { dots: ReactNode }) {
 }
 
 function EpisodesView({ model }: ViewProps) {
-    const { id, item, details, setParams, location, api, play } = model;
+    const { id, item, details, setParams, location, api, play, playQueue, queueBusy } = model;
     const [activeEpisode, setActiveEpisode] = useState('');
     if (!id || item?.Type !== 'Series') return null;
-    return <section className='client-episodes'><header><h2>Épisodes</h2><div role='group' aria-label='Saison'>{details.seasons.data?.map(s => <button key={s.Id} aria-pressed={details.selected === s.Id} onClick={() => setParams({ id, season: s.Id! }, { state: location.state })}><strong>{s.IndexNumber === 0 ? 'Spéciaux' : `Saison ${s.IndexNumber}`}</strong><small>{s.ChildCount ? `${s.ChildCount} épisodes` : 'Voir les épisodes'}</small></button>)}</div></header>
-        {(details.seasons.isPending || (details.episodes.isPending && !!details.selected)) && <ClientSkeleton layout='episodes' count={4} contained label='Chargement des épisodes…' />}
-        {details.episodes.isError && <button type='button' className='client-button' onClick={() => details.episodes.refetch()}>Réessayer le chargement des épisodes</button>}
-        <div className='client-strip'>{details.episodes.data?.map(e => <button className='client-episode' key={e.Id} onPointerEnter={() => setActiveEpisode(e.Id || '')} onPointerLeave={event => {
-            if (!event.currentTarget.contains(document.activeElement)) setActiveEpisode('');
-        }} onFocus={() => setActiveEpisode(e.Id || '')} onBlur={event => {
-            if (!event.currentTarget.contains(event.relatedTarget)) setActiveEpisode('');
-        }} onClick={() => play(e)} aria-label={`Lire ${episodeLabel(e)} ${e.Name}`}>
-            <Artwork source={artworkUrl(api?.basePath || '', e, 'episode')} /><PreviewClip item={e} surface='episode' enabled={activeEpisode === e.Id} soundControl={false} /><span className='client-episode-play' aria-hidden='true'><ClientIcon name='play' /></span><span className='client-episode-caption'><strong>{e.Name}</strong><small>{episodeLabel(e)} · {Math.round((e.RunTimeTicks || 0) / 6e8)} min</small></span>
-            <i className='client-progress'><i style={{ width: `${progressPercent(e)}%` }} /></i></button>)}</div>
-        {(details.episodes.data?.length === 0 || details.seasons.data?.length === 0) && <p>Aucun épisode disponible dans cette saison.</p>}
+    return <section className='client-episodes'><header><h2>Épisodes</h2><div role='group' aria-label='Saison'>{details.seasons.data?.map(s => <button key={s.Id} aria-pressed={details.selected === s.Id} onClick={() => setParams({ id, season: s.Id! }, { state: location.state })}><strong>{s.IndexNumber === 0 ? 'Spéciaux' : `Saison ${s.IndexNumber}`}</strong><small>{s.ChildCount ? `${s.ChildCount} épisodes` : 'Voir les épisodes'}</small></button>)}</div>
+        {details.episodes.data?.some(isQueuedVideo) && <QueueAction source={details.episodes.data} playQueue={playQueue}
+            pending={queueBusy} label='Lire la saison' />}
+    </header>
+    {(details.seasons.isPending || (details.episodes.isPending && !!details.selected)) && <ClientSkeleton layout='episodes' count={4} contained label='Chargement des épisodes…' />}
+    {details.episodes.isError && <button type='button' className='client-button' onClick={() => details.episodes.refetch()}>Réessayer le chargement des épisodes</button>}
+    <div className='client-strip'>{details.episodes.data?.map(e => <button className='client-episode' key={e.Id} onPointerEnter={() => setActiveEpisode(e.Id || '')} onPointerLeave={event => {
+        if (!event.currentTarget.contains(document.activeElement)) setActiveEpisode('');
+    }} onFocus={() => setActiveEpisode(e.Id || '')} onBlur={event => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setActiveEpisode('');
+    }} onClick={() => play(e)} aria-label={`Lire ${episodeLabel(e)} ${e.Name}`}>
+        <Artwork source={artworkUrl(api?.basePath || '', e, 'episode')} /><PreviewClip item={e} surface='episode' enabled={activeEpisode === e.Id} soundControl={false} /><span className='client-episode-play' aria-hidden='true'><ClientIcon name='play' /></span><span className='client-episode-caption'><strong>{e.Name}</strong><small>{episodeLabel(e)} · {Math.round((e.RunTimeTicks || 0) / 6e8)} min</small></span>
+        <i className='client-progress'><i style={{ width: `${progressPercent(e)}%` }} /></i></button>)}</div>
+    {(details.episodes.data?.length === 0 || details.seasons.data?.length === 0) && <p>Aucun épisode disponible dans cette saison.</p>}
     </section>;
 }
 
@@ -699,7 +747,7 @@ function DiscoveryView({ model }: ViewProps) {
 }
 
 function PersonalView({ model }: ViewProps) {
-    const { user, media, row, image, play, seerr } = model;
+    const { user, media, row, image, play, playQueue, queueBusy, seerr } = model;
     const home = useClientMedia('home', '', 0);
     const stats = usePersonalStats();
     const history = useViewingHistory();
@@ -721,7 +769,13 @@ function PersonalView({ model }: ViewProps) {
             <button className='client-play' onClick={() => play(lead)}><ClientIcon name='play' />Reprendre</button><Link className='client-button' to={`/client?id=${lead.SeriesId || lead.Id}`}>Voir la fiche</Link></div></section>}
         <div id='client-resume'>{row('Continuer à regarder', resume.slice(1), true)}</div>
         {row('Épisodes à venir', upcoming.data, false, 'upcoming-episodes')}
-        <div className='client-personal-favorites' id='client-favorites'><header><h2>Ma liste</h2></header><FolderPanel image={image} /><LibraryView model={model} embedded /></div>
+        <div className='client-personal-favorites' id='client-favorites'>
+            <header><h2>Ma liste</h2>{!!media.data?.total && <div className='client-queue-actions'>
+                <QueueActions source='favorites' playQueue={playQueue} pending={queueBusy} />
+            </div>}</header>
+            <FolderPanel image={image} playQueue={playQueue} queueBusy={queueBusy} />
+            <LibraryView model={model} embedded />
+        </div>
         {row('Vus récemment', history.data)}
         {!!stats.data?.genres.length && <div className='client-personal-columns'><GenreTaste stats={stats.data} /></div>}
         <RatingsOverview />

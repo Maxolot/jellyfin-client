@@ -267,7 +267,7 @@ function enableIntros(item) {
 }
 
 function getIntros(firstItem, apiClient, options) {
-    if (options.startPositionTicks || options.startIndex || options.fullscreen === false || !enableIntros(firstItem) || !userSettings.enableCinemaMode()) {
+    if (options.explicitQueue || options.startPositionTicks || options.startIndex || options.fullscreen === false || !enableIntros(firstItem) || !userSettings.enableCinemaMode()) {
         return Promise.resolve({
             Items: []
         });
@@ -1877,8 +1877,8 @@ export class PlaybackManager {
         }
 
         function getPlaybackPromise(firstItem, serverId, options, queryOptions, items) {
-            // Local downloads already describe their complete queue and never query episodes on the server.
-            if (firstItem.OfflineKey) return undefined;
+            // An explicit list is already in playback order, including when it contains a single episode.
+            if (options.explicitQueue || firstItem.OfflineKey) return undefined;
             const SortBy = options.shuffle ? ItemSortBy.Random : ItemSortBy.SortName;
 
             switch (firstItem.Type) {

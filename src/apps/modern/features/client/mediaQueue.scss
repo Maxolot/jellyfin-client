@@ -1,0 +1,38 @@
+.client-queue-actions {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.client-interface .client-queue-button {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    white-space: nowrap;
+
+    .client-icon {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.client-episodes header > [aria-label='Saison'] {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.client-episodes header .client-queue-button {
+    min-width: 0;
+    flex-direction: row;
+}
+
+.client-personal-favorites > header {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+}

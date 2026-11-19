@@ -2,6 +2,7 @@ import React from 'react';
 
 const paths = {
     play: 'M8 5v14l11-7Z',
+    shuffle: 'M3 6h3c5 0 7 12 12 12h3m-4-4 4 4-4 4M3 18h3c2 0 3-2 4-4m4-4c1-2 2-4 4-4h3m-4-4 4 4-4 4',
     volume: 'M11 5 6 9H2v6h4l5 4ZM15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14',
     muted: 'M11 5 6 9H2v6h4l5 4ZM16 9l6 6M16 15l6-6',
     star: 'm12 3 2.8 5.7 6.3.9-4.6 4.4 1.1 6.3-5.6-3-5.6 3 1.1-6.3L2.9 9.6l6.3-.9Z',

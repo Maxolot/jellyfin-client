@@ -6,17 +6,20 @@ import { Link, useLocation } from 'react-router-dom';
 import Artwork from '../Artwork';
 import ClientDialog from '../ClientDialog';
 import ClientIcon from '../ClientIcon';
+import { QueueActions } from '../QueueActions';
+import type { PlayQueue } from '../mediaQueue';
 import { ChoiceSelect, type Option } from '../settings/controls';
 import { useFolderPicker } from './FolderPicker';
 import { canEditFolder, type Folder, type FolderDetail, type FolderShare, orderedFolderItems } from './model';
 import { useFolderChange, useFolderDetail, useFolderTargets, useFolderTitles } from './queries';
 
 type Image = (item: BaseItemDto) => string;
+type QueueControls = { playQueue: PlayQueue; queueBusy: boolean };
 type Editor = 'rename' | 'share' | 'delete';
 
 const accessLabels = { owner: 'Personnel', editor: 'Modification', viewer: 'Lecture seule' };
 
-export default function FolderPanel({ image }: Readonly<{ image: Image }>) {
+export default function FolderPanel({ image, playQueue, queueBusy }: Readonly<{ image: Image } & QueueControls>) {
     const picker = useFolderPicker();
     const [selected, setSelected] = useState('');
     const [creating, setCreating] = useState(false);
@@ -41,7 +44,7 @@ export default function FolderPanel({ image }: Readonly<{ image: Image }>) {
         <FolderTiles folders={own} selected={selected} select={setSelected} empty='Aucun dossier personnel.' />
         <h3 id='client-shared-folders'>Partagées avec moi</h3>
         <FolderTiles folders={shared} selected={selected} select={setSelected} empty='Aucun dossier partagé pour le moment.' />
-        {folder && <FolderContents key={folder.id} summary={folder} image={image} onDelete={() => setSelected('')} />}
+        {folder && <FolderContents key={folder.id} summary={folder} image={image} playQueue={playQueue} queueBusy={queueBusy} onDelete={() => setSelected('')} />}
         <h3 className='client-folder-favorites-heading'>Favoris</h3>
     </section>;
 }
@@ -76,10 +79,12 @@ function FolderNameForm({ folder, onSave }: Readonly<{ folder?: Folder; onSave: 
     </form>;
 }
 
-function FolderContents({ summary, image, onDelete }: Readonly<{ summary: Folder; image: Image; onDelete: () => void }>) {
+function FolderContents({ summary, image, playQueue, queueBusy, onDelete }: Readonly<{ summary: Folder; image: Image; onDelete: () => void } & QueueControls>) {
     const detail = useFolderDetail(summary.id);
     const [editor, setEditor] = useState<Editor | null>(null);
     const data = detail.isError ? undefined : detail.data;
+    const titles = useFolderTitles(data?.items);
+    const items = !titles.isError && data && titles.data ? orderedFolderItems(data.items, titles.data) : [];
     const editable = canEditFolder(summary) && !!data && canEditFolder(data.folder);
     const owner = summary.access === 'owner' && data?.folder.access === 'owner';
     const activeEditor = (editor === 'rename' && editable) || owner ? editor : null;
@@ -88,15 +93,16 @@ function FolderContents({ summary, image, onDelete }: Readonly<{ summary: Folder
     return <section id='client-folder-content' className='client-folder-content' aria-label={summary.name}>
         <header>
             <div><h4>{summary.name}</h4><p>{accessLabels[summary.access]}{titleCount !== undefined && ` · ${titleCount} ${plural}`}</p></div>
-            {editable && <div className='client-folder-actions'>
-                <button type='button' className='client-button' onClick={() => setEditor('rename')}>Renommer</button>
+            {(editable || !!items.length) && <div className='client-folder-actions'>
+                {!!items.length && <QueueActions source={items.map(({ item }) => item)} playQueue={playQueue} pending={queueBusy} />}
+                {editable && <button type='button' className='client-button' onClick={() => setEditor('rename')}>Renommer</button>}
                 {owner && <><button type='button' className='client-button' onClick={() => setEditor('share')}>Partager</button>
                     <button type='button' className='client-button' onClick={() => setEditor('delete')}>Supprimer le dossier</button></>}
             </div>}
         </header>
         {detail.isPending && <p role='status'>Chargement du dossier…</p>}
         {detail.isError && <p role='alert'>Impossible d’ouvrir le dossier. <button type='button' className='client-button' onClick={() => detail.refetch()}>Réessayer</button></p>}
-        {data && !detail.isError && <FolderTitles detail={data} editable={editable} image={image} />}
+        {data && !detail.isError && <FolderTitles detail={data} titles={titles} items={items} editable={editable} image={image} />}
         <ClientDialog className='client-folder-modal' label={summary.name} title={editorTitle(activeEditor)} subtitle={summary.name}
             controlled={{ open: !!activeEditor, onClose: () => setEditor(null) }}>
             {close => <>
@@ -117,14 +123,14 @@ function editorTitle(editor: Editor | null) {
     return 'Supprimer le dossier';
 }
 
-function FolderTitles({ detail, editable, image }: Readonly<{ detail: FolderDetail; editable: boolean; image: Image }>) {
+function FolderTitles({ detail, titles, items, editable, image }: Readonly<{
+    detail: FolderDetail; titles: ReturnType<typeof useFolderTitles>; items: ReturnType<typeof orderedFolderItems>; editable: boolean; image: Image;
+}>) {
     const location = useLocation();
-    const titles = useFolderTitles(detail.items);
     const change = useFolderChange();
     if (!detail.items.length) return <p className='client-folder-empty'>Ce dossier ne contient encore aucun titre.</p>;
     if (titles.isPending) return <p role='status'>Chargement des titres…</p>;
     if (titles.isError) return <p role='alert'>Impossible de charger les titres. <button type='button' className='client-button' onClick={() => titles.refetch()}>Réessayer</button></p>;
-    const items = orderedFolderItems(detail.items, titles.data);
     return <>
         {!items.length && <p className='client-folder-empty'>Aucun titre disponible dans ce dossier.</p>}
         <ul className='client-folder-titles'>{items.map(({ item, itemId }) => <li key={itemId}>
