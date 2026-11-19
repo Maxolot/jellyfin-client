@@ -10,7 +10,7 @@ describe('interface preference restoration', () => {
     });
     it('uses safe defaults for older settings and malformed storage', () => {
         localStorage.setItem('older', JSON.stringify({ floating: true }));
-        expect(readInterfacePreferences('older')).toMatchObject({ floating: true, previews: true, previewMuted: true, hoverDescriptions: true, headerAlignment: 'center', hero: 'framed' });
+        expect(readInterfacePreferences('older')).toMatchObject({ floating: true, previews: true, previewMuted: true, hoverDescriptions: true, headerAlignment: 'center', hero: 'background', detailTreatment: 'cinema' });
         localStorage.setItem('broken', '{');
         expect(readInterfacePreferences('broken')).toMatchObject({ glass: true, detail: 'continuous' });
     });
@@ -19,6 +19,29 @@ describe('interface preference restoration', () => {
         expect(readInterfacePreferences('disabled').watchedMarkers).toBe(false);
         expect(readInterfacePreferences('new').watchedMarkers).toBe(true);
     });
+    it('migrates an existing account once and keeps unrelated stored values', () => {
+        localStorage.setItem('account', JSON.stringify({
+            floating: false, hero: 'framed', detailTreatment: 'clear', glass: false, detailShade: 33, extension: 'keep'
+        }));
+        expect(readInterfacePreferences('account')).toMatchObject({
+            floating: true, hero: 'background', detailTreatment: 'cinema', glass: false, detailShade: 33
+        });
+        const migrated = JSON.parse(localStorage.getItem('account')!);
+        expect(migrated).toMatchObject({ version: 1, extension: 'keep' });
+        localStorage.setItem('account', JSON.stringify({ ...migrated, floating: false, hero: 'framed', detailTreatment: 'progressive' }));
+        expect(readInterfacePreferences('account')).toMatchObject({ floating: false, hero: 'framed', detailTreatment: 'progressive' });
+    });
+
+    it('seeds new accounts independently and uses the same defaults without an active account', () => {
+        const presentation = { floating: true, hero: 'background', detailTreatment: 'cinema' };
+        expect(readInterfacePreferences(undefined)).toMatchObject(presentation);
+        expect(localStorage.length).toBe(0);
+        expect(readInterfacePreferences('one')).toMatchObject(presentation);
+        expect(readInterfacePreferences('two')).toMatchObject(presentation);
+        expect(JSON.parse(localStorage.getItem('one')!)).toMatchObject({ ...presentation, version: 1 });
+        expect(JSON.parse(localStorage.getItem('two')!)).toMatchObject({ ...presentation, version: 1 });
+    });
+
     it('does not reuse another account settings', () => {
         localStorage.setItem('first', JSON.stringify({ previews: false, glass: false, hoverDescriptions: false, headerAlignment: 'left' }));
         expect(readInterfacePreferences('other')).toMatchObject({ previews: true, glass: true, hoverDescriptions: true, headerAlignment: 'center' });

@@ -7,7 +7,7 @@ import { useApi } from 'hooks/useApi';
 import { useWebConfig } from 'hooks/useWebConfig';
 
 import ClientIcon from '../ClientIcon';
-import { readInterfacePreferences } from '../interfacePreferences';
+import { interfacePreferenceKey, readInterfacePreferences } from '../interfacePreferences';
 import '../client.scss';
 import '../profiles/profiles.scss';
 import './session.scss';
@@ -25,7 +25,7 @@ export default function SessionPage({ title, background, variant = 'standard', c
         // The boot spinner is owned by the legacy engine until our first screen is ready.
         loading.hide();
     }, []);
-    const classic = user?.Id && !readInterfacePreferences(`client-interface-${api?.basePath}-${user.Id}`).glass;
+    const classic = !readInterfacePreferences(interfacePreferenceKey(api?.basePath, user?.Id)).glass;
     return <Page id='clientPage' title={title} className='client-page' isBackButtonEnabled={false}>
         <div className={`client-profiles client-session client-session-${variant}${artwork ? ' has-backdrop' : ''}${classic ? ' client-session-classic' : ''}`}>
             {artwork && <img className={`client-session-backdrop${shown === artwork ? ' is-shown' : ''}`} src={artwork} alt='' onLoad={onBackgroundLoad} />}

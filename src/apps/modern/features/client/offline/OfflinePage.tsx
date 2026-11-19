@@ -7,7 +7,7 @@ import { useApi } from 'hooks/useApi';
 
 import ClientDialog from '../ClientDialog';
 import ClientIcon from '../ClientIcon';
-import { readInterfacePreferences } from '../interfacePreferences';
+import { interfacePreferenceKey, readInterfacePreferences } from '../interfacePreferences';
 import { downloader, posterName } from './downloader';
 import { offlineIdentity, rememberOfflineIdentity } from './identity';
 import { episodeLabel, formatBytes, progressOf, type OfflineEntry } from './model';
@@ -58,7 +58,7 @@ function LocalEntry({ entry, remove, action }: Readonly<{ entry: OfflineEntry; r
 
 export default function OfflinePage() {
     const { api, user } = useApi();
-    const classic = user?.Id && !readInterfacePreferences(`client-interface-${api?.basePath}-${user.Id}`).glass;
+    const classic = !readInterfacePreferences(interfacePreferenceKey(api?.basePath, user?.Id)).glass;
     const entries = useSyncExternalStore(downloader.subscribe, downloader.list, downloader.list);
     const [identity, setIdentity] = useState(offlineIdentity);
     const [space, setSpace] = useState<DeviceSpace>();

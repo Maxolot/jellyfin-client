@@ -22,7 +22,7 @@ import HeroArtwork from '../features/client/HeroArtwork';
 import ClientSkeleton from '../features/client/ClientSkeleton';
 import PreviewProvider, { usePreviews } from '../features/client/PreviewProvider';
 import PreviewClip from '../features/client/PreviewClip';
-import { type Preferences, useInterfacePreferences } from '../features/client/interfacePreferences';
+import { interfacePreferenceKey, type Preferences, useInterfacePreferences } from '../features/client/interfacePreferences';
 import HeroPagination, { type MarkerPosition } from '../features/client/HeroPagination';
 import useLoadedHero from '../features/client/useLoadedHero';
 import useTabPreparation from '../features/client/useTabPreparation';
@@ -191,7 +191,7 @@ function useClientController() {
     const filters = useClientFilters(['mine', 'tonight'].includes(view) ? 'disabled' : view);
     const genres = { ...filters, data: filters.data?.Genres };
     const cache = useQueryClient();
-    const prefKey = `client-interface-${api?.basePath}-${user?.Id}`;
+    const prefKey = interfacePreferenceKey(api?.basePath, user?.Id);
     const [preferences, storePreference] = useInterfacePreferences(prefKey);
     const previewProvider = usePreviewCapabilities(preferences.previews && !reducedMotion);
     const previewProviderAvailable = previewProvider.data === true;
