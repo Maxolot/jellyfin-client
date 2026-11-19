@@ -22,6 +22,7 @@ import type { ItemDto } from 'types/base/models/item-dto';
 import Events from 'utils/events';
 
 import ActionLabel from '../features/client/ActionLabel';
+import DetailSynopsis from '../features/client/DetailSynopsis';
 import HeroArtwork from '../features/client/HeroArtwork';
 import ClientSkeleton from '../features/client/ClientSkeleton';
 import PreviewProvider, { usePreviews } from '../features/client/PreviewProvider';
@@ -82,6 +83,7 @@ import '../features/client/readableBackdrops.scss';
 import '../features/client/themeConsistency.scss';
 import '../features/client/search.scss';
 import '../features/client/mediaVersions.scss';
+import '../features/client/detailInfoPosition.scss';
 
 type ClientNavigationState = { returnTo?: string, returnState?: ClientNavigationState | null, restoreFocus?: boolean };
 import TonightPage from '../features/client/TonightPage';
@@ -534,7 +536,7 @@ function ClientView({ model }: ViewProps) {
     const { preferences, id, view, user, actionError, error, media, details, profileOpen, setProfileOpen, profileButton, profileMenu, accent } = model;
     const spotlight = useRef<SpotlightHandle>(null);
     return <PreviewProvider serverAvailable={model.previewProviderAvailable} surface={model.surface} enabled={preferences.previews} muted={preferences.previewMuted} suspended={model.previewSuspended} toggleMuted={() => model.savePreference({ ...preferences, previewMuted: !preferences.previewMuted })} onPlayingChange={model.setPreviewPlaying}><Page id='clientPage' title={APP_NAME} className='client-page' isBackButtonEnabled={false}>
-        <div ref={model.surface} className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} ${preferences.chromatic ? 'client-chromatic' : ''} ${preferences.hero === 'background' ? 'client-hero-background' : ''} client-treatment-${preferences.detailTreatment} client-layout-${preferences.detail} ${id ? 'client-detail-page' : ''}`} style={{ '--client-accent': accent, '--detail-blur': `${preferences.detailBlur}px`, '--detail-shade': preferences.detailShade / 100, '--detail-width': `${preferences.detailWidth}%` } as CSSProperties}>
+        <div ref={model.surface} className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} ${preferences.chromatic ? 'client-chromatic' : ''} ${preferences.hero === 'background' ? 'client-hero-background' : ''} client-treatment-${preferences.detailTreatment} client-layout-${preferences.detail} client-detail-info-${preferences.detailInfo} ${id ? 'client-detail-page' : ''}`} style={{ '--client-accent': accent, '--detail-blur': `${preferences.detailBlur}px`, '--detail-shade': preferences.detailShade / 100, '--detail-width': `${preferences.detailWidth}%` } as CSSProperties}>
             <FolderPickerProvider>
                 {preferences.ambient && !id && <AmbientBackdrop source={model.backdrop} />}
                 <nav className='client-nav' data-alignment={preferences.headerAlignment} aria-label='Navigation principale'>
@@ -595,14 +597,12 @@ function HeroView({ model }: ViewProps) {
 
 function HeroCopyView({ model, dots }: ViewProps & { dots: ReactNode }) {
     const { hero, id, api } = model;
-    const [synopsisExpanded, setSynopsisExpanded] = useState(false);
-    useEffect(() => setSynopsisExpanded(false), [hero?.Id]);
     if (!hero) return null;
     return <div className='client-hero-copy'>{!id && <span className='client-eyebrow'>À LA UNE</span>}
         {hero.ImageTags?.Logo && <Artwork className='client-title-logo' source={artworkUrl(api?.basePath || '', hero, 'logo')} eager />}
         <h1 className={hero.ImageTags?.Logo ? 'client-title-fallback' : undefined}>{hero.Name}</h1>
         <HeroMetadata item={hero} detailed={!!id} />
-        {id && <><p className={`client-overview${synopsisExpanded ? ' expanded' : ''}`}>{hero.Overview}</p>{hero.Type === 'Series' && (hero.Overview?.length || 0) > 220 && <button className='client-synopsis-toggle' aria-expanded={synopsisExpanded} onClick={() => setSynopsisExpanded(!synopsisExpanded)}>{synopsisExpanded ? 'Réduire' : 'Lire la suite'}</button>}</>}
+        {id && <DetailSynopsis key={hero.Id} overview={hero.Overview} />}
         <HeroActions model={model} dots={dots} />
         {id && <PersonalRating item={hero} />}
     </div>;

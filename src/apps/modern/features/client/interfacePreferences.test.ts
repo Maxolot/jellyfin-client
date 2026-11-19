@@ -42,6 +42,14 @@ describe('interface preference restoration', () => {
         expect(JSON.parse(localStorage.getItem('two')!)).toMatchObject({ ...presentation, version: 1 });
     });
 
+    it('defaults detail information to the bottom and preserves the account’s previous-slot choice', () => {
+        localStorage.setItem('first', JSON.stringify({ version: 1, detailInfo: 'center' }));
+        localStorage.setItem('other', JSON.stringify({ version: 1 }));
+        expect(readInterfacePreferences('first').detailInfo).toBe('center');
+        expect(readInterfacePreferences('other').detailInfo).toBe('bottom');
+        expect(JSON.parse(localStorage.getItem('other')!)).toEqual({ version: 1 });
+    });
+
     it('does not reuse another account settings', () => {
         localStorage.setItem('first', JSON.stringify({ previews: false, glass: false, hoverDescriptions: false, headerAlignment: 'left' }));
         expect(readInterfacePreferences('other')).toMatchObject({ previews: true, glass: true, hoverDescriptions: true, headerAlignment: 'center' });

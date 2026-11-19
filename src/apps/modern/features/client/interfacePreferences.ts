@@ -15,11 +15,12 @@ export type Preferences = {
     detailWidth: number;
     previews: boolean;
     previewMuted: boolean;
+    detailInfo: 'bottom' | 'center';
     detail: 'continuous' | 'fade' | 'immersive';
 };
 const PREFERENCE_VERSION = 1;
 const presentationDefaults = { floating: true, hero: 'background', detailTreatment: 'cinema' } as const;
-const defaults: Preferences = { ...presentationDefaults, detailBlur: 24, detailShade: 75, detailWidth: 58, glass: true, headerAlignment: 'center', chromatic: false, ambient: true, hoverDescriptions: true, watchedMarkers: true, previews: true, previewMuted: true, detail: 'continuous' };
+const defaults: Preferences = { ...presentationDefaults, detailBlur: 24, detailShade: 75, detailWidth: 58, glass: true, headerAlignment: 'center', chromatic: false, ambient: true, hoverDescriptions: true, watchedMarkers: true, previews: true, previewMuted: true, detailInfo: 'bottom', detail: 'continuous' };
 
 function bounded(value: unknown, fallback: number, min: number, max: number) {
     return typeof value === 'number' && Number.isFinite(value) ? Math.max(min, Math.min(max, value)) : fallback;
@@ -68,6 +69,7 @@ export function readInterfacePreferences(key: string | undefined): Preferences {
             detailShade: bounded(saved.detailShade, 75, 0, 95),
             detailWidth: bounded(saved.detailWidth, 58, 35, 85),
             previewMuted: saved.previewMuted !== false,
+            detailInfo: option(saved.detailInfo, ['bottom', 'center'], defaults.detailInfo),
             detail: option(saved.detail, ['continuous', 'fade', 'immersive'], defaults.detail)
         };
     } catch { return defaults; }

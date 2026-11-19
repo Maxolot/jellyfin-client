@@ -28,6 +28,9 @@ export default function AppearanceSettings({ preferences, savePreference, hasPre
             <Toggle label='Descriptions au survol entre les sections' hint='Titre et résumé apparaissent sous la rangée survolée.' checked={preferences.hoverDescriptions} onChange={set('hoverDescriptions')} />
         </SettingCard>
         <SettingCard title='Fiches des films et séries' scope='browser'>
+            <PictureChoice label='Position des informations de la fiche' value={preferences.detailInfo} onChange={set('detailInfo')}
+                options={[{ value: 'bottom', label: 'En bas', preview: <InterfacePreview kind='info-bottom' /> },
+                    { value: 'center', label: 'Au milieu', preview: <InterfacePreview kind='info-center' /> }]} />
             <PictureChoice label='Fond des fiches' value={preferences.detail} onChange={set('detail')}
                 options={[{ value: 'continuous', label: 'Fond continu', preview: <InterfacePreview kind='continuous' /> }, { value: 'fade', label: 'Fondu progressif', preview: <InterfacePreview kind='fade' /> },
                     { value: 'immersive', label: 'Fiche immersive', preview: <InterfacePreview kind='immersive' /> }]} />

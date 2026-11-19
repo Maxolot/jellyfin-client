@@ -11,6 +11,7 @@ import Artwork from '../Artwork';
 import ClientDialog from '../ClientDialog';
 import DetailExtras from '../DetailExtras';
 import ClientSkeleton from '../ClientSkeleton';
+import DetailSynopsis from '../DetailSynopsis';
 import HeroArtwork from '../HeroArtwork';
 import ClientIcon from '../ClientIcon';
 import { withLocalAvailability, externalIdentity, catalogueItem, providerKey, canRequest, imageUrl, localMatch, mediaLabel, requestableSeasons, requestLabel,
@@ -228,7 +229,7 @@ export function ExternalDetail({ id, row, image }: Readonly<{ id: string; row: (
     }
     const data = detail.data;
     const match = localMatch(data, identity.type, local.data || []);
-    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><div className='client-detail-readability' aria-hidden='true' /><Link className='client-back' to={back} state={backState}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{[releaseLabel(data.releaseDate || data.firstAirDate), ...(data.genres || []).map(genre => genre.name)].filter(Boolean).join(' · ')}</p><ExternalSource data={data} identity={identity} owned={!!match} /><p className='client-overview'>{data.overview}</p><div className='client-actions'>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}<AvailabilityAction identity={identity} localItem={match} /><FollowCatalogAction item={catalogueItem(data, identity.type, [])} remote={data} /></div></div></section><ExternalRecommendations identity={identity} local={local.data || []} row={row} data={data} image={image} /></>;
+    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><div className='client-detail-readability' aria-hidden='true' /><Link className='client-back' to={back} state={backState}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{[releaseLabel(data.releaseDate || data.firstAirDate), ...(data.genres || []).map(genre => genre.name)].filter(Boolean).join(' · ')}</p><ExternalSource data={data} identity={identity} owned={!!match} /><DetailSynopsis key={identity.id} overview={data.overview} /><div className='client-actions'>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}<AvailabilityAction identity={identity} localItem={match} /><FollowCatalogAction item={catalogueItem(data, identity.type, [])} remote={data} /></div></div></section><ExternalRecommendations identity={identity} local={local.data || []} row={row} data={data} image={image} /></>;
 }
 
 function ExternalSource({ data, identity, owned }: Readonly<{ data: ExternalMedia; identity: SeerrIdentity; owned: boolean }>) {
