@@ -58,7 +58,7 @@ function FolderContent({ detail, full, playQueue, queueBusy, ...card }: Readonly
         pending={change.isPending} move={manualOrder ? direction => move(entry.key, direction) : undefined}
         previous={entry.key !== folderMemberKey(items[0])} next={entry.key !== folderMemberKey(items[items.length - 1])}
         remove={() => change.mutate({ method: 'DELETE', path: `/${folder.id}${folderMemberPath(entry)}` })} /> : undefined;
-    return <CollectionHero title={folder.name} items={queue} count={items.length} metadata={metadata} metadataBadge={<FolderSharing folder={folder} shares={shares} targets={targets.data} />}
+    return <CollectionHero tinted title={folder.name} items={queue} count={items.length} metadata={metadata} metadataBadge={<FolderSharing folder={folder} shares={shares} targets={targets.data} />}
         backTo={foldersPath} backLabel='Ma liste' full={full} image={card.image} playQueue={playQueue} queueBusy={queueBusy} actions={actions}>
         {organizing && editable && <p className='client-shelf-organize' role='status'>Utilise les flèches dans l’ordre du dossier pour déplacer un titre. <button type='button' className='client-button' onClick={() => setOrganizing(false)}>Terminer</button></p>}
         {change.isError && <div className='client-shelf-organize'><FolderError /></div>}

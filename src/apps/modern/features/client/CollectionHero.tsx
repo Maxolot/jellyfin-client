@@ -16,15 +16,16 @@ const maxWallPosters = 18;
 
 type Props = {
     title: string; items: BaseItemDto[]; count: number; metadata?: string; metadataBadge?: ReactNode; backTo: To; backLabel: string;
-    full: boolean; image: FolderImage; playQueue: PlayQueue; queueBusy: boolean; actions?: ReactNode; children: ReactNode;
+    full: boolean; tinted?: boolean; image: FolderImage; playQueue: PlayQueue; queueBusy: boolean; actions?: ReactNode; children: ReactNode;
 };
 
-export default function CollectionHero({ title, items, count, metadata, metadataBadge, backTo, backLabel, full, image, playQueue, queueBusy, actions, children }: Readonly<Props>) {
+export default function CollectionHero({ title, items, count, metadata, metadataBadge, backTo, backLabel, full, tinted, image, playQueue, queueBusy, actions, children }: Readonly<Props>) {
     const region = useRef<HTMLElement>(null);
     const [frozen, setFrozen] = useState(false);
     const picks = useMemo(() => items.filter(hasFolderPoster).slice(0, maxWallPosters), [items]);
     const posters = useMemo(() => picks.map(item => shelfPoster(item, image)).filter(Boolean), [picks, image]);
-    const color = useArtworkColor(posters[0]);
+    const tintedArtwork = tinted && posters.length > 0;
+    const color = useArtworkColor(tintedArtwork ? posters[0] : undefined, '128 128 128');
     const featured = items.find(item => item.BackdropImageTags?.length || item.ParentBackdropImageTags?.length)
         ?? picks[0];
     const backdrop = !!(featured?.BackdropImageTags?.length || featured?.ParentBackdropImageTags?.length);
@@ -45,7 +46,8 @@ export default function CollectionHero({ title, items, count, metadata, metadata
     const known = duration.data;
     const qualifier = known?.incomplete ? ' de durée connue' : '';
     const meta = [metadata, folderTitleCount(count), known?.ticks && `${folderDuration(known.ticks)}${qualifier}`];
-    return <div className='client-shelf-page' style={{ '--shelf-color': color } as CSSProperties}>
+    return <div className={tintedArtwork ? 'client-shelf-page client-shelf-folder' : 'client-shelf-page'}
+        style={tintedArtwork ? { '--shelf-color': color } as CSSProperties : undefined}>
         <section ref={region} className='client-hero client-home-hero client-shelf-hero'>
             <div className='client-hero-image-layer client-shelf-art' aria-hidden='true'>
                 {posters.length >= 6 ? <PosterWall posters={posters} frozen={frozen} /> :

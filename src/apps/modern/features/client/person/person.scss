@@ -32,9 +32,9 @@
     aspect-ratio: 3 / 4;
     place-items: center;
     overflow: hidden;
-    border: 1px solid #eee3;
-    border-radius: 16px;
-    background: linear-gradient(145deg, #2b415c, #162030);
+    border: 1px solid var(--client-surface-border);
+    border-radius: var(--client-card-radius);
+    background: var(--client-art-placeholder);
     font-size: clamp(30px, 10vw, 104px);
     font-weight: 700;
 
@@ -49,7 +49,7 @@
 
 .client-person-job {
     margin: 12px 0 10px;
-    color: #dbe4f1;
+    color: var(--client-surface-text);
     font-size: clamp(14px, 1.65vw, 21px);
 }
 
@@ -60,10 +60,10 @@
     grid-template-columns: auto minmax(0, 1fr);
     gap: 4px 9px;
     margin: 14px 0;
-    color: #d8deea;
+    color: var(--client-surface-muted);
     font-size: 13px;
 
-    dt { color: #aeb9cb; }
+    dt { color: var(--client-surface-subtle); }
 
     dd {
         margin: 0;
@@ -73,7 +73,7 @@
 
 .client-person-count {
     margin: 10px 0 16px;
-    color: #d5e9e8;
+    color: var(--client-surface-text);
     font-weight: 650;
 }
 
@@ -91,7 +91,7 @@
 
     p {
         margin: 4px 0;
-        color: #cbd3e0;
+        color: var(--client-surface-muted);
         line-height: 1.55;
         white-space: pre-line;
     }
@@ -116,7 +116,7 @@
     min-height: 40px;
     align-items: center;
     gap: 6px;
-    color: #d5ddea;
+    color: var(--client-surface-muted);
     font-size: 13px;
 }
 
@@ -125,40 +125,21 @@
     flex-wrap: wrap;
     gap: 6px;
     margin: 8px 0 18px;
-
-    button {
-        min-height: 40px;
-        padding: 4px 12px;
-        border: 1px solid #f0f5ff2b;
-        border-radius: 999px;
-        background: #e2eaf016;
-        color: #e2eaf0;
-
-        &[aria-pressed='true'] {
-            background: #ecf3fa;
-            color: #182235;
-        }
-    }
 }
 
 .client-credit-section {
     margin: 18px 0 clamp(22px, 3vw, 44px);
     padding: clamp(13px, 2.2vw, 28px);
-    border: 1px solid #d2e5fe2e;
-    border-radius: 17px;
-    background: linear-gradient(145deg, #233f4938, #191b240b);
+    border: 1px solid var(--client-surface-border);
+    border-radius: var(--client-panel-radius);
+    background: var(--client-surface-panel);
+    box-shadow: var(--client-surface-reflection);
+    backdrop-filter: var(--client-surface-blur);
 
     h3 {
         margin: 0 0 16px;
         font-size: clamp(19px, 2.3vw, 29px);
         font-weight: 660;
-    }
-
-    &.is-tracked { background: linear-gradient(145deg, #48363860, #191b240b); }
-
-    &.is-requestable {
-        border-color: #d2e5fe20;
-        background: #131823;
     }
 }
 
@@ -188,22 +169,13 @@
     left: 6px;
     max-width: calc(100% - 12px);
     padding: 4px 6px;
-    border-radius: 9px;
-    background: #0d1b20ea;
-    color: #e4faf7;
+    border: 1px solid var(--client-surface-border);
+    border-radius: var(--client-pill-radius);
+    background: var(--client-surface-raised);
+    color: var(--client-surface-text);
     font-size: clamp(9px, 0.92vw, 12px);
     line-height: 1.2;
     overflow-wrap: anywhere;
-}
-
-.is-tracked .client-credit-badge {
-    background: #342523eb;
-    color: #ffe8cf;
-}
-
-.is-requestable .client-credit-badge {
-    background: #202734eb;
-    color: #eef2fb;
 }
 
 .client-credit-copy {
@@ -213,7 +185,7 @@
     display: grid;
     gap: 4px;
     padding: 20px 8px 9px;
-    background: linear-gradient(transparent, #0c131deb 46%);
+    background: linear-gradient(transparent, var(--client-art-scrim) 46%);
     color: #fff;
     font-size: clamp(11px, 1.2vw, 15px);
     strong { display: none; }
@@ -221,14 +193,14 @@
     small {
         display: -webkit-box;
         overflow: hidden;
-        color: #e0e7f5;
+        color: var(--client-surface-muted);
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
     }
 }
 
 .client-credit-poster:where(:hover, :focus-visible) .client-credit-copy strong { display: block; }
-.client-person-note { color: #bbc6d7; }
+.client-person-note { color: var(--client-surface-muted); }
 
 @media (max-width: 700px) {
     .client-person-hero { padding-top: 8px; }

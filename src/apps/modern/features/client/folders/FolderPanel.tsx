@@ -50,7 +50,7 @@ function FolderTile({ folder, image, targets }: Readonly<{ folder: Folder; image
     const preview = useFolderTitles(entries);
     const posters = entries && preview.data ? orderedFolderItems(entries, preview.data)
         .filter(({ item }) => hasFolderPoster(item)) : [];
-    return <CollectionCover anchor={tile} className='client-folder-tile' to={folderPath(folder.id)} id={folder.id} name={folder.name}
+    return <CollectionCover tinted anchor={tile} className='client-folder-tile' to={folderPath(folder.id)} id={folder.id} name={folder.name}
         count={detail.data && folderTitleCount(detail.data.items.length)} badge={folder.access !== 'owner' || !!detail.data?.shares?.length ? <FolderSharing folder={folder} shares={detail.data?.shares} targets={targets} /> : undefined} posters={posters.map(({ item }) => shelfPoster(item, image)).filter(Boolean)}
         ready={detail.isSuccess && (!entries?.length || preview.isSuccess)} emptyLabel={folder.access === 'viewer' || detail.data?.items.length ? undefined : 'Ajoutez un titre'} />;
 }

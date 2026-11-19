@@ -30,13 +30,13 @@ export function useCoverPreview(anchor: RefObject<HTMLElement>, enabled = true) 
 type Props = {
     anchor: RefObject<HTMLAnchorElement>; to: string; id: string; name: string;
     posters: string[]; count?: string; badge?: ReactNode; ready: boolean;
-    emptyLabel?: string; className?: string;
+    emptyLabel?: string; className?: string; tinted?: boolean;
 };
 
-export default function CollectionCover({ anchor, to, id, name, posters, count, badge, ready, emptyLabel, className }: Readonly<Props>) {
-    const color = useArtworkColor(posters[0]);
+export default function CollectionCover({ anchor, to, id, name, posters, count, badge, ready, emptyLabel, className, tinted }: Readonly<Props>) {
+    const color = useArtworkColor(tinted ? posters[0] : undefined, '128 128 128');
     return <Link ref={anchor} to={to} data-client-focus={id} className={`client-cover ${className || ''}`}
-        style={{ '--cover-color': color } as CSSProperties}>
+        style={tinted && posters.length ? { '--cover-color': color } as CSSProperties : undefined}>
         <span className='client-cover-art' data-posters={posters.length} aria-hidden='true'>
             {!posters.length && <span className='client-cover-empty'><ClientIcon name='collection' /></span>}
             {posters.map(source => <span key={source} className='client-cover-poster'><Artwork source={source} /></span>)}

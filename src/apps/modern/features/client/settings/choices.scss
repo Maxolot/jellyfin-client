@@ -13,9 +13,9 @@
         justify-content: space-between;
         gap: 10px;
         padding: 8px 14px;
-        border: 1px solid #fff3;
-        border-radius: 12px;
-        background: var(--client-control-surface, #1c2027);
+        border: 1px solid var(--client-surface-border, #fff3);
+        border-radius: var(--client-control-radius, 12px);
+        background: var(--client-control-surface, #242424);
         color: #f2f3f5;
         font: inherit;
         font-size: 14px;
@@ -47,7 +47,7 @@
     .client-choice-copy small {
         display: block;
         margin-top: 3px;
-        color: #adb5c2;
+        color: var(--client-surface-muted, #c9c9c9);
         font-size: 12px;
         font-weight: 400;
     }
@@ -69,10 +69,11 @@
         padding: 5px;
         overflow-y: auto;
         overscroll-behavior: contain;
-        border: 1px solid #fff3;
-        border-radius: 14px;
-        background: var(--client-control-menu, #212631);
-        box-shadow: 0 14px 30px #0008;
+        border: 1px solid var(--client-surface-border, #fff3);
+        border-radius: var(--client-card-radius, 14px);
+        background: var(--client-control-menu, #242424);
+        box-shadow: var(--client-surface-shadow, 0 14px 30px #0008);
+        backdrop-filter: var(--client-surface-blur, none);
         list-style: none;
     }
 
@@ -99,11 +100,6 @@
             font-weight: 650;
         }
     }
-}
-
-.client-interface.client-classic {
-    --client-control-surface: #242424;
-    --client-control-menu: #242424;
 }
 
 .client-setting-control .client-select {

@@ -4,8 +4,6 @@
 
     h1 {
         margin: 6px 0 20px;
-        font-size: clamp(34px, 6vw, 66px);
-        letter-spacing: -0.036em;
     }
 }
 
@@ -20,11 +18,11 @@
     grid-template-columns: clamp(104px, 15vw, 158px) minmax(0, 1fr);
     gap: clamp(13px, 2vw, 25px);
     padding: clamp(13px, 2vw, 23px);
-    border: 1px solid #ccd9ed38;
-    border-radius: 18px;
-    background: linear-gradient(110deg, #212b3b, #141923);
-
-    &.is-blocked { background: linear-gradient(110deg, #332630, #191923); }
+    border: 1px solid var(--client-surface-border);
+    border-radius: var(--client-panel-radius);
+    background: var(--client-surface-panel);
+    box-shadow: var(--client-card-shadow);
+    backdrop-filter: var(--client-surface-blur);
 }
 
 .client-request-card-poster {
@@ -33,9 +31,9 @@
     aspect-ratio: 2 / 3;
     align-self: start;
     overflow: hidden;
-    border: 1px solid #dceafa33;
-    border-radius: 11px;
-    background: linear-gradient(135deg, #375375, #1d2738);
+    border: 1px solid var(--client-surface-border);
+    border-radius: var(--client-control-radius);
+    background: var(--client-art-placeholder);
 
     .client-artwork {
         position: absolute;
@@ -49,7 +47,7 @@
         position: absolute;
         inset: auto 0 0;
         padding: 22px 8px 8px;
-        background: linear-gradient(transparent, #080e18f2 48%);
+        background: linear-gradient(transparent, var(--client-art-scrim) 48%);
         font-size: clamp(12px, 1.35vw, 17px);
         overflow-wrap: anywhere;
     }
@@ -77,17 +75,17 @@
 .client-request-quality-badge {
     align-self: start;
     padding: 5px 10px;
-    border: 1px solid #99bed150;
-    border-radius: 24px;
-    background: #1f303f;
-    color: #e5f3fb;
+    border: 1px solid var(--client-surface-border);
+    border-radius: var(--client-pill-radius);
+    background: var(--client-surface-highlight);
+    color: var(--client-surface-text);
     font-size: 13px;
 }
 
 .is-blocked .client-request-stage {
-    border-color: #ffd4bd44;
-    background: #472e33;
-    color: #ffe6d4;
+    border-color: var(--client-state-warning-edge);
+    background: var(--client-state-warning-surface);
+    color: var(--client-state-warning-text);
 }
 
 .client-request-steps {
@@ -104,7 +102,7 @@
         flex-direction: column;
         align-items: center;
         gap: 5px;
-        color: #bbc5d8;
+        color: var(--client-surface-muted);
         text-align: center;
     }
 
@@ -113,7 +111,7 @@
         width: 25px;
         height: 25px;
         place-items: center;
-        border: 1px solid #d1e0f244;
+        border: 1px solid var(--client-state-track);
         border-radius: 50%;
         font-size: 12px;
     }
@@ -124,13 +122,13 @@
     }
 
     [aria-current] span {
-        border-color: #a4e6f2;
-        background: #a4e6f2;
-        color: #101e2c;
+        border-color: var(--client-state-emphasis);
+        background: var(--client-state-emphasis);
+        color: var(--client-state-contrast);
         animation: client-request-step-in 260ms ease both;
     }
 
-    .is-complete span { background: #134758; }
+    .is-complete span { background: var(--client-surface-highlight); }
 }
 
 .client-request-meter {
@@ -143,18 +141,20 @@
         overflow: hidden;
         border: 0;
         border-radius: 10px;
-        background: #d1e0f244;
-        color: #a4e6f2;
+        // The legacy dashboard gives every progress element an important background.
+        background: var(--client-state-track) !important;
+        color: var(--client-state-emphasis);
+        appearance: none;
 
-        &::-webkit-progress-bar { background: #d1e0f244; }
+        &::-webkit-progress-bar { background: transparent; }
 
         &::-webkit-progress-value {
             border-radius: 10px;
-            background: #a4e6f2;
+            background: var(--client-state-emphasis);
             transition: width 350ms ease;
         }
 
-        &::-moz-progress-bar { background: #a4e6f2; }
+        &::-moz-progress-bar { background: var(--client-state-emphasis); }
     }
 
     p {
@@ -162,7 +162,7 @@
         flex-wrap: wrap;
         gap: 4px 9px;
         margin: 6px 0 0;
-        color: #c1cbde;
+        color: var(--client-surface-muted);
         font-size: 13px;
     }
 }
@@ -179,9 +179,9 @@
         display: grid;
         gap: 4px;
         padding: 6px 9px;
-        border: 1px solid #cedaf035;
+        border: 1px solid var(--client-surface-border);
         border-radius: 9px;
-        color: #d7e3f8;
+        color: var(--client-surface-text);
         font-size: 12px;
     }
 }

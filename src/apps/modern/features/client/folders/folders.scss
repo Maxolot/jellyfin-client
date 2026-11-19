@@ -48,9 +48,9 @@
         width: 100%;
         min-height: 44px;
         padding: 10px 12px;
-        border: 1px solid #ffffff40;
-        border-radius: 8px;
-        background: #ffffff08;
+        border: 1px solid var(--client-surface-border);
+        border-radius: var(--client-control-radius);
+        background: var(--client-control-surface);
         color: inherit;
         font: inherit;
     }
@@ -69,7 +69,7 @@
 .client-folder-empty {
     display: block;
     margin-top: 3px;
-    color: #c1c5ce;
+    color: var(--client-surface-muted);
     font-size: 13px;
 }
 
@@ -91,7 +91,7 @@
         place-items: center;
         padding: 0;
         border-color: #fff5;
-        background: #17181cf2;
+        background: var(--client-surface-raised);
     }
 }
 

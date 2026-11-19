@@ -21,7 +21,7 @@
 
     p {
         margin: 6px 0 0;
-        color: #c0c7d3;
+        color: var(--client-surface-muted);
     }
 }
 
@@ -44,7 +44,7 @@
 
 .client-collections-note {
     margin: 0;
-    color: #c0c7d3;
+    color: var(--client-surface-muted);
 }
 
 .client-detail-dialog.client-collection-modal { width: min(560px, calc(100vw - 32px)); }
@@ -59,9 +59,9 @@
         width: 100%;
         min-height: 44px;
         padding: 10px 12px;
-        border: 1px solid #ffffff40;
-        border-radius: 8px;
-        background: #ffffff08;
+        border: 1px solid var(--client-surface-border);
+        border-radius: var(--client-control-radius);
+        background: var(--client-control-surface);
         color: inherit;
         font: inherit;
     }
@@ -83,13 +83,13 @@
         align-items: center;
         gap: 12px;
         padding: 7px 10px;
-        border: 1px solid #ffffff26;
+        border: 1px solid var(--client-surface-border);
         border-radius: 9px;
-        background: #ffffff08;
+        background: var(--client-control-surface);
         color: inherit;
         text-align: start;
 
-        &:hover { background: #ffffff14; }
+        &:hover { background: var(--client-surface-highlight); }
     }
 
     strong,

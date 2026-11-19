@@ -6,13 +6,15 @@
     margin: auto;
     padding: 0;
     overflow-y: auto;
-    border: 1px solid #ffffff30;
-    border-radius: 18px;
-    background: #17181c;
-    color: #f3f3f5;
+    border: 1px solid var(--client-surface-border, #fff3);
+    border-radius: var(--client-panel-radius, 18px);
+    background: var(--client-surface-raised, #202020);
+    box-shadow: var(--client-surface-shadow, 0 14px 38px #0007);
+    backdrop-filter: var(--client-surface-blur, none);
+    color: var(--client-surface-text, #f4f4f4);
 
     &::backdrop {
-        background: #000b;
+        background: #0008;
         backdrop-filter: blur(6px);
     }
 
@@ -26,7 +28,7 @@
         gap: 18px;
         padding: 22px;
         border-bottom: 1px solid #ffffff18;
-        background: #17181c;
+        background: var(--client-surface-header, #202020);
     }
 
     h2 {
@@ -35,7 +37,7 @@
         font-weight: 600;
     }
 
-    small { color: #b5b7bf; }
+    small { color: var(--client-surface-muted, #c9c9c9); }
 
     > header > button {
         display: grid;
@@ -55,7 +57,10 @@
         margin: 0;
         padding: 0;
         border: 0;
+        border-radius: 0;
         background: none;
+        box-shadow: none;
+        backdrop-filter: none;
     }
 
     .client-cast-grid {

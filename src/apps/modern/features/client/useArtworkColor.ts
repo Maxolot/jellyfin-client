@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 
 /** Sample a tiny server thumbnail; CORS failures simply retain a neutral glow. */
-export default function useArtworkColor(source: string | undefined) {
-    const [color, setColor] = useState('115 139 175');
+export default function useArtworkColor(source: string | undefined, fallback = '115 139 175') {
+    const [color, setColor] = useState(fallback);
     useEffect(() => {
         if (!source) return;
         let disposed = false;

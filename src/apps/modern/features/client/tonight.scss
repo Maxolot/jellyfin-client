@@ -70,7 +70,7 @@
 .client-draw-keywords {
     display: block;
     margin: 0;
-    color: #b9bbc3;
+    color: var(--client-surface-muted);
     font-size: 12px;
 }
 
@@ -85,7 +85,7 @@
     border: 1px solid #ffffff35;
     border-radius: 99px;
     background: transparent;
-    color: #c9cbd1;
+    color: var(--client-surface-muted);
     font-size: 12px;
 
     &[aria-pressed='true'] {
@@ -100,14 +100,14 @@
     width: 100%;
     min-height: 44px;
     padding: 10px 14px;
-    border: 1px solid #ffffff40;
-    border-radius: 12px;
-    background: var(--client-control-surface, #1c2027);
+    border: 1px solid var(--client-surface-border);
+    border-radius: var(--client-control-radius);
+    background: var(--client-control-surface);
     color: #f2f3f5;
     font: inherit;
     font-size: 16px;
 
-    &::placeholder { color: #a6b1c3; }
+    &::placeholder { color: var(--client-surface-subtle); }
 }
 
 .client-draw-stage {
@@ -143,7 +143,7 @@
 .client-draw-card .client-draw-shell {
     position: absolute;
     inset: 0;
-    border-radius: 12px;
+    border-radius: var(--client-control-radius);
     animation: draw-turn 0.75s ease both;
     animation-delay: calc(var(--draw-order) * 130ms + 100ms);
     transform-style: preserve-3d;
@@ -159,7 +159,7 @@
 }
 
 .client-draw-front {
-    background: #17191e;
+    background: var(--client-art-placeholder);
     transform: rotateY(0);
 }
 
@@ -167,7 +167,8 @@
     display: grid;
     place-items: center;
     border: 1px solid #ffffff50;
-    background: radial-gradient(ellipse at 30% 20%, #ffffff14, transparent 65%), linear-gradient(135deg, #24262f, #0c0e13);
+    background: var(--client-surface-raised);
+    box-shadow: var(--client-surface-reflection);
     transform: rotateY(180deg);
 
     &::before {
@@ -192,7 +193,7 @@
 .client-draw-open {
     display: block;
     height: 100%;
-    border-radius: 12px;
+    border-radius: var(--client-control-radius);
     outline-offset: -3px;
 }
 
@@ -202,8 +203,8 @@
     height: 100%;
     overflow: hidden;
     border: 1px solid #ffffff24;
-    border-radius: 12px;
-    background: #17191e;
+    border-radius: var(--client-control-radius);
+    background: var(--client-art-placeholder);
     transition: border-color 0.25s, box-shadow 0.25s;
 
     img {
@@ -221,7 +222,7 @@
 
 .client-draw-empty {
     padding: 75px 0;
-    color: #aeb1bb;
+    color: var(--client-surface-muted);
     text-align: center;
 }
 

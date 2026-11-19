@@ -54,13 +54,14 @@
     justify-content: space-between;
     gap: 8px;
     padding: 10px 12px;
-    border: 1px solid #b7c4db2e;
-    border-radius: 12px;
-    background: #121923;
+    border: 1px solid var(--client-surface-border);
+    border-radius: var(--client-control-radius);
+    background: var(--client-surface-layer);
 
     &.is-unread {
-        border-color: #88cbdc6b;
-        background: #202f3d;
+        border-color: var(--client-surface-edge);
+        background: var(--client-surface-highlight);
+        box-shadow: var(--client-surface-reflection);
     }
 
     > a {
@@ -73,14 +74,14 @@
     }
 
     time {
-        color: #bac9dd;
+        color: var(--client-surface-subtle);
         font-size: 11px;
     }
 }
 
 .client-notification-event,
 .client-notification-detail {
-    color: #cfdfec;
+    color: var(--client-surface-muted);
     font-size: 12px;
 }
 

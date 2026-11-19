@@ -3,14 +3,45 @@
 // Chargé en dernier : il l'emporte sur les styles propres à chaque page.
 //
 // - Bouton principal : Lecture, Reprendre, Autres idées, Appliquer.
-// - Bouton secondaire : Voir la fiche, Plus d'infos, Affiner.
+// - Bouton secondaire : Voir la fiche, Plus d’infos.
 // - Pastilles de choix : Découvrir/Bibliothèque, périodes des Nouveautés, ambiances et durées de Ce soir.
 
 $primary: '.client-play, .client-draw-reroll';
-$secondary: '.client-button, .client-draw-refine > summary';
-$chips: '.client-catalogue-switch button, .client-period-choices button, .client-draw-choices button';
+$secondary: '.client-button';
+$chip-groups: '.client-catalogue-switch, .client-period-choices, .client-draw-choices, .client-person-role-tabs';
 
 .client-interface {
+    --client-heading-size: clamp(28px, 3.25vw, 43px);
+    --client-panel-radius: 18px;
+    --client-card-radius: 14px;
+    --client-control-radius: 12px;
+    --client-pill-radius: 999px;
+    --client-surface-panel: #1b1b1b;
+    --client-surface-raised: #202020;
+    --client-surface-header: #202020;
+    --client-surface-layer: #ffffff08;
+    --client-surface-highlight: #ffffff18;
+    --client-surface-border: #ffffff2e;
+    --client-surface-edge: #ffffff59;
+    --client-surface-blur: none;
+    --client-surface-reflection: none;
+    --client-surface-shadow: 0 14px 38px #0007;
+    --client-card-shadow: 0 7px 18px #0005;
+    --client-control-surface: #242424;
+    --client-control-menu: #242424;
+    --client-surface-text: #f4f4f4;
+    --client-surface-muted: #c9c9c9;
+    --client-surface-subtle: #b4b4b4;
+    --client-art-placeholder: #252525;
+    --client-art-scrim: #101010ed;
+    --client-state-emphasis: #f3f3f3;
+    --client-state-contrast: #171717;
+    --client-state-track: #ffffff30;
+    --client-state-warning-surface: #e9b87920;
+    --client-state-warning-edge: #e9b87967;
+    --client-state-warning-text: #ffe0b4;
+    --client-icon-target: 44px;
+
     :is(#{$primary}, #{$secondary}) {
         display: inline-flex;
         align-items: center;
@@ -32,22 +63,13 @@ $chips: '.client-catalogue-switch button, .client-period-choices button, .client
         font-weight: 700;
     }
 
-    .client-draw-refine > summary {
-        min-height: 48px;
-        padding: 12px 20px;
-        border: 1px solid #ffffff40;
-        color: #f2f3f5;
-        font-size: 15px;
-        font-weight: 600;
-    }
-
-    :is(#{$chips}) {
+    :is(#{$chip-groups}) button {
         min-height: 40px;
         padding: 9px 17px;
         border: 1px solid #ffffff30;
         border-radius: 999px;
         background: transparent;
-        color: #c3c9d3;
+        color: var(--client-surface-muted);
         font-size: 13px;
         font-weight: 500;
         transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.22s ease;
@@ -59,11 +81,7 @@ $chips: '.client-catalogue-switch button, .client-period-choices button, .client
         }
     }
 
-    --client-heading-size: clamp(28px, 3.25vw, 43px);
-    --client-panel-radius: 18px;
-    --client-icon-target: 44px;
-
-    :is(.client-page-heading, .client-library-heading, .client-search-heading, .client-personal-identity, .client-tonight-table-head) h1,
+    :is(.client-page-heading, .client-library-heading, .client-search-heading, .client-personal-identity, .client-tonight-table-head, .client-live-requests) h1,
     .client-preferences > h1 {
         font-size: var(--client-heading-size);
         font-weight: 650;
@@ -190,7 +208,7 @@ $chips: '.client-catalogue-switch button, .client-period-choices button, .client
         }
     }
 
-    :is(#{$chips}) {
+    :is(#{$chip-groups}) button {
         &[aria-pressed='true'] {
             border-color: #f2f3f5;
             background: #f2f3f5;
@@ -203,28 +221,40 @@ $chips: '.client-catalogue-switch button, .client-period-choices button, .client
 // L'option chromatique garde sa propre teinte sur le bouton principal.
 .client-interface.client-glass:not(.client-chromatic) :is(#{$primary}) {
     border: 1px solid #ffffff6b;
-    background: linear-gradient(140deg, #ffffff38, #ffffff12), #0f131966;
+    background: linear-gradient(140deg, #ffffff38, #ffffff12), #15151566;
     color: #fff;
     box-shadow: inset 0 1px 0 #ffffff8c, 0 5px 20px #0004;
     backdrop-filter: blur(20px) saturate(155%);
 }
 
 .client-interface.client-glass {
+    --client-surface-panel: linear-gradient(145deg, #ffffff21, #ffffff07 70%), #111a;
+    --client-surface-raised: linear-gradient(145deg, #ffffff24, #ffffff0a 68%), #151515b8;
+    --client-surface-header: linear-gradient(145deg, #ffffff0c, transparent), #232323dc;
+    --client-surface-border: #ffffff40;
+    --client-surface-edge: #ffffff73;
+    --client-surface-blur: blur(22px) saturate(115%);
+    --client-surface-reflection: inset 0 1px 0 #ffffff38;
+    --client-surface-shadow: inset 0 1px 0 #ffffff3b, 0 18px 45px #0007;
+    --client-card-shadow: inset 0 1px 0 #ffffff25, 0 9px 24px #0005;
+    --client-control-surface: linear-gradient(145deg, #ffffff17, #ffffff07), #171717a8;
+    --client-control-menu: var(--client-surface-raised);
+
     :is(#{$secondary}) {
         border: 1px solid #ffffff4d;
-        background: linear-gradient(140deg, #ffffff1c, #ffffff06), #0f131947;
+        background: linear-gradient(140deg, #ffffff1c, #ffffff06), #15151547;
         color: #f4f5f7;
         box-shadow: inset 0 1px 0 #ffffff59, 0 5px 20px #0003;
         backdrop-filter: blur(18px) saturate(140%);
     }
 
-    :is(#{$chips}) {
+    :is(#{$chip-groups}) button {
         background: linear-gradient(140deg, #ffffff0d, #ffffff02);
         backdrop-filter: blur(14px);
 
         &[aria-pressed='true'] {
             border-color: #ffffffb3;
-            background: linear-gradient(140deg, #ffffff40, #ffffff14), #0f131940;
+            background: linear-gradient(140deg, #ffffff40, #ffffff14), #15151540;
             color: #fff;
             box-shadow: inset 0 1px 0 #ffffff80;
         }
@@ -244,13 +274,6 @@ $chips: '.client-catalogue-switch button, .client-period-choices button, .client
     margin-top: 0;
     margin-bottom: 0;
     vertical-align: middle;
-}
-
-.client-interface.client-glass .client-detail-dialog {
-    border-color: #ffffff40;
-    background: #191e28;
-
-    > header { background: #191e28; }
 }
 
 .client-interface.client-classic .client-detail-dialog::backdrop {
