@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PreviewPlayback } from './playback';
+import { PreviewPlayback, startPreviewVideo } from './playback';
 
 function video() {
     const element = document.createElement('video');
@@ -36,5 +36,44 @@ describe('preview playback ownership', () => {
         playback.stop();
         expect(element.pause).toHaveBeenCalled();
         expect(playback.owns(element, nextLease)).toBe(false);
+    });
+});
+
+describe('preview start', () => {
+    it('falls back once for a remote source rejected in CORS mode', async () => {
+        const element = video();
+        element.crossOrigin = 'anonymous';
+        element.src = 'https://media.example.test/clip.mp4';
+        Object.defineProperty(element, 'error', { value: { code: 4 } });
+        element.play = vi.fn().mockRejectedValueOnce(new DOMException('Source failed', 'NotSupportedError')).mockResolvedValueOnce(undefined);
+        const mute = vi.fn();
+        expect(await startPreviewVideo(element, () => true, mute)).toBe(true);
+        expect(element.crossOrigin).toBeNull();
+        expect(element.src).toBe('https://media.example.test/clip.mp4');
+        expect(element.play).toHaveBeenCalledTimes(2);
+        expect(mute).not.toHaveBeenCalled();
+    });
+
+    it('keeps the same source and requests muted playback when autoplay is blocked', async () => {
+        const element = video();
+        element.crossOrigin = 'anonymous';
+        element.play = vi.fn().mockRejectedValueOnce(new DOMException('Autoplay blocked', 'NotAllowedError')).mockResolvedValueOnce(undefined);
+        const mute = vi.fn();
+        expect(await startPreviewVideo(element, () => true, mute)).toBe(true);
+        expect(element.crossOrigin).toBe('anonymous');
+        expect(element.muted).toBe(true);
+        expect(element.play).toHaveBeenCalledTimes(2);
+        expect(mute).toHaveBeenCalledOnce();
+    });
+
+    it('does not restart a clip that lost ownership during startup', async () => {
+        const element = video();
+        element.crossOrigin = 'anonymous';
+        element.src = 'https://media.example.test/clip.mp4';
+        Object.defineProperty(element, 'error', { value: { code: 4 } });
+        element.play = vi.fn().mockRejectedValue(new DOMException('Source failed', 'NotSupportedError'));
+        expect(await startPreviewVideo(element, () => false, vi.fn())).toBe(false);
+        expect(element.crossOrigin).toBe('anonymous');
+        expect(element.play).toHaveBeenCalledOnce();
     });
 });

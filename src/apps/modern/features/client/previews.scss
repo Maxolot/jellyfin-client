@@ -115,6 +115,8 @@
 
     .client-detail .client-preview-media video {
         object-position: 65% top;
+
+        &.is-framed { object-position: 65% center; }
     }
 }
 
