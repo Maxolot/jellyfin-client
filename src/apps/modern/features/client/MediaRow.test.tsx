@@ -74,6 +74,14 @@ describe('prepared landscape handoff', () => {
         expect(card(0).classList.contains('active')).toBe(true);
         expect(card(0).classList.contains('has-backdrop')).toBe(true);
     });
+    it('keeps the name on the expanded card and out of the copy below the row', async () => {
+        await decode(0);
+        await focus(0);
+        expect(card(0).querySelector('a')?.getAttribute('aria-label')).toBe(items[0].Name);
+        expect(card(0).querySelector('.client-expanded-title')?.textContent).toBe(items[0].Name);
+        expect(container.querySelector('.client-row-info h3')).toBeNull();
+    });
+
     it('closes the previous focus and only opens the latest requested image', async () => {
         await decode(0);
         await focus(0);

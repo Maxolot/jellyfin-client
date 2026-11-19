@@ -12,7 +12,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useQueryClient } from '@tanstack/react-query';
 import { APP_NAME } from 'constants/branding';
 import React, { type CSSProperties, memo, type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigationType, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigationType, useSearchParams, useNavigate, useParams } from 'react-router-dom';
 
 import Page from 'components/Page';
 import { playbackManager } from 'components/playback/playbackmanager';
@@ -60,6 +60,8 @@ import AdvancedLibraryFilters from '../features/client/AdvancedLibraryFilters';
 import { countLibraryFilters, isFullLibrary, readLibraryFilters } from '../features/client/libraryFilters';
 import { QueueAction, QueueActions } from '../features/client/QueueActions';
 import { buildMediaQueue, isQueuedVideo, type PlayQueue } from '../features/client/mediaQueue';
+import GridLoadMore from '../features/client/GridLoadMore';
+import FolderPage from '../features/client/folders/FolderPage';
 import FolderPanel from '../features/client/folders/FolderPanel';
 import { FolderPickerProvider, ListAction, useFolderPicker } from '../features/client/folders/FolderPicker';
 import { canFile } from '../features/client/folders/model';
@@ -150,8 +152,13 @@ function restoreClientNavigation(key: string, restoreFocus: boolean, id: string)
     } catch { /* Navigation remains usable when storage is unavailable. */ }
 }
 
+function clientScrollKey(prefKey: string | undefined, location: ReturnType<typeof useLocation>, view: string, params: URLSearchParams) {
+    const scope = ['folder', 'collections'].includes(view) ? params.get('collection') || '' : params.toString();
+    return `${prefKey}-scroll-${location.pathname}?${scope}`;
+}
+
 function clientPageReady(id: string, view: string, item: BaseItemDto | undefined, mediaReady: boolean, externalReady: boolean) {
-    return externalReady || (id ? !!item : ['settings', 'collections'].includes(view) || mediaReady);
+    return externalReady || (id ? !!item : ['settings', 'collections', 'folder'].includes(view) || mediaReady);
 }
 
 /** What the blurred page background shows when no card is hovered. */
@@ -171,7 +178,7 @@ function clientBrowseInput(view: string, search: string, filters: Parameters<typ
 }
 
 function clientBrowseView(view: string, id: string, emptySearch: boolean) {
-    return id || ['settings', 'collections'].includes(view) || emptySearch ? 'disabled' : view;
+    return id || ['settings', 'collections', 'folder'].includes(view) || emptySearch ? 'disabled' : view;
 }
 
 function useSharedBrowse(view: string, id: string, search: string) {
@@ -193,7 +200,8 @@ function useClientController() {
     const location = useLocation();
     const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
     const restoreFocus = useNavigationType() === 'POP' || (location.state as ClientNavigationState | null)?.restoreFocus === true;
-    const view = params.get('view') || 'home';
+    const { folderId } = useParams();
+    const view = folderId ? 'folder' : params.get('view') || 'home';
     const discovery = (view === 'films' || view === 'series') && params.get('mode') !== 'library';
     const id = params.get('id') || '';
     const search = params.get('q') || '';
@@ -203,7 +211,7 @@ function useClientController() {
     const audio = params.get('audio') || '';
     const collection = params.get('collection') || '';
     const sort = params.get('sort') === 'recent' ? 'recent' : 'name';
-    const filters = useClientFilters(['mine', 'tonight', 'collections'].includes(view) ? 'disabled' : view);
+    const filters = useClientFilters(['mine', 'tonight', 'collections', 'folder'].includes(view) ? 'disabled' : view);
     const genres = { ...filters, data: filters.data?.Genres };
     const cache = useQueryClient();
     const prefKey = interfacePreferenceKey(api?.basePath, user?.Id);
@@ -222,7 +230,7 @@ function useClientController() {
     const [ambient, setAmbient] = useState('');
     // The page's own blurred background when nothing is hovered: set by Ce soir and Mon espace, derived elsewhere.
     const [ownAmbient, setOwnAmbient] = useState({ page: '', source: '' });
-    const pageKey = [id, view, genre, audio].join('|');
+    const pageKey = [id, view, folderId, genre, audio].join('|');
     // Tied to the page that set it: a page set by a child before the parent's effects run is never wiped.
     const pageAmbient = ownAmbient.page === pageKey ? ownAmbient.source : '';
     const setPageAmbient = useCallback((source: string) => setOwnAmbient({ page: pageKey, source }), [pageKey]);
@@ -297,9 +305,10 @@ function useClientController() {
         setActionError('');
     }, [params]);
     const pageReady = clientPageReady(id, view, item, !!media.data, remoteDetails.isFetched);
+    const scrollKey = clientScrollKey(prefKey, location, view, params);
     const prepareTab = useTabPreparation(pageReady);
     useLayoutEffect(() => {
-        const key = `${prefKey}-scroll-${params.toString()}`;
+        const key = scrollKey;
         if (!pageReady) {
             // The page shrinks while loading: that forced position must not be saved as this page's own.
             if (!restoreFocus) window.scrollTo(0, 0);
@@ -326,7 +335,7 @@ function useClientController() {
             window.removeEventListener('scroll', saveScroll);
             page?.removeEventListener('focusin', saveFocus);
         };
-    }, [params, pageReady, prefKey, id, restoreFocus]);
+    }, [scrollKey, pageReady, id, restoreFocus]);
 
     useEffect(() => {
         document.body.dataset.clientPlayerTheme = preferences.glass ? 'glass' : 'classic';
@@ -475,7 +484,7 @@ function useClientController() {
     const accent = useArtworkColor(preferences.chromatic && hero ? image(hero, true) : undefined);
     const error = id ? details.item.isError : media.isError;
     const backdrop = ambient || pageBackdrop(id, view, hero, pageAmbient, media.data?.items || [], entry => image(entry, true));
-    return { api, user, params, location, setParams, view, id, search, browseInput, media, details, item, preferences, actionError, busy,
+    return { api, user, params, location, setParams, view, id, folderId, search, browseInput, media, details, item, preferences, actionError, busy,
         searchInput, setSearchInput, starting, genres, genre, sort, savePreference, image, play, playQueue, queueBusy, updateState, cards, row, playItem, hero, error,
         standaloneSearch, prepareDetail, releaseDetail, prepareTab, seerr, catalogue, shared, sharedItems, sharedLocal, upcoming, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, previewProviderAvailable, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent, backdrop, setPageAmbient };
 }
@@ -529,7 +538,7 @@ function ClientView({ model }: ViewProps) {
                 {preferences.ambient && !id && <AmbientBackdrop source={model.backdrop} />}
                 <nav className='client-nav' data-alignment={preferences.headerAlignment} aria-label='Navigation principale'>
                     <button ref={profileButton} className='client-profile' aria-label='Menu du profil' aria-expanded={profileOpen} onClick={() => setProfileOpen(!profileOpen)}>{user?.PrimaryImageTag ? <img src={`${model.api?.basePath}/Users/${user.Id}/Images/Primary?tag=${user.PrimaryImageTag}&width=96&quality=90`} alt='' /> : user?.Name?.slice(0, 1) || '•'}</button>
-                    <NavLinks view={view} detail={!!id} prepare={model.prepareTab} />
+                    <NavLinks view={model.folderId ? 'mine' : view} detail={!!id} prepare={model.prepareTab} />
                     {/* À gauche de la loupe : envoyer la lecture vers un autre appareil, regarder à plusieurs. */}
                     <button type='button' className='client-nav-tool' aria-label='Lire sur un autre appareil' title='Lire sur un autre appareil' onClick={() => openConnectivity('targets')}><RemoteIcon name='cast' /></button>
                     <button type='button' className='client-nav-tool' aria-label='Regarder ensemble' title='Regarder ensemble' onClick={() => openConnectivity('together')}><RemoteIcon name='people' /></button>
@@ -683,8 +692,15 @@ function ContentView({ model }: ViewProps) {
             {media.data && !media.data.movies.length && !media.data.series.length && !media.data.resume.length && <p className='client-message'>Votre bibliothèque est vide pour le moment.</p>}
         </>;
     }
+    if (model.folderId) {
+        return <FolderPage key={model.folderId} id={model.folderId} image={image} full={model.preferences.hero === 'background'} showWatched={model.preferences.watchedMarkers}
+            playQueue={model.playQueue} queueBusy={model.queueBusy} prepare={model.prepareDetail} release={model.releaseDetail} />;
+    }
     if (view === 'settings') return <SettingsView model={model} />;
-    if (view === 'collections') return <PublicCollections image={image} />;
+    if (view === 'collections') {
+        return <PublicCollections image={image} full={model.preferences.hero === 'background'} showWatched={model.preferences.watchedMarkers}
+            playQueue={model.playQueue} queueBusy={model.queueBusy} prepare={model.prepareDetail} release={model.releaseDetail} />;
+    }
     if (view === 'recent') return <RecentPage items={media.data?.items || []} row={row} />;
     if (view === 'tonight') return <TonightPage items={media.data?.items || []} loading={media.isPending} image={item => artworkUrl(model.api?.basePath || '', item, 'draw')} onPrepare={model.prepareDetail} onRelease={model.releaseDetail} onFeature={entry => model.setPageAmbient(entry ? image(entry, true) : '')} />;
     if (model.discovery) return <DiscoveryView model={model} />;
@@ -773,7 +789,7 @@ function PersonalView({ model }: ViewProps) {
             <header><h2>Ma liste</h2>{!!media.data?.total && <div className='client-queue-actions'>
                 <QueueActions source='favorites' playQueue={playQueue} pending={queueBusy} />
             </div>}</header>
-            <FolderPanel image={image} playQueue={playQueue} queueBusy={queueBusy} />
+            <FolderPanel image={image} />
             <LibraryView model={model} embedded />
         </div>
         {row('Vus récemment', history.data)}
@@ -793,27 +809,6 @@ function SearchResultCount({ model, embedded, count }: ViewProps & { readonly em
 const GridChunk = memo(function ClientGridChunk({ items, render }: Readonly<{ items: BaseItemDto[]; render: (items: BaseItemDto[]) => ReactNode }>) {
     return <>{render(items)}</>;
 }, (previous, next) => previous.items === next.items);
-
-/** Asks for the next titles well before the end of the page is reached. */
-function LoadMore({ loading, failed, pages, load }: Readonly<{ loading: boolean; failed: boolean; pages: number; load: () => void }>) {
-    const marker = useRef<HTMLDivElement>(null);
-    const supported = 'IntersectionObserver' in window;
-    useEffect(() => {
-        const element = marker.current;
-        if (!element || !supported || loading || failed) return;
-        // A new observer per page also covers a tall screen, where the end is still in view after loading.
-        const observer = new IntersectionObserver(entries => {
-            if (entries.some(entry => entry.isIntersecting)) load();
-        }, { rootMargin: '1600px 0px' });
-        observer.observe(element);
-        return () => observer.disconnect();
-    }, [loading, failed, pages, load, supported]);
-    return <div ref={marker} className='client-load-more'>
-        {loading && <ClientSkeleton layout='grid' count={6} contained label='Chargement des titres suivants…' />}
-        {failed && <p role='alert'>Impossible de charger la suite. <button type='button' onClick={load}>Réessayer</button></p>}
-        {!supported && !loading && !failed && <button type='button' className='client-button' onClick={load}>Afficher plus</button>}
-    </div>;
-}
 
 function LibraryResultCount({ model, embedded, loaded, extra, onlyMissing }: ViewProps & Readonly<{
     embedded: boolean; loaded: number; extra: number; onlyMissing: boolean;
@@ -854,7 +849,7 @@ function SearchView({ model }: ViewProps) {
             </div>
             <SearchGroup title='Dans ta bibliothèque' count={results.own.length}>
                 <div className='client-grid'>{cards(shown, false, hasFolders)}</div>
-                {more.hasMore && <LoadMore loading={more.isFetching} failed={more.isError} pages={more.pages.length} load={() => { void more.fetchMore(); }} />}
+                {more.hasMore && <GridLoadMore loading={more.isFetching} failed={more.isError} pages={more.pages.length} load={() => { void more.fetchMore(); }} />}
             </SearchGroup>
             <SearchGroup title='Catalogue partagé' count={results.saved.length}><div className='client-grid'>{cards(results.saved)}</div></SearchGroup>
             <SearchGroup title='À demander' count={results.suggestion.length || Number(catalogue.hasNextPage)}>
@@ -911,7 +906,7 @@ function LibraryView({ model, embedded = false }: ViewProps & { readonly embedde
             {!withoutFiles && more.pages.filter(page => page.length).map(page => <GridChunk key={`${page[0].Id}:${model.preferences.watchedMarkers}`} items={page} render={cards} />)}
             {cards(external)}
         </div>
-        {!withoutFiles && more.hasMore && <LoadMore loading={more.isFetching} failed={more.isError} pages={more.pages.length} load={loadMore} />}
+        {!withoutFiles && more.hasMore && <GridLoadMore loading={more.isFetching} failed={more.isError} pages={more.pages.length} load={loadMore} />}
         {!withoutFiles && !external.length && media.data?.items.length === 0 && <p>{view === 'mine' ? 'Ajoutez des films et des séries à votre liste depuis leurs fiches.' : 'Aucun résultat.'}</p>}
     </section>;
 }

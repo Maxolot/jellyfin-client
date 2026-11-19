@@ -47,76 +47,6 @@
     color: #c0c7d3;
 }
 
-.client-collection-grid,
-.client-collection-titles,
-.client-collection-matches {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.client-collection-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 235px), 1fr));
-    gap: clamp(12px, 1.25vw, 18px);
-
-    li { min-width: 0; }
-}
-
-.client-collection-mosaic {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(2, minmax(0, 1fr));
-    gap: 2px;
-
-    > span {
-        position: relative;
-        min-width: 0;
-        overflow: hidden;
-    }
-
-    &[data-posters='1'] > span { grid-area: 1 / 1 / -1 / -1; }
-
-    &[data-posters='2'] > span,
-    &[data-posters='3'] > span:first-child { grid-row: 1 / -1; }
-}
-
-@media (max-width: 600px) {
-    .client-collection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
-.client-collection-titles {
-    li { min-width: 0; }
-
-    .client-card { display: block; }
-}
-
-.client-collection-poster {
-    position: relative;
-
-    .client-collection-remove {
-        position: absolute;
-        z-index: 2;
-        top: 6px;
-        right: 6px;
-        display: inline-grid;
-        width: 44px;
-        height: 44px;
-        place-items: center;
-        padding: 0;
-        background: #17181ce6;
-    }
-}
-
-.client-collection-title {
-    display: block;
-    margin-top: 8px;
-    font-size: 14px;
-    overflow-wrap: anywhere;
-}
-
 .client-detail-dialog.client-collection-modal { width: min(560px, calc(100vw - 32px)); }
 
 .client-collection-form {
@@ -142,6 +72,9 @@
 .client-collection-matches {
     display: grid;
     gap: 5px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
 
     button {
         display: grid;
@@ -180,42 +113,4 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-}
-
-.client-collection-card {
-    text-decoration: none;
-
-    .client-card-fallback {
-        color: #aab7ca;
-
-        svg {
-            width: 42px;
-            height: 42px;
-        }
-    }
-
-    .client-card-caption {
-        inset: auto 0 0;
-        min-height: 37%;
-        gap: 4px;
-        padding: 30px clamp(10px, 1.15vw, 17px) clamp(11px, 1.1vw, 16px);
-        background: linear-gradient(transparent, #070a10cf 58%, #070a10f5);
-        color: #fff;
-
-        strong {
-            display: -webkit-box;
-            overflow: hidden;
-            font-size: clamp(14px, 1.18vw, 17px);
-            font-weight: 650;
-            line-height: 1.2;
-            overflow-wrap: anywhere;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 3;
-        }
-
-        small {
-            color: #d4dbe7;
-            font-size: 12px;
-        }
-    }
 }

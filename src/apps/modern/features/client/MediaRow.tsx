@@ -289,7 +289,7 @@ export default function MediaRow({ title, items, kind, continuation, showDescrip
                     {!upcoming && <span className='client-availability' role='img' aria-label={availability} title={availability}><ClientIcon name={isExternal(media) ? 'plus' : 'check'} /></span>}
                 </article>;
             })}</div>
-        {showDescription && <div className='client-row-info' aria-live='polite'>{item && <><h3>{item.SeriesName || item.Name}</h3><span>{[item.Type === 'Episode' ? episodeLabel(item) : item.ProductionYear, ...(item.Genres || []).slice(0, 2)].filter(Boolean).join(' · ')}</span><p>{item.Overview}</p></>}</div>}
+        {showDescription && <div className='client-row-info' aria-live='polite'>{item && <><span>{[item.Type === 'Episode' ? episodeLabel(item) : item.ProductionYear, ...(item.Genres || []).slice(0, 2)].filter(Boolean).join(' · ')}</span><p>{item.Overview}</p></>}</div>}
     </section>;
 }
 

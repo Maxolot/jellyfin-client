@@ -290,7 +290,14 @@ function TrackedRequest({ entry, local }: { readonly entry: MediaRequest; readon
     if (!entry.media.tmdbId) return null;
     const media: ExternalMedia = detail.data || { id: entry.media.tmdbId };
     const item = catalogueItem(media, type, local);
-    return <Link to={`/client?id=${item.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }} className='client-tracked-request' data-client-focus={`request-${entry.id}`}><Artwork source={imageUrl(media.posterPath)} /><span><strong>{media.title || media.name || 'Chargement du titre…'}</strong><small>{entry.seasons?.length ? `Saisons ${entry.seasons.map(season => season.seasonNumber).join(', ')} · ` : ''}{entry.is4k ? '4K · ' : ''}{entry.media.status === 4 ? 'Partiellement disponible' : requestLabel(entry.status)}</small></span><ClientIcon name='next' /></Link>;
+    const name = media.title || media.name || 'Chargement du titre…';
+    const status = entry.media.status === 4 ? 'Partiellement disponible' : requestLabel(entry.status);
+    const details = entry.seasons?.length ? `Saisons ${entry.seasons.map(season => season.seasonNumber).join(', ')} · ${status}` : status;
+    return <Link to={`/client?id=${item.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }}
+        className='client-tracked-request' data-client-focus={`request-${entry.id}`} aria-label={`${name} · ${details}`}>
+        <span className='client-tracked-art'><Artwork source={imageUrl(media.posterPath)} /><strong className='client-tracked-title'>{name}</strong></span>
+        <small>{details}</small><ClientIcon name='next' />
+    </Link>;
 }
 export function RequestTracking() {
     const seerr = useSeerr();

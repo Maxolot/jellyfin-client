@@ -201,17 +201,18 @@
     border-radius: 14px;
     background: #ffffff08;
 
-    img {
+    .client-tracked-art {
+        display: block;
         flex: none;
         width: 55px;
+        min-width: 0;
+    }
+
+    img {
+        width: 100%;
         height: 80px;
         border-radius: 6px;
         object-fit: cover;
-    }
-
-    span {
-        flex: 1;
-        min-width: 0;
     }
 
     strong,
