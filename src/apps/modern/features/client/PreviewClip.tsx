@@ -9,6 +9,7 @@ import { createPreviewVideo, growFrom, prepareUpgrade, sameFile, type HandedClip
 import { inspectPreviewLetterbox, letterboxTransform } from './previews/letterbox';
 import { startPreviewVideo } from './previews/playback';
 import ClientIcon from './ClientIcon';
+import { useEpisodeSpoilers } from './spoilers';
 import { usePreviews } from './PreviewProvider';
 import { previewSource, type PreviewSurface } from './previewSource';
 
@@ -18,6 +19,7 @@ const priority = { hero: 0, spotlight: 1, detail: 5, card: 10, episode: 20 };
 // eslint-disable-next-line sonarjs/cognitive-complexity -- Source ownership combines static and optional server-backed previews.
 export default function PreviewClip({ item, surface, enabled = true, soundControl = true }: Readonly<Props>) {
     const preview = usePreviews();
+    const protect = useEpisodeSpoilers();
     const generatedId = useId();
     const owner = `${preview?.scope || ''}:${generatedId}`;
     const region = useRef<HTMLSpanElement>(null);
@@ -39,7 +41,7 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
     const playback = preview?.playback;
     const handoff = preview?.handoff;
     const [resuming, setResuming] = useState(false);
-    const available = (!!staticSource || !!preview?.serverAvailable) && enabled && !!preview?.enabled;
+    const available = (!!staticSource || !!preview?.serverAvailable) && enabled && !protect(item) && !!preview?.enabled;
     useEffect(() => {
         if (!available || !region.current || !('IntersectionObserver' in window)) return;
         const observer = new IntersectionObserver(entries => setNearby(entries.some(entry => entry.isIntersecting)), { threshold: 0.1 });

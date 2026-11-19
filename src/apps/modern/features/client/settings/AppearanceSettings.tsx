@@ -25,9 +25,11 @@ export default function AppearanceSettings({ preferences, savePreference, hasPre
             <Segmented label='Alignement des boutons' value={preferences.headerAlignment} onChange={set('headerAlignment')}
                 options={[['left', 'À gauche'], ['center', 'Au centre'], ['right', 'À droite']]} />
             <Toggle label='Marqueur « Déjà vu » sur les cartes' hint='Une coche indique les films vus et les séries entièrement vues.' checked={preferences.watchedMarkers} onChange={set('watchedMarkers')} />
-            <Toggle label='Descriptions au survol entre les sections' hint='Titre et résumé apparaissent sous la rangée survolée.' checked={preferences.hoverDescriptions} onChange={set('hoverDescriptions')} />
+            <Toggle label='Descriptions au survol entre les sections' hint='Le résumé apparaît sous la rangée survolée.' checked={preferences.hoverDescriptions} onChange={set('hoverDescriptions')} />
         </SettingCard>
         <SettingCard title='Fiches des films et séries' scope='browser'>
+            <Toggle label='Masquer les spoilers' hint='Floute les vignettes et masque les résumés et extraits des épisodes que vous n’avez pas vus.'
+                checked={preferences.hideSpoilers} onChange={set('hideSpoilers')} />
             <PictureChoice label='Position des informations de la fiche' value={preferences.detailInfo} onChange={set('detailInfo')}
                 options={[{ value: 'bottom', label: 'En bas', preview: <InterfacePreview kind='info-bottom' /> },
                     { value: 'center', label: 'Au milieu', preview: <InterfacePreview kind='info-center' /> }]} />

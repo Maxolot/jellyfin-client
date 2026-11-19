@@ -6,6 +6,7 @@ import ResizeObserver from 'resize-observer-polyfill';
 
 import ClientIcon from './ClientIcon';
 import Artwork from './Artwork';
+import { EpisodeSummary, useEpisodeSpoilers } from './spoilers';
 import { rowPosterSizes } from './artwork';
 import PreviewClip from './PreviewClip';
 import SharedCatalogArtwork from './SharedCatalogArtwork';
@@ -35,6 +36,7 @@ type Props = {
 };
 
 export default function MediaRow({ title, items, kind, continuation, showDescription = true, showWatched = true, image, logo, onPrepare, onRelease }: Readonly<Props>) {
+    const protect = useEpisodeSpoilers();
     const [readyBackdrops, setReadyBackdrops] = useState<Partial<Record<string, boolean>>>({});
     const preparedSources = useRef<Partial<Record<string, boolean>>>({});
     const [active, setActive] = useState(-1);
@@ -243,6 +245,7 @@ export default function MediaRow({ title, items, kind, continuation, showDescrip
                 const media = items[index % count];
                 const copy = looping ? Math.floor(index / count) : 1;
                 const backdrop = image(media, true);
+                const spoiler = protect(media) ? ' client-spoiler-art' : '';
                 const watched = isWatchedCard(media, showWatched);
                 const tracked = kind === 'shared-catalog' && isExternal(media);
                 const poster = image(media);
@@ -274,8 +277,8 @@ export default function MediaRow({ title, items, kind, continuation, showDescrip
                         touchOpens.current = false;
                     }}>
                         {tracked ? <SharedCatalogArtwork item={media} backdrop={false} className='client-card-poster' /> :
-                            <Artwork className='client-card-poster' source={poster} sizes={rowPosterSizes} />}
-                        <Artwork className='client-card-backdrop' source={backdrop} eager={pending === index} rootMargin='180px 180px' onReady={() => prepared(index, backdrop, true)} onFailure={() => prepared(index, backdrop, false)} />
+                            <Artwork className={`client-card-poster${spoiler}`} source={poster} sizes={rowPosterSizes} />}
+                        <Artwork className={`client-card-backdrop${spoiler}`} source={backdrop} eager={pending === index} rootMargin='180px 180px' onReady={() => prepared(index, backdrop, true)} onFailure={() => prepared(index, backdrop, false)} />
                         <span className='client-card-fallback'>{media.SeriesName || media.Name}</span>
                     </Link>
                     {!upcoming && <PreviewClip item={media} surface='card' enabled={active === index} />}
@@ -290,7 +293,7 @@ export default function MediaRow({ title, items, kind, continuation, showDescrip
                     {!upcoming && <span className='client-availability' role='img' aria-label={availability} title={availability}><ClientIcon name={isExternal(media) ? 'plus' : 'check'} /></span>}
                 </article>;
             })}</div>
-        {showDescription && <div className='client-row-info' aria-live='polite'>{item && <><span>{[item.Type === 'Episode' ? episodeLabel(item) : item.ProductionYear, ...(item.Genres || []).slice(0, 2)].filter(Boolean).join(' · ')}</span><p>{item.Overview}</p></>}</div>}
+        {showDescription && <div className='client-row-info' aria-live='polite'>{item && <><span>{[item.Type === 'Episode' ? episodeLabel(item) : item.ProductionYear, ...(item.Genres || []).slice(0, 2)].filter(Boolean).join(' · ')}</span><EpisodeSummary key={item.Id} item={item} protectedContent={protect(item)} /></>}</div>}
     </section>;
 }
 

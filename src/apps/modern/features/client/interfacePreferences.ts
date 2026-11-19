@@ -8,6 +8,7 @@ export type Preferences = {
     ambient: boolean;
     hoverDescriptions: boolean;
     watchedMarkers: boolean;
+    hideSpoilers: boolean;
     hero: 'framed' | 'background';
     detailTreatment: 'progressive' | 'cinema' | 'clear';
     detailBlur: number;
@@ -20,7 +21,7 @@ export type Preferences = {
 };
 const PREFERENCE_VERSION = 1;
 const presentationDefaults = { floating: true, hero: 'background', detailTreatment: 'cinema' } as const;
-const defaults: Preferences = { ...presentationDefaults, detailBlur: 24, detailShade: 75, detailWidth: 58, glass: true, headerAlignment: 'center', chromatic: false, ambient: true, hoverDescriptions: true, watchedMarkers: true, previews: true, previewMuted: true, detailInfo: 'bottom', detail: 'continuous' };
+const defaults: Preferences = { ...presentationDefaults, detailBlur: 24, detailShade: 75, detailWidth: 58, glass: true, headerAlignment: 'center', chromatic: false, ambient: true, hoverDescriptions: true, watchedMarkers: true, hideSpoilers: false, previews: true, previewMuted: true, detailInfo: 'bottom', detail: 'continuous' };
 
 function bounded(value: unknown, fallback: number, min: number, max: number) {
     return typeof value === 'number' && Number.isFinite(value) ? Math.max(min, Math.min(max, value)) : fallback;
@@ -63,6 +64,7 @@ export function readInterfacePreferences(key: string | undefined): Preferences {
             headerAlignment: option(saved.headerAlignment, ['left', 'center', 'right'], defaults.headerAlignment),
             ambient: saved.ambient !== false, previews: saved.previews !== false,
             hoverDescriptions: saved.hoverDescriptions !== false, watchedMarkers: saved.watchedMarkers !== false,
+            hideSpoilers: saved.hideSpoilers === true,
             hero: option(saved.hero, ['framed', 'background'], defaults.hero),
             detailTreatment: option(saved.detailTreatment, ['progressive', 'cinema', 'clear'], defaults.detailTreatment),
             detailBlur: bounded(saved.detailBlur, 24, 0, 48),

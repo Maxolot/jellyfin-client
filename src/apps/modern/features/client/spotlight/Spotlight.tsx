@@ -1,4 +1,5 @@
 /* eslint-disable react/jsx-no-bind -- Option handlers are rebuilt with the results they act on. */
+import { useEpisodeSpoilers } from '../spoilers';
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import { getShowApi } from '@jellyfin/sdk/lib/utils/api/show-api';
 import { getUserDataApi } from '@jellyfin/sdk/lib/utils/api/user-data-api';
@@ -280,12 +281,13 @@ const Spotlight = forwardRef<SpotlightHandle, Props>(function ClientSpotlight({ 
     useImperativeHandle(handle, () => ({ open: show }), [show]);
     usePreparation();
     const data = useSpotlightData(open, query, filter, seed);
+    const protectEpisode = useEpisodeSpoilers();
     const actionsBase = useActions(close, () => {
         if (query.trim()) setRecent(rememberSearch(recentKey, query));
     }, play);
     useEffect(() => setActive(query.trim() ? 0 : -1), [query, filter]);
 
-    const actions: Actions = { ...actionsBase, image, showWatched, basePath: api?.basePath || '', shared: data.sharedIds };
+    const actions: Actions = { ...actionsBase, image, showWatched, protectEpisode, basePath: api?.basePath || '', shared: data.sharedIds };
     const focusField = () => input.current?.focus({ preventScroll: true });
     const groups = data.searching ? searchGroups(data, query, actions) : openingGroups(data, actions, {
         recent: recent.map(entry => chip(`recent-${entry}`, entry, () => {

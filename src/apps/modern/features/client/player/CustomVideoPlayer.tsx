@@ -443,7 +443,7 @@ export default function CustomVideoPlayer() {
                     <p className='client-player-hint'>Le serveur adapte le flux aux capacités du navigateur. Une limite de débit peut déclencher un transcodage.</p>
                     <button type='button' onClick={() => setPanel('appearance')}><ActionLabel icon='settings'>Personnaliser le lecteur</ActionLabel></button>
                 </div>}
-                {panel === 'episodes' && <PlayerEpisodes key={item?.SeriesId} item={item} play={(items, start) => action(async () => {
+                {panel === 'episodes' && <PlayerEpisodes key={item?.SeriesId} item={item} nextId={next?.Id} play={(items, start) => action(async () => {
                     await playbackManager.play({ items: [items[start]], startPositionTicks: items[start]?.UserData?.PlaybackPositionTicks || 0 });
                     setEnded(false);
                     dialog.current?.close();

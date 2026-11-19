@@ -20,6 +20,7 @@ export type Actions = {
     basePath: string;
     showWatched: boolean;
     shared: ReadonlySet<string>;
+    protectEpisode?: (item: BaseItemDto) => boolean;
     openItem: (item: BaseItemDto) => void;
     playItem: (item: BaseItemDto) => void;
     go: (path: string) => void;
@@ -56,7 +57,7 @@ function alone(action: () => void) {
 function optionArtwork(item: BaseItemDto, actions: Actions, backdrop = false) {
     const source = actions.image(item, backdrop);
     if (actions.shared.has(item.Id || '')) return <SharedCatalogArtwork item={item} backdrop={backdrop} />;
-    return <Artwork source={source} />;
+    return <Artwork source={source} className={actions.protectEpisode?.(item) ? 'client-spoiler-art' : undefined} />;
 }
 
 function row(item: BaseItemDto, prefix: string, actions: Actions): Option {

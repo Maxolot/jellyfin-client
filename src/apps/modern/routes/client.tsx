@@ -20,6 +20,8 @@ import type { ItemDto } from 'types/base/models/item-dto';
 import Events from 'utils/events';
 
 import ActionLabel from '../features/client/ActionLabel';
+import SpoilerProvider from '../features/client/SpoilerProvider';
+import { useEpisodeSpoilers } from '../features/client/spoilers';
 import DetailSynopsis from '../features/client/DetailSynopsis';
 import SeriesEpisodesPanel, { SeasonRail } from '../features/client/SeriesEpisodes';
 import { remoteSeasonChoices, type RemoteSeason } from '../features/client/seriesEpisodesModel';
@@ -562,7 +564,7 @@ const NavLinks = memo(function ClientNavLinks({ view, detail, prepare }: NavProp
 function ClientView({ model }: ViewProps) {
     const { preferences, id, view, user, actionError, error, media, details, profileOpen, setProfileOpen, profileButton, profileMenu, accent } = model;
     const spotlight = useRef<SpotlightHandle>(null);
-    return <PreviewProvider serverAvailable={model.previewProviderAvailable} surface={model.surface} enabled={preferences.previews} muted={preferences.previewMuted} suspended={model.previewSuspended} toggleMuted={() => model.savePreference({ ...preferences, previewMuted: !preferences.previewMuted })} onPlayingChange={model.setPreviewPlaying}><Page id='clientPage' title={APP_NAME} className='client-page' isBackButtonEnabled={false}>
+    return <SpoilerProvider enabled={preferences.hideSpoilers} nextId={details.next.data?.Id} home={view === 'home'} continuing={media.data}><PreviewProvider serverAvailable={model.previewProviderAvailable} surface={model.surface} enabled={preferences.previews} muted={preferences.previewMuted} suspended={model.previewSuspended} toggleMuted={() => model.savePreference({ ...preferences, previewMuted: !preferences.previewMuted })} onPlayingChange={model.setPreviewPlaying}><Page id='clientPage' title={APP_NAME} className='client-page' isBackButtonEnabled={false}>
         <div ref={model.surface} className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} ${preferences.chromatic ? 'client-chromatic' : ''} ${preferences.hero === 'background' ? 'client-hero-background' : ''} client-treatment-${preferences.detailTreatment} client-layout-${preferences.detail} client-detail-info-${preferences.detailInfo} ${id ? 'client-detail-page' : ''}`} style={{ '--client-accent': accent, '--detail-blur': `${preferences.detailBlur}px`, '--detail-shade': preferences.detailShade / 100, '--detail-width': `${preferences.detailWidth}%` } as CSSProperties}>
             <FolderPickerProvider>
                 {preferences.ambient && !id && <AmbientBackdrop source={model.backdrop} />}
@@ -594,7 +596,7 @@ function ClientView({ model }: ViewProps) {
                 <PlaybackStarting item={model.starting} basePath={model.api?.basePath || ''} />
             </FolderPickerProvider>
         </div>
-    </Page></PreviewProvider>;
+    </Page></PreviewProvider></SpoilerProvider>;
 }
 
 function HeroView({ model }: ViewProps) {
@@ -831,6 +833,7 @@ function DiscoveryView({ model }: ViewProps) {
 }
 
 function PersonalView({ model }: ViewProps) {
+    const protect = useEpisodeSpoilers();
     const { user, media, row, image, play, playQueue, queueBusy, seerr } = model;
     const home = useClientMedia('home', '', 0);
     const stats = usePersonalStats();
@@ -848,7 +851,7 @@ function PersonalView({ model }: ViewProps) {
             <p>{user?.Name}</p></div></header>
         <PersonalStatsBand stats={stats.data} pending={stats.isPending} favorites={media.data?.total || 0} favoritesPending={media.isPending} />
         {home.isPending && <ClientSkeleton layout='episodes' contained count={3} label='Chargement des reprises…' />}
-        {lead && <section className='client-personal-spotlight'><Artwork source={image(lead, true, true)} eager /><PreviewClip item={lead} surface='spotlight' /><div><small>ON CONTINUE ?</small><h2>{lead.SeriesName || lead.Name}</h2><p>{lead.Type === 'Episode' ? `${episodeLabel(lead)} · ${lead.Name}` : 'Votre film vous attend'}</p>
+        {lead && <section className='client-personal-spotlight'><Artwork source={image(lead, true, true)} className={protect(lead) ? 'client-spoiler-art' : undefined} eager /><PreviewClip item={lead} surface='spotlight' /><div><small>ON CONTINUE ?</small><h2>{lead.SeriesName || lead.Name}</h2><p>{lead.Type === 'Episode' ? `${episodeLabel(lead)} · ${lead.Name}` : 'Votre film vous attend'}</p>
             {progressPercent(lead) > 0 && <span className='client-spotlight-progress' aria-label={`Vu à ${Math.round(progressPercent(lead))} %`}><i style={{ width: `${progressPercent(lead)}%` }} /></span>}
             <button className='client-play' onClick={() => play(lead)}><ClientIcon name='play' />Reprendre</button><Link className='client-button' to={`/client?id=${lead.SeriesId || lead.Id}`}>Voir la fiche</Link></div></section>}
         <div id='client-resume'>{row('Continuer à regarder', resume.slice(1), true)}</div>

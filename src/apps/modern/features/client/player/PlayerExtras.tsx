@@ -2,6 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getShowApi } from '@jellyfin/sdk/lib/utils/api/show-api';
+import { EpisodeSummary, isProtectedEpisode } from '../spoilers';
+import { interfacePreferenceKey, readInterfacePreferences } from '../interfacePreferences';
+import { ItemFields } from '@jellyfin/sdk/lib/generated-client/models/item-fields';
 import type { BaseItemDto, SessionInfoDto } from '@jellyfin/sdk/lib/generated-client';
 import type { PlayerState } from 'types/playbackStopInfo';
 import { useApi } from 'hooks/useApi';
@@ -18,8 +21,9 @@ export function SubtitleOffset({ run }: Readonly<{ run: (action: () => unknown) 
     return <section className='client-player-offset' aria-label='Décalage des sous-titres'><h3>Décalage des sous-titres</h3><p>Une valeur positive les affiche plus tard.</p><div><button type='button' aria-label='Sous-titres 0,1 seconde plus tôt' disabled={offset <= -120} onClick={() => change(offset - 0.1)}>−</button><output aria-live='polite'>{offset > 0 ? '+' : ''}{offset.toFixed(1)} s</output><button type='button' aria-label='Sous-titres 0,1 seconde plus tard' disabled={offset >= 120} onClick={() => change(offset + 0.1)}>+</button><button type='button' onClick={() => change(0)}>Réinitialiser</button></div></section>;
 }
 
-export function PlayerEpisodes({ item, play }: Readonly<{ item?: BaseItemDto; play: (items: BaseItemDto[], start: number) => void }>) {
+export function PlayerEpisodes({ item, nextId, play }: Readonly<{ item?: BaseItemDto; nextId?: string | null; play: (items: BaseItemDto[], start: number) => void }>) {
     const { api, user, __legacyApiClient__: client } = useApi();
+    const { hideSpoilers } = readInterfacePreferences(interfacePreferenceKey(api?.basePath, user?.Id));
     const [season, setSeason] = useState(item?.SeasonId || '');
     const seasons = useQuery({
         queryKey: ['PlayerSeasons', api?.basePath, user?.Id, item?.SeriesId],
@@ -28,9 +32,9 @@ export function PlayerEpisodes({ item, play }: Readonly<{ item?: BaseItemDto; pl
     });
     const selected = season || seasons.data?.[0]?.Id;
     const episodes = useQuery({
-        queryKey: ['PlayerEpisodes', api?.basePath, user?.Id, item?.SeriesId, selected],
+        queryKey: ['PlayerEpisodes', api?.basePath, user?.Id, item?.SeriesId, selected, hideSpoilers],
         enabled: !!api && !!user?.Id && !!item?.SeriesId && !!selected,
-        queryFn: async ({ signal }) => (await getShowApi(api!).getEpisodes({ seriesId: item!.SeriesId!, seasonId: selected, userId: user!.Id, isMissing: false }, { signal })).data.Items?.filter(episode => episode.LocationType !== 'Virtual') || []
+        queryFn: async ({ signal }) => (await getShowApi(api!).getEpisodes({ seriesId: item!.SeriesId!, seasonId: selected, userId: user!.Id, isMissing: false, enableUserData: true, fields: hideSpoilers ? [ItemFields.Overview] : undefined }, { signal })).data.Items?.filter(episode => episode.LocationType !== 'Virtual') || []
     });
     if (seasons.isError || episodes.isError) {
         return <div role='alert'><p>Impossible de charger les épisodes.</p><button type='button' onClick={() => {
@@ -41,11 +45,19 @@ export function PlayerEpisodes({ item, play }: Readonly<{ item?: BaseItemDto; pl
     return <div className='client-player-episodes'><div className='client-player-season-list' aria-label='Saisons'>{seasons.data?.map(value => <button type='button' key={value.Id} aria-pressed={selected === value.Id} onClick={() => setSeason(value.Id || '')}>{value.Name}</button>)}</div>
         {(seasons.isLoading || episodes.isLoading) && <p role='status'>Chargement des épisodes…</p>}
         {episodes.data?.length === 0 && <p>Aucun épisode disponible dans cette saison.</p>}
-        {episodes.data?.map((episode, index) => <button type='button' className='client-player-episode' key={episode.Id} aria-current={episode.Id === item?.Id ? 'true' : undefined} onClick={() => play(episodes.data!, index)}>
-            {episode.ImageTags?.Primary && client && <img loading='lazy' alt='' src={client.getUrl(`Items/${episode.Id}/Images/Primary`, { maxWidth: 320, tag: episode.ImageTags.Primary })} />}
-            <span><small>{episode.Id === item?.Id ? 'EN LECTURE · ' : ''}Épisode {episode.IndexNumber} {episode.UserData?.Played ? '· Vu' : ''}</small><strong>{episode.Name}</strong><small>{episode.RunTimeTicks ? `${Math.round(episode.RunTimeTicks / SECOND / 60)} min` : ''}</small></span>
-        </button>)}
+        {episodes.data?.map((episode, index) => {
+            const protect = isProtectedEpisode(hideSpoilers, episode, [item?.Id, nextId]);
+            return <div key={episode.Id}><button type='button' className='client-player-episode' aria-current={episode.Id === item?.Id ? 'true' : undefined} onClick={() => play(episodes.data!, index)}>
+                {episode.ImageTags?.Primary && client && <PlayerEpisodeArt source={client.getUrl(`Items/${episode.Id}/Images/Primary`, { maxWidth: 320, tag: episode.ImageTags.Primary })} protect={protect} />}
+                <span><small>{episode.Id === item?.Id ? 'EN LECTURE · ' : ''}Épisode {episode.IndexNumber} {episode.UserData?.Played ? '· Vu' : ''}</small><strong>{episode.Name}</strong><small>{episode.RunTimeTicks ? `${Math.round(episode.RunTimeTicks / SECOND / 60)} min` : ''}</small></span>
+            </button>{protect && <EpisodeSummary item={episode} protectedContent />}</div>;
+        })}
     </div>;
+}
+
+function PlayerEpisodeArt({ source, protect }: Readonly<{ source: string; protect: boolean }>) {
+    const image = <img className={protect ? 'client-spoiler-art' : undefined} loading='lazy' alt='' src={source} />;
+    return protect ? <span className='client-player-episode-art'>{image}</span> : image;
 }
 
 function bitRate(value?: number | null) {

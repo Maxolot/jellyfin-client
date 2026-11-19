@@ -12,6 +12,7 @@ import { episodeLabel, progressPercent, runtimeLabel } from './model';
 import PreviewClip from './PreviewClip';
 import { QueueAction } from './QueueActions';
 import type { ExternalMedia } from './seerr/model';
+import { EpisodeSummary, useEpisodeSpoilers } from './spoilers';
 import { episodeCount, partialSeason, seasonChoices, seasonLabel, seasonProgress, seasonSummary, type RemoteSeason } from './seriesEpisodesModel';
 import './seriesEpisodes.scss';
 
@@ -131,13 +132,14 @@ export default function SeriesEpisodesPanel(props: Readonly<PanelProps>) {
 
 function EpisodeCard({ episode, basePath, nextId, play }: Readonly<EpisodeState & { episode: BaseItemDto }>) {
     const [active, setActive] = useState(false);
+    const protect = useEpisodeSpoilers()(episode);
     const next = episode.Id === nextId;
     const watched = !!episode.UserData?.Played;
     const progress = progressPercent(episode);
-    return <button type='button' className={`client-series-episode-card${next ? ' is-next' : ''}${watched ? ' is-watched' : ''}`}
+    const card = <button type='button' className={`client-series-episode-card${next ? ' is-next' : ''}${watched ? ' is-watched' : ''}`}
         aria-label={`Lire ${episodeLabel(episode)} · ${episode.Name}${next ? ' · À suivre' : ''}${watched ? ' · Vu' : ''}`} onClick={() => play(episode)}
         onPointerEnter={() => setActive(true)} onPointerLeave={() => setActive(false)} onFocus={() => setActive(true)} onBlur={() => setActive(false)}>
-        <Artwork source={artworkUrl(basePath, episode, 'episode')} />
+        <Artwork source={artworkUrl(basePath, episode, 'episode')} className={protect ? 'client-spoiler-art' : undefined} />
         <PreviewClip item={episode} surface='episode' enabled={active} soundControl={false} />
         <span className='client-series-episode-number' aria-hidden='true'>{episode.IndexNumber}</span>
         {watched && <span className='client-series-episode-seen' aria-hidden='true'><ClientIcon name='check' /></span>}
@@ -145,6 +147,7 @@ function EpisodeCard({ episode, basePath, nextId, play }: Readonly<EpisodeState 
         <span className='client-series-episode-title'>{episode.Name}</span>
         {progress > 0 && <span className='client-series-episode-progress' aria-hidden='true'><i style={{ width: `${progress}%` }} /></span>}
     </button>;
+    return protect && episode.Overview ? <div className='client-series-episode-wrap'>{card}<EpisodeSummary item={episode} protectedContent /></div> : card;
 }
 
 function EpisodeList({ seasons, missing, requestSeason, selected, select, items, loading, failed, retry, ...media }: Readonly<PanelProps>) {
@@ -179,6 +182,7 @@ function EditorialEpisodes({ items, loading, failed, retry, ...media }: Readonly
 }
 
 function EpisodeListItem({ episode, basePath, nextId, play }: Readonly<EpisodeState & { episode: BaseItemDto }>) {
+    const protect = useEpisodeSpoilers()(episode);
     const played = episode.UserData?.Played;
     const progress = progressPercent(episode);
     const next = episode.Id === nextId;
@@ -190,15 +194,15 @@ function EpisodeListItem({ episode, basePath, nextId, play }: Readonly<EpisodeSt
     return <li><button type='button' className='client-episode-editorial-entry'
         aria-label={label} onClick={() => play(episode)}>
         <span className='client-episode-editorial-number' aria-hidden='true'>{episode.IndexNumber}</span>
-        <span className='client-episode-editorial-thumbnail'><Artwork source={artworkUrl(basePath, episode, 'episode')} />
+        <span className='client-episode-editorial-thumbnail'><Artwork source={artworkUrl(basePath, episode, 'episode')} className={protect ? 'client-spoiler-art' : undefined} />
             {progress > 0 && <span className='client-series-episode-progress' aria-hidden='true'><i style={{ width: `${progress}%` }} /></span>}
         </span>
         <span className='client-episode-editorial-copy'>
             <strong>{episode.Name}</strong>
             <small>{[runtimeLabel(episode.RunTimeTicks), status].filter(Boolean).join(' · ')}</small>
-            {episode.Overview && <span className='client-episode-editorial-summary'>{episode.Overview}</span>}
+            {!protect && episode.Overview && <span className='client-episode-editorial-summary'>{episode.Overview}</span>}
         </span>
-    </button></li>;
+    </button>{protect && <EpisodeSummary item={episode} protectedContent />}</li>;
 }
 
 /* eslint-enable react/jsx-no-bind */
