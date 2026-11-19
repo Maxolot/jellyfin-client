@@ -15,6 +15,7 @@ import { mediaVersions } from './mediaVersions';
 import { clientRequest } from './session';
 import { serverInterfaceUrl } from './session/ServerInterfacePage';
 import type { TrackChoice } from './trackChoice';
+import { useLocalTrailers } from './trailers/useLocalTrailers';
 
 type Props = { item: BaseItemDto; basePath: string; open: boolean; onClose: () => void; play: (item: BaseItemDto, startTicks?: number) => void; choice: TrackChoice; chooseVersion: (version?: string) => void };
 
@@ -35,12 +36,12 @@ function useMediaInfo(item: BaseItemDto, enabled: boolean) {
             };
             // A series has no file of its own: its first episode stands for the technical details.
             const first = item.Type === BaseItemKind.Series ? (await library.getItems({ userId, parentId: item.Id, recursive: true, includeItemTypes: [BaseItemKind.Episode], limit: 1, sortBy: [ItemSortBy.ParentIndexNumber, ItemSortBy.IndexNumber] }, { signal })).data.Items?.[0] : item;
-            const [title, file, bonus, trailers] = await Promise.all([
+            const [title, file, bonus] = await Promise.all([
                 library.getItem({ itemId: item.Id!, userId }, { signal }),
                 first?.Id ? library.getItem({ itemId: first.Id, userId }, { signal }) : undefined,
-                list('SpecialFeatures'), list('LocalTrailers')
+                list('SpecialFeatures')
             ]);
-            return { title: title.data, file: file?.data, bonus, trailers };
+            return { title: title.data, file: file?.data, bonus };
         })
     });
 }
@@ -73,7 +74,8 @@ export default function MediaInfoDialog({ item, basePath, open, onClose, play, c
         onClose();
         play(entry, ticks);
     };
-    const { title, file, bonus = [], trailers = [] } = info.data || {};
+    const { data: trailers = [] } = useLocalTrailers(item, open);
+    const { title, file, bonus = [] } = info.data || {};
     const sources = file?.MediaSources || [];
     const versions = item.Type === BaseItemKind.Series ? [] : mediaVersions(sources);
     const shown = versions.find(version => version.id === choice.version)?.source || sources[0];
