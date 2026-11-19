@@ -9,7 +9,7 @@ import { getUserDataApi } from '@jellyfin/sdk/lib/utils/api/user-data-api';
 import useClientMediaQuery from '../features/client/useClientMediaQuery';
 import { useQueryClient } from '@tanstack/react-query';
 import { APP_NAME } from 'constants/branding';
-import React, { type CSSProperties, lazy, memo, Suspense, type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { type CSSProperties, lazy, memo, Suspense, type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigationType, useSearchParams, useNavigate, useParams } from 'react-router-dom';
 
 import Page from 'components/Page';
@@ -69,7 +69,8 @@ import { canFile } from '../features/client/folders/model';
 import WatchedMarker, { watchedLabel } from '../features/client/WatchedMarker';
 import { episodeLabel, isWatchedCard, progressPercent, uniqueItems } from '../features/client/model';
 import { clientRequest } from '../features/client/session';
-import { useClientDetails, useClientFilters, useClientMedia, useMoreBrowse } from '../features/client/useClientMedia';
+import { pickHeroes, type HeroMix } from '../features/client/heroSelection';
+import { useClientDetails, useClientFilters, useClientMedia, useHeroPool, useMoreBrowse } from '../features/client/useClientMedia';
 import '../features/client/client.scss';
 import '../features/client/prototype.scss';
 import '../features/client/motion.scss';
@@ -486,7 +487,13 @@ function useClientController() {
         if (!items?.length) return null;
         return <MediaRow key={`${title}:${items.map(entry => entry.Id).join('|')}`} title={title} items={items} kind={kind} continuation={horizontal} showDescription={preferences.hoverDescriptions} showWatched={preferences.watchedMarkers} image={image} logo={logo} onPrepare={prepareDetail} onRelease={releaseDetail} />;
     }
-    const heroItems = heroCandidates(discovery, media.data);
+    const heroPool = useHeroPool(view === 'home' || discovery ? view : 'disabled', genre);
+    const heroItems = useMemo(() => {
+        // Titles already in « Continuer à regarder » are not repeated in the home banner.
+        const continuing = new Set([...(media.data?.resume || []), ...(media.data?.next || [])].flatMap(entry => [entry.Id || '', entry.SeriesId || '']));
+        const picked = view === 'home' || discovery ? pickHeroes(heroPool.data, view as HeroMix, Date.now(), 5, continuing) : [];
+        return picked.length ? picked : heroCandidates(discovery, media.data);
+    }, [heroPool.data, media.data, view, discovery]);
     const lead = heroItems[heroIndex % Math.max(1, heroItems.length)];
     const nextHero = heroItems[(heroIndex + 1) % Math.max(1, heroItems.length)];
     const nextArtwork = nextHero && !id ? image(nextHero, true, true) : '';
