@@ -51,6 +51,9 @@ import MediaRow from '../features/client/MediaRow';
 import { ChoiceSelect, type Option } from '../features/client/settings/controls';
 import AdvancedLibraryFilters from '../features/client/AdvancedLibraryFilters';
 import { countLibraryFilters, isFullLibrary, readLibraryFilters } from '../features/client/libraryFilters';
+import FolderPanel from '../features/client/folders/FolderPanel';
+import { FolderPickerProvider, ListAction, useFolderPicker } from '../features/client/folders/FolderPicker';
+import { canFile } from '../features/client/folders/model';
 import WatchedMarker, { watchedLabel } from '../features/client/WatchedMarker';
 import { episodeLabel, isWatchedCard, progressPercent, uniqueItems } from '../features/client/model';
 import { clientRequest } from '../features/client/session';
@@ -373,12 +376,12 @@ function useClientController() {
             setBusy(false);
         }
     }
-    function cards(items: BaseItemDto[], horizontal = false) {
+    function cards(items: BaseItemDto[], horizontal = false, withFolders = false) {
         return items.map(i => {
             const tracked = isExternal(i) && sharedItems.some(entry => entry.Id === i.Id);
             const source = image(i, horizontal);
             const watched = isWatchedCard(i, preferences.watchedMarkers);
-            return <Link className={`client-card${horizontal ? ' client-card-wide' : ''}`} key={i.Id} data-client-focus={i.Id}
+            const card = <Link className={`client-card${horizontal ? ' client-card-wide' : ''}`} key={i.Id} data-client-focus={i.Id}
                 to={`/client?id=${i.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }} aria-label={[i.SeriesName, i.Name, watched && watchedLabel].filter(Boolean).join(' · ')} onPointerEnter={() => prepareDetail(i)} onFocus={() => prepareDetail(i)}>
                 {tracked && !source ? <SharedCatalogArtwork item={i} backdrop={horizontal} /> : <Artwork source={source} />}
                 {horizontal && <span className='client-card-caption'><strong>{i.SeriesName || i.Name}</strong>
@@ -388,6 +391,7 @@ function useClientController() {
                 {watched && <WatchedMarker />}
                 {isExternal(i) && <span className='client-external-badge'>{tracked ? 'À télécharger' : mediaLabel((i as CatalogueItem).Seerr?.mediaInfo)}</span>}
             </Link>;
+            return withFolders && canFile(i) ? <div className='client-folder-search-card' key={i.Id}>{card}<ListAction item={i} /></div> : card;
         });
     }
     function row(title: string, items: BaseItemDto[] | undefined, horizontal = false) {
@@ -470,30 +474,32 @@ function ClientView({ model }: ViewProps) {
     const spotlight = useRef<SpotlightHandle>(null);
     return <PreviewProvider serverAvailable={model.previewProviderAvailable} surface={model.surface} enabled={preferences.previews} muted={preferences.previewMuted} suspended={model.previewSuspended} toggleMuted={() => model.savePreference({ ...preferences, previewMuted: !preferences.previewMuted })} onPlayingChange={model.setPreviewPlaying}><Page id='clientPage' title={APP_NAME} className='client-page' isBackButtonEnabled={false}>
         <div ref={model.surface} className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} ${preferences.chromatic ? 'client-chromatic' : ''} ${preferences.hero === 'background' ? 'client-hero-background' : ''} client-treatment-${preferences.detailTreatment} client-layout-${preferences.detail} ${id ? 'client-detail-page' : ''}`} style={{ '--client-accent': accent, '--detail-blur': `${preferences.detailBlur}px`, '--detail-shade': preferences.detailShade / 100, '--detail-width': `${preferences.detailWidth}%` } as CSSProperties}>
-            {preferences.ambient && !id && <AmbientBackdrop source={model.backdrop} />}
-            <nav className='client-nav' data-alignment={preferences.headerAlignment} aria-label='Navigation principale'>
-                <button ref={profileButton} className='client-profile' aria-label='Menu du profil' aria-expanded={profileOpen} onClick={() => setProfileOpen(!profileOpen)}>{user?.PrimaryImageTag ? <img src={`${model.api?.basePath}/Users/${user.Id}/Images/Primary?tag=${user.PrimaryImageTag}&width=96&quality=90`} alt='' /> : user?.Name?.slice(0, 1) || '•'}</button>
-                <NavLinks view={view} detail={!!id} prepare={model.prepareTab} />
-                {/* À gauche de la loupe : envoyer la lecture vers un autre appareil, regarder à plusieurs. */}
-                <button type='button' className='client-nav-tool' aria-label='Lire sur un autre appareil' title='Lire sur un autre appareil' onClick={() => openConnectivity('targets')}><RemoteIcon name='cast' /></button>
-                <button type='button' className='client-nav-tool' aria-label='Regarder ensemble' title='Regarder ensemble' onClick={() => openConnectivity('together')}><RemoteIcon name='people' /></button>
-                <button type='button' className='client-brand client-search-shortcut' aria-label='Rechercher' title='Rechercher (⌘K ou Ctrl+K)' aria-haspopup='dialog' aria-current={!id && view === 'search' ? 'page' : undefined} onClick={event => spotlight.current?.open(event.currentTarget)}><ClientIcon name='search' /></button>
-                {profileOpen && <div ref={profileMenu} className='client-profile-menu' role='dialog' aria-label='Menu du profil'>
-                    <strong>{user?.Name}</strong><Link to='/client?view=profiles' onClick={() => setProfileOpen(false)}>Changer de profil</Link><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><Link to='/offline' onClick={() => setProfileOpen(false)}>Hors ligne</Link><QuickConnectMenuItem /><button onClick={() => {
-                        void signOut(model.api?.basePath, user?.Id);
-                    }}>Se déconnecter</button>
-                </div>}
-            </nav>
-            <ProfileEntrance profile={profileButton} />
-            {actionError && <p role='alert' className='client-message'>{actionError}</p>}
-            {error && <div className='client-message' role='alert'><p>Impossible de charger les médias.</p><button type='button' className='client-button' onClick={() => (id ? details.item.refetch() : media.refetch())}>Réessayer</button></div>}
-            {id && !model.remote && details.item.isPending && <ClientSkeleton layout='detail' label='Chargement de la fiche…' />}
-            <BrowseControls model={model} />
-            {!id && media.isPending && (view === 'home' || model.discovery) && <ClientSkeleton layout='hero' label='Chargement de la sélection…' />}
-            <HeroView model={model} />
-            <ContentView model={model} />
-            <Spotlight ref={spotlight} glass={preferences.glass} showWatched={preferences.watchedMarkers} image={model.image} play={model.play} />
-            <PlaybackStarting item={model.starting} basePath={model.api?.basePath || ''} />
+            <FolderPickerProvider>
+                {preferences.ambient && !id && <AmbientBackdrop source={model.backdrop} />}
+                <nav className='client-nav' data-alignment={preferences.headerAlignment} aria-label='Navigation principale'>
+                    <button ref={profileButton} className='client-profile' aria-label='Menu du profil' aria-expanded={profileOpen} onClick={() => setProfileOpen(!profileOpen)}>{user?.PrimaryImageTag ? <img src={`${model.api?.basePath}/Users/${user.Id}/Images/Primary?tag=${user.PrimaryImageTag}&width=96&quality=90`} alt='' /> : user?.Name?.slice(0, 1) || '•'}</button>
+                    <NavLinks view={view} detail={!!id} prepare={model.prepareTab} />
+                    {/* À gauche de la loupe : envoyer la lecture vers un autre appareil, regarder à plusieurs. */}
+                    <button type='button' className='client-nav-tool' aria-label='Lire sur un autre appareil' title='Lire sur un autre appareil' onClick={() => openConnectivity('targets')}><RemoteIcon name='cast' /></button>
+                    <button type='button' className='client-nav-tool' aria-label='Regarder ensemble' title='Regarder ensemble' onClick={() => openConnectivity('together')}><RemoteIcon name='people' /></button>
+                    <button type='button' className='client-brand client-search-shortcut' aria-label='Rechercher' title='Rechercher (⌘K ou Ctrl+K)' aria-haspopup='dialog' aria-current={!id && view === 'search' ? 'page' : undefined} onClick={event => spotlight.current?.open(event.currentTarget)}><ClientIcon name='search' /></button>
+                    {profileOpen && <div ref={profileMenu} className='client-profile-menu' role='dialog' aria-label='Menu du profil'>
+                        <strong>{user?.Name}</strong><Link to='/client?view=profiles' onClick={() => setProfileOpen(false)}>Changer de profil</Link><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><Link to='/offline' onClick={() => setProfileOpen(false)}>Hors ligne</Link><QuickConnectMenuItem /><button onClick={() => {
+                            void signOut(model.api?.basePath, user?.Id);
+                        }}>Se déconnecter</button>
+                    </div>}
+                </nav>
+                <ProfileEntrance profile={profileButton} />
+                {actionError && <p role='alert' className='client-message'>{actionError}</p>}
+                {error && <div className='client-message' role='alert'><p>Impossible de charger les médias.</p><button type='button' className='client-button' onClick={() => (id ? details.item.refetch() : media.refetch())}>Réessayer</button></div>}
+                {id && !model.remote && details.item.isPending && <ClientSkeleton layout='detail' label='Chargement de la fiche…' />}
+                <BrowseControls model={model} />
+                {!id && media.isPending && (view === 'home' || model.discovery) && <ClientSkeleton layout='hero' label='Chargement de la sélection…' />}
+                <HeroView model={model} />
+                <ContentView model={model} />
+                <Spotlight ref={spotlight} glass={preferences.glass} showWatched={preferences.watchedMarkers} image={model.image} play={model.play} />
+                <PlaybackStarting item={model.starting} basePath={model.api?.basePath || ''} />
+            </FolderPickerProvider>
         </div>
     </Page></PreviewProvider>;
 }
@@ -552,7 +558,7 @@ function HeroActions({ model, dots }: ViewProps & { dots: ReactNode }) {
     return <div className='client-actions'>
         {playable && <button className='client-play' onClick={() => play(playable)}><ClientIcon name='play' />{playLabel}</button>}
         {!id && <Link className='client-button' data-client-focus={`info-${hero.Id}`} to={`/client?id=${hero.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }}><ClientIcon name='info' />Plus d’infos</Link>}
-        {id && <><button className='client-button client-action-circle' aria-label={item?.UserData?.IsFavorite ? 'Retirer de ma liste' : 'Ajouter à ma liste'} title={item?.UserData?.IsFavorite ? 'Retirer de ma liste' : 'Ajouter à ma liste'} disabled={busy} aria-pressed={!!item?.UserData?.IsFavorite} onClick={() => updateState('favorite')}><ClientIcon name={item?.UserData?.IsFavorite ? 'check' : 'plus'} /></button>
+        {id && <><ListAction item={hero} disabled={busy} fallback={() => updateState('favorite')} />
             <button className='client-button client-action-circle' aria-label={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} title={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} disabled={busy} aria-pressed={!!item?.UserData?.Played} onClick={() => updateState('played')}><ClientIcon name={item?.UserData?.Played ? 'check' : 'eye'} /></button>
             <DetailMenu key={hero.Id} item={hero} basePath={api?.basePath || ''} play={play} /></>}
         {dots}
@@ -694,7 +700,7 @@ function PersonalView({ model }: ViewProps) {
             {progressPercent(lead) > 0 && <span className='client-spotlight-progress' aria-label={`Vu à ${Math.round(progressPercent(lead))} %`}><i style={{ width: `${progressPercent(lead)}%` }} /></span>}
             <button className='client-play' onClick={() => play(lead)}><ClientIcon name='play' />Reprendre</button><Link className='client-button' to={`/client?id=${lead.SeriesId || lead.Id}`}>Voir la fiche</Link></div></section>}
         <div id='client-resume'>{row('Continuer à regarder', resume.slice(1), true)}</div>
-        <div className='client-personal-favorites' id='client-favorites'><header><h2>Ma liste</h2></header><LibraryView model={model} embedded /></div>
+        <div className='client-personal-favorites' id='client-favorites'><header><h2>Ma liste</h2></header><FolderPanel image={image} /><LibraryView model={model} embedded /></div>
         {row('Vus récemment', history.data)}
         {(!!stats.data?.genres.length || !!collections.data?.length) && <div className='client-personal-columns'>
             <GenreTaste stats={stats.data} />
@@ -751,6 +757,7 @@ function LibraryResultCount({ model, embedded, loaded, extra, onlyMissing }: Vie
 function SearchView({ model }: ViewProps) {
     const { search, searchInput, setSearchInput, setParams, params, cards, media, catalogue, genre, sort, genres } = model;
     const query = search.trim();
+    const hasFolders = !!useFolderPicker()?.folders;
     const more = useMoreBrowse('search', search, model.browseInput.filters || {}, media.data);
     const tracked = genre ? model.sharedItems.filter(item => item.Genres?.includes(genre)) : model.sharedItems;
     const results = groupSearchResults(more.pages.flat(), tracked, catalogue.items);
@@ -774,7 +781,7 @@ function SearchView({ model }: ViewProps) {
                 </span>
             </div>
             <SearchGroup title='Dans ta bibliothèque' count={results.own.length}>
-                <div className='client-grid'>{cards(shown)}</div>
+                <div className='client-grid'>{cards(shown, false, hasFolders)}</div>
                 {more.hasMore && <LoadMore loading={more.isFetching} failed={more.isError} pages={more.pages.length} load={() => { void more.fetchMore(); }} />}
             </SearchGroup>
             <SearchGroup title='Catalogue partagé' count={results.saved.length}><div className='client-grid'>{cards(results.saved)}</div></SearchGroup>

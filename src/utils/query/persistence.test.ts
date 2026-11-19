@@ -2,15 +2,16 @@ import { describe, expect, it, vi } from 'vitest';
 import type { PersistedClient } from '@tanstack/react-query-persist-client';
 import { createDeferredSaver, withoutPreviewGrants } from './persistence';
 
-describe('preview grant persistence boundary', () => {
-    it('removes preview tickets from both writes and restored snapshots while retaining other queries', () => {
+describe('private query persistence boundary', () => {
+    it('removes preview tickets and personal folders from durable snapshots', () => {
         const saved = { timestamp: 1, buster: 'build', clientState: { mutations: [], queries: [
             { queryKey: ['ClientPreviews', 'server', 'account', 'Manifest', 'film'], queryHash: 'preview', state: { data: { full: '/preview.mp4?ticket=temporary' } } },
+            { queryKey: ['ClientFolders', 'server', 'account', 'Targets'], queryHash: 'folder-targets' },
             { queryKey: ['Client', 'server', 'account', 'Detail', 'film'], queryHash: 'detail', state: { data: { Name: 'Film' } } }
         ] } } as unknown as PersistedClient;
         const result = withoutPreviewGrants(saved);
         expect(result.clientState.queries.map(query => query.queryHash)).toEqual(['detail']);
-        expect(saved.clientState.queries).toHaveLength(2);
+        expect(saved.clientState.queries).toHaveLength(3);
         expect(withoutPreviewGrants(result)).toEqual(result);
     });
 });

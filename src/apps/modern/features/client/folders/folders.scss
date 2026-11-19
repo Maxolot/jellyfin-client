@@ -1,0 +1,238 @@
+.client-folders {
+    display: grid;
+    gap: 14px;
+    margin: 0 var(--client-margin) 18px;
+
+    h3,
+    h4,
+    p {
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    h3 {
+        font-size: 18px;
+        font-weight: 600;
+    }
+}
+
+.client-folders-header,
+.client-folder-content > header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.client-folder-tiles,
+.client-folder-titles,
+.client-folder-choices,
+.client-folder-share-list {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.client-folder-tiles {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 235px), 1fr));
+    margin-bottom: 8px;
+}
+
+.client-folder-tile,
+.client-folder-content {
+    border: 1px solid #ffffff24;
+    border-radius: 12px;
+    background: #ffffff08;
+    color: inherit;
+}
+
+.client-folder-tile {
+    display: grid;
+    width: 100%;
+    min-height: 68px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    text-align: start;
+
+    &:hover,
+    &[aria-expanded='true'] {
+        border-color: #ffffff65;
+        background: #ffffff16;
+    }
+
+    > .client-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    &:where([aria-expanded='true']) > .client-icon { transform: rotate(90deg); }
+}
+
+.client-folder-symbol {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    border-radius: 8px;
+    background: #ffffff12;
+
+    .client-icon {
+        width: 22px;
+        height: 22px;
+    }
+}
+
+.client-folder-tile strong,
+.client-folder-titles strong,
+.client-folder-choice span {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+.client-detail-dialog.client-folder-modal { width: min(540px, calc(100vw - 32px)); }
+
+.client-folder-dialog {
+    display: grid;
+    gap: 14px;
+
+    > h3,
+    > p { margin: 0; }
+
+    input {
+        width: 100%;
+        min-height: 44px;
+        padding: 10px 12px;
+        border: 1px solid #ffffff40;
+        border-radius: 8px;
+        background: #ffffff08;
+        color: inherit;
+        font: inherit;
+    }
+
+    > .client-play { justify-self: start; }
+
+    > .client-folder-delete {
+        justify-self: start;
+        color: #ffb6b6;
+    }
+
+    [role='alert'] { color: #ffb6b6; }
+}
+
+.client-folder-tile small,
+.client-folder-titles small,
+.client-folder-choice small,
+.client-folder-content > header p,
+.client-folder-empty {
+    display: block;
+    margin-top: 3px;
+    color: #c1c5ce;
+    font-size: 13px;
+}
+
+.client-folder-content {
+    display: grid;
+    gap: 14px;
+    padding: clamp(12px, 2vw, 20px);
+
+    h4 { font-size: 19px; }
+}
+
+.client-folder-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.client-folder-search-card {
+    position: relative;
+    min-width: 0;
+
+    > .client-card { display: block; }
+
+    > .client-action-circle {
+        position: absolute;
+        z-index: 2;
+        bottom: 7px;
+        right: 7px;
+        border-color: #fff5;
+        background: #17181cf2;
+    }
+}
+
+.client-folder-search-card > .client-action-circle,
+.client-folder-titles li .client-action-circle {
+    display: inline-grid;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    place-items: center;
+    padding: 0;
+}
+
+.client-folder-titles li {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #ffffff1a;
+
+    a {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+        gap: 12px;
+        color: inherit;
+        text-decoration: none;
+
+        &:hover { text-decoration: underline; }
+    }
+}
+
+.client-folder-poster {
+    position: relative;
+    display: block;
+    width: 38px;
+    height: 54px;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: 5px;
+    background: #ffffff12;
+}
+
+.client-folders > .client-folder-favorites-heading { margin-top: 8px; }
+
+.client-folder-choice {
+    width: 100%;
+    justify-content: flex-start;
+    text-align: start;
+
+    .client-icon { flex-shrink: 0; }
+
+    span { flex: 1; }
+}
+
+.client-folder-share-list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 14px;
+    padding: 8px 0;
+    border-top: 1px solid #ffffff1a;
+
+    strong { overflow-wrap: anywhere; }
+
+    .client-select { min-width: 150px; }
+}
+
+@media (max-width: 550px) {
+    .client-folder-tiles { grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); }
+}

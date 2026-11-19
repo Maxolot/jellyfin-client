@@ -9,6 +9,7 @@ const paths = {
     collection: 'M8 3H3v13h5M8 7h13v14H8ZM14.5 11v6M11.5 14h6',
     search: 'M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0',
     refresh: 'M20 7v5h-5M4 17v-5h5M6 6a8 8 0 0 1 13.5 3M4.5 15A8 8 0 0 0 18 18',
+    folder: 'M3 6h7l2 2h9v12H3Z',
     plus: 'M12 5v14M5 12h14',
     more: 'M5 12h.01M12 12h.01M19 12h.01',
     check: 'm5 12 4 4L19 6',

@@ -1,13 +1,13 @@
 import type { PersistedClient } from '@tanstack/react-query-persist-client';
 
-/** Short-lived preview grants belong to memory, never the durable account query cache. */
+/** Keep short-lived preview grants and private folder data in memory. */
 export function withoutPreviewGrants(client: PersistedClient): PersistedClient {
     return {
         ...client,
         clientState: {
             ...client.clientState,
             // The whole library's identities and long scrolled lists are large, quick to fetch again, and would slow every save.
-            queries: client.clientState.queries.filter(query => query.queryKey[0] !== 'ClientPreviews' && !query.queryKey.includes('LocalIdentities') && query.queryKey[query.queryKey.length - 1] !== 'More')
+            queries: client.clientState.queries.filter(query => query.queryKey[0] !== 'ClientPreviews' && query.queryKey[0] !== 'ClientFolders' && !query.queryKey.includes('LocalIdentities') && query.queryKey[query.queryKey.length - 1] !== 'More')
         }
     };
 }

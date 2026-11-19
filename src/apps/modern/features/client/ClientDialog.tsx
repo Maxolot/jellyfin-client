@@ -3,9 +3,9 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import ClientIcon from './ClientIcon';
 import './detailDialogs.scss';
 
-type Props = { label: string; title: string; subtitle?: string; buttonClassName?: string; controlled?: { open: boolean; onClose: () => void }; children: React.ReactNode | ((close: () => void) => React.ReactNode) };
+type Props = { label: string; title: string; subtitle?: string; className?: string; buttonClassName?: string; controlled?: { open: boolean; onClose: () => void }; children: React.ReactNode | ((close: () => void) => React.ReactNode) };
 
-export default function ClientDialog({ label, title, subtitle, buttonClassName, controlled, children }: Readonly<Props>) {
+export default function ClientDialog({ label, title, subtitle, className, buttonClassName, controlled, children }: Readonly<Props>) {
     const dialog = useRef<HTMLDialogElement>(null);
     const titleId = useId();
     const dialogId = useId();
@@ -31,7 +31,7 @@ export default function ClientDialog({ label, title, subtitle, buttonClassName, 
     }}>{label}</button>}
     {/* Native dialog handles Escape and focus; this pointer handler only dismisses outside clicks. */}
     {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
-    <dialog ref={dialog} id={dialogId} className='client-detail-dialog' aria-labelledby={titleId} onClose={() => {
+    <dialog ref={dialog} id={dialogId} className={className ? `client-detail-dialog ${className}` : 'client-detail-dialog'} aria-labelledby={titleId} onClose={() => {
         setOpened(false);
         controlled?.onClose();
     }} onClick={event => {

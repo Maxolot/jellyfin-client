@@ -387,23 +387,24 @@ body.client-spotlight-open {
         line-height: 1;
     }
 
-    .client-action-circle {
-        display: inline-grid;
-        width: 36px;
-        height: 36px;
-        padding: 0;
-        place-items: center;
-        border: 1px solid #ffffff4d;
-        border-radius: 50%;
-        background: #ffffff14;
-        color: #fff;
-        cursor: pointer;
-    }
-
     svg {
         width: 16px;
         height: 16px;
     }
+}
+
+.client-spotlight :is(.client-spotlight-best-actions, .client-spotlight-list) .client-action-circle {
+    display: inline-grid;
+    width: 36px;
+    flex: none;
+    height: 36px;
+    padding: 0;
+    place-items: center;
+    border: 1px solid #ffffff4d;
+    border-radius: 50%;
+    background: #ffffff14;
+    color: #fff;
+    cursor: pointer;
 }
 
 // Rangées d'affiches de l'ouverture (Pour toi, tendances…).

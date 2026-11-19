@@ -4,6 +4,7 @@ import React, { type MouseEvent, type ReactNode } from 'react';
 import Artwork from '../Artwork';
 import ClientIcon from '../ClientIcon';
 import SharedCatalogArtwork from '../SharedCatalogArtwork';
+import { ListAction } from '../folders/FolderPicker';
 import WatchedMarker, { watchedLabel } from '../WatchedMarker';
 import { episodeLabel, isWatchedCard, progressPercent } from '../model';
 import { isExternal, mediaLabel, type CatalogueItem } from '../seerr/model';
@@ -69,6 +70,7 @@ function row(item: BaseItemDto, prefix: string, actions: Actions): Option {
             <span className='client-spotlight-text'><strong>{item.Name}</strong>
                 <small>{[item.ProductionYear, typeLabel(item)].filter(Boolean).join(' · ')}</small></span>
             <span className={`client-spotlight-badge${isExternal(item) ? '' : ' available'}`}>{availability(item, actions)}</span>
+            {prefix === 'own' && <ListAction item={item} tabIndex={-1} />}
         </>
     };
 }
@@ -91,14 +93,14 @@ export function chip(key: string, label: string, run: () => void, icon?: 'collec
 
 function BestActions({ item, actions }: Readonly<{ item: BaseItemDto; actions: Actions }>) {
     const favorite = actions.isFavorite(item);
-    const favoriteLabel = favorite ? 'Retirer de ma liste' : 'Ajouter à ma liste';
     const requestLabel = actions.shared.has(item.Id || '') ? 'Voir la fiche' : 'Demander';
     return <span className='client-spotlight-best-actions'>
         {isExternal(item) ?
             <button type='button' className='client-play' tabIndex={-1} onClick={alone(() => actions.openItem(item))}><ClientIcon name='plus' />{requestLabel}</button> :
             <button type='button' className='client-play' tabIndex={-1} onClick={alone(() => actions.playItem(item))}><ClientIcon name='play' />Lecture</button>}
-        {!isExternal(item) && <button type='button' className='client-button client-action-circle' tabIndex={-1} aria-pressed={favorite}
-            aria-label={favoriteLabel} title={favoriteLabel} onClick={alone(() => actions.toggleFavorite(item))}><ClientIcon name={favorite ? 'check' : 'plus'} /></button>}
+        {!isExternal(item) && <ListAction item={item} favorite={favorite} tabIndex={-1}
+            // eslint-disable-next-line react/jsx-no-bind -- This action belongs to the current search result.
+            fallback={() => actions.toggleFavorite(item)} />}
         <button type='button' className='client-button client-action-circle' tabIndex={-1} aria-label='Plus d’infos' title='Plus d’infos'
             onClick={alone(() => actions.openItem(item))}><ClientIcon name='info' /></button>
     </span>;

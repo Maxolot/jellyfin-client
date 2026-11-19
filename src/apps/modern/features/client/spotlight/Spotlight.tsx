@@ -122,6 +122,7 @@ function useOpening(reset: () => void, prepare: () => void) {
     // ⌘K / Ctrl+K anywhere, « / » outside a field, Échap to leave, as on a Mac.
     useEffect(() => {
         const keys = (event: globalThis.KeyboardEvent) => {
+            if (document.querySelector('dialog[open]')) return;
             const mod = event.metaKey || event.ctrlKey;
             const toggle = mod && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'k';
             const slash = event.key === '/' && !mod && !event.altKey && !busyTarget(event.target);
@@ -237,7 +238,7 @@ function Groups({ groups, active, setActive, onForget }: Readonly<{
                     }}
                     onClick={event => run(event.metaKey || event.ctrlKey)}
                     onKeyDown={event => {
-                        if (event.key === 'Enter') run(event.metaKey || event.ctrlKey);
+                        if (event.target === event.currentTarget && event.key === 'Enter') run(event.metaKey || event.ctrlKey);
                     }}>
                     {option.view()}
                     {group.id === 'recent' && <button type='button' className='client-spotlight-forget' aria-label={`Oublier ${option.label}`} onClick={event => {
@@ -303,6 +304,13 @@ const Spotlight = forwardRef<SpotlightHandle, Props>(function ClientSpotlight({ 
     }, [current]);
 
     function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+        const folderAction = current && event.key === 'Tab' && !event.shiftKey
+            && document.getElementById(optionId(current.key))?.querySelector<HTMLButtonElement>('button[data-folder-action]');
+        if (folderAction) {
+            event.preventDefault();
+            folderAction.focus();
+            return;
+        }
         const move = keyMove(event);
         if (move) {
             const next = moveActive(shown.map(group => ({ layout: group.layout, size: group.options.length })), active, move, !!query);
