@@ -113,6 +113,7 @@ internal static class FolderApiChecks
         var restricted = await Request(http, HttpMethod.Get, "/SharedCatalog/Describe?q=description", recipient.Id, null, HttpStatusCode.OK);
         Check(restricted.Body!.Value.GetProperty("results").EnumerateArray().Select(item => item.GetProperty("title").GetString())
             .SequenceEqual(["Série suivie"]), "Items outside the caller's library and untracked results are filtered.");
+        File.Delete(Path.Combine(plugin.DataFolderPath, "catalog.json"));
         await Request(http, HttpMethod.Get, Root, null, null, HttpStatusCode.Unauthorized);
         await Request(http, HttpMethod.Get, Root, Guid.NewGuid(), null, HttpStatusCode.Forbidden);
         await Request(http, HttpMethod.Get, Root, disabled.Id, null, HttpStatusCode.Forbidden);
