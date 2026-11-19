@@ -1,7 +1,7 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import { describe, expect, it } from 'vitest';
 
-import { browseFilmography, filmography, personPath, personTmdbId, uniquePersonResults, type Credit } from './model';
+import { browseFilmography, filmography, filmographyCounts, personPath, personTmdbId, uniquePersonResults, type Credit } from './model';
 
 const available: BaseItemDto = { Id: 'visible', Name: 'Réel', Type: 'Movie', ProviderIds: { Tmdb: '1' } };
 const virtual: BaseItemDto = { Id: 'virtual', Name: 'Absent', Type: 'Movie', ProviderIds: { Tmdb: '2' }, LocationType: 'Virtual' };
@@ -48,6 +48,12 @@ describe('global filmography', () => {
         const local = { ...available, People: [{ Id: 'person', Type: 'Director' as const }] };
         expect(filmography({ ...initial, local: [local], personId: 'person' }))
             .toMatchObject([{ item: local, status: 'available', roles: { directing: ['Réalisation'] } }]);
+    });
+
+    it('uses French agreement in the availability counter', () => {
+        expect(filmographyCounts(0, 2)).toBe('0 disponible · 2 à demander');
+        expect(filmographyCounts(1, 1)).toBe('1 disponible · 1 à demander');
+        expect(filmographyCounts(2)).toBe('2 disponibles');
     });
 
     it('routes to a local or TMDb profile and prefers the local search duplicate', () => {

@@ -71,7 +71,7 @@ export default function useClientMotion(surface: RefObject<HTMLDivElement>) {
             }
         }, { threshold: 0.04 });
         const discover = () => {
-            root.querySelectorAll('.client-home-hero, .client-row, .client-grid, .client-detail-extras > section, .client-personal-collections').forEach(element => {
+            root.querySelectorAll('.client-home-hero, .client-row, .client-grid:not([data-reveal="static"]), .client-detail-extras > section, .client-personal-collections').forEach(element => {
                 if (seen.has(element)) return;
                 seen.add(element);
                 if (!element.classList.contains('client-home-hero') && element.getBoundingClientRect().top > window.innerHeight) element.classList.add('client-reveal-pending');

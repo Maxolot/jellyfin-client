@@ -13,7 +13,7 @@ import { useSeerr } from '../seerr/SeerrContext';
 import { RequestPanel } from '../seerr/SeerrViews';
 import { ChoiceSelect, type Option } from '../settings/controls';
 import SharedCatalogArtwork from '../SharedCatalogArtwork';
-import { browseFilmography, filmography, personDepartment, type FilmographyEntry, type FilmographyRole, type FilmographyStatus } from './model';
+import { browseFilmography, filmography, filmographyCounts, personDepartment, type FilmographyEntry, type FilmographyRole, type FilmographyStatus } from './model';
 import { usePersonData } from './queries';
 import './person.scss';
 
@@ -83,7 +83,7 @@ export default function PersonPage({ id, basePath, image, play }: Readonly<Props
     const shown = browseFilmography(contents, type, role, sort);
     const there = contents.filter(entry => entry.status === 'available').length;
     const toRequest = contents.filter(entry => entry.status === 'requestable').length;
-    const counts = canClassify ? `${there} disponibles · ${toRequest} à demander` : `${there} disponibles`;
+    const counts = filmographyCounts(there, canClassify ? toRequest : undefined);
     const roleTabs = roles.filter(tab => contents.some(entry => entry.roles[tab.key]?.length));
     const loading = data.associated.isLoading || data.local.isLoading || data.resolving || data.remote.isLoading || (data.remote.isSuccess && data.library.isLoading);
     const portrait = imageUrl(remote?.profilePath) || (data.local.data?.ImageTags?.Primary ? artworkUrl(basePath, data.local.data, 'portrait') : '');
@@ -122,7 +122,7 @@ function CreditSection({ label, status, entries, ...actions }: Readonly<CreditAc
     if (!entries.length && status !== 'available') return null;
     return <section className={`client-credit-section is-${status}`}>
         <h3>{label}</h3>
-        {!entries.length ? <p>Aucun titre disponible pour cette sélection.</p> : <div className='client-grid'>
+        {!entries.length ? <p>Aucun titre disponible pour cette sélection.</p> : <div className='client-grid' data-reveal='static'>
             {entries.map(entry => <CreditTile key={entry.item.Id} entry={entry} {...actions} />)}
         </div>}
     </section>;

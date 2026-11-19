@@ -161,3 +161,8 @@ export function browseFilmography(entries: FilmographyEntry[], type: string, rol
             return sort === 'date' ? date || right.popularity - left.popularity : right.popularity - left.popularity || date;
         });
 }
+
+export function filmographyCounts(available: number, requestable?: number) {
+    const local = `${available} disponible${available > 1 ? 's' : ''}`;
+    return requestable === undefined ? local : `${local} · ${requestable} à demander`;
+}

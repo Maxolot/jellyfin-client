@@ -155,3 +155,20 @@ export function withLocalAvailability(detail: ExternalMedia, local?: BaseItemDto
     const complete = required.length > 0 && required.every(season => seasons.some(entry => entry.seasonNumber === season.seasonNumber && entry.status === 5));
     return { ...detail, mediaInfo: { ...info, seasons, status: complete ? 5 : 4 } };
 }
+
+export function orderedRequestSeasons(seasons: ExternalMedia['seasons']) {
+    const order = (number: number) => number === 0 ? Number.MAX_SAFE_INTEGER : number;
+    return (seasons || []).slice().sort((left, right) => order(left.seasonNumber) - order(right.seasonNumber));
+}
+
+export function requestQuotaLabel(type: MediaType, remaining: number, limited: boolean) {
+    if (!limited) return 'Aucune limite de demandes pour votre compte';
+    const plural = remaining > 1;
+    const words = type === 'tv' ? ['saison restante', 'saisons restantes'] : ['film restant', 'films restants'];
+    const unit = words[Number(plural)];
+    return `${remaining} ${unit} dans votre quota`;
+}
+
+export function requestSeasonNumbersLabel(numbers: number[]) {
+    return `${numbers.length === 1 ? 'Saison' : 'Saisons'} ${numbers.slice().sort((a, b) => a - b).join(', ')}`;
+}
