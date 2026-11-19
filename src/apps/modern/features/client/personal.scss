@@ -113,21 +113,6 @@ button.client-stat {
         font-size: 19px;
         font-weight: 500;
     }
-
-    .client-personal-collections {
-        margin: 0;
-    }
-
-    .client-personal-collections > div {
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-
-    .client-personal-collections a {
-        flex-basis: 200px;
-        min-height: 96px;
-        padding: 12px;
-    }
 }
 
 .client-personal-panel {

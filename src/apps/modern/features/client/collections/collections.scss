@@ -1,0 +1,223 @@
+.client-collections {
+    min-height: 60vh;
+    margin: 0 var(--client-margin);
+    padding: clamp(24px, 5vw, 64px) 0 56px;
+
+    a { color: inherit; }
+}
+
+.client-collections-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 24px;
+    margin-bottom: clamp(20px, 3vw, 32px);
+
+    h1 {
+        margin: 0;
+        font-size: var(--client-heading-size, 32px);
+        font-weight: 650;
+        overflow-wrap: anywhere;
+    }
+
+    p {
+        margin: 6px 0 0;
+        color: #c0c7d3;
+    }
+}
+
+.client-collections-back {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; }
+}
+
+.client-collections-entry {
+    flex: none;
+    text-decoration: none;
+}
+
+.client-collections-note {
+    margin: 0;
+    color: #c0c7d3;
+}
+
+.client-collection-grid,
+.client-collection-titles,
+.client-collection-matches {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.client-collection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+    gap: 14px;
+}
+
+.client-collection-card {
+    display: grid;
+    min-height: 106px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    padding: 12px;
+    border: 1px solid #ffffff26;
+    border-radius: 12px;
+    background: #ffffff08;
+    text-decoration: none;
+
+    strong { overflow-wrap: anywhere; }
+
+    &:hover {
+        border-color: #ffffff60;
+        background: #ffffff14;
+    }
+}
+
+.client-collection-stack {
+    position: relative;
+    display: flex;
+    width: 90px;
+    height: 78px;
+    align-items: center;
+    justify-content: center;
+
+    > span {
+        position: absolute;
+        left: 2px;
+        width: 48px;
+        height: 68px;
+        overflow: hidden;
+        border: 1px solid #ffffff30;
+        border-radius: 6px;
+        background: #252d3a;
+        box-shadow: 0 5px 14px #0007;
+        transform: rotate(-7deg);
+
+        &:only-child {
+            left: 21px;
+            transform: none;
+        }
+
+        &:nth-child(2) {
+            left: 20px;
+            transform: none;
+        }
+
+        &:nth-child(3) {
+            left: 38px;
+            transform: rotate(7deg);
+        }
+    }
+
+    > svg {
+        width: 32px;
+        height: 32px;
+        color: #c0c7d3;
+    }
+}
+
+.client-collection-titles {
+    li { min-width: 0; }
+
+    .client-card { display: block; }
+}
+
+.client-collection-poster {
+    position: relative;
+
+    .client-collection-remove {
+        position: absolute;
+        z-index: 2;
+        top: 6px;
+        right: 6px;
+        display: inline-grid;
+        width: 44px;
+        height: 44px;
+        place-items: center;
+        padding: 0;
+        background: #17181ce6;
+    }
+}
+
+.client-collection-title {
+    display: block;
+    margin-top: 8px;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.client-detail-dialog.client-collection-modal { width: min(560px, calc(100vw - 32px)); }
+
+.client-collection-form {
+    display: grid;
+    gap: 12px;
+
+    > p { margin: 0; }
+
+    input {
+        width: 100%;
+        min-height: 44px;
+        padding: 10px 12px;
+        border: 1px solid #ffffff40;
+        border-radius: 8px;
+        background: #ffffff08;
+        color: inherit;
+        font: inherit;
+    }
+
+    > .client-play { justify-self: start; }
+}
+
+.client-collection-matches {
+    display: grid;
+    gap: 5px;
+
+    button {
+        display: grid;
+        width: 100%;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 12px;
+        padding: 7px 10px;
+        border: 1px solid #ffffff26;
+        border-radius: 9px;
+        background: #ffffff08;
+        color: inherit;
+        text-align: start;
+
+        &:hover { background: #ffffff14; }
+    }
+
+    strong,
+    small {
+        display: block;
+        overflow-wrap: anywhere;
+    }
+}
+
+.client-collection-thumb {
+    position: relative;
+    display: block;
+    width: 32px;
+    height: 44px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: #ffffff12;
+}
+
+.client-collection-stack .client-artwork,
+.client-collection-thumb .client-artwork {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

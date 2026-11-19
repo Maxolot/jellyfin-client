@@ -57,7 +57,7 @@ import { canFile } from '../features/client/folders/model';
 import WatchedMarker, { watchedLabel } from '../features/client/WatchedMarker';
 import { episodeLabel, isWatchedCard, progressPercent, uniqueItems } from '../features/client/model';
 import { clientRequest } from '../features/client/session';
-import { useClientCollections, useClientDetails, useClientFilters, useClientMedia, useMoreBrowse } from '../features/client/useClientMedia';
+import { useClientDetails, useClientFilters, useClientMedia, useMoreBrowse } from '../features/client/useClientMedia';
 import '../features/client/client.scss';
 import '../features/client/prototype.scss';
 import '../features/client/motion.scss';
@@ -72,7 +72,7 @@ import '../features/client/search.scss';
 
 type ClientNavigationState = { returnTo?: string, returnState?: ClientNavigationState | null, restoreFocus?: boolean };
 import TonightPage from '../features/client/TonightPage';
-import CollectionCard from '../features/client/CollectionCard';
+import PublicCollections from '../features/client/collections/PublicCollections';
 import AmbientBackdrop from '../features/client/AmbientBackdrop';
 import { SeerrProvider, useSeerr } from '../features/client/seerr/SeerrContext';
 import { useLocalIdentities, useSeerrCatalogue, useSeerrDetail, useSeerrUpcoming } from '../features/client/seerr/queries';
@@ -140,7 +140,7 @@ function restoreClientNavigation(key: string, restoreFocus: boolean, id: string)
 }
 
 function clientPageReady(id: string, view: string, item: BaseItemDto | undefined, mediaReady: boolean, externalReady: boolean) {
-    return externalReady || (id ? !!item : view === 'settings' || mediaReady);
+    return externalReady || (id ? !!item : ['settings', 'collections'].includes(view) || mediaReady);
 }
 
 /** What the blurred page background shows when no card is hovered. */
@@ -160,7 +160,7 @@ function clientBrowseInput(view: string, search: string, filters: Parameters<typ
 }
 
 function clientBrowseView(view: string, id: string, emptySearch: boolean) {
-    return id || view === 'settings' || emptySearch ? 'disabled' : view;
+    return id || ['settings', 'collections'].includes(view) || emptySearch ? 'disabled' : view;
 }
 
 function useSharedBrowse(view: string, id: string, search: string) {
@@ -191,7 +191,7 @@ function useClientController() {
     const audio = params.get('audio') || '';
     const collection = params.get('collection') || '';
     const sort = params.get('sort') === 'recent' ? 'recent' : 'name';
-    const filters = useClientFilters(['mine', 'tonight'].includes(view) ? 'disabled' : view);
+    const filters = useClientFilters(['mine', 'tonight', 'collections'].includes(view) ? 'disabled' : view);
     const genres = { ...filters, data: filters.data?.Genres };
     const cache = useQueryClient();
     const prefKey = interfacePreferenceKey(api?.basePath, user?.Id);
@@ -620,6 +620,7 @@ function ContentView({ model }: ViewProps) {
         </>;
     }
     if (view === 'settings') return <SettingsView model={model} />;
+    if (view === 'collections') return <PublicCollections image={image} />;
     if (view === 'recent') return <RecentPage items={media.data?.items || []} row={row} />;
     if (view === 'tonight') return <TonightPage items={media.data?.items || []} loading={media.isPending} image={item => artworkUrl(model.api?.basePath || '', item, 'draw')} onPrepare={model.prepareDetail} onRelease={model.releaseDetail} onFeature={entry => model.setPageAmbient(entry ? image(entry, true) : '')} />;
     if (model.discovery) return <DiscoveryView model={model} />;
@@ -656,6 +657,7 @@ function BrowseControls({ model }: ViewProps) {
     if (audio && !languages.some(([key]) => key === audio)) languages.push([audio, audio]);
     return <div className='client-browse-controls'>
         {view !== 'home' && <div className='client-catalogue-switch' aria-label='Présentation du catalogue'><button aria-pressed={discovery} onClick={() => setParams({ view })}>Découvrir</button><button aria-pressed={!discovery} onClick={() => setParams({ view, mode: 'library' })}>Toute la bibliothèque</button></div>}
+        {view !== 'home' && <Link className='client-button client-collections-entry' to='/client?view=collections'><ClientIcon name='collection' />Collections publiques</Link>}
         {(view === 'home' || discovery) && <ChoiceSelect label='Genres' value={genre} options={genreChoices(genres.data, genre)} onChange={value => setParams(changeBrowseParams(params, { genre: value }))} />}
         <ChoiceSelect label='Langues audio' value={audio} options={[['', 'Toutes les langues'], ...languages]} onChange={value => setParams(changeBrowseParams(params, { audio: value }))} />
     </div>;
@@ -683,7 +685,6 @@ function DiscoveryView({ model }: ViewProps) {
 function PersonalView({ model }: ViewProps) {
     const { user, media, row, image, play, seerr } = model;
     const home = useClientMedia('home', '', 0);
-    const collections = useClientCollections(true);
     const stats = usePersonalStats();
     const history = useViewingHistory();
     const resume = home.data?.resume || [];
@@ -702,10 +703,7 @@ function PersonalView({ model }: ViewProps) {
         <div id='client-resume'>{row('Continuer à regarder', resume.slice(1), true)}</div>
         <div className='client-personal-favorites' id='client-favorites'><header><h2>Ma liste</h2></header><FolderPanel image={image} /><LibraryView model={model} embedded /></div>
         {row('Vus récemment', history.data)}
-        {(!!stats.data?.genres.length || !!collections.data?.length) && <div className='client-personal-columns'>
-            <GenreTaste stats={stats.data} />
-            {!!collections.data?.length && <section className='client-personal-panel client-personal-collections'><h2>Mes collections</h2><div>{collections.data.map(collection => <CollectionCard key={collection.Id} collection={collection} image={image} />)}</div></section>}
-        </div>}
+        {!!stats.data?.genres.length && <div className='client-personal-columns'><GenreTaste stats={stats.data} /></div>}
         <RatingsOverview />
         {seerr.connected && <div id='client-requests' className='client-personal-requests'><RequestTracking /></div>}
     </div>;

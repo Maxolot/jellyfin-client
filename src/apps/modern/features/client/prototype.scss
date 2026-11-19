@@ -1737,58 +1737,6 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     }
 }
 
-.client-personal-collections {
-    margin: 25px var(--client-margin) 35px;
-}
-
-.client-personal-collections h2 {
-    margin: 0 0 18px;
-    font-size: 23px;
-    font-weight: 500;
-}
-
-.client-personal-collections > div {
-    display: flex;
-    gap: 18px;
-    overflow-x: auto;
-    padding-bottom: 8px;
-    scrollbar-width: none;
-}
-
-.client-personal-collections a {
-    display: flex;
-    flex: 0 0 210px;
-    align-items: center;
-    gap: 14px;
-    min-height: 110px;
-    padding: 16px;
-    border: 1px solid #ffffff24;
-    border-radius: 18px;
-    background: linear-gradient(130deg, #ffffff0c, #ffffff02);
-}
-
-.client-collection-art {
-    display: block;
-    flex: none;
-    width: 58px;
-    height: 77px;
-    overflow: hidden;
-    border-radius: 7px;
-    background: #252d3a;
-}
-
-.client-collection-art img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.client-personal-collections strong {
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 1.5;
-}
-
 .client-interface .client-play {
     color: #15191e;
 }
@@ -1881,45 +1829,6 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
 }
 
 /* stylelint-enable no-descending-specificity */
-
-.client-personal-collections .client-collection-stack {
-    position: relative;
-    width: 100px;
-    height: 90px;
-    overflow: visible;
-    background: none;
-
-    img {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 58px;
-        height: 82px;
-        border: 1px solid #ffffff30;
-        border-radius: 7px;
-        box-shadow: 0 5px 15px #0007;
-        transform: rotate(-8deg);
-    }
-
-    img:nth-child(2) {
-        left: 20px;
-        transform: rotate(0);
-    }
-
-    img:nth-child(3) {
-        left: 40px;
-        transform: rotate(8deg);
-    }
-}
-
-.client-collection-stack > svg {
-    width: 58px;
-    height: 82px;
-    padding: 12px;
-    border: 1px solid #ffffff20;
-    border-radius: 7px;
-    color: #9ca7b5;
-}
 
 // Invitation « Ce soir » de la maquette : une ligne entre deux filets, sous le bandeau d'accueil.
 .client-interface .client-tonight-invite {
