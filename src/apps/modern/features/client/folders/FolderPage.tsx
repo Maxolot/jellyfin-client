@@ -10,8 +10,9 @@ import ClientSkeleton from '../ClientSkeleton';
 import CollectionGrid, { type CollectionCardOptions } from '../CollectionGrid';
 import CollectionHero from '../CollectionHero';
 import type { PlayQueue } from '../mediaQueue';
+import FolderSharing from './FolderSharing';
 import { DeleteFolder, FolderError, FolderNameForm, ShareForm } from './FolderForms';
-import { canEditFolder, type Folder, type FolderDetail, folderItemId, foldersPath, moveFolderItem, orderedFolderItems } from './model';
+import { canEditFolder, type Folder, type FolderDetail, foldersPath, moveFolderItem, orderedFolderItems } from './model';
 import { useFolderChange, useFolderDetail, useFolderTargets, useFolderTitles } from './queries';
 
 type Props = CollectionCardOptions & { id: string; full: boolean; playQueue: PlayQueue; queueBusy: boolean };
@@ -33,7 +34,7 @@ function FolderContent({ detail, full, playQueue, queueBusy, ...card }: Readonly
     const { folder, items, shares } = detail;
     const { user } = useApi();
     const navigate = useNavigate();
-    const targets = useFolderTargets(folder.access !== 'owner');
+    const targets = useFolderTargets(folder.access !== 'owner' || !!shares?.length);
     const titles = useFolderTitles(items);
     const change = useFolderChange();
     const entries = useMemo(() => orderedFolderItems(items, titles.data || []), [items, titles.data]);
@@ -42,8 +43,7 @@ function FolderContent({ detail, full, playQueue, queueBusy, ...card }: Readonly
     const [organizing, setOrganizing] = useState(false);
     const owner = folder.access === 'owner';
     const editable = canEditFolder(folder);
-    const ownerName = owner ? user?.Name : targets.data?.find(target => folderItemId(target.userId) === folderItemId(folder.ownerId))?.name;
-    const metadata = folderMetadata(folder.access, ownerName, !!shares?.length);
+    const metadata = owner ? user?.Name || 'Personnel' : undefined;
     const actions = editable && <FolderActions folder={folder} hasTitles={entries.length > 0} organizing={organizing}
         toggle={() => setOrganizing(value => !value)} edit={setEditor} />;
     function move(itemId: string, direction: -1 | 1) {
@@ -57,7 +57,7 @@ function FolderContent({ detail, full, playQueue, queueBusy, ...card }: Readonly
     const gridActions = editable && organizing ? ({ item, itemId }: typeof entries[number], manualOrder: boolean) => <FolderItemActions name={item.Name || 'ce titre'}
         pending={change.isPending} move={manualOrder ? direction => move(itemId, direction) : undefined}
         previous={itemId !== items[0]?.itemId} next={itemId !== items[items.length - 1]?.itemId} remove={() => remove(itemId)} /> : undefined;
-    return <CollectionHero title={folder.name} items={queue} count={items.length} metadata={metadata}
+    return <CollectionHero title={folder.name} items={queue} count={items.length} metadata={metadata} metadataBadge={<FolderSharing folder={folder} shares={shares} targets={targets.data} />}
         backTo={foldersPath} backLabel='Ma liste' full={full} image={card.image} playQueue={playQueue} queueBusy={queueBusy} actions={actions}>
         {organizing && editable && <p className='client-shelf-organize' role='status'>Utilise les flèches dans l’ordre du dossier pour déplacer un titre. <button type='button' className='client-button' onClick={() => setOrganizing(false)}>Terminer</button></p>}
         {change.isError && <div className='client-shelf-organize'><FolderError /></div>}
@@ -76,12 +76,6 @@ function FolderContent({ detail, full, playQueue, queueBusy, ...card }: Readonly
             </>}
         </ClientDialog>
     </CollectionHero>;
-}
-
-function folderMetadata(access: Folder['access'], ownerName: string | null | undefined, shared: boolean) {
-    if (access === 'owner') return [ownerName, shared ? 'Partagé' : 'Personnel'].filter(Boolean).join(' · ');
-    const ownership = ownerName ? `Partagé par ${ownerName}` : 'Partagé avec moi';
-    return `${ownership} · ${access === 'editor' ? 'Modification' : 'Lecture seule'}`;
 }
 
 type Actions = { folder: Folder; hasTitles: boolean; organizing: boolean; toggle: () => void; edit: (choice: Editor) => void };

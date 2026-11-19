@@ -14,11 +14,11 @@ import useHeroBackground from './useHeroBackground';
 const maxWallPosters = 18;
 
 type Props = {
-    title: string; items: BaseItemDto[]; count: number; metadata?: string; backTo: To; backLabel: string;
+    title: string; items: BaseItemDto[]; count: number; metadata?: string; metadataBadge?: ReactNode; backTo: To; backLabel: string;
     full: boolean; image: FolderImage; playQueue: PlayQueue; queueBusy: boolean; actions?: ReactNode; children: ReactNode;
 };
 
-export default function CollectionHero({ title, items, count, metadata, backTo, backLabel, full, image, playQueue, queueBusy, actions, children }: Readonly<Props>) {
+export default function CollectionHero({ title, items, count, metadata, metadataBadge, backTo, backLabel, full, image, playQueue, queueBusy, actions, children }: Readonly<Props>) {
     const region = useRef<HTMLElement>(null);
     const [frozen, setFrozen] = useState(false);
     const picks = useMemo(() => items.filter(hasFolderPoster).slice(0, maxWallPosters), [items]);
@@ -52,7 +52,10 @@ export default function CollectionHero({ title, items, count, metadata, backTo, 
             <div className='client-hero-copy client-shelf-copy'>
                 <Link className='client-shelf-back' to={backTo} state={{ restoreFocus: true }}><ClientIcon name='back' />{backLabel}</Link>
                 <h1>{title}</h1>
-                <p className='client-shelf-meta'>{meta.filter(Boolean).join(' · ')}</p>
+                <div className='client-shelf-meta-line'>
+                    <p className='client-shelf-meta'>{meta.filter(Boolean).join(' · ')}</p>
+                    {metadataBadge}
+                </div>
                 {(!!items.length || actions) && <div className='client-actions client-shelf-actions'>
                     {!!items.length && <QueueActions source={items} playQueue={playQueue} pending={queueBusy} />}
                     {actions}

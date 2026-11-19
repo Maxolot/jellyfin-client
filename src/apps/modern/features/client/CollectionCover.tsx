@@ -1,4 +1,4 @@
-import React, { type CSSProperties, type RefObject, useEffect, useState } from 'react';
+import React, { type CSSProperties, type ReactNode, type RefObject, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import Artwork from './Artwork';
@@ -29,7 +29,7 @@ export function useCoverPreview(anchor: RefObject<HTMLElement>, enabled = true) 
 
 type Props = {
     anchor: RefObject<HTMLAnchorElement>; to: string; id: string; name: string;
-    posters: string[]; count?: string; badge?: string | false; ready: boolean;
+    posters: string[]; count?: string; badge?: ReactNode; ready: boolean;
     emptyLabel?: string; className?: string;
 };
 
@@ -43,7 +43,7 @@ export default function CollectionCover({ anchor, to, id, name, posters, count, 
         </span>
         <span className='client-cover-info'>
             <strong>{name}</strong>
-            {(count || badge) && <span className='client-cover-meta'>{count && <small>{count}</small>}{badge && <small className='client-cover-badge'>{badge}</small>}</span>}
+            {(count || badge) && <span className='client-cover-meta'>{count && <small>{count}</small>}{badge && <span className='client-cover-badge'>{badge}</span>}</span>}
             {ready && !posters.length && emptyLabel && <small>{emptyLabel}</small>}
         </span>
     </Link>;

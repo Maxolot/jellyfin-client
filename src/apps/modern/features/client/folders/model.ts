@@ -67,3 +67,25 @@ export function folderDuration(ticks: number) {
     const hours = Math.floor(minutes / 60);
     return minutes % 60 ? `${hours} h ${String(minutes % 60).padStart(2, '0')}` : `${hours} h`;
 }
+
+export function personalFoldersFirst(folders: Folder[]) {
+    return [...folders.filter(folder => folder.access === 'owner'), ...folders.filter(folder => folder.access !== 'owner')];
+}
+
+export function folderSharing(folder: Folder, shares?: FolderShare[] | null, targets: FolderTarget[] = []) {
+    function account(id: string) {
+        const canonical = folderItemId(id);
+        const name = targets.find(target => folderItemId(target.userId) === canonical)?.name;
+        return { id: canonical, name };
+    }
+    if (folder.access !== 'owner') {
+        const owner = account(folder.ownerId);
+        const label = owner.name ? `Partagé par ${owner.name}` : 'Partagé avec moi';
+        return { label, accessible: folder.access === 'viewer' ? `${label} · Lecture seule` : label, people: [owner], extra: 0 };
+    }
+    if (!shares?.length) return undefined;
+    const people = shares.slice(0, 3).map(share => account(share.userId));
+    const names = people.flatMap(person => person.name || []);
+    return { label: 'Partagé', accessible: [`Partagé avec ${shares.length} ${shares.length === 1 ? 'compte' : 'comptes'}`, ...names].join(' · '),
+        people, extra: shares.length - people.length };
+}

@@ -255,8 +255,25 @@
     &:hover { text-decoration: underline; }
 }
 
-.client-shelf-meta {
+.client-shelf-meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
     margin: 0 0 22px;
+
+    .client-folder-sharing {
+        min-height: 30px;
+        padding: 3px 9px;
+        border: 1px solid rgb(var(--shelf-color) / 0.58);
+        border-radius: 999px;
+        background: #151921a8;
+        font-size: 12px;
+    }
+}
+
+.client-shelf-meta {
+    margin: 0;
     color: #edf2fa;
     font-weight: 560;
 }

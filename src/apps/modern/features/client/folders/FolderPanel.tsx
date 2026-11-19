@@ -5,9 +5,10 @@ import { useNavigate } from 'react-router-dom';
 import CollectionCover, { useCoverPreview } from '../CollectionCover';
 import ClientDialog from '../ClientDialog';
 import ClientIcon from '../ClientIcon';
+import FolderSharing from './FolderSharing';
 import { FolderNameForm } from './FolderForms';
 import { useFolderPicker } from './FolderPicker';
-import { type Folder, type FolderImage, folderItemId, folderPath, folderTitleCount, orderedFolderItems } from './model';
+import { type Folder, type FolderImage, type FolderTarget, folderPath, folderTitleCount, orderedFolderItems, personalFoldersFirst } from './model';
 import { useFolderDetail, useFolderTargets, useFolderTitles } from './queries';
 
 export default function FolderPanel({ image }: Readonly<{ image: FolderImage }>) {
@@ -28,22 +29,20 @@ export default function FolderPanel({ image }: Readonly<{ image: FolderImage }>)
                 }} />}
             </ClientDialog>
         </header>
-        <FolderTiles folders={folders.filter(folder => folder.access === 'owner')} image={image} empty='Aucun dossier personnel.' />
-        <h3>Partagées avec moi</h3>
-        <FolderTiles folders={folders.filter(folder => folder.access !== 'owner')} image={image} empty='Aucun dossier partagé pour le moment.' shared />
+        <FolderTiles folders={personalFoldersFirst(folders)} image={image} />
         <h3 className='client-folder-favorites-heading'>Favoris</h3>
     </section>;
 }
 
-function FolderTiles({ folders, empty, image, shared = false }: Readonly<{ folders: Folder[]; empty: string; image: FolderImage; shared?: boolean }>) {
-    const owners = useFolderTargets(shared && folders.length > 0);
-    if (!folders.length) return <p className='client-folder-empty'>{empty}</p>;
+function FolderTiles({ folders, image }: Readonly<{ folders: Folder[]; image: FolderImage }>) {
+    const targets = useFolderTargets(folders.length > 0);
+    if (!folders.length) return <p className='client-folder-empty'>Aucun dossier pour le moment.</p>;
     return <ul className='client-folder-tiles'>{folders.map(folder => <li key={folder.id}>
-        <FolderTile folder={folder} image={image} owner={owners.data?.find(entry => folderItemId(entry.userId) === folderItemId(folder.ownerId))?.name} />
+        <FolderTile folder={folder} image={image} targets={targets.data} />
     </li>)}</ul>;
 }
 
-function FolderTile({ folder, image, owner }: Readonly<{ folder: Folder; image: FolderImage; owner?: string }>) {
+function FolderTile({ folder, image, targets }: Readonly<{ folder: Folder; image: FolderImage; targets?: FolderTarget[] }>) {
     const tile = useRef<HTMLAnchorElement>(null);
     const nearby = useCoverPreview(tile);
     const detail = useFolderDetail(nearby ? folder.id : undefined);
@@ -51,10 +50,8 @@ function FolderTile({ folder, image, owner }: Readonly<{ folder: Folder; image: 
     const preview = useFolderTitles(entries);
     const posters = entries && preview.data ? orderedFolderItems(entries, preview.data)
         .filter(({ item }) => item.ImageTags?.Primary || item.ImageTags?.Thumb || item.BackdropImageTags?.length) : [];
-    const sharedBy = owner ? `Partagé par ${owner}` : 'Partagé avec moi';
-    const badge = folder.access === 'owner' ? !!detail.data?.shares?.length && 'Partagé' : sharedBy;
     return <CollectionCover anchor={tile} className='client-folder-tile' to={folderPath(folder.id)} id={folder.id} name={folder.name}
-        count={detail.data && folderTitleCount(detail.data.items.length)} badge={badge} posters={posters.map(({ item }) => image(item))}
+        count={detail.data && folderTitleCount(detail.data.items.length)} badge={folder.access !== 'owner' || !!detail.data?.shares?.length ? <FolderSharing folder={folder} shares={detail.data?.shares} targets={targets} /> : undefined} posters={posters.map(({ item }) => image(item))}
         ready={detail.isSuccess && (!entries?.length || preview.isSuccess)} emptyLabel={folder.access === 'viewer' || detail.data?.items.length ? undefined : 'Ajoutez un titre'} />;
 }
 
