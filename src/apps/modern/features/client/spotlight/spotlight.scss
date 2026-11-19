@@ -186,6 +186,15 @@ body.client-spotlight-open {
     }
 }
 
+.client-spotlight-filters button.client-spotlight-describe:not([aria-pressed='true']) {
+    border-color: #9bd5e967;
+    color: #ddf4f9;
+}
+
+@media (max-width: 580px) {
+    .client-spotlight-filters.allows-description { flex-wrap: wrap; }
+}
+
 .client-spotlight-field,
 .client-spotlight-filters,
 .client-spotlight-hints {

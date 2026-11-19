@@ -83,6 +83,15 @@ internal static class FolderApiChecks
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapControllers();
+        app.MapGet("/_fixture/describe/search", () => new
+        {
+            results = new[]
+            {
+                new { itemId = (string?)movie.Id.ToString("N"), tmdb = 123, type = "movie", score = 0.99, reason = "Motif fixture" },
+                new { itemId = (string?)null, tmdb = 456, type = "tv", score = 0.85, reason = "Résumé proche" },
+                new { itemId = (string?)null, tmdb = 789, type = "tv", score = 0.75, reason = "Titre non suivi" }
+            }
+        });
         await app.StartAsync();
         var address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
         using var http = new HttpClient { BaseAddress = new Uri(address) };
@@ -93,6 +102,17 @@ internal static class FolderApiChecks
         await Request(http, HttpMethod.Get, "/SharedCatalog/Notifications", null, null, HttpStatusCode.Unauthorized);
         await Request(http, HttpMethod.Get, "/SharedCatalog/Notifications", owner.Id, null, HttpStatusCode.NotFound);
         await NotificationChecks.Run(app.Services.GetRequiredService<NotificationStore>(), owner.Id, recipient.Id);
+        await Request(http, HttpMethod.Get, "/SharedCatalog/Describe", null, null, HttpStatusCode.Unauthorized);
+        await Request(http, HttpMethod.Get, "/SharedCatalog/Describe", owner.Id, null, HttpStatusCode.NotFound);
+        Directory.CreateDirectory(plugin.DataFolderPath);
+        await File.WriteAllTextAsync(Path.Combine(plugin.DataFolderPath, "describe.json"), JsonSerializer.Serialize(new { url = address + "/_fixture/describe" }));
+        await File.WriteAllTextAsync(Path.Combine(plugin.DataFolderPath, "catalog.json"), """[{"type":"tv","id":456,"title":"Série suivie","posterPath":"/fixture.jpg"}]""");
+        var description = await Request(http, HttpMethod.Get, "/SharedCatalog/Describe?q=description", owner.Id, null, HttpStatusCode.OK);
+        Check(description.Body!.Value.GetProperty("results").GetArrayLength() == 2 && description.NoStore,
+            "Visible local and shared hits remain, with caching disabled.");
+        var restricted = await Request(http, HttpMethod.Get, "/SharedCatalog/Describe?q=description", recipient.Id, null, HttpStatusCode.OK);
+        Check(restricted.Body!.Value.GetProperty("results").EnumerateArray().Select(item => item.GetProperty("title").GetString())
+            .SequenceEqual(["Série suivie"]), "Items outside the caller's library and untracked results are filtered.");
         await Request(http, HttpMethod.Get, Root, null, null, HttpStatusCode.Unauthorized);
         await Request(http, HttpMethod.Get, Root, Guid.NewGuid(), null, HttpStatusCode.Forbidden);
         await Request(http, HttpMethod.Get, Root, disabled.Id, null, HttpStatusCode.Forbidden);

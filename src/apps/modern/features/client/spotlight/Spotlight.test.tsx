@@ -16,7 +16,7 @@ const otherFollowed: BaseItemDto = { Id: 'seerr-tv-43', Name: 'Horizons lointain
 const empty = { loadingLibrary: false, requestLoading: false, best: undefined, own: [], shared: [], requestable: [], people: [], groups: [],
     sharedIds: new Set([followed.Id!, otherFollowed.Id!]), resume: [], forYou: [], recentShared: { entries: [], items: [], byOthers: true }, trending: [], genreShortcuts: [] };
 
-vi.mock('hooks/useApi', () => ({ useApi: () => ({ api: { basePath: 'https://media.example.test' }, user: { Id: 'user-a' } }) }));
+vi.mock('hooks/useApi', () => ({ useApi: () => ({ api: { basePath: 'https://media.example.test', axiosInstance: { get: async () => ({ data: { available: false } }) } }, user: { Id: 'user-a' } }) }));
 vi.mock('../seerr/SeerrContext', () => ({ useSeerr: () => ({ connected: false }) }));
 vi.mock('components/playback/playbackmanager', () => ({ playbackManager: { isPlayingVideo: () => false } }));
 vi.mock('../Artwork', () => ({ default: ({ source }: { source: string }) => <img alt='' src={source || undefined} /> }));

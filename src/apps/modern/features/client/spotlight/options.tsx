@@ -9,7 +9,9 @@ import { ListAction } from '../folders/FolderPicker';
 import WatchedMarker, { watchedLabel } from '../WatchedMarker';
 import { episodeLabel, isWatchedCard, progressPercent } from '../model';
 import { imageUrl, isExternal, mediaLabel, type CatalogueItem } from '../seerr/model';
+import { descriptionItem, type DescriptionHit } from './descriptionSearch';
 import type { Layout } from './navigation';
+import { matchesFilter, type SearchFilter } from './searchIndex';
 import type { SpotlightResults } from './useSpotlightData';
 
 export type Option = { key: string; label: string; run: (play: boolean) => void; playable?: boolean; view: () => ReactNode };
@@ -155,6 +157,32 @@ function resume(item: BaseItemDto, actions: Actions): Option {
             {progressPercent(item) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(item)}%` }} /></span>}
         </span>
     };
+}
+
+export function descriptionGroup(description: { active: boolean; pending: boolean; failed: boolean; results: DescriptionHit[] }, filter: SearchFilter, actions: Actions): Group | undefined {
+    if (!description.active) return undefined;
+    const options = description.results.flatMap(hit => {
+        const item = descriptionItem(hit);
+        if (!item || !matchesFilter(item, filter)) return [];
+        const playable = !isExternal(item);
+        if (filter === 'available' && !playable) return [];
+        return [{
+            key: `description-${item.Id}`,
+            label: [item.Name, hit.reason, playable ? 'Disponible' : 'Catalogue partagé'].filter(Boolean).join(' · '),
+            playable,
+            run: runner(item, actions),
+            view: () => <>
+                <span className='client-spotlight-thumb'>{optionArtwork(item, actions)}</span>
+                <span className='client-spotlight-text'><strong>{item.Name}</strong><small>{hit.reason}</small></span>
+                <span className='client-spotlight-badge'>{playable ? 'Disponible' : 'Suivi'}</span>
+            </>
+        }];
+    });
+    let status: string | undefined;
+    if (description.pending) status = 'Recherche…';
+    else if (description.failed) status = 'Service temporairement indisponible.';
+    else if (!options.length) status = 'Aucun titre proche.';
+    return { id: 'description', title: 'Ça ressemble à…', layout: 'list', options, status };
 }
 
 const genrePath = (name: string) => `/client?view=home&genre=${encodeURIComponent(name)}`;

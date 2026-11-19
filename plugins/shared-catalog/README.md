@@ -141,3 +141,11 @@ with `enabled` (defaults to false), `url` (the homelab ntfy base URL),
 `token` (write-only credential for the `media-stack` topic) and optionally
 `clickUrl` (the request tracking page). The topic is fixed. Delivery runs
 independently of reads, with a ten-second timeout and status-only logging.
+
+## Description search (0.6.2)
+
+With private `describe.json` configuration, `GET /SharedCatalog/Describe?q=`
+forwards an authenticated query to the local describe-search service. Visibility
+is checked as the current Jellyfin user for every local match. Followed results
+must still appear in the shared catalog. The browser reaches only Jellyfin.
+See [the service configuration](../../services/describe-search/README.md).

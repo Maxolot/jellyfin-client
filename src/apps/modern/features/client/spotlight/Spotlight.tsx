@@ -17,7 +17,8 @@ import { clientRequest } from '../session';
 import { isExternal } from '../seerr/model';
 import { useSeerr } from '../seerr/SeerrContext';
 import { moveActive, type Move } from './navigation';
-import { chip, openingGroups, searchGroups, type Actions, type Group } from './options';
+import { useDescriptionSearch } from './descriptionSearch';
+import { chip, descriptionGroup, openingGroups, searchGroups, type Actions, type Group } from './options';
 import { clearSearches, forgetSearch, readRecentSearches, recentSearchesKey, rememberSearch } from './recentSearches';
 import type { SearchFilter } from './searchIndex';
 import { spotlightIndexQuery, spotlightResumeQuery, useSpotlightData } from './useSpotlightData';
@@ -267,12 +268,14 @@ const Spotlight = forwardRef<SpotlightHandle, Props>(function ClientSpotlight({ 
     const { api, user } = useApi();
     const seerr = useSeerr();
     const [query, setQuery] = useState('');
+    const [describe, setDescribe] = useState(false);
     const [filter, setFilter] = useState<SearchFilter>('all');
     const [active, setActive] = useState(-1);
     const recentKey = recentSearchesKey(api?.basePath, user?.Id);
     const [recent, setRecent] = useState<string[]>([]);
     const reset = useCallback(() => {
         setQuery('');
+        setDescribe(false);
         setActive(-1);
     }, []);
     // Whatever opens the bar (magnifier, ⌘K, « / »), the recent searches are read again.
@@ -281,13 +284,14 @@ const Spotlight = forwardRef<SpotlightHandle, Props>(function ClientSpotlight({ 
     useImperativeHandle(handle, () => ({ open: show }), [show]);
     usePreparation();
     const data = useSpotlightData(open, query, filter, seed);
-    const protectEpisode = useEpisodeSpoilers();
+    const protection = useEpisodeSpoilers();
+    const description = useDescriptionSearch(open, query, describe);
     const actionsBase = useActions(close, () => {
         if (query.trim()) setRecent(rememberSearch(recentKey, query));
     }, play);
     useEffect(() => setActive(query.trim() ? 0 : -1), [query, filter]);
 
-    const actions: Actions = { ...actionsBase, image, showWatched, protectEpisode, basePath: api?.basePath || '', shared: data.sharedIds };
+    const actions: Actions = { ...actionsBase, image, showWatched, protectEpisode: protection, basePath: api?.basePath || '', shared: data.sharedIds };
     const focusField = () => input.current?.focus({ preventScroll: true });
     const groups = data.searching ? searchGroups(data, query, actions) : openingGroups(data, actions, {
         recent: recent.map(entry => chip(`recent-${entry}`, entry, () => {
@@ -297,7 +301,8 @@ const Spotlight = forwardRef<SpotlightHandle, Props>(function ClientSpotlight({ 
         clearRecent: recent.length ? <button type='button' className='client-spotlight-clear-all' onClick={() => setRecent(clearSearches(recentKey))}>Tout effacer</button> : undefined,
         trending: seerr.connected
     });
-    const shown = groups.filter(group => group.options.length || group.status);
+    const described = descriptionGroup(description, filter, actions);
+    const shown = [described, ...groups].filter((group): group is Group => !!group && (!!group.options.length || !!group.status));
     const flat = shown.flatMap(group => group.options);
     const current = active >= 0 ? flat[active] : undefined;
 
@@ -327,8 +332,9 @@ const Spotlight = forwardRef<SpotlightHandle, Props>(function ClientSpotlight({ 
         }
     }
 
-    const count = data.own.length + data.shared.length + data.requestable.length + data.people.length + (data.best ? 1 : 0);
-    const message = emptyMessage(data.searching, query, count, data.loadingLibrary || data.requestLoading, flat.length > 0);
+    const descriptiveCount = described?.options.length || 0;
+    const count = descriptiveCount + data.own.length + data.shared.length + data.requestable.length + data.people.length + (data.best ? 1 : 0);
+    const message = emptyMessage(data.searching, query, count, data.loadingLibrary || data.requestLoading || description.pending, flat.length > 0);
     const plural = count > 1 ? 's' : '';
     const status = data.searching ? `${count} résultat${plural}` : '';
     return createPortal(<div className={`client-spotlight ${glass ? 'client-spotlight-glass' : 'client-spotlight-classic'}`} role='dialog' aria-modal='true' aria-label='Recherche' hidden={!open}>
@@ -346,11 +352,15 @@ const Spotlight = forwardRef<SpotlightHandle, Props>(function ClientSpotlight({ 
                 }}><ClientIcon name='close' /></button>}
                 <button type='button' className='client-spotlight-close' onClick={() => close()}><kbd>Échap</kbd><span>Fermer</span></button>
             </div>
-            <div className='client-spotlight-filters' role='group' aria-label='Filtrer les résultats'>
+            <div className={`client-spotlight-filters${description.available ? ' allows-description' : ''}`} role='group' aria-label='Filtrer les résultats'>
                 {filters.map(([key, label]) => <button key={key} type='button' aria-pressed={filter === key} onClick={() => {
                     setFilter(key);
                     focusField();
                 }}>{label}</button>)}
+                {description.available && <button type='button' className='client-spotlight-describe' aria-pressed={describe} onClick={() => {
+                    setDescribe(value => !value);
+                    focusField();
+                }}>Rechercher par description</button>}
             </div>
             <div className='client-spotlight-body' id='client-spotlight-results' role='listbox' aria-label='Résultats'>
                 <Groups groups={shown} active={active} setActive={setActive} onForget={label => setRecent(forgetSearch(recentKey, label))} />
