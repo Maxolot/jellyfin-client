@@ -28,7 +28,7 @@ internal static class RequestProgress
         var measurement = Measure(jobs, remaining, previous, now);
         var available = Available(request, library, seasons);
         var (stage, reason) = Stage(request, arr, jobs, measurement, available, vpnHealthy, now);
-        var active = stage is not ("available" or "declined" or "failed");
+        var active = stage is not ("available" or "declined" or "failed" or "removed" or "partial");
         var percent = size > 0 ? (int)Math.Round(100d * (size - remaining) / size) : (int?)null;
         var rate = measurement?.Rate > 0 ? (long?)Math.Round(measurement.Rate) : null;
         var (from, to) = Estimate(stage, reason, remaining, rate, jobs, now);
@@ -73,6 +73,9 @@ internal static class RequestProgress
         if (request.Status == 1) return ("requested", null);
         if (jobs.Any(job => job.ImportFailed)) return ("blocked", "importFailed");
         if (request.Status == 4) return ("failed", null);
+        // Seerr already closed the request, or the media left the server: no download queue to watch.
+        if (request.MediaStatus == 7) return ("removed", null);
+        if (request.Status == 5 && !arr.Known) return (request.MediaStatus == 4 ? "partial" : "library", null);
         if (jobs.Any(job => job.State is "importPending" or "importing" or "importBlocked" || job.Status == "completed"))
             return ("import", null);
         if (arr.History == "import" && jobs.Length == 0 || request.MediaStatus == 5) return ("library", null);

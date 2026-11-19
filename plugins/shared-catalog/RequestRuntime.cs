@@ -11,7 +11,8 @@ namespace Jellyfin.Plugin.SharedCatalog;
 
 public sealed class RequestRuntime(ILibraryManager library, NotificationStore notifications, ILogger<RequestRuntime> logger) : BackgroundService
 {
-    private static readonly TimeSpan Interval = TimeSpan.FromSeconds(25);
+    private static readonly TimeSpan Interval = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan SlowInterval = TimeSpan.FromMinutes(1);
     private static readonly RequestArr NoArr = new([], [], null, false);
     private static readonly HttpClient Http = new(new SocketsHttpHandler { AllowAutoRedirect = false })
     {
@@ -82,7 +83,7 @@ public sealed class RequestRuntime(ILibraryManager library, NotificationStore no
         try
         {
             var now = _clock.GetUtcNow();
-            var wait = _items.Any(item => item.Result.Active) ? Interval : TimeSpan.FromMinutes(1);
+            var wait = _items.Any(item => Urgent(item, now)) ? Interval : SlowInterval;
             if (now - _lastAttempt >= wait)
             {
                 _lastAttempt = now;
@@ -156,6 +157,11 @@ public sealed class RequestRuntime(ILibraryManager library, NotificationStore no
         _stale = false;
         await CaptureNotifications(ct);
     }
+
+    // Downloads, imports and requests made in the last six hours are refreshed every ten seconds;
+    // long-waiting searches only every minute, to keep Radarr and Sonarr quiet.
+    private static bool Urgent(Tracked item, DateTimeOffset now) => item.Result.Active
+        && (item.Result.Stage is "approved" or "downloading" or "import" or "library" || now - item.Source.Updated < TimeSpan.FromHours(6));
 
     private Task CaptureNotifications(CancellationToken ct) =>
         notifications.Capture(_items.Select(item => (item.Source.Owner, item.Result)), ct);

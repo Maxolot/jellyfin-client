@@ -49,7 +49,14 @@ internal static class RequestChecks
         var partial = RequestProgress.Calculate(show, title, local, episodes, true, null, now).Snapshot;
         Check(partial.Active && partial.Seasons is [{ Number: 1, Available: 1, Total: 2 }, { Number: 2, Available: 0, Total: 1 }],
             "Season progress includes available episode numbers and verified totals");
-        Console.WriteLine("Request checks passed: Seerr, Arr/qBittorrent queue, ETA, stalled, empty, import, VPN and seasons.");
+        var unobserved = new RequestArr([], [], null, false);
+        var completedPartial = RequestProgress.Calculate(show with { Status = 5 }, title, local, unobserved, true, null, now).Snapshot;
+        Check(completedPartial is { Stage: "partial", Reason: null, Active: false }, "A closed request with missing episodes is partial, not untracked");
+        var deleted = RequestProgress.Calculate(film with { Status = 5, MediaStatus = 7 }, title, empty, unobserved, true, null, now).Snapshot;
+        Check(deleted is { Stage: "removed", Reason: null, Active: false }, "A request whose media was removed says so");
+        var closed = RequestProgress.Calculate(film with { Status = 5, MediaStatus = 3 }, title, empty, unobserved, true, null, now).Snapshot;
+        Check(closed.Reason != "trackingUnavailable", "Closed requests never claim the queue is unreadable");
+        Console.WriteLine("Request checks passed: Seerr, Arr/qBittorrent queue, ETA, stalled, empty, import, VPN, seasons, closed and removed.");
     }
 
     private static void Check(bool result, string message)
@@ -83,7 +90,8 @@ internal static class RequestChecks
                     downloadId = "transfer", outputPath = "/private/source", statusMessages = new[] { "Matched by ID: /private/source" }
                 } } }),
                 "/api/v3/queue" => """{"totalRecords":0,"records":[]}""",
-                "/api/v3/history" when History is not null => JsonSerializer.Serialize(new { records = new[] { new { movieId = 8, date = "2026-11-19T17:00:00Z", eventType = History } } }),
+                "/api/v3/history/movie" when History is not null => JsonSerializer.Serialize(new[] { new { movieId = 8, date = "2026-11-19T17:00:00Z", eventType = History } }),
+                "/api/v3/history/movie" => "[]",
                 _ => """{"records":[]}"""
             };
             return Task.FromResult(new HttpResponseMessage(path == "/health" ? HttpStatusCode.ServiceUnavailable : HttpStatusCode.OK)

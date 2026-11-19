@@ -6,7 +6,7 @@ export const steps = [
 ] as const;
 
 type PositiveStage = typeof steps[number][0];
-export type RequestStage = PositiveStage | 'blocked' | 'declined' | 'failed';
+export type RequestStage = PositiveStage | 'blocked' | 'declined' | 'failed' | 'partial' | 'removed';
 
 export type RequestProgress = {
     id: number;
@@ -43,7 +43,7 @@ export function requestReason(request: Pick<RequestProgress, 'reason'>) {
 }
 
 export function requestStageLabel(stage: RequestStage) {
-    return steps.find(step => step[0] === stage)?.[1] || ({ blocked: 'Bloquée', declined: 'Refusée', failed: 'Échec' } as Record<string, string>)[stage] || 'Suivi en cours';
+    return steps.find(step => step[0] === stage)?.[1] || ({ blocked: 'Bloquée', declined: 'Refusée', failed: 'Échec', partial: 'Disponible en partie', removed: 'Retirée du serveur' } as Record<string, string>)[stage] || 'Suivi en cours';
 }
 
 export function requestStep(request: RequestProgress) {
@@ -52,6 +52,8 @@ export function requestStep(request: RequestProgress) {
         if (request.reason === 'noSource') return 2;
         return 3;
     }
+    if (request.stage === 'partial') return steps.length - 1;
+    if (request.stage === 'removed') return -1;
     return steps.findIndex(([stage]) => stage === request.stage);
 }
 

@@ -135,9 +135,10 @@ internal sealed class RequestSources(HttpClient http)
 
     private async Task<string?> History(ArrConnection server, int id, bool tv, DateTimeOffset since, CancellationToken ct)
     {
-        var filter = tv ? $"seriesId={id}" : $"movieId={id}";
-        var data = await Get(server.Url, server.ApiKey, $"api/v3/history?page=1&pageSize=30&sortKey=date&sortDirection=descending&{filter}", ct);
-        var history = Array(Prop(data, "records")).Where(row =>
+        // The paged /history route ignores the title filter; the per-title routes return only its events.
+        var route = tv ? $"api/v3/history/series?seriesId={id}" : $"api/v3/history/movie?movieId={id}";
+        var data = await Get(server.Url, server.ApiKey, route, ct);
+        var history = Array(data).OrderByDescending(row => Date(row, "date")).Where(row =>
             Num(row, tv ? "seriesId" : "movieId") == id && Prop(row, "date").ValueKind == JsonValueKind.String
             && Prop(row, "date").TryGetDateTimeOffset(out var date) && date >= since);
         var latest = history.Select(row => Str(row, "eventType")).FirstOrDefault(value => value is "downloadFolderImported" or "grabbed" or "downloadFailed");

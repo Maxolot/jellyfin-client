@@ -80,6 +80,7 @@ type Filter = typeof filters[number][0];
 function matchesFilter(request: RequestProgress, filter: Filter) {
     if (filter === 'all') return true;
     if (filter === 'active') return request.active;
+    if (filter === 'available') return request.stage === 'available' || request.stage === 'partial';
     return request.stage === filter;
 }
 
