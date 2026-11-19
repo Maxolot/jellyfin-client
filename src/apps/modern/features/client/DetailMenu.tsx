@@ -14,26 +14,21 @@ import { useSeerr } from './seerr/SeerrContext';
 import { canRequestSeasons, RequestDialog, useMissingSeasons } from './seerr/SeerrViews';
 import StorageRemoval, { useStorageRemovalAvailable } from './StorageRemoval';
 import { FollowCatalogAction } from './sharedCatalog';
-import { choiceSummary, readTrackChoice, saveTrackChoice, type TrackChoice } from './trackChoice';
+import { choiceSummary, type TrackChoice } from './trackChoice';
 import TrackMenu from './TrackMenu';
 
 /** Secondary actions of a media page, kept behind one "more" button so the main row stays minimal. */
-export default function DetailMenu({ item, basePath, play }: Readonly<{ item: BaseItemDto; basePath: string; play: (item: BaseItemDto, startTicks?: number) => void }>) {
+export default function DetailMenu({ item, basePath, play, choice, chooseTracks }: Readonly<{ item: BaseItemDto; basePath: string; play: (item: BaseItemDto, startTicks?: number) => void; choice: TrackChoice; chooseTracks: (choice: TrackChoice) => void }>) {
     const seerr = useSeerr();
     const root = useRef<HTMLDivElement>(null);
     const trigger = useRef<HTMLButtonElement>(null);
     const [open, setOpen] = useState(false);
     const [dialog, setDialog] = useState<'cast' | 'request' | 'info' | 'download' | 'storage' | null>(null);
     const [tracksOpen, setTracksOpen] = useState(false);
-    const { api, user } = useApi();
+    const { user } = useApi();
     const tracks = useFileTracks(item);
     const storage = useStorageRemovalAvailable(item, open && user?.Policy?.IsAdministrator === true);
-    const [choice, setChoice] = useState(() => readTrackChoice(api?.basePath, user?.Id, item.Id));
     const canChooseTracks = tracks.audio.length > 1 || tracks.subtitles.length > 0;
-    const chooseTracks = (next: TrackChoice) => {
-        setChoice(next);
-        if (item.Id) saveTrackChoice(api?.basePath, user?.Id, item.Id, next);
-    };
     const request = canRequestSeasons(item, seerr.connected);
     const missing = useMissingSeasons(item, request);
     let triggerLabel = 'Plus d’actions';

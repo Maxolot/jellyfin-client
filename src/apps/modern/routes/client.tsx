@@ -45,6 +45,8 @@ import ProfileEntrance from '../features/client/profiles/ProfileEntrance';
 import ProfilePage from '../features/client/profiles/ProfilePage';
 import { signOut } from '../features/client/profiles/profileSession';
 import { useProfileGate } from '../features/client/profiles/useProfileGate';
+import { mediaVersions } from '../features/client/mediaVersions';
+import { useTitleTrackChoice } from '../features/client/useTitleTrackChoice';
 import { chosenTracks } from '../features/client/languageTags';
 import { RecentPage } from '../features/client/LocalDiscoveryPages';
 import MediaRow from '../features/client/MediaRow';
@@ -69,6 +71,7 @@ import '../features/client/headerAlignment.scss';
 import '../features/client/readableBackdrops.scss';
 import '../features/client/themeConsistency.scss';
 import '../features/client/search.scss';
+import '../features/client/mediaVersions.scss';
 
 type ClientNavigationState = { returnTo?: string, returnState?: ClientNavigationState | null, restoreFocus?: boolean };
 import TonightPage from '../features/client/TonightPage';
@@ -345,7 +348,7 @@ function useClientController() {
             queryFn: ({ signal }) => clientRequest(async () => (await getLibraryApi(api!).getItem({ itemId: targetId, userId: user!.Id! }, { signal })).data)
         });
     }
-    async function play(i: BaseItemDto, startTicks?: number) {
+    async function play(i: BaseItemDto, startTicks?: number, version?: string) {
         if (isExternal(i)) {
             setParams({ id: i.Id! }, { state: { returnTo: location.pathname + location.search, returnState: location.state } });
             return;
@@ -354,7 +357,7 @@ function useClientController() {
         setPreviewSuspended(true);
         setStarting(i);
         try {
-            await playbackManager.play({ items: [i as ItemDto], startPositionTicks: startTicks ?? (i.UserData?.PlaybackPositionTicks || 0), ...await chosenTracks(api, user?.Id, i) });
+            await playbackManager.play({ items: [i as ItemDto], startPositionTicks: startTicks ?? (i.UserData?.PlaybackPositionTicks || 0), ...await chosenTracks(api, user?.Id, i, version) });
         } catch {
             setStarting(null);
             setPreviewSuspended(false);
@@ -548,19 +551,27 @@ function HeroCopyView({ model, dots }: ViewProps & { dots: ReactNode }) {
 }
 
 function HeroActions({ model, dots }: ViewProps & { dots: ReactNode }) {
-    const { hero, id, item, api, location, playItem, busy, play, updateState } = model;
+    const { hero, id, item, api, user, location, playItem, busy, play, updateState } = model;
+    const { choice, chooseTracks } = useTitleTrackChoice(api?.basePath, user?.Id, id ? hero?.Id : undefined);
     if (!hero) return null;
     const homePlayable = hero.Type === 'Movie' ? hero : undefined;
     const playable = id ? playItem : homePlayable;
+    const versions = id && playable?.Id === hero.Id ? mediaVersions(playable?.MediaSources) : [];
+    const showVersions = versions.length > 1;
+    const version = versions.find(entry => entry.id === choice.version)?.id || '';
+    const options: Option<string>[] = [['', 'Version automatique'], ...versions.map((entry): Option<string> => [entry.id, entry.label])];
     let playLabel = 'Lecture';
     if (playable?.UserData?.PlaybackPositionTicks) playLabel = 'Reprendre';
     if (playable?.Type === 'Episode') playLabel = episodeLabel(playable);
     return <div className='client-actions'>
-        {playable && <button className='client-play' onClick={() => play(playable)}><ClientIcon name='play' />{playLabel}</button>}
+        {playable && <button className='client-play' onClick={() => play(playable, undefined, showVersions ? version : undefined)}><ClientIcon name='play' />{playLabel}</button>}
+        {showVersions && <div className='client-version-select'>
+            <ChoiceSelect label='Version à lire' value={version} options={options} onChange={entry => chooseTracks({ ...choice, version: entry || undefined })} />
+        </div>}
         {!id && <Link className='client-button' data-client-focus={`info-${hero.Id}`} to={`/client?id=${hero.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }}><ClientIcon name='info' />Plus d’infos</Link>}
         {id && <><ListAction item={hero} disabled={busy} fallback={() => updateState('favorite')} />
             <button className='client-button client-action-circle' aria-label={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} title={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} disabled={busy} aria-pressed={!!item?.UserData?.Played} onClick={() => updateState('played')}><ClientIcon name={item?.UserData?.Played ? 'check' : 'eye'} /></button>
-            <DetailMenu key={hero.Id} item={hero} basePath={api?.basePath || ''} play={play} /></>}
+            <DetailMenu key={hero.Id} item={hero} basePath={api?.basePath || ''} play={play} choice={choice} chooseTracks={chooseTracks} /></>}
         {dots}
     </div>;
 }

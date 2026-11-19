@@ -11,6 +11,7 @@ import { useApi } from 'hooks/useApi';
 import ClientDialog from './ClientDialog';
 import ClientIcon from './ClientIcon';
 import { describeAudio, describeSubtitle, describeVideo, formatBitrate, formatClock, formatSize, safeLink } from './mediaInfo';
+import { mediaVersions } from './mediaVersions';
 import { clientRequest } from './session';
 import { serverInterfaceUrl } from './session/ServerInterfacePage';
 import type { TrackChoice } from './trackChoice';
@@ -74,8 +75,9 @@ export default function MediaInfoDialog({ item, basePath, open, onClose, play, c
     };
     const { title, file, bonus = [], trailers = [] } = info.data || {};
     const sources = file?.MediaSources || [];
-    const versions = item.Type === BaseItemKind.Movie && sources.length > 1 ? sources : [];
-    const shown = versions.find(source => source.Id === choice.version) || sources[0];
+    const versions = item.Type === BaseItemKind.Series ? [] : mediaVersions(sources);
+    const shown = versions.find(version => version.id === choice.version)?.source || sources[0];
+    const explicitVersion = versions.some(version => version.id === choice.version);
     const chapters = item.Type === BaseItemKind.Movie ? file?.Chapters || [] : [];
     const links = [...(title?.ExternalUrls || []).map(link => ({ name: link.Name, url: safeLink(link.Url) })),
         ...(title?.RemoteTrailers || []).map((link, index) => ({ name: link.Name || `Bande-annonce ${index + 1}`, url: safeLink(link.Url) }))].filter(link => link.url);
@@ -83,11 +85,17 @@ export default function MediaInfoDialog({ item, basePath, open, onClose, play, c
         <div className='client-media-info'>
             {info.isPending && open && <p role='status'>Chargement…</p>}
             {info.isError && <p role='alert'>Ces informations sont indisponibles pour le moment.</p>}
-            {versions.length > 0 && <section><h3>Version à lire</h3><ul>{versions.map(source => <li key={source.Id}>
-                <button type='button' className='client-media-row' aria-pressed={shown?.Id === source.Id} onClick={() => chooseVersion(source.Id || undefined)}>
-                    {shown?.Id === source.Id && <ClientIcon name='check' />}{source.Name || source.Id}<small>{formatSize(source.Size)}</small>
-                </button></li>)}</ul></section>}
-            {shown && <section><h3>{item.Type === BaseItemKind.Series ? `Fichier de l’épisode « ${file?.Name} »` : 'Fichier'}</h3><Technical source={shown} name={versions.length ? shown.Name || undefined : undefined} /></section>}
+            {versions.length > 1 && <section><h3>Version à lire</h3><ul>
+                <li><button type='button' className='client-media-row' aria-pressed={!explicitVersion} onClick={() => chooseVersion()}>
+                    {!explicitVersion && <ClientIcon name='check' />}Version automatique
+                </button></li>
+                {versions.map(version => <li key={version.id}>
+                    <button type='button' className='client-media-row' aria-pressed={choice.version === version.id} onClick={() => chooseVersion(version.id)}>
+                        {choice.version === version.id && <ClientIcon name='check' />}{version.label}
+                    </button>
+                </li>)}
+            </ul></section>}
+            {shown && <section><h3>{item.Type === BaseItemKind.Series ? `Fichier de l’épisode « ${file?.Name} »` : 'Fichier'}</h3><Technical source={shown} name={versions.length > 1 ? shown.Name || undefined : undefined} /></section>}
             {chapters.length > 0 && <section><h3>Chapitres</h3><ul>{chapters.map((chapter, index) => <li key={chapter.StartPositionTicks ?? index}>
                 <button type='button' className='client-media-row' onClick={() => start(file!, chapter.StartPositionTicks || 0)}>
                     {chapter.ImageTag && <img src={`${basePath}/Items/${file!.Id}/Images/Chapter/${index}?tag=${chapter.ImageTag}&maxWidth=160&quality=80`} alt='' loading='lazy' />}

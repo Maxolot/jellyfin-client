@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import DetailMenu from './DetailMenu';
+import { useTitleTrackChoice } from './useTitleTrackChoice';
 
 vi.mock('./seerr/SeerrContext', () => ({ useSeerr: () => ({ connected: true }) }));
 vi.mock('./seerr/SeerrViews', () => ({
@@ -33,15 +34,19 @@ afterEach(async () => {
     await act(async () => root.unmount());
     container.remove();
 });
+function Menu({ item }: Readonly<{ item: BaseItemDto }>) {
+    const tracksForTitle = useTitleTrackChoice('s', 'u', item.Id);
+    return <DetailMenu item={item} basePath='' play={vi.fn()} {...tracksForTitle} />;
+}
 async function open(item: BaseItemDto) {
-    await act(async () => root.render(<MemoryRouter><DetailMenu item={item} basePath='' play={vi.fn()} /></MemoryRouter>));
+    await act(async () => root.render(<MemoryRouter><Menu item={item} /></MemoryRouter>));
     await act(async () => container.querySelector('button')?.click());
     return Array.from(container.querySelectorAll('[role="menuitem"]')).map(entry => entry.textContent);
 }
 
 describe('DetailMenu tracks', () => {
     const openMenu = async () => {
-        await act(async () => root.render(<MemoryRouter><DetailMenu item={{ Id: 'film', Type: 'Movie' }} basePath='' play={vi.fn()} /></MemoryRouter>));
+        await act(async () => root.render(<MemoryRouter><Menu item={{ Id: 'film', Type: 'Movie' }} /></MemoryRouter>));
         await act(async () => container.querySelector<HTMLElement>('.client-action-circle')?.click());
     };
     const item = (text: string) => [...container.querySelectorAll<HTMLElement>('[role^="menuitem"]')].find(entry => entry.textContent?.includes(text));
@@ -103,10 +108,10 @@ describe('DetailMenu', () => {
 
 describe('DetailMenu badge', () => {
     it('shows a badge on the button when seasons are missing, not for a movie', async () => {
-        await act(async () => root.render(<MemoryRouter><DetailMenu item={{ Id: 's', Type: 'Series' }} basePath='' play={vi.fn()} /></MemoryRouter>));
+        await act(async () => root.render(<MemoryRouter><Menu item={{ Id: 's', Type: 'Series' }} /></MemoryRouter>));
         expect(container.querySelector('.client-more-badge')).not.toBeNull();
         expect(container.querySelector('button')?.getAttribute('aria-label')).toBe('Plus d’actions : 2 saisons à demander');
-        await act(async () => root.render(<MemoryRouter><DetailMenu item={{ Id: 'm', Type: 'Movie' }} basePath='' play={vi.fn()} /></MemoryRouter>));
+        await act(async () => root.render(<MemoryRouter><Menu item={{ Id: 'm', Type: 'Movie' }} /></MemoryRouter>));
         expect(container.querySelector('.client-more-badge')).toBeNull();
     });
 });

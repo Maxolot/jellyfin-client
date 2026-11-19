@@ -1,0 +1,26 @@
+.client-version-select {
+    min-width: 0;
+    max-width: 100%;
+    flex: 0 1 182px;
+
+    .client-select > button {
+        max-width: 100%;
+        border-radius: 999px;
+
+        > span {
+            display: -webkit-box;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+        }
+    }
+}
+
+@media (max-width: 700px) {
+    .client-version-select { flex-basis: min(190px, calc(100% - 134px)); }
+}
+
+@media (min-width: 701px) {
+    .client-version-select .client-select ul { min-width: 250px; }
+}
