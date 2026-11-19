@@ -102,9 +102,12 @@ import { exactSearchFirst, groupSearchResults, matchesSearchTitle, searchMode } 
 import SharedCatalogArtwork from '../features/client/SharedCatalogArtwork';
 import { latestFollowed } from '../features/client/spotlight/sharedRecent';
 import { sharedCatalogItems, useSharedCatalog } from '../features/client/sharedCatalog';
+import { CompactRequest, RequestBell } from '../features/client/requests/RequestInline';
+import { useRequestProgress } from '../features/client/requests/queries';
 import { ExternalDetail, RequestDialog, RequestTracking } from '../features/client/seerr/SeerrViews';
 import { canRequest, externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
 
+const RequestPage = lazy(() => import(/* webpackChunkName: "client-requests" */ '../features/client/requests/RequestPage'));
 const PersonPage = lazy(() => import(/* webpackChunkName: "client-person" */ '../features/client/person/PersonPage'));
 
 const links = [['home', 'Accueil'], ['series', 'Séries'], ['films', 'Films'], ['recent', 'Nouveautés'], ['tonight', 'Ce soir'], ['search', 'Rechercher'], ['mine', 'Mon espace']];
@@ -168,7 +171,7 @@ function clientScrollKey(prefKey: string | undefined, location: ReturnType<typeo
 }
 
 function clientPageReady(id: string, view: string, item: BaseItemDto | undefined, mediaReady: boolean, externalReady: boolean) {
-    return externalReady || (id ? !!item : ['settings', 'collections', 'folder', 'person'].includes(view) || mediaReady);
+    return externalReady || (id ? !!item : ['settings', 'collections', 'folder', 'person', 'requests'].includes(view) || mediaReady);
 }
 
 /** What the blurred page background shows when no card is hovered. */
@@ -194,7 +197,7 @@ function routedView(params: URLSearchParams, folderId?: string, personId?: strin
 }
 
 function clientBrowseView(view: string, id: string, emptySearch: boolean) {
-    return id || ['settings', 'collections', 'folder', 'person'].includes(view) || emptySearch ? 'disabled' : view;
+    return id || ['settings', 'collections', 'folder', 'person', 'requests'].includes(view) || emptySearch ? 'disabled' : view;
 }
 
 function useSharedBrowse(view: string, id: string, search: string) {
@@ -560,6 +563,7 @@ function ClientView({ model }: ViewProps) {
                     {/* À gauche de la loupe : envoyer la lecture vers un autre appareil, regarder à plusieurs. */}
                     <button type='button' className='client-nav-tool' aria-label='Lire sur un autre appareil' title='Lire sur un autre appareil' onClick={() => openConnectivity('targets')}><RemoteIcon name='cast' /></button>
                     <button type='button' className='client-nav-tool' aria-label='Regarder ensemble' title='Regarder ensemble' onClick={() => openConnectivity('together')}><RemoteIcon name='people' /></button>
+                    <RequestBell />
                     <button type='button' className='client-brand client-search-shortcut' aria-label='Rechercher' title='Rechercher (⌘K ou Ctrl+K)' aria-haspopup='dialog' aria-current={!id && view === 'search' ? 'page' : undefined} onClick={event => spotlight.current?.open(event.currentTarget)}><ClientIcon name='search' /></button>
                     {profileOpen && <div ref={profileMenu} className='client-profile-menu' role='dialog' aria-label='Menu du profil'>
                         <strong>{user?.Name}</strong><Link to='/client?view=profiles' onClick={() => setProfileOpen(false)}><ActionLabel icon='people'>Changer de profil</ActionLabel></Link><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}><ActionLabel icon='profile'>Mon espace</ActionLabel></Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}><ActionLabel icon='settings'>Paramètres</ActionLabel></Link><Link to='/offline' onClick={() => setProfileOpen(false)}><ActionLabel icon='download'>Hors ligne</ActionLabel></Link><QuickConnectMenuItem /><button onClick={() => {
@@ -637,6 +641,7 @@ function HeroCopyView({ model, dots }: ViewProps & { dots: ReactNode }) {
         {id && <DetailSynopsis key={hero.Id} overview={hero.Overview} />}
         <HeroActions model={model} dots={dots} />
         {id && <PersonalRating item={hero} />}
+        {id && <CompactRequest identity={externalIdentity(hero)} />}
     </div>;
 }
 
@@ -697,34 +702,41 @@ function TonightInvite({ prepare }: Readonly<{ prepare: (view: string) => void }
     </Link>;
 }
 
+function HomeContent({ model }: ViewProps) {
+    const { media, row } = model;
+    // Keep the shared catalogue in its own order and avoid repeating its titles in the discovery rows.
+    const continuing = uniqueItems([...(media.data?.resume || []), ...(media.data?.next || [])]).filter((entry, index, all) => !entry.SeriesId || all.findIndex(other => other.SeriesId === entry.SeriesId) === index);
+    const used = new Set([...model.heroItems, ...continuing, ...model.sharedItems].map(entry => entry.SeriesId || entry.Id || ''));
+    const take = (items: BaseItemDto[], limit: number) => items.filter(entry => !used.has(entry.Id || '')).slice(0, limit).map(entry => {
+        used.add(entry.Id || '');
+        return entry;
+    });
+    const picks = take(media.data?.picks || [], 12);
+    const recent = take([...(media.data?.movies || []), ...(media.data?.series || [])].sort((a, b) => String(b.DateCreated || '').localeCompare(String(a.DateCreated || ''))), 16);
+    const trends = take(model.catalogue.items, 20);
+    return <>
+        <TonightInvite prepare={model.prepareTab} />
+        {row('Continuer à regarder', continuing, true)}
+        {row('À découvrir', picks)}
+        {row('Ajouts récents', recent)}
+        {row('Récemment suivis', model.sharedItems, false, 'shared-catalog')}
+        {row('Tendances', trends)}
+        {model.catalogue.loading && !trends.length && <ClientSkeleton layout='row' label='Chargement des tendances…' />}
+        {model.catalogue.isError && <p className='client-message'>Les tendances sont temporairement indisponibles. Votre bibliothèque reste accessible.</p>}
+        <UpcomingRow items={model.upcoming.items.filter(({ item }) => !used.has(item.Id || ''))} />
+        {media.data && !media.data.movies.length && !media.data.series.length && !media.data.resume.length && <p className='client-message'>Votre bibliothèque est vide pour le moment.</p>}
+    </>;
+}
+
+const accountViews = new Map<string, (props: ViewProps) => ReactNode>([
+    ['requests', RequestsView], ['settings', SettingsView]
+]);
+
 function ContentView({ model }: ViewProps) {
     const { id, view, details, media, row, api, image } = model;
     if (model.remote) return <ExternalDetail key={id} id={id} row={row} image={image} />;
     if (id) return details.item.data && api ? <DetailExtras item={details.item.data} similar={details.similar.data || []} image={image} /> : null;
-    if (view === 'home') {
-        // Keep the shared catalogue in its own order and avoid repeating its titles in the discovery rows.
-        const continuing = uniqueItems([...(media.data?.resume || []), ...(media.data?.next || [])]).filter((entry, index, all) => !entry.SeriesId || all.findIndex(other => other.SeriesId === entry.SeriesId) === index);
-        const used = new Set([...model.heroItems, ...continuing, ...model.sharedItems].map(entry => entry.SeriesId || entry.Id || ''));
-        const take = (items: BaseItemDto[], limit: number) => items.filter(entry => !used.has(entry.Id || '')).slice(0, limit).map(entry => {
-            used.add(entry.Id || '');
-            return entry;
-        });
-        const picks = take(media.data?.picks || [], 12);
-        const recent = take([...(media.data?.movies || []), ...(media.data?.series || [])].sort((a, b) => String(b.DateCreated || '').localeCompare(String(a.DateCreated || ''))), 16);
-        const trends = take(model.catalogue.items, 20);
-        return <>
-            <TonightInvite prepare={model.prepareTab} />
-            {row('Continuer à regarder', continuing, true)}
-            {row('À découvrir', picks)}
-            {row('Ajouts récents', recent)}
-            {row('Récemment suivis', model.sharedItems, false, 'shared-catalog')}
-            {row('Tendances', trends)}
-            {model.catalogue.loading && !trends.length && <ClientSkeleton layout='row' label='Chargement des tendances…' />}
-            {model.catalogue.isError && <p className='client-message'>Les tendances sont temporairement indisponibles. Votre bibliothèque reste accessible.</p>}
-            <UpcomingRow items={model.upcoming.items.filter(({ item }) => !used.has(item.Id || ''))} />
-            {media.data && !media.data.movies.length && !media.data.series.length && !media.data.resume.length && <p className='client-message'>Votre bibliothèque est vide pour le moment.</p>}
-        </>;
-    }
+    if (view === 'home') return <HomeContent model={model} />;
     if (model.personId) {
         return <Suspense fallback={<ClientSkeleton layout='grid' count={6} contained label='Chargement de la personne…' />}>
             <PersonPage key={model.personId} id={model.personId} basePath={api?.basePath || ''} image={image} play={model.play} />
@@ -734,7 +746,8 @@ function ContentView({ model }: ViewProps) {
         return <FolderPage key={model.folderId} id={model.folderId} image={image} full={model.preferences.hero === 'background'} showWatched={model.preferences.watchedMarkers}
             playQueue={model.playQueue} queueBusy={model.queueBusy} prepare={model.prepareDetail} release={model.releaseDetail} />;
     }
-    if (view === 'settings') return <SettingsView model={model} />;
+    const AccountView = accountViews.get(view);
+    if (AccountView) return <AccountView model={model} />;
     if (view === 'collections') {
         return <PublicCollections image={image} full={model.preferences.hero === 'background'} showWatched={model.preferences.watchedMarkers}
             playQueue={model.playQueue} queueBusy={model.queueBusy} prepare={model.prepareDetail} release={model.releaseDetail} />;
@@ -746,6 +759,12 @@ function ContentView({ model }: ViewProps) {
     if (model.standaloneSearch) return <SearchView model={model} />;
     return <LibraryView model={model} />;
 }
+function RequestsView({ model }: ViewProps) {
+    return <Suspense fallback={<ClientSkeleton layout='list' count={3} contained label='Chargement des demandes…' />}>
+        <RequestPage play={model.play} />
+    </Suspense>;
+}
+
 function SettingsView({ model }: ViewProps) {
     const { preferences, savePreference, user, params } = model;
     if (!model.api || !user?.Id) return <section className='client-settings'><h1>Paramètres</h1><ClientSkeleton layout='settings' contained count={3} label='Chargement des préférences…' /></section>;
@@ -833,7 +852,19 @@ function PersonalView({ model }: ViewProps) {
         {row('Vus récemment', history.data)}
         {!!stats.data?.genres.length && <div className='client-personal-columns'><GenreTaste stats={stats.data} /></div>}
         <RatingsOverview />
-        {seerr.connected && <div id='client-requests' className='client-personal-requests'><RequestTracking /></div>}
+        <PersonalRequests connected={seerr.connected} />
+    </div>;
+}
+
+function PersonalRequests({ connected }: Readonly<{ connected: boolean }>) {
+    const query = useRequestProgress();
+    if (!query.data && !connected) return null;
+    const active = query.data?.filter(entry => entry.active).length || 0;
+    return <div id='client-requests' className='client-personal-requests'>
+        {query.data ? <section className='client-request-overview'>
+            <div><h2>Mes demandes</h2><p>{active ? `${active} en cours` : 'Aucune demande en cours'}</p></div>
+            <Link className='client-button' to='/client?view=requests'><ClientIcon name='bell' />Voir le suivi</Link>
+        </section> : <RequestTracking />}
     </div>;
 }
 

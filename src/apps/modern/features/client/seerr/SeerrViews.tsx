@@ -8,6 +8,8 @@ import { Link, useLocation } from 'react-router-dom';
 import './seerr.scss';
 
 import Artwork from '../Artwork';
+import { CompactRequest } from '../requests/RequestInline';
+import { useRefreshRequestProgress } from '../requests/queries';
 import ClientDialog from '../ClientDialog';
 import DetailExtras from '../DetailExtras';
 import ClientSkeleton from '../ClientSkeleton';
@@ -170,6 +172,7 @@ function useRequestSources(identity: SeerrIdentity, data: ExternalMedia, is4k: b
 function RequestForm({ identity, data, initialSeason }: Readonly<{ identity: SeerrIdentity; data: ExternalMedia; initialSeason?: InitialSeason }>) {
     const seerr = useSeerr();
     const cache = useQueryClient();
+    const refreshProgress = useRefreshRequestProgress();
     const initial4k = initialSeason?.quality === '4k';
     const preselected = initialSeason?.number;
     const [is4k, set4k] = useState(initial4k);
@@ -187,7 +190,7 @@ function RequestForm({ identity, data, initialSeason }: Readonly<{ identity: See
     }, retry: false, onSuccess: async () => {
         setConfirm(false);
         setSelected([]);
-        await cache.invalidateQueries({ queryKey: seerr.root });
+        await Promise.all([cache.invalidateQueries({ queryKey: seerr.root }), refreshProgress()]);
     }, onError: () => { void cache.invalidateQueries({ queryKey: [...seerr.root, 'Detail'] }); } });
     useEffect(() => {
         setSelected(preselected == null || is4k !== initial4k ? [] : [preselected]);
@@ -214,6 +217,7 @@ function RequestForm({ identity, data, initialSeason }: Readonly<{ identity: See
             <div className='client-request-confirm'><p>Demander <strong>{data.title || data.name}</strong>{identity.type === 'tv' ? ` · ${requestSeasonNumbersLabel(selected)}` : ''}{is4k ? ' en 4K' : ''} ?</p><p>Le serveur appliquera la qualité configurée et les éventuelles règles de validation.</p><button className='client-play' disabled={disabled} onClick={() => mutation.mutate()}>{mutation.isPending ? 'Envoi…' : 'Confirmer la demande'}</button><button className='client-button' disabled={mutation.isPending} onClick={() => setConfirm(false)}>Annuler</button></div>)}
         {mutation.isSuccess && <p role='status'>Demande enregistrée. Retrouvez son avancement dans Mon espace.</p>}
         {mutation.isError && <p role='alert'>{mutation.error.message}</p>}
+        <CompactRequest identity={identity} />
         <RequestHistory entries={info?.requests || []} />
     </section>;
 }
@@ -239,7 +243,7 @@ export function ExternalDetail({ id, row, image }: Readonly<{ id: string; row: (
     }
     const data = detail.data;
     const match = localMatch(data, identity.type, local.data || []);
-    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><div className='client-detail-readability' aria-hidden='true' /><Link className='client-back' to={back} state={backState}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{[releaseLabel(data.releaseDate || data.firstAirDate), ...(data.genres || []).map(genre => genre.name)].filter(Boolean).join(' · ')}</p><ExternalSource data={data} identity={identity} owned={!!match} /><DetailSynopsis key={identity.id} overview={data.overview} /><div className='client-actions'>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}<AvailabilityAction identity={identity} localItem={match} /><FollowCatalogAction item={catalogueItem(data, identity.type, [])} remote={data} /></div></div></section><ExternalRecommendations identity={identity} local={local.data || []} row={row} data={data} image={image} /></>;
+    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><div className='client-detail-readability' aria-hidden='true' /><Link className='client-back' to={back} state={backState}>← Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{[releaseLabel(data.releaseDate || data.firstAirDate), ...(data.genres || []).map(genre => genre.name)].filter(Boolean).join(' · ')}</p><ExternalSource data={data} identity={identity} owned={!!match} /><DetailSynopsis key={identity.id} overview={data.overview} /><div className='client-actions'>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}<AvailabilityAction identity={identity} localItem={match} /><FollowCatalogAction item={catalogueItem(data, identity.type, [])} remote={data} /></div><CompactRequest identity={identity} /></div></section><ExternalRecommendations identity={identity} local={local.data || []} row={row} data={data} image={image} /></>;
 }
 
 function ExternalSource({ data, identity, owned }: Readonly<{ data: ExternalMedia; identity: SeerrIdentity; owned: boolean }>) {
