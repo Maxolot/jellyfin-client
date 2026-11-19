@@ -23,6 +23,7 @@ import Events from 'utils/events';
 
 import ActionLabel from '../features/client/ActionLabel';
 import DetailSynopsis from '../features/client/DetailSynopsis';
+import SeriesEpisodesPanel, { SeasonRail } from '../features/client/SeriesEpisodes';
 import HeroArtwork from '../features/client/HeroArtwork';
 import ClientSkeleton from '../features/client/ClientSkeleton';
 import PreviewProvider, { usePreviews } from '../features/client/PreviewProvider';
@@ -61,7 +62,7 @@ import { ChoiceSelect, type Option } from '../features/client/settings/controls'
 import AdvancedLibraryFilters from '../features/client/AdvancedLibraryFilters';
 import { countLibraryFilters, isFullLibrary, readLibraryFilters } from '../features/client/libraryFilters';
 import { QueueAction, QueueActions } from '../features/client/QueueActions';
-import { buildMediaQueue, isQueuedVideo, type PlayQueue } from '../features/client/mediaQueue';
+import { buildMediaQueue, type PlayQueue } from '../features/client/mediaQueue';
 import GridLoadMore from '../features/client/GridLoadMore';
 import FolderPage from '../features/client/folders/FolderPage';
 import FolderPanel from '../features/client/folders/FolderPanel';
@@ -85,7 +86,7 @@ import '../features/client/search.scss';
 import '../features/client/mediaVersions.scss';
 import '../features/client/detailInfoPosition.scss';
 
-type ClientNavigationState = { returnTo?: string, returnState?: ClientNavigationState | null, restoreFocus?: boolean };
+type ClientNavigationState = { returnTo?: string, returnState?: ClientNavigationState | null, restoreFocus?: boolean, episodeDrawer?: boolean };
 import TonightPage from '../features/client/TonightPage';
 import PublicCollections from '../features/client/collections/PublicCollections';
 import AmbientBackdrop from '../features/client/AmbientBackdrop';
@@ -156,7 +157,10 @@ function restoreClientNavigation(key: string, restoreFocus: boolean, id: string)
 }
 
 function clientScrollKey(prefKey: string | undefined, location: ReturnType<typeof useLocation>, view: string, params: URLSearchParams) {
-    const scope = ['folder', 'collections'].includes(view) ? params.get('collection') || '' : params.toString();
+    const stable = new URLSearchParams(params);
+    stable.delete('season');
+    stable.delete('episodes');
+    const scope = ['folder', 'collections'].includes(view) ? params.get('collection') || '' : stable.toString();
     return `${prefKey}-scroll-${location.pathname}?${scope}`;
 }
 
@@ -203,6 +207,8 @@ function useClientController() {
     const location = useLocation();
     const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
     const restoreFocus = useNavigationType() === 'POP' || (location.state as ClientNavigationState | null)?.restoreFocus === true;
+    const restoration = useRef(restoreFocus);
+    restoration.current = restoreFocus;
     const { folderId } = useParams();
     const view = folderId ? 'folder' : params.get('view') || 'home';
     const discovery = (view === 'films' || view === 'series') && params.get('mode') !== 'library';
@@ -314,10 +320,10 @@ function useClientController() {
         const key = scrollKey;
         if (!pageReady) {
             // The page shrinks while loading: that forced position must not be saved as this page's own.
-            if (!restoreFocus) window.scrollTo(0, 0);
+            if (!restoration.current) window.scrollTo(0, 0);
             return;
         }
-        restoreClientNavigation(key, restoreFocus, id);
+        restoreClientNavigation(key, restoration.current, id);
         const saveFocus = (event: FocusEvent) => {
             const target = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-client-focus]') : null;
             if (target?.dataset.clientFocus) {
@@ -338,7 +344,7 @@ function useClientController() {
             window.removeEventListener('scroll', saveScroll);
             page?.removeEventListener('focusin', saveFocus);
         };
-    }, [scrollKey, pageReady, id, restoreFocus]);
+    }, [scrollKey, pageReady, id]);
 
     useEffect(() => {
         document.body.dataset.clientPlayerTheme = preferences.glass ? 'glass' : 'classic';
@@ -582,7 +588,10 @@ function HeroView({ model }: ViewProps) {
         previews?.playback.stop();
         setHeroIndex(index => (index + heroItems.length + delta) % heroItems.length);
     }
-    return <section ref={region} className={`client-hero${id ? ' client-detail' : ' client-home-hero'}${hero.Type === 'Series' && id ? ' client-series-detail' : ''}`} onPointerEnter={() => setHeroPaused(true)} onPointerLeave={() => setHeroPaused(false)} onFocus={() => setHeroPaused(true)} onBlur={event => {
+    const series = !!id && hero.Type === 'Series';
+    const seasons = model.details.seasons.data || [];
+    const layout = seasons.length > 1 ? ' client-series-seasons' : ' client-series-single';
+    return <><section ref={region} className={`client-hero${id ? ' client-detail' : ' client-home-hero'}${series ? ' client-series-detail' + layout : ''}`} onPointerEnter={() => setHeroPaused(true)} onPointerLeave={() => setHeroPaused(false)} onFocus={() => setHeroPaused(true)} onBlur={event => {
         if (!event.currentTarget.contains(event.relatedTarget)) setHeroPaused(false);
     }}>
         <HeroArtwork source={image(hero, true, true)} fullBackground={!id && preferences.hero === 'background'} />
@@ -591,8 +600,9 @@ function HeroView({ model }: ViewProps) {
         {id && <Link className='client-back' to={(location.state as ClientNavigationState | null)?.returnTo || '/client'} state={{ ...(location.state as ClientNavigationState | null)?.returnState, restoreFocus: true }}><ClientIcon name='back' />Retour</Link>}
         <HeroCopyView key={hero.Id} model={model} dots={!id && heroItems.length > 1 ? <HeroPagination items={heroItems} index={Math.max(0, heroItems.findIndex(entry => entry.Id === hero.Id))} select={selectHero} position={marker} /> : null} />
         {!id && heroItems.length > 1 && <div className='client-hero-arrows'><button aria-label='Média précédent' onClick={() => advanceHero(-1)}><ClientIcon name='back' /></button><button aria-label='Média suivant' onClick={() => advanceHero(1)}><ClientIcon name='next' /></button></div>}
-        <EpisodesView model={model} />
-    </section>;
+        {series && <SeasonRail series={hero} seasons={seasons} selected={model.details.selected} episodes={model.details.episodes.data}
+            basePath={model.api?.basePath || ''} select={season => model.setParams({ id, season }, { state: location.state })} />}
+    </section>{series && <EpisodesView model={model} />}</>;
 }
 
 function HeroCopyView({ model, dots }: ViewProps & { dots: ReactNode }) {
@@ -636,27 +646,27 @@ function HeroActions({ model, dots }: ViewProps & { dots: ReactNode }) {
 }
 
 function EpisodesView({ model }: ViewProps) {
-    const { id, item, details, setParams, location, api, play, playQueue, queueBusy } = model;
-    const [activeEpisode, setActiveEpisode] = useState('');
-    if (!id || item?.Type !== 'Series') return null;
-    return <section className='client-episodes'><header><h2>Épisodes</h2><div role='group' aria-label='Saison'>{details.seasons.data?.map(s => <button key={s.Id} aria-pressed={details.selected === s.Id} onClick={() => setParams({ id, season: s.Id! }, { state: location.state })}><strong>{s.IndexNumber === 0 ? 'Spéciaux' : `Saison ${s.IndexNumber}`}</strong><small>{s.ChildCount ? `${s.ChildCount} épisodes` : 'Voir les épisodes'}</small></button>)}</div>
-        {details.episodes.data?.some(isQueuedVideo) && <QueueAction source={details.episodes.data} playQueue={playQueue}
-            pending={queueBusy} label='Lire la saison' />}
-    </header>
-    {(details.seasons.isPending || (details.episodes.isPending && !!details.selected)) && <ClientSkeleton layout='episodes' count={4} contained label='Chargement des épisodes…' />}
-    {details.episodes.isError && <button type='button' className='client-button' onClick={() => details.episodes.refetch()}>Réessayer le chargement des épisodes</button>}
-    <div className='client-strip'>{details.episodes.data?.map(e => <button className='client-episode' key={e.Id} onPointerEnter={() => setActiveEpisode(e.Id || '')} onPointerLeave={event => {
-        if (!event.currentTarget.contains(document.activeElement)) setActiveEpisode('');
-    }} onFocus={() => setActiveEpisode(e.Id || '')} onBlur={event => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setActiveEpisode('');
-    }} onClick={() => play(e)} aria-label={`Lire ${episodeLabel(e)} ${e.Name}`}>
-        <Artwork source={artworkUrl(api?.basePath || '', e, 'episode')} /><PreviewClip item={e} surface='episode' enabled={activeEpisode === e.Id} soundControl={false} /><span className='client-episode-play' aria-hidden='true'><ClientIcon name='play' /></span><span className='client-episode-caption'><strong>{e.Name}</strong><small>{episodeLabel(e)} · {Math.round((e.RunTimeTicks || 0) / 6e8)} min</small></span>
-        <i className='client-progress'><i style={{ width: `${progressPercent(e)}%` }} /></i></button>)}</div>
-    {(details.episodes.data?.length === 0 || details.seasons.data?.length === 0) && <p>Aucun épisode disponible dans cette saison.</p>}
-    </section>;
+    const { id, details, params, setParams, location, api, play, playQueue, queueBusy } = model;
+    const navigate = useNavigate();
+    const state = location.state as ClientNavigationState | null;
+    const drawer = params.get('episodes') === 'all';
+    const seasons = details.seasons.data || [];
+    const show = () => setParams({ id, season: details.selected, episodes: 'all' }, { state: { ...state, episodeDrawer: true } });
+    const hide = () => {
+        if (!drawer) return;
+        if (state?.episodeDrawer) navigate(-1);
+        else setParams({ id, season: details.selected }, { replace: true, state });
+    };
+    const choose = (season: string) => setParams({ id, season, episodes: 'all' }, { replace: true, state });
+    return <SeriesEpisodesPanel seasons={seasons} selected={details.selected} select={choose} items={details.episodes.data}
+        loading={details.seasons.isPending || (!!details.selected && details.episodes.isPending)}
+        failed={details.seasons.isError || details.episodes.isError} retry={() => {
+            if (details.seasons.isError) void details.seasons.refetch();
+            else void details.episodes.refetch();
+        }} basePath={api?.basePath || ''} nextId={details.next.data?.Id} play={play} playQueue={playQueue} queueBusy={queueBusy}
+        drawer={drawer} openDrawer={show} closeDrawer={hide} />;
 }
 
-/** A thin line under the home hero, as on the mockup: the way into « Ce soir ». */
 function TonightInvite({ prepare }: Readonly<{ prepare: (view: string) => void }>) {
     const ready = useCallback(() => prepare('tonight'), [prepare]);
     return <Link className='client-tonight-invite' to='/client?view=tonight' onPointerEnter={ready} onFocus={ready}>

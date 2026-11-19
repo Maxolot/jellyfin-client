@@ -16,6 +16,7 @@ import * as userSettings from 'scripts/settings/userSettings';
 import { libraryFilterQuery, type LibraryFilters } from './libraryFilters';
 import { uniqueItems } from './model';
 import { clientRequest } from './session';
+import { orderSeasons } from './seriesEpisodesModel';
 
 function browseOrder(view: string, sort: string) {
     if (view === 'tonight') return { sortBy: [ItemSortBy.Random], sortOrder: [SortOrder.Ascending] };
@@ -136,14 +137,16 @@ export function useClientDetails(id: string, season: string) {
     const seasons = useQuery({
         queryKey: ['Client', api?.basePath, user?.Id, 'Seasons', id],
         enabled: !!api && !!user?.Id && item.data?.Type === BaseItemKind.Series,
-        queryFn: ({ signal }) => clientRequest(async () => (await getShowApi(api!).getSeasons({ seriesId: id, userId: user!.Id, fields: [ItemFields.ChildCount] }, { signal })).data.Items || [])
+        queryFn: ({ signal }) => clientRequest(async () => orderSeasons((await getShowApi(api!).getSeasons({
+            seriesId: id, userId: user!.Id, fields: [ItemFields.ChildCount], enableUserData: true
+        }, { signal })).data.Items || []))
     });
-    const selected = season || seasons.data?.[0]?.Id || '';
+    const selected = seasons.data?.find(entry => entry.Id === season)?.Id || seasons.data?.[0]?.Id || '';
     const episodes = useQuery({
         queryKey: ['Client', api?.basePath, user?.Id, 'Episodes', id, selected],
         enabled: !!api && !!user?.Id && !!selected && item.data?.Type === BaseItemKind.Series,
         queryFn: ({ signal }) => clientRequest(async () => (await getShowApi(api!).getEpisodes({ seriesId: id, seasonId: selected,
-            userId: user!.Id, fields: [ItemFields.Overview] }, { signal })).data.Items || [])
+            userId: user!.Id, isMissing: false, enableUserData: true, fields: [ItemFields.Overview] }, { signal })).data.Items || [])
     });
     const next = useQuery({
         queryKey: ['Client', api?.basePath, user?.Id, 'Next', id],

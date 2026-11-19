@@ -32,6 +32,7 @@ export function isWatchedCard(item: BaseItemDto, enabled = true): boolean {
 export function runtimeLabel(ticks?: number | null): string {
     if (!ticks) return '';
     const minutes = Math.round(ticks / 6e8);
+    if (minutes <= 0) return '';
     const hours = Math.floor(minutes / 60);
     return hours ? `${hours} h ${String(minutes % 60).padStart(2, '0')}` : `${minutes} min`;
 }

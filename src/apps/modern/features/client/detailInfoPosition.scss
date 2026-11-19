@@ -18,6 +18,14 @@
 }
 
 @media (min-width: 701px) {
+    .client-hero.client-detail .client-actions {
+        width: max-content;
+        max-width: calc(100vw - var(--client-margin) * 2);
+        flex-wrap: nowrap;
+    }
+
+    .client-detail .client-hero-copy .client-overview { max-width: 560px; }
+
     .client-detail-info-bottom .client-detail {
         padding-bottom: clamp(18px, 2.2svh, 36px);
 
@@ -37,10 +45,14 @@
 
 @media (min-width: 701px) and (max-height: 820px) {
     .client-detail-info-bottom .client-detail {
-        padding-top: 54px;
+        padding-top: 82px;
 
         .client-hero-copy { padding-top: 8px; }
-        h1 { margin-top: 0; }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: clamp(29px, 3vw, 42px);
+        }
 
         .client-title-logo {
             height: 68px;
@@ -49,24 +61,5 @@
 
         :is(.client-meta, .client-overview, .client-personal-rating) { margin-top: 9px; }
         .client-actions { margin-top: 13px; }
-
-        .client-episodes {
-            margin-top: 2px;
-
-            header { margin-bottom: 6px; }
-        }
-    }
-}
-
-@media (min-width: 701px) and (max-height: 820px) {
-    .client-detail-info-bottom .client-series-detail {
-        .client-hero-copy { width: min(76vw, 760px); }
-        .client-episode { flex-basis: clamp(205px, 15.8vw, 245px); }
-
-        .client-episodes header > [aria-label='Saison'] {
-            min-width: 0;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-        }
     }
 }
