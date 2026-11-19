@@ -1,28 +1,41 @@
-import React, { useEffect, useState } from 'react';
+import { useLayoutEffect, type RefObject } from 'react';
 
-import { reducedMotion, takeEntrance, type Entrance } from './profileEntrance';
+import { ARRIVAL_MS, clearOutgoingFlight, flightTransform, mountFlight, reducedMotion, takeEntrance } from './profileEntrance';
 import './entrance.scss';
 
-/** Covers the home page with the chosen avatar, then lets it grow and dissolve to reveal the page underneath. */
-export default function ProfileEntrance() {
-    const [entrance, setEntrance] = useState<Entrance | undefined>(() => {
-        // Always consumed, so that the next visit to the home page does not replay it.
+/** Lands the avatar on the actual profile button, even after an account reload. */
+export default function ProfileEntrance({ profile }: Readonly<{ profile: RefObject<HTMLButtonElement> }>) {
+    useLayoutEffect(() => {
         const pending = takeEntrance();
-        return reducedMotion() ? undefined : pending;
-    });
-    useEffect(() => {
-        if (!entrance) return;
-        document.documentElement.classList.add('client-entering-profile');
-        const timer = window.setTimeout(() => setEntrance(undefined), 1300);
-        return () => {
-            window.clearTimeout(timer);
-            document.documentElement.classList.remove('client-entering-profile');
+        const destination = profile.current;
+        if (!pending || reducedMotion() || !destination || typeof destination.animate !== 'function') {
+            clearOutgoingFlight();
+            return;
+        }
+        const target = destination.getBoundingClientRect();
+        const layer = document.createElement('div');
+        layer.className = 'client-profile-flight client-profile-flight-incoming';
+        layer.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(layer);
+        const avatar = mountFlight(layer, pending, pending.box);
+        clearOutgoingFlight();
+        const movement = avatar.animate([
+            { transform: 'none', opacity: 1 },
+            { opacity: 1, offset: 0.84 },
+            { transform: flightTransform(pending.box, target), opacity: 0 }
+        ], { duration: ARRIVAL_MS, easing: 'cubic-bezier(0.35, 0.05, 0.18, 1)', fill: 'both' });
+        const reveal = destination.animate([
+            { opacity: 0 }, { opacity: 0, offset: 0.74 }, { opacity: 1 }
+        ], { duration: ARRIVAL_MS, fill: 'both' });
+        const done = () => {
+            layer.remove();
+            reveal.cancel();
         };
-    }, [entrance]);
-    if (!entrance) return null;
-    return <div className='client-profile-entrance' aria-hidden='true'>
-        <span className='client-profile-entrance-avatar' style={{ background: entrance.image ? undefined : entrance.tone }}>
-            {entrance.image ? <img src={entrance.image} alt='' /> : entrance.letter}
-        </span>
-    </div>;
+        movement.finished.then(done, done);
+        return () => {
+            movement.cancel();
+            done();
+        };
+    }, [profile]);
+    return null;
 }

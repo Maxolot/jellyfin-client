@@ -16,7 +16,7 @@ import ClientIcon from '../ClientIcon';
 import AvatarPicker from './AvatarPicker';
 import { saveAvatar, type GalleryAvatar } from './avatars';
 import { enterProfile, restart } from './profileSession';
-import { leaveProfiles } from './profileEntrance';
+import { avatarBox, leaveProfiles, type Avatar as FlightAvatar } from './profileEntrance';
 import './entrance.scss';
 import { dropToken, forgetProfile, markProfileChosen, profileTone, readProfiles, rememberProfile, type SavedProfile } from './profileStore';
 import QuickConnectPanel from './QuickConnectPanel';
@@ -66,6 +66,7 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
     const [message, setMessage] = useState('');
     const [busy, setBusy] = useState(false);
     const formElement = useRef<HTMLFormElement>(null);
+    const selectedAvatar = useRef<{ id: string; avatar: FlightAvatar; box: ReturnType<typeof avatarBox> }>();
     const formOpen = !!form && !quick;
     useEffect(() => {
         if (!legacy) return;
@@ -109,6 +110,7 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
     async function choose(profile: SavedProfile, tile?: HTMLElement) {
         setMessage('');
         if (profile.userId === user?.Id) {
+            setBusy(true);
             markProfileChosen();
             await leaveProfiles(tile, entranceOf(profile));
             navigate('/client', { replace: true });
@@ -118,13 +120,16 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
             if (login?.passwordless.has(profile.userId) && legacy) {
                 setBusy(true);
                 try {
-                    await welcome(await legacy.authenticateUserByName(profile.name, ''), undefined);
+                    const result = await legacy.authenticateUserByName(profile.name, '');
+                    await leaveProfiles(tile, entranceOf(profile));
+                    await welcome(result, undefined);
                 } catch (error) {
                     setMessage(refusal((error as { status?: number }).status));
                     setBusy(false);
                 }
                 return;
             }
+            selectedAvatar.current = { id: profile.userId, avatar: entranceOf(profile), box: avatarBox(tile) };
             setForm({ name: profile.name, locked: true, note: 'Ce profil demande son mot de passe.' });
             return;
         }
@@ -136,6 +141,7 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
             if (response.status === 401 || (response.ok && owner?.replace(/-/g, '').toLowerCase() !== profile.userId.replace(/-/g, '').toLowerCase())) {
                 dropToken(basePath, profile.userId);
                 setProfiles(readProfiles(basePath));
+                selectedAvatar.current = { id: profile.userId, avatar: entranceOf(profile), box: avatarBox(tile) };
                 setForm({ name: profile.name, locked: true, note: 'Cette session a expiré.' });
                 return;
             }
@@ -157,7 +163,10 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
         setMessage('');
         const leaving = closing.current;
         try {
-            await welcome(await legacy.authenticateUserByName(form.name.trim(), password), leaving);
+            const result = await legacy.authenticateUserByName(form.name.trim(), password);
+            const selected = selectedAvatar.current;
+            if (selected && selected.id === result.User?.Id) await leaveProfiles(undefined, selected.avatar, selected.box);
+            await welcome(result, leaving);
         } catch (error) {
             setPassword('');
             setMessage(refusal((error as { status?: number }).status));
@@ -196,6 +205,7 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
     }
 
     function closeForm() {
+        selectedAvatar.current = undefined;
         setForm(undefined);
         setQuick(false);
         setPassword('');

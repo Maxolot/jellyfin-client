@@ -470,7 +470,6 @@ function ClientView({ model }: ViewProps) {
     const spotlight = useRef<SpotlightHandle>(null);
     return <PreviewProvider serverAvailable={model.previewProviderAvailable} surface={model.surface} enabled={preferences.previews} muted={preferences.previewMuted} suspended={model.previewSuspended} toggleMuted={() => model.savePreference({ ...preferences, previewMuted: !preferences.previewMuted })} onPlayingChange={model.setPreviewPlaying}><Page id='clientPage' title={APP_NAME} className='client-page' isBackButtonEnabled={false}>
         <div ref={model.surface} className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} ${preferences.chromatic ? 'client-chromatic' : ''} ${preferences.hero === 'background' ? 'client-hero-background' : ''} client-treatment-${preferences.detailTreatment} client-layout-${preferences.detail} ${id ? 'client-detail-page' : ''}`} style={{ '--client-accent': accent, '--detail-blur': `${preferences.detailBlur}px`, '--detail-shade': preferences.detailShade / 100, '--detail-width': `${preferences.detailWidth}%` } as CSSProperties}>
-            <ProfileEntrance />
             {preferences.ambient && !id && <AmbientBackdrop source={model.backdrop} />}
             <nav className='client-nav' data-alignment={preferences.headerAlignment} aria-label='Navigation principale'>
                 <button ref={profileButton} className='client-profile' aria-label='Menu du profil' aria-expanded={profileOpen} onClick={() => setProfileOpen(!profileOpen)}>{user?.PrimaryImageTag ? <img src={`${model.api?.basePath}/Users/${user.Id}/Images/Primary?tag=${user.PrimaryImageTag}&width=96&quality=90`} alt='' /> : user?.Name?.slice(0, 1) || '•'}</button>
@@ -485,6 +484,7 @@ function ClientView({ model }: ViewProps) {
                     }}>Se déconnecter</button>
                 </div>}
             </nav>
+            <ProfileEntrance profile={profileButton} />
             {actionError && <p role='alert' className='client-message'>{actionError}</p>}
             {error && <div className='client-message' role='alert'><p>Impossible de charger les médias.</p><button type='button' className='client-button' onClick={() => (id ? details.item.refetch() : media.refetch())}>Réessayer</button></div>}
             {id && !model.remote && details.item.isPending && <ClientSkeleton layout='detail' label='Chargement de la fiche…' />}
