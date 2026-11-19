@@ -486,7 +486,7 @@ function ClientView({ model }: ViewProps) {
                 </div>}
             </nav>
             {actionError && <p role='alert' className='client-message'>{actionError}</p>}
-            {error && <div className='client-message' role='alert'><p>Impossible de charger les médias.</p><button onClick={() => (id ? details.item.refetch() : media.refetch())}>Réessayer</button></div>}
+            {error && <div className='client-message' role='alert'><p>Impossible de charger les médias.</p><button type='button' className='client-button' onClick={() => (id ? details.item.refetch() : media.refetch())}>Réessayer</button></div>}
             {id && !model.remote && details.item.isPending && <ClientSkeleton layout='detail' label='Chargement de la fiche…' />}
             <BrowseControls model={model} />
             {!id && media.isPending && (view === 'home' || model.discovery) && <ClientSkeleton layout='hero' label='Chargement de la sélection…' />}
@@ -565,7 +565,7 @@ function EpisodesView({ model }: ViewProps) {
     if (!id || item?.Type !== 'Series') return null;
     return <section className='client-episodes'><header><h2>Épisodes</h2><div role='group' aria-label='Saison'>{details.seasons.data?.map(s => <button key={s.Id} aria-pressed={details.selected === s.Id} onClick={() => setParams({ id, season: s.Id! }, { state: location.state })}><strong>{s.IndexNumber === 0 ? 'Spéciaux' : `Saison ${s.IndexNumber}`}</strong><small>{s.ChildCount ? `${s.ChildCount} épisodes` : 'Voir les épisodes'}</small></button>)}</div></header>
         {(details.seasons.isPending || (details.episodes.isPending && !!details.selected)) && <ClientSkeleton layout='episodes' count={4} contained label='Chargement des épisodes…' />}
-        {details.episodes.isError && <button onClick={() => details.episodes.refetch()}>Réessayer le chargement des épisodes</button>}
+        {details.episodes.isError && <button type='button' className='client-button' onClick={() => details.episodes.refetch()}>Réessayer le chargement des épisodes</button>}
         <div className='client-strip'>{details.episodes.data?.map(e => <button className='client-episode' key={e.Id} onPointerEnter={() => setActiveEpisode(e.Id || '')} onPointerLeave={event => {
             if (!event.currentTarget.contains(document.activeElement)) setActiveEpisode('');
         }} onFocus={() => setActiveEpisode(e.Id || '')} onBlur={event => {

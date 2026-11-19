@@ -12,7 +12,6 @@
     z-index: 2;
     display: flex;
     width: 100%;
-    max-width: var(--draw-width);
     align-items: center;
     justify-content: space-between;
     gap: 24px;
@@ -35,7 +34,7 @@
 
 .client-tonight-table .client-tonight-table-head h1 {
     margin: 0;
-    font-size: clamp(32px, 3vw, 44px);
+    font-size: var(--client-heading-size, 40px);
     font-weight: 600;
     line-height: 1.05;
     letter-spacing: -0.035em;
@@ -142,14 +141,19 @@
 }
 
 .client-tonight-table .client-draw-keywords input {
+    box-sizing: border-box;
     width: 100%;
-    margin-top: 10px;
-    padding: 11px 12px;
+    min-height: 44px;
+    margin-top: 8px;
+    padding: 10px 14px;
     border: 1px solid #ffffff40;
-    border-radius: 8px;
-    background: #ffffff06;
-    color: white;
-    font-size: 14px;
+    border-radius: 12px;
+    background: var(--client-control-surface, #1c2027);
+    color: #f2f3f5;
+    font: inherit;
+    font-size: 16px;
+
+    &::placeholder { color: #a6b1c3; }
 }
 
 .client-tonight-table .client-draw-reset {

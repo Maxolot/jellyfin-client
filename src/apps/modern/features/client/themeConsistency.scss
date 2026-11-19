@@ -1,3 +1,4 @@
+/* stylelint-disable no-descending-specificity -- Component and theme scopes intentionally override earlier shared states. */
 // Mêmes boutons sur toutes les pages, dans chacun des deux thèmes.
 // Chargé en dernier : il l'emporte sur les styles propres à chaque page.
 //
@@ -56,6 +57,106 @@ $chips: '.client-catalogue-switch button, .client-period-choices button, .client
             border-color: #ffffff70;
             color: #fff;
         }
+    }
+
+    --client-heading-size: clamp(28px, 3.25vw, 43px);
+    --client-panel-radius: 18px;
+    --client-icon-target: 44px;
+
+    :is(.client-page-heading, .client-library-heading, .client-search-heading, .client-personal-identity, .client-tonight-table-head) h1,
+    .client-preferences > h1 {
+        font-size: var(--client-heading-size);
+        font-weight: 650;
+        line-height: 1.1;
+        letter-spacing: -0.025em;
+    }
+
+    .client-browse-controls {
+        flex-wrap: wrap;
+        gap: 8px 12px;
+    }
+
+    .client-catalogue-switch {
+        flex-wrap: wrap;
+
+        button { min-height: var(--client-icon-target); }
+    }
+
+    .client-filter-options {
+        gap: 10px 12px;
+    }
+
+    .client-nav :is(.client-nav-tool, .client-brand.client-search-shortcut, .client-profile),
+    .client-row-heading button,
+    .client-actions .client-action-circle {
+        display: inline-grid;
+        width: var(--client-icon-target);
+        height: var(--client-icon-target);
+        min-height: var(--client-icon-target);
+        flex: none;
+        place-items: center;
+        padding: 0;
+        line-height: 1;
+    }
+
+    .client-nav :is(.client-nav-tool, .client-brand.client-search-shortcut) {
+        border: 1px solid transparent;
+        border-radius: 50%;
+        background: transparent;
+        color: #ebeff6;
+        box-shadow: none;
+
+        .client-icon {
+            width: 21px;
+            height: 21px;
+        }
+
+        &:is(:hover, :focus-visible, [aria-current='page']) {
+            border-color: #ffffff30;
+            background: #ffffff12;
+        }
+    }
+
+    .client-nav .client-profile { border-radius: 12px; }
+
+    .client-actions .client-action-circle {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+
+        .client-icon {
+            width: 20px;
+            height: 20px;
+        }
+    }
+
+    .client-row-heading h2 { font-size: clamp(18px, 2vw, 24px); }
+
+    .client-row-heading button {
+        color: #e1e8f4;
+
+        &:hover { background: #ffffff20; }
+    }
+
+    .client-episodes header button {
+        min-height: var(--client-icon-target);
+        border-radius: 12px;
+    }
+
+    :is(.client-personal-spotlight, .client-advanced-panel, .client-stat) {
+        border-radius: var(--client-panel-radius);
+    }
+
+    .client-detail-dialog {
+        box-sizing: border-box;
+        max-width: 100%;
+        border-radius: var(--client-panel-radius);
+    }
+
+    .client-detail-dialog > header > button {
+        cursor: pointer;
+
+        &:hover { background: #ffffff24; }
     }
 }
 
@@ -143,4 +244,36 @@ $chips: '.client-catalogue-switch button, .client-period-choices button, .client
     margin-top: 0;
     margin-bottom: 0;
     vertical-align: middle;
+}
+
+.client-interface.client-glass .client-detail-dialog {
+    border-color: #ffffff40;
+    background: #191e28;
+
+    > header { background: #191e28; }
+}
+
+.client-interface.client-classic .client-detail-dialog::backdrop {
+    backdrop-filter: none;
+}
+
+@media (max-width: 700px) {
+    .client-interface {
+        .client-actions .client-action-circle {
+            width: var(--client-icon-target);
+            height: var(--client-icon-target);
+        }
+
+        .client-nav :is(.client-nav-tool, .client-brand.client-search-shortcut, .client-profile) { width: 40px; }
+
+        .client-nav .client-nav-links {
+            padding-inline-end: 10px;
+            mask-image: linear-gradient(90deg, #000 calc(100% - 12px), transparent);
+        }
+
+        .client-filter-options .client-result-count {
+            width: 100%;
+            margin-inline-start: 0;
+        }
+    }
 }

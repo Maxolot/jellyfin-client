@@ -1,3 +1,4 @@
+/* stylelint-disable no-descending-specificity -- Search form and results have separate button scopes. */
 .client-library.client-search-page {
     .client-search-heading {
         margin-block: 0 clamp(20px, 3vw, 32px);
@@ -5,7 +6,7 @@
 
     .client-search-heading h1 {
         margin: 0;
-        font-size: clamp(30px, 4.3vw, 54px);
+        font-size: var(--client-heading-size, 40px);
         font-weight: 650;
         line-height: 1.08;
         letter-spacing: -0.035em;
@@ -42,7 +43,6 @@
             }
 
             &::-webkit-search-cancel-button {
-                -webkit-appearance: none;
                 appearance: none;
             }
         }

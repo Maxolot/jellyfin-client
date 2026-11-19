@@ -31,13 +31,11 @@ html.client-video-active {
     &.accent-gold { --player-accent: #f5cf87; }
 
     button,
-    input,
-    select { font: inherit; }
+    input { font: inherit; }
     button { color: inherit; }
 
     button:focus-visible,
-    input:focus-visible,
-    select:focus-visible {
+    input:focus-visible {
         outline: 3px solid var(--player-accent);
         outline-offset: 4px;
     }
@@ -394,13 +392,13 @@ html.client-video-active {
     padding: 1.5em;
     overflow-y: auto;
     border: 1px solid #ffffff30;
-    border-radius: 20px;
-    background: #171719;
+    border-radius: 18px;
+    background: #18191d;
     box-shadow: 0 20px 80px #0009;
 
     &.style-glass {
         backdrop-filter: blur(30px);
-        background: #1b1b1de8;
+        background: #191e28f2;
     }
     &::backdrop { background: #0004; }
 
@@ -421,11 +419,19 @@ html.client-video-active {
         min-height: 44px;
         padding: 0.6em 0.9em;
         border: 1px solid #ffffff20;
-        border-radius: 8px;
+        border-radius: 12px;
         background: #ffffff09;
         cursor: pointer;
     }
     button:not(.client-controls button):hover { background: #ffffff1c; }
+
+    > header > button:not(.client-controls button) {
+        display: grid;
+        width: 44px;
+        place-items: center;
+        padding: 0;
+        border-radius: 50%;
+    }
 
     button[aria-pressed=true] {
         border-color: var(--player-accent);
