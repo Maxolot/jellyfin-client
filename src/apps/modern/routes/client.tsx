@@ -656,7 +656,7 @@ function HeroCopyView({ model, dots }: ViewProps & { dots: ReactNode }) {
     const { hero, id, api } = model;
     if (!hero) return null;
     return <div className='client-hero-copy'>{!id && <span className='client-eyebrow'>À LA UNE</span>}
-        {hero.ImageTags?.Logo && <TitleLogo key={hero.Id} source={artworkUrl(api?.basePath || '', hero, 'logo')} />}
+        {hero.ImageTags?.Logo && <TitleLogo source={artworkUrl(api?.basePath || '', hero, 'logo')} />}
         <h1 className={hero.ImageTags?.Logo ? 'client-title-fallback' : undefined}>{hero.Name}</h1>
         <HeroMetadata item={hero} detailed={!!id} />
         {id && <DetailSynopsis key={hero.Id} overview={hero.Overview} />}
