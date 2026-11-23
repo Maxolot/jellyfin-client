@@ -61,7 +61,7 @@ import MediaRow, { type MediaRowKind } from '../features/client/MediaRow';
 import { ChoiceSelect, type Option } from '../features/client/settings/controls';
 import AdvancedLibraryFilters from '../features/client/AdvancedLibraryFilters';
 import { countLibraryFilters, isFullLibrary, readLibraryFilters } from '../features/client/libraryFilters';
-import { QueueAction, QueueActions } from '../features/client/QueueActions';
+import { QueueActions } from '../features/client/QueueActions';
 import { buildMediaQueue, type PlayQueue } from '../features/client/mediaQueue';
 import GridLoadMore from '../features/client/GridLoadMore';
 import { FolderPickerProvider, ListAction, useFolderPicker } from '../features/client/folders/FolderPicker';
@@ -666,7 +666,7 @@ function HeroCopyView({ model, dots }: ViewProps & { dots: ReactNode }) {
 }
 
 function HeroActions({ model, dots }: ViewProps & { dots: ReactNode }) {
-    const { hero, id, item, api, user, location, playItem, busy, play, playQueue, queueBusy, image, updateState } = model;
+    const { hero, id, item, api, user, location, playItem, busy, play, image, updateState } = model;
     const { choice, chooseTracks } = useTitleTrackChoice(api?.basePath, user?.Id, id ? hero?.Id : undefined);
     if (!hero) return null;
     const homePlayable = hero.Type === 'Movie' ? hero : undefined;
@@ -680,7 +680,6 @@ function HeroActions({ model, dots }: ViewProps & { dots: ReactNode }) {
     if (playable?.Type === 'Episode') playLabel = episodeLabel(playable);
     return <div className={`client-actions${showVersions ? ' has-versions' : ''}`}>
         {playable && <button className='client-play' onClick={() => play(playable, undefined, showVersions ? version : undefined)}><ClientIcon name='play' />{playLabel}</button>}
-        {id && hero.Type === 'Series' && <QueueAction source={[hero]} playQueue={playQueue} pending={queueBusy} shuffled />}
         {showVersions && <div className='client-version-select'>
             <ChoiceSelect label='Version à lire' value={version} options={options} onChange={entry => chooseTracks({ ...choice, version: entry || undefined })} />
         </div>}
