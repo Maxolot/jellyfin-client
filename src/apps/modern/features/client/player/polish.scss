@@ -11,31 +11,6 @@
         width: 1.6em;
         height: 1.6em;
     }
-
-    strong {
-        font-size: 0.85em;
-        line-height: 1;
-        font-variant-numeric: tabular-nums;
-    }
-
-    small {
-        margin-left: 0.15em;
-        font-size: 0.75em;
-    }
-    &.is-jumping { background: #ffffff24; }
-    &.is-jumping > span { animation: player-jump-pulse 0.45s ease-out; }
-}
-
-@keyframes player-jump-pulse {
-    0% {
-        opacity: 0.5;
-        transform: rotate(-20deg) scale(0.88);
-    }
-
-    100% {
-        opacity: 1;
-        transform: rotate(0) scale(1);
-    }
 }
 
 .client-player-offset {
@@ -132,10 +107,6 @@
     padding: 0.25em 0.5em;
     color: #ccc;
     font-size: 0.7em;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .client-player-center .client-player-jump.is-jumping > span { animation: none; }
 }
 
 .client-player-chapter-image {

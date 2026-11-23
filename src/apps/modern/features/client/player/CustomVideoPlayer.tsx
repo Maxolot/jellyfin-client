@@ -26,6 +26,8 @@ import { PlayerEpisodes, PlayerTechnical, PlayerHelp, SubtitleOffset, sleepLabel
 import { Select } from '../settings/controls';
 import './player.scss';
 import './polish.scss';
+import './liquidGlass.scss';
+import LiquidGlassFilter from './LiquidGlassFilter';
 import { isPlayingOffline } from '../offline/playback';
 import LoadingTitle from './LoadingTitle';
 
@@ -364,8 +366,12 @@ export default function CustomVideoPlayer() {
         const active = Math.sign(jumpFeedback.offset) === side;
         const sign = side < 0 ? '−' : '+';
         const label = side < 0 ? 'Reculer' : 'Avancer';
-        const value = active ? `${sign}${Math.abs(jumpFeedback.offset)}` : preferences.skip;
-        return <button type='button' className={`client-player-jump ${active ? 'is-jumping' : ''}`} aria-label={`${label} de ${preferences.skip} secondes`} disabled={!canSeek} onClick={() => jump(side * preferences.skip)}><span key={active ? jumpFeedback.serial : 0}><PlayerGlyph name={side < 0 ? 'rewind' : 'forward'} /></span><strong aria-live='polite'>{value}<small>s</small></strong></button>;
+        // The amount only appears when pressed: it springs out of the button, then fades away.
+        return <button type='button' className={`client-player-jump client-liquid-glass${active ? ' is-jumping' : ''}`} aria-label={`${label} de ${preferences.skip} secondes`} disabled={!canSeek} onClick={() => jump(side * preferences.skip)}>
+            <span key={active ? jumpFeedback.serial : 0} className='client-player-jump-icon'><PlayerGlyph name={side < 0 ? 'rewind' : 'forward'} /></span>
+            {active && <strong key={jumpFeedback.serial} className='client-player-jump-burst' aria-hidden='true'>{sign}{Math.abs(jumpFeedback.offset)}<small>s</small></strong>}
+            <span className='client-player-sr' aria-live='polite'>{active ? `${sign}${Math.abs(jumpFeedback.offset)} secondes` : ''}</span>
+        </button>;
     };
     const timerStatus = sleepEnd ? '· fin de cet épisode' : '';
     const audio: MediaStream[] = hasPlayer ? playbackManager.audioTracks() : [];
@@ -421,9 +427,9 @@ export default function CustomVideoPlayer() {
             {ended ? <div className='client-player-ended'><h2>{error ? 'Lecture interrompue' : 'Lecture terminée'}</h2><button type='button' onClick={replay}>{error ? 'Réessayer' : 'Revoir'}</button>{next && <button type='button' onClick={() => action(() => {
                 setEnded(false);
                 return playbackManager.nextTrack();
-            })}>{nextLabel} · {next.Name}</button>}<button type='button' onClick={leave}>Retour à la fiche</button></div> : <div className='client-player-center'>
+            })}>{nextLabel} · {next.Name}</button>}<button type='button' onClick={leave}>Retour à la fiche</button></div> : <div className='client-player-center'><LiquidGlassFilter />
                 {jumpButton(-1)}
-                <button type='button' className='client-player-main-play' aria-label={paused ? 'Reprendre la lecture' : 'Mettre en pause'} disabled={!hasPlayer} onClick={() => action(() => playbackManager.playPause())}>{paused ? <ClientIcon name='play' /> : <PlayerGlyph name='pause' />}</button>
+                <button type='button' className='client-player-main-play client-liquid-glass' aria-label={paused ? 'Reprendre la lecture' : 'Mettre en pause'} disabled={!hasPlayer} onClick={() => action(() => playbackManager.playPause())}>{paused ? <ClientIcon name='play' /> : <PlayerGlyph name='pause' />}</button>
                 {jumpButton(1)}
             </div>}
             {segment && canSeek && !(showNext && segment.Type === 'Outro') && (segment.Type !== 'Intro' || preferences.intro === 'button') && <button className='client-player-skip' type='button' onClick={() => seek((segment.EndTicks || 0) / SECOND)}>{segmentLabels[segment.Type || 'Outro']} <ClientIcon name='next' /></button>}
