@@ -62,6 +62,25 @@ export default function CustomVideoPlayer() {
     const [hover, setHover] = useState<number>();
     const [scrub, setScrub] = useState<number>();
     const [jumpFeedback, setJumpFeedback] = useState({ offset: 0, serial: 0, at: 0 });
+    const jumpParts = useRef<Record<string, HTMLElement | null>>({});
+    useEffect(() => {
+        if (!jumpFeedback.serial) return;
+        const direction = jumpFeedback.offset < 0 ? -1 : 1;
+        const part = direction < 0 ? 'back' : 'forward';
+        const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        if (!still) {
+            jumpParts.current[`${part}-icon`]?.animate?.([{ transform: `rotate(${direction * -120}deg) scale(0.8)` }, { transform: 'none' }],
+                { duration: 500, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
+        }
+        jumpParts.current[`${part}-burst`]?.animate?.(still ?
+            [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.6 }, { opacity: 0 }] :
+            [
+                { opacity: 0, transform: `translate(${direction * -0.8}em, -50%) scale(0.6)` },
+                { opacity: 1, transform: 'translate(0, -50%) scale(1.12)', offset: 0.25 },
+                { opacity: 1, transform: 'translate(0, -50%) scale(1)', offset: 0.45 },
+                { opacity: 0, transform: `translate(${direction * 0.6}em, -50%) scale(0.96)` }
+            ], { duration: 900, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' });
+    }, [jumpFeedback.serial, jumpFeedback.offset]);
     const jumpTarget = useRef<{ position: number; at: number }>();
     const [sleepAt, setSleepAt] = useState<number>();
     const [sleepEnd, setSleepEnd] = useState(false);
@@ -366,10 +385,11 @@ export default function CustomVideoPlayer() {
         const active = Math.sign(jumpFeedback.offset) === side;
         const sign = side < 0 ? '−' : '+';
         const label = side < 0 ? 'Reculer' : 'Avancer';
-        // The amount only appears when pressed: it springs out of the button, then fades away.
-        return <button type='button' className={`client-player-jump client-liquid-glass${active ? ' is-jumping' : ''}`} aria-label={`${label} de ${preferences.skip} secondes`} disabled={!canSeek} onClick={() => jump(side * preferences.skip)}>
-            <span key={active ? jumpFeedback.serial : 0} className='client-player-jump-icon'><PlayerGlyph name={side < 0 ? 'rewind' : 'forward'} /></span>
-            {active && <strong key={jumpFeedback.serial} className='client-player-jump-burst' aria-hidden='true'>{sign}{Math.abs(jumpFeedback.offset)}<small>s</small></strong>}
+        const part = side < 0 ? 'back' : 'forward';
+        // Same elements every time: the effect on jumpFeedback replays their animations.
+        return <button type='button' className={`client-player-jump client-liquid-glass${side < 0 ? ' is-back' : ''}`} aria-label={`${label} de ${preferences.skip} secondes`} disabled={!canSeek} onClick={() => jump(side * preferences.skip)}>
+            <span ref={element => { jumpParts.current[`${part}-icon`] = element; }} className='client-player-jump-icon'><PlayerGlyph name={side < 0 ? 'rewind' : 'forward'} /></span>
+            <strong ref={element => { jumpParts.current[`${part}-burst`] = element; }} className='client-player-jump-burst' aria-hidden='true'>{active ? <>{sign}{Math.abs(jumpFeedback.offset)}<small>s</small></> : null}</strong>
             <span className='client-player-sr' aria-live='polite'>{active ? `${sign}${Math.abs(jumpFeedback.offset)} secondes` : ''}</span>
         </button>;
     };
