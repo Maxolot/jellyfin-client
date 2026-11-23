@@ -15,6 +15,7 @@ import type { ExternalMedia } from './seerr/model';
 import { EpisodeSummary, useEpisodeSpoilers } from './spoilers';
 import { episodeCount, partialSeason, seasonChoices, seasonLabel, seasonProgress, seasonSummary, type RemoteSeason } from './seriesEpisodesModel';
 import './seriesEpisodes.scss';
+import './seriesSide.scss';
 
 type SeasonSelection = {
     seasons: BaseItemDto[];

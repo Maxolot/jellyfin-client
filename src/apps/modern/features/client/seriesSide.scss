@@ -1,0 +1,146 @@
+/* Wide screens: the selected season's episodes stand in a column on the right of the series hero,
+   so choosing a season visibly changes the list without scrolling. */
+
+/* Narrower screens keep the panel under the seasons, inside the hero's own margins. */
+.client-series-side .client-series-episodes-panel { margin: 22px 0 0; }
+
+@media (min-width: 1100px) {
+    .client-series-side {
+        --client-episodes-side: clamp(360px, 30vw, 470px);
+
+        padding-right: calc(var(--client-margin) + var(--client-episodes-side) + 28px);
+
+        .client-season-poster.is-active::after { display: none; }
+
+        .client-series-episodes-panel {
+            position: absolute;
+            z-index: 2;
+            top: 80px;
+            right: var(--client-margin);
+            bottom: 25px;
+            display: flex;
+            width: var(--client-episodes-side);
+            box-sizing: border-box;
+            flex-direction: column;
+            margin: 0;
+            padding: 18px;
+        }
+
+        .client-series-episodes-heading {
+            flex: none;
+            margin-bottom: 12px;
+
+            h2 { font-size: 22px; }
+        }
+
+        .client-series-episode-grid {
+            display: flex;
+            min-height: 0;
+            flex: 1;
+            flex-direction: column;
+            gap: 6px;
+            margin-inline: -6px;
+            padding-inline: 6px;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
+        }
+
+        .client-series-episode-card {
+            display: grid;
+            flex: none;
+            grid-template-columns: 132px minmax(0, 1fr);
+            align-items: center;
+            gap: 14px;
+            padding: 6px 36px 6px 6px;
+            border-color: transparent;
+            border-radius: 14px;
+            background: transparent;
+            aspect-ratio: auto;
+            transition: background-color 0.18s ease, border-color 0.18s ease;
+
+            min-height: 86px;
+
+            &::after { display: none; }
+
+            // Reserves the thumbnail even when an episode has no image.
+            &::before {
+                position: absolute;
+                z-index: -1;
+                top: 50%;
+                left: 6px;
+                width: 132px;
+                border-radius: 9px;
+                background: var(--client-art-placeholder);
+                aspect-ratio: 16 / 9;
+                content: '';
+                transform: translateY(-50%);
+            }
+
+            &:hover,
+            &:focus-visible {
+                border-color: var(--client-surface-border);
+                background: #ffffff12;
+            }
+
+            &.is-next {
+                border-color: #f6edc7a6;
+                box-shadow: none;
+            }
+
+            .client-artwork {
+                position: relative;
+                width: 132px;
+                height: auto;
+                border-radius: 9px;
+                aspect-ratio: 16 / 9;
+            }
+
+            .client-preview-media {
+                inset: 6px auto 6px 6px;
+                width: 132px;
+                overflow: hidden;
+                border-radius: 9px;
+            }
+        }
+
+        .client-series-episode-number {
+            inset: 9px auto auto 13px;
+            font-size: 26px;
+        }
+
+        .client-series-episode-title {
+            position: static;
+            grid-column: 2;
+            display: -webkit-box;
+            overflow: hidden;
+            font-size: 14px;
+            line-height: 1.3;
+            white-space: normal;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+        }
+
+        .client-series-episode-next,
+        .client-series-episode-seen {
+            top: 50%;
+            right: 8px;
+            transform: translateY(-50%);
+        }
+
+        .client-series-episode-next {
+            top: 8px;
+            transform: none;
+        }
+
+        .client-series-episode-progress {
+            inset: auto auto 9px 12px;
+            width: 120px;
+        }
+
+        .client-series-more-episodes {
+            flex: none;
+            margin-top: 10px;
+        }
+    }
+}

@@ -635,7 +635,7 @@ function HeroView({ model }: ViewProps) {
         setHeroIndex(index => (index + heroItems.length + delta) % heroItems.length);
     }
     const layout = seasons.length + missing.length > 1 ? ' client-series-seasons' : ' client-series-single';
-    return <><section ref={region} className={`client-hero${id ? ' client-detail' : ' client-home-hero'}${series ? ' client-series-detail' + layout : ''}`} onPointerEnter={() => setHeroPaused(true)} onPointerLeave={() => setHeroPaused(false)} onFocus={() => setHeroPaused(true)} onBlur={event => {
+    return <><section ref={region} className={`client-hero${id ? ' client-detail' : ' client-home-hero'}${series ? ' client-series-detail client-series-side' + layout : ''}`} onPointerEnter={() => setHeroPaused(true)} onPointerLeave={() => setHeroPaused(false)} onFocus={() => setHeroPaused(true)} onBlur={event => {
         if (!event.currentTarget.contains(event.relatedTarget)) setHeroPaused(false);
     }}>
         <HeroArtwork source={image(hero, true, true)} fullBackground={!id && preferences.hero === 'background'} />
@@ -647,7 +647,9 @@ function HeroView({ model }: ViewProps) {
         {series && <SeasonRail series={hero} seasons={seasons} selected={model.details.selected} episodes={model.details.episodes.data}
             basePath={model.api?.basePath || ''} missing={missing} detail={detail} requestSeason={requestSeason}
             select={season => model.setParams({ id, season }, { state: location.state })} />}
-    </section>{series && <EpisodesView model={model} missing={missing} requestSeason={requestSeason} />}
+        {/* Inside the hero: on wide screens the episodes sit in a column beside the seasons. */}
+        {series && <EpisodesView model={model} missing={missing} requestSeason={requestSeason} />}
+    </section>
     {!!requested && requested.id === id && <Suspense fallback={null}><RequestDialog key={`${id}-${requested.number}`} item={hero} open initialSeason={requested}
         onClose={() => setRequested(undefined)} /></Suspense>}</>;
 }
