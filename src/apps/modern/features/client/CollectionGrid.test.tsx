@@ -22,7 +22,7 @@ it('keeps media titles inside the poster and retains each accessible title', asy
         const card = container.querySelector('.client-shelf-item a')!;
         expect(card.getAttribute('aria-label')).toContain(item.Name);
         expect(card.getAttribute('aria-label')).toContain('Déjà vu');
-        expect(card.querySelector('.client-shelf-reveal strong')?.textContent).toBe(item.Name);
+        expect(card.querySelector('.client-shelf-reveal')).toBeNull();
         expect(card.parentElement?.textContent).toBe(card.textContent);
         expect(card.parentElement?.children).toHaveLength(1);
     } finally {

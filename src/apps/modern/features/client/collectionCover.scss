@@ -356,42 +356,6 @@
     min-width: 0;
 }
 
-.client-shelf-poster {
-    position: relative;
-    display: block;
-    transition: transform 160ms ease, box-shadow 160ms ease;
-}
-
-.client-shelf-poster:where(:hover, :focus-visible) { z-index: 2; }
-
-.client-shelf-reveal {
-    position: absolute;
-    inset: auto 0 0;
-    display: grid;
-    gap: 3px;
-    padding: 22px 10px 12px;
-    background: linear-gradient(0deg, var(--client-art-scrim) 55%, transparent);
-    color: #fff;
-    font-size: 14px;
-    opacity: 0;
-    transform: translateY(9px);
-    transition: opacity 160ms ease, transform 160ms ease;
-
-    small { color: var(--client-surface-muted); }
-}
-
-@media (hover: hover) {
-    .client-shelf-poster:hover {
-        box-shadow: var(--client-surface-shadow);
-        transform: scale(1.065);
-    }
-}
-
-.client-shelf-poster:where(:hover, :focus-visible) .client-shelf-reveal {
-    opacity: 1;
-    transform: none;
-}
-
 .client-shelf-organize,
 .client-library.client-folder-unavailable { margin: 18px var(--client-margin); }
 
@@ -451,7 +415,5 @@
 @media (prefers-reduced-motion: reduce) {
     .client-shelf-column { animation: none; }
 
-    .client-cover-poster,
-    .client-shelf-poster,
-    .client-shelf-reveal { transition: none; }
+    .client-cover-poster { transition: none; }
 }

@@ -73,7 +73,7 @@ function CollectionTile({ item, image, showWatched, prepare, release }: Readonly
     const followed = isExternal(item);
     const watched = isWatchedCard(item, showWatched);
     const progress = progressPercent(item);
-    return <Link className='client-card client-shelf-poster' to={`/client?id=${item.Id}`} data-client-focus={item.Id}
+    return <Link className='client-card' to={`/client?id=${item.Id}`} data-client-focus={item.Id}
         state={{ returnTo: location.pathname + location.search, returnState: location.state }}
         aria-label={[item.Name, followed && 'À demander', watched && watchedLabel].filter(Boolean).join(' · ')}
         onPointerEnter={() => prepare(item)} onPointerLeave={release} onFocus={() => prepare(item)} onBlur={release}>
@@ -82,7 +82,6 @@ function CollectionTile({ item, image, showWatched, prepare, release }: Readonly
         <span className='client-card-fallback'>{item.Name}</span>
         {watched && <WatchedMarker />}
         {progress > 0 && <span className='client-progress'><i style={{ width: `${progress}%` }} /></span>}
-        <span className='client-shelf-reveal' aria-hidden='true'><strong>{item.Name}</strong><small>{[item.Type === 'Series' ? 'Série' : 'Film', item.ProductionYear].filter(Boolean).join(' · ')}</small></span>
     </Link>;
 }
 
