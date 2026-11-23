@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 export type Preferences = {
     glass: boolean;
@@ -14,7 +14,6 @@ export type Preferences = {
     detailBlur: number;
     detailShade: number;
     detailWidth: number;
-    uiScale: number;
     previews: boolean;
     previewMuted: boolean;
     detailInfo: 'bottom' | 'center';
@@ -22,7 +21,7 @@ export type Preferences = {
 };
 const PREFERENCE_VERSION = 1;
 const presentationDefaults = { floating: true, hero: 'background', detailTreatment: 'cinema' } as const;
-const defaults: Preferences = { ...presentationDefaults, detailBlur: 24, detailShade: 75, detailWidth: 58, uiScale: 100, glass: true, headerAlignment: 'center', chromatic: false, ambient: true, hoverDescriptions: true, watchedMarkers: true, hideSpoilers: false, previews: true, previewMuted: true, detailInfo: 'bottom', detail: 'continuous' };
+const defaults: Preferences = { ...presentationDefaults, detailBlur: 24, detailShade: 75, detailWidth: 58, glass: true, headerAlignment: 'center', chromatic: false, ambient: true, hoverDescriptions: true, watchedMarkers: true, hideSpoilers: false, previews: true, previewMuted: true, detailInfo: 'bottom', detail: 'continuous' };
 
 function bounded(value: unknown, fallback: number, min: number, max: number) {
     return typeof value === 'number' && Number.isFinite(value) ? Math.max(min, Math.min(max, value)) : fallback;
@@ -71,7 +70,6 @@ export function readInterfacePreferences(key: string | undefined): Preferences {
             detailBlur: bounded(saved.detailBlur, 24, 0, 48),
             detailShade: bounded(saved.detailShade, 75, 0, 95),
             detailWidth: bounded(saved.detailWidth, 58, 35, 85),
-            uiScale: bounded(saved.uiScale, 100, 80, 150),
             previewMuted: saved.previewMuted !== false,
             detailInfo: option(saved.detailInfo, ['bottom', 'center'], defaults.detailInfo),
             detail: option(saved.detail, ['continuous', 'fade', 'immersive'], defaults.detail)
@@ -82,10 +80,6 @@ export function readInterfacePreferences(key: string | undefined): Preferences {
 export function useInterfacePreferences(key: string | undefined) {
     const [stored, setStored] = useState<{ key: string | undefined; value: Preferences }>();
     const preferences = useMemo(() => stored && stored.key === key ? stored.value : readInterfacePreferences(key), [stored, key]);
-    useEffect(() => {
-        // Read by --client-px on the root, so dialogs rendered outside the client follow it too.
-        document.documentElement.style.setProperty('--client-ui-scale', String(preferences.uiScale / 100));
-    }, [preferences.uiScale]);
     const save = useCallback((next: Preferences) => {
         setStored({ key, value: next });
         if (!key) return;

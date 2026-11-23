@@ -1,11 +1,5 @@
 /* Client-specific surface. Playback and inherited pages keep their own styles. */
 
-/* Every client length is a multiple of this unit (see postcss.config.js): 1px up to a
-   1440px wide window, then proportional to the window, times the account's interface size. */
-:root {
-    --client-px: calc(clamp(1px, 100vw / 1440, 1.6px) * var(--client-ui-scale, 1));
-}
-
 body:has(.client-page:not(.hide)) .skinHeader,
 body:has(.client-page:not(.hide)) .mainDrawer,
 body:has(.client-page:not(.hide)) .backgroundContainer {
