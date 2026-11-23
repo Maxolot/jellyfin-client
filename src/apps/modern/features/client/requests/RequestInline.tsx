@@ -21,7 +21,7 @@ export function RequestProgressNote({ request }: Readonly<{ request: RequestProg
     return <div className='client-request-progress-note'>
         {eta && <p><ClientIcon name='clock' />{eta}</p>}
         {reason && <p>{reason}</p>}
-        {waiting && <p>Aucune estimation fiable pour le moment.</p>}
+        {waiting && !reason && <p>Aucune estimation fiable pour le moment.</p>}
     </div>;
 }
 

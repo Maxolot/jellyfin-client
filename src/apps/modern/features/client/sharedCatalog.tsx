@@ -4,6 +4,7 @@ import { isAxiosError } from 'axios';
 import React from 'react';
 
 import ActionLabel from './ActionLabel';
+import ClientIcon from './ClientIcon';
 
 import { useApi } from 'hooks/useApi';
 
@@ -57,7 +58,7 @@ export function sharedCatalogItems(entries: SharedCatalogEntry[], local: BaseIte
     }, entry.type, local));
 }
 
-export function FollowCatalogAction({ item, remote, menu = false }: Readonly<{ item: BaseItemDto; remote?: ExternalMedia; menu?: boolean }>) {
+export function FollowCatalogAction({ item, remote, menu = false, circle = false }: Readonly<{ item: BaseItemDto; remote?: ExternalMedia; menu?: boolean; circle?: boolean }>) {
     const { api, user } = useApi();
     const query = useSharedCatalog();
     const artwork = useCatalogArtworkLookup();
@@ -93,6 +94,12 @@ export function FollowCatalogAction({ item, remote, menu = false }: Readonly<{ i
     if (mutation.isPending) label = 'Enregistrement…';
     function follow() {
         mutation.mutate();
+    }
+    if (circle) {
+        return <button type='button' className='client-button client-action-circle' aria-label={label} title={label} aria-pressed={followed}
+            disabled={mutation.isPending || (followed && !admin)}
+            // eslint-disable-next-line react/jsx-no-bind -- Action belongs to this button.
+            onClick={follow}><ClientIcon name={icon} /></button>;
     }
     return <>
         <button type='button' className={menu ? undefined : 'client-button'} role={menu ? 'menuitem' : undefined}

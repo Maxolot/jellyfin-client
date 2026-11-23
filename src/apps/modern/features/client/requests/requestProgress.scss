@@ -41,18 +41,25 @@
     margin-top: 9px;
     color: var(--client-surface-text);
 
+    // One discreet status line under the actions, not another row of buttons.
     a {
         display: inline-flex;
-        min-height: 34px;
+        min-height: 28px;
         align-items: center;
-        gap: 7px;
-        padding: 3px 10px;
-        border: 1px solid var(--client-surface-border);
-        border-radius: var(--client-pill-radius);
-        background: var(--client-surface-raised);
-        backdrop-filter: var(--client-surface-blur);
+        gap: 6px;
+        color: #fff;
         font-size: 13px;
+        font-weight: 600;
         text-decoration: none;
+
+        &:hover { opacity: 0.75; }
+    }
+
+    .client-request-progress-note {
+        color: var(--client-surface-muted, #aab0bb);
+        font-size: 13px;
+
+        p { margin: 0; }
     }
 
     a > .client-icon {
