@@ -49,8 +49,24 @@
 
 // The filter is only rendered in Chromium, the one engine that refracts the backdrop through it.
 // stylelint-disable-next-line no-descending-specificity -- Only backdrop-filter is overridden, hover states are unaffected.
-.client-player:not(.style-minimal) .client-player-center:has(.client-liquid-glass-defs) > .client-liquid-glass {
+.client-player:not(.style-minimal) .client-player-center:has(.client-liquid-glass-defs.is-backdrop) > .client-liquid-glass {
     backdrop-filter: blur(6px) url('#client-liquid-glass') blur(4px) saturate(1.15) brightness(0.94);
+}
+
+// Firefox: a live copy of the video, aligned behind the control, is blurred and swirled instead.
+// stylelint-disable-next-line no-descending-specificity -- A separate layer, hover states are unaffected.
+.client-player:not(.style-minimal) .client-player-center:has(.client-liquid-glass-defs.is-copy) > .client-liquid-glass::after {
+    position: absolute;
+    z-index: -2;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--glass-copy) no-repeat;
+    background-position: var(--glass-copy-x) var(--glass-copy-y);
+    background-size: var(--glass-copy-w) var(--glass-copy-h);
+    clip-path: circle(50%);
+    content: '';
+    filter: blur(6px) url('#client-liquid-glass') blur(4px) saturate(1.15) brightness(0.94);
+    pointer-events: none;
 }
 
 .client-player-sr {

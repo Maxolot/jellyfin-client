@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 /*
  * Displacement map for the lens: red follows x and green follows y, neutral grey in the
@@ -15,13 +15,54 @@ const MAP = 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns='http://www.w
 <rect width='100' height='100' fill='url(#c)'/>
 </svg>`);
 
-/** Chromium can refract the backdrop through an SVG filter; other engines keep the blurred glass. */
+/** Chromium can refract the backdrop through an SVG filter. */
 export const refractionSupported = typeof navigator !== 'undefined'
     && !!(navigator as Navigator & { userAgentData?: { brands?: { brand: string }[] } }).userAgentData?.brands?.some(entry => entry.brand === 'Chromium');
 
+/** Firefox cannot, but can paint a live copy of the video with -moz-element() and filter that copy instead. */
+// eslint-disable-next-line compat/compat -- Guarded by the typeof check; engines without CSS.supports keep the plain blur.
+const elementCopySupported = !refractionSupported && typeof CSS !== 'undefined' && CSS.supports('background-image', '-moz-element(#a)');
+
+const VIDEO_ID = 'client-player-video';
+
+/** Lines the video copy behind each glass control up with the video itself. */
+function useVideoCopy(enabled: boolean) {
+    useEffect(() => {
+        if (!enabled) return;
+        let frame = 0;
+        const place = () => {
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(() => {
+                const video = document.querySelector<HTMLVideoElement>('.videoPlayerContainer video, video');
+                if (!video) return;
+                if (!video.id) video.id = VIDEO_ID;
+                const source = video.getBoundingClientRect();
+                document.querySelectorAll<HTMLElement>('.client-player-center > .client-liquid-glass').forEach(control => {
+                    const box = control.getBoundingClientRect();
+                    control.style.setProperty('--glass-copy', `-moz-element(#${video.id})`);
+                    control.style.setProperty('--glass-copy-x', `${source.left - box.left}px`);
+                    control.style.setProperty('--glass-copy-y', `${source.top - box.top}px`);
+                    control.style.setProperty('--glass-copy-w', `${source.width}px`);
+                    control.style.setProperty('--glass-copy-h', `${source.height}px`);
+                });
+            });
+        };
+        place();
+        // Controls fade in and out and the window can change: realign a few times a second.
+        const timer = window.setInterval(place, 400);
+        window.addEventListener('resize', place);
+        return () => {
+            cancelAnimationFrame(frame);
+            window.clearInterval(timer);
+            window.removeEventListener('resize', place);
+        };
+    }, [enabled]);
+}
+
 export default function LiquidGlassFilter() {
-    if (!refractionSupported) return null;
-    return <svg className='client-liquid-glass-defs' width='0' height='0' aria-hidden='true' focusable='false'>
+    useVideoCopy(elementCopySupported);
+    if (!refractionSupported && !elementCopySupported) return null;
+    return <svg className={`client-liquid-glass-defs ${refractionSupported ? 'is-backdrop' : 'is-copy'}`} width='0' height='0' aria-hidden='true' focusable='false'>
         <filter id='client-liquid-glass' x='0' y='0' width='100%' height='100%' colorInterpolationFilters='sRGB'>
             {/* Low-frequency noise smears the blurred backdrop into soft swirls… */}
             <feTurbulence type='fractalNoise' baseFrequency='0.012 0.018' numOctaves='2' seed='7' result='noise' />
