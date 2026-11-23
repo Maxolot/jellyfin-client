@@ -304,7 +304,13 @@ $chip-groups: '.client-catalogue-switch, .client-period-choices, .client-draw-ch
 }
 
 // Liens dans le texte : pas de soulignement natif, du blanc plein et une graisse marquée.
-.client-interface :is(.client-director-credits a, .client-text-button, .client-session-link, .client-rating-clear, .client-profile-quick, .client-spoiler-summary summary, .client-person-biography summary) {
+.client-interface .client-director-credits a,
+.client-interface .client-text-button,
+.client-interface .client-session-link,
+.client-interface .client-rating-clear,
+.client-interface .client-profile-quick,
+.client-interface .client-spoiler-summary summary,
+.client-interface .client-person-biography summary {
     color: #fff;
     font-weight: 600;
     text-decoration: none;

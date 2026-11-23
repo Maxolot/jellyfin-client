@@ -14,11 +14,15 @@ const CLIENT_STYLES = path.resolve(__dirname, 'src/apps/modern/features/client')
  */
 const clientScale = () => ({
     postcssPlugin: 'client-scale',
-    Declaration(decl) {
-        if (decl.prop === '--client-px') return;
-        decl.value = decl.value.replace(/(^|[^\w.#-])(-?)(\d+(?:\.\d+)?|\.\d+)px\b/g, (match, before, sign, size) => (
-            Number(size) <= 1 ? match : `${before}calc(${sign}${size} * var(--client-px, 1px))`
-        ));
+    // Once, not Declaration: preset-env rewrites var() fallbacks, which would revisit the
+    // rewritten declarations and grow them forever.
+    Once(root) {
+        root.walkDecls(decl => {
+            if (decl.prop === '--client-px' || decl.value.includes('--client-px')) return;
+            decl.value = decl.value.replace(/(^|[^\w.#-])(-?)(\d+(?:\.\d+)?|\.\d+)px\b/g, (match, before, sign, size) => (
+                Number(size) <= 1 ? match : `${before}calc(${sign}${size} * var(--client-px, 1px))`
+            ));
+        });
     }
 });
 clientScale.postcss = true;
