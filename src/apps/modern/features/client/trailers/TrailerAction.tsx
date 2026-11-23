@@ -27,12 +27,12 @@ export default function TrailerAction({ item, backdrop, play }: Readonly<Props>)
     if (!enabled || (!available && !open)) return null;
     const playable = available;
     return <>
-        <button ref={trigger} type='button' className='client-button client-trailer-action' aria-haspopup='dialog'
+        <button ref={trigger} type='button' className='client-button client-action-circle' aria-label='Bande-annonce' title='Bande-annonce' aria-haspopup='dialog'
             onClick={() => {
                 if (!playable) return;
                 previews?.playback.stop();
                 setOpen(playable);
-            }}><ClientIcon name='play' />Bande-annonce</button>
+            }}><ClientIcon name='clapper' /></button>
         <ClientDialog label='Bande-annonce' title='Bande-annonce' subtitle={item.Name || undefined} className='client-trailer-dialog'
             controlled={{ open: !!open, onClose: () => {
                 setOpen(null);
