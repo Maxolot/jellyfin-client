@@ -39,6 +39,7 @@ export type ExternalMedia = {
     releaseDate?: string;
     firstAirDate?: string;
     voteAverage?: number;
+    voteCount?: number;
     runtime?: number;
     collection?: { id: number; name: string };
     genreIds?: number[];

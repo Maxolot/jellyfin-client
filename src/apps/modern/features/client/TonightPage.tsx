@@ -15,6 +15,7 @@ import { followedMember } from './folders/model';
 import PreviewClip from './PreviewClip';
 import { catalogueItem, canRequest, externalIdentity, isExternal, providerKey, type ExternalMedia, type Results } from './seerr/model';
 import { useSeerr } from './seerr/SeerrContext';
+import { isRecommendable } from './seerr/queries';
 import { RequestPanel } from './seerr/SeerrViews';
 import { sharedCatalogItems, useSharedCatalog } from './sharedCatalog';
 import SharedCatalogArtwork from './SharedCatalogArtwork';
@@ -174,7 +175,7 @@ function useRequestIdeas(enabled: boolean, library: TonightTitle[]) {
         const entries = new Map<string, BaseItemDto>();
         for (const media of trending.data?.results || []) {
             const type = media.mediaType;
-            if ((type !== 'movie' && type !== 'tv') || !canRequest(seerr.permissions, type) || [2, 3, 4, 5, 6].includes(media.mediaInfo?.status || 0)) continue;
+            if ((type !== 'movie' && type !== 'tv') || !isRecommendable(media) || !canRequest(seerr.permissions, type) || [2, 3, 4, 5, 6].includes(media.mediaInfo?.status || 0)) continue;
             const item = catalogueItem(media, type, []);
             entries.set(item.Id!, { ...item, RunTimeTicks: media.runtime ? media.runtime * 6e8 : undefined });
         }

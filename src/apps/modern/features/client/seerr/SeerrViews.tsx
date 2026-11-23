@@ -18,7 +18,7 @@ import HeroArtwork from '../HeroArtwork';
 import ClientIcon from '../ClientIcon';
 import { withLocalAvailability, externalIdentity, catalogueItem, providerKey, canRequest, imageUrl, localMatch, mediaLabel, orderedRequestSeasons, requestableSeasons, requestLabel, requestQuotaLabel, requestSeasonNumbersLabel,
     releaseLabel, type ExternalMedia, type MediaRequest, type MediaType, type Quota, type Results, type SeerrIdentity } from './model';
-import { canRequestSeasons, useLocalIdentities, useLocalSeasons, useSeerrDetail } from './queries';
+import { canRequestSeasons, isRecommendable, useLocalIdentities, useLocalSeasons, useSeerrDetail } from './queries';
 import { useSeerr } from './SeerrContext';
 import { SettingCard, StatusBadge, Toggle } from '../settings/controls';
 import seerrLogo from '../settings/logos/seerr.svg';
@@ -279,7 +279,7 @@ function ExternalRecommendations({ identity, local, row, data, image }: Readonly
     const query = useQuery({ queryKey: [...seerr.root, 'Recommendations', identity.type, identity.id],
         enabled: seerr.connected, retry: false, staleTime: 300000,
         queryFn: ({ signal }) => seerr.call<Results<ExternalMedia>>(`Api/${identity.type}/${identity.id}/recommendations?language=fr&page=1`, signal) });
-    const items = (query.data?.results || []).map(media => catalogueItem(media, identity.type, local));
+    const items = (query.data?.results || []).filter(isRecommendable).map(media => catalogueItem(media, identity.type, local));
     const item = catalogueItem(data, identity.type, local);
     if (identity.type === 'movie') {
         item.ProviderIds = { ...item.ProviderIds, TmdbCollection: data.collection ? String(data.collection.id) : '' };

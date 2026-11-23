@@ -38,6 +38,13 @@ function useGenreList(type: MediaType, enabled: boolean) {
             return results.flat();
         } });
 }
+// TMDB genres left out of discovery rows: TV movies, news, reality, soaps and talk shows.
+const UNWANTED_GENRES = new Set([10770, 10763, 10764, 10766, 10767]);
+/** Discovery rows skip daily TV programmes, TV movies and titles almost nobody rated. Search keeps everything. */
+export function isRecommendable(entry: ExternalMedia) {
+    if ((entry.genreIds || entry.genres?.map(genre => genre.id) || []).some(id => UNWANTED_GENRES.has(id))) return false;
+    return entry.voteCount === undefined || entry.voteCount >= 30;
+}
 function catalogueEndpoint(view: string, search: string, ids: number[]) {
     let category = 'trending';
     if (view === 'films') category = 'movies';
@@ -74,7 +81,7 @@ export function useSeerrCatalogue(view: string, search: string, enabled: boolean
     const results = pages?.flatMap(page => page.results) || [];
     const people = results.filter(entry => entry.mediaType === 'person' && entry.id > 0 && entry.name)
         .map(entry => ({ Id: `tmdb-${entry.id}`, Name: entry.name, profilePath: entry.profilePath }));
-    const mapped = results.filter(entry => entry.mediaType !== 'person').map(entry => {
+    const mapped = results.filter(entry => entry.mediaType !== 'person' && (view === 'search' || isRecommendable(entry))).map(entry => {
         const type: MediaType = entry.mediaType === 'tv' || view === 'series' ? 'tv' : 'movie';
         return catalogueItem(entry, type, local.data || []);
     });
