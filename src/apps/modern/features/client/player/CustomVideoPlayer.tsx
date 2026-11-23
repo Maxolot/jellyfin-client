@@ -427,7 +427,21 @@ export default function CustomVideoPlayer() {
                 {jumpButton(1)}
             </div>}
             {segment && canSeek && !(showNext && segment.Type === 'Outro') && (segment.Type !== 'Intro' || preferences.intro === 'button') && <button className='client-player-skip' type='button' onClick={() => seek((segment.EndTicks || 0) / SECOND)}>{segmentLabels[segment.Type || 'Outro']} <ClientIcon name='next' /></button>}
-            {showNext && <aside className='client-player-next'><small>À SUIVRE</small><strong>{next.SeriesName}</strong><span>{next.Name}</span>{preferences.next > 0 && secondsLeft <= preferences.next && <span role='status'>{paused ? 'Compte à rebours en pause' : `Dans ${Math.ceil(secondsLeft)} s`}</span>}<div><button type='button' onClick={() => action(() => playbackManager.nextTrack())}>{nextLabel} <ClientIcon name='next' /></button><button type='button' onClick={() => setCancelledFor(itemId)}>Annuler</button></div></aside>}
+            {showNext && <aside className='client-player-next'>
+                {next.ImageTags?.Primary && <img className='client-player-next-art' alt='' src={`${api?.basePath || ''}/Items/${next.Id}/Images/Primary?fillWidth=480&quality=85&tag=${next.ImageTags.Primary}`} />}
+                <div className='client-player-next-copy'>
+                    <small>À suivre{preferences.next > 0 && secondsLeft <= preferences.next && <span role='status'>{paused ? ' · en pause' : ` · dans ${Math.ceil(secondsLeft)} s`}</span>}</small>
+                    <strong>{next.SeriesName || next.Name}</strong>
+                    {next.SeriesName && <span>{next.Type === 'Episode' ? `S${next.ParentIndexNumber || 1}:E${next.IndexNumber || 1} · ` : ''}{next.Name}</span>}
+                    <div className='client-player-next-actions'>
+                        <button type='button' className='is-primary' onClick={() => action(() => playbackManager.nextTrack())}
+                            style={preferences.next > 0 && secondsLeft <= preferences.next ? { '--next-progress': `${Math.max(0, Math.min(1, 1 - secondsLeft / preferences.next)) * 100}%` } as CSSProperties : undefined}>
+                            <PlayerGlyph name='play' />{nextLabel}
+                        </button>
+                        <button type='button' onClick={() => setCancelledFor(itemId)}>Annuler</button>
+                    </div>
+                </div>
+            </aside>}
             <footer className='client-player-bottom'>
                 {error && <p role='alert' className='client-player-error'>{error}</p>}
                 <div className='client-player-timeline'>
