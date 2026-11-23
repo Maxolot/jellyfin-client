@@ -84,7 +84,7 @@ export default function DetailMenu({ item, basePath, play, choice, chooseTracks 
     // Keyboard handling for the menu items; the wrapper itself is not interactive.
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     return <div className='client-more' ref={root} onKeyDown={onKeyDown}>
-        <button ref={trigger} type='button' className='client-button client-action-circle' aria-label={triggerLabel} title={missing ? 'Des saisons peuvent être demandées' : 'Plus d’actions'} aria-haspopup='menu' aria-expanded={open} onClick={() => setOpen(!open)}><ClientIcon name='more' />{missing > 0 && <span className='client-more-badge' aria-hidden='true' />}</button>
+        <button ref={trigger} type='button' className='client-button client-action-circle' aria-label={triggerLabel} title={missing ? 'Des saisons peuvent être demandées' : 'Plus d’actions'} aria-haspopup='menu' aria-expanded={open} onClick={() => setOpen(!open)}><ClientIcon name='more' /></button>
         {open && <div className='client-more-menu' role='menu' aria-label={tracksOpen ? 'Audio et sous-titres' : 'Plus d’actions'}>
             {tracksOpen ? <TrackMenu audio={tracks.audio} subtitles={tracks.subtitles} choice={choice} onChange={chooseTracks} onBack={() => setTracksOpen(false)} /> : <>
                 {externalIdentity(item) && <FollowCatalogAction key={item.Id} item={item} menu />}

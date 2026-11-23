@@ -54,8 +54,8 @@ function FolderContent({ detail, full, playQueue, queueBusy, ...card }: Readonly
         else change.mutate({ method: 'PUT', path: `/${folder.id}/Order`, data: { itemIds: order } });
     }
 
-    const gridActions = editable && organizing ? (entry: typeof entries[number], manualOrder: boolean) => <FolderItemActions name={entry.item.Name || 'ce titre'}
-        pending={change.isPending} move={manualOrder ? direction => move(entry.key, direction) : undefined}
+    const gridActions = editable ? (entry: typeof entries[number], manualOrder: boolean) => <FolderItemActions name={entry.item.Name || 'ce titre'}
+        pending={change.isPending} move={organizing && manualOrder ? direction => move(entry.key, direction) : undefined}
         previous={entry.key !== folderMemberKey(items[0])} next={entry.key !== folderMemberKey(items[items.length - 1])}
         remove={() => change.mutate({ method: 'DELETE', path: `/${folder.id}${folderMemberPath(entry)}` })} /> : undefined;
     return <CollectionHero tinted title={folder.name} items={queue} count={items.length} metadata={metadata} metadataBadge={<FolderSharing folder={folder} shares={shares} targets={targets.data} />}
@@ -118,12 +118,12 @@ function FolderMenu({ folder, hasTitles, organizing, toggle, edit }: Readonly<Ac
 }
 
 function FolderItemActions({ name, pending, move, previous, next, remove }: Readonly<{ name: string; pending: boolean; move?: (direction: -1 | 1) => void; previous: boolean; next: boolean; remove: () => void }>) {
-    return <div className='client-shelf-item-actions'>
+    return <div className={`client-shelf-item-actions${move ? ' is-organizing' : ''}`}>
         {move && <>
             <button type='button' className='client-button' aria-label={`Avancer ${name}`} disabled={pending || !previous} onClick={() => move(-1)}><ClientIcon name='back' /></button>
             <button type='button' className='client-button' aria-label={`Reculer ${name}`} disabled={pending || !next} onClick={() => move(1)}><ClientIcon name='next' /></button>
         </>}
-        <button type='button' className='client-button' aria-label={`Retirer ${name} du dossier`} disabled={pending} onClick={remove}><ClientIcon name='close' /></button>
+        <button type='button' className='client-button' aria-label={`Retirer ${name} du dossier`} title='Retirer du dossier' disabled={pending} onClick={remove}><ClientIcon name='close' /></button>
     </div>;
 }
 

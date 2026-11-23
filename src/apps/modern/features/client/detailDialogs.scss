@@ -77,12 +77,6 @@
 
 .client-detail-dialog-body { padding: 22px; }
 
-.client-actions .client-availability-action:not(.client-action-circle) {
-    min-height: 44px;
-    padding: 11px 13px;
-    font-size: 13px;
-}
-
 .client-detail-links {
     display: flex;
     flex-wrap: wrap;
@@ -204,17 +198,6 @@
     width: 18px;
     flex: none;
     margin-left: auto;
-}
-
-.client-more-badge {
-    position: absolute;
-    top: 3px;
-    right: 3px;
-    width: 10px;
-    height: 10px;
-    border: 2px solid #15171b;
-    border-radius: 50%;
-    background: #e50914;
 }
 
 .client-more-menu > button small {

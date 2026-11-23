@@ -134,12 +134,10 @@ describe('DetailMenu', () => {
     });
 });
 
-describe('DetailMenu badge', () => {
-    it('shows a badge on the button when seasons are missing, not for a movie', async () => {
+describe('DetailMenu missing seasons', () => {
+    it('announces missing seasons in the label without a visual badge', async () => {
         await act(async () => root.render(<MemoryRouter><Menu item={{ Id: 's', Type: 'Series' }} /></MemoryRouter>));
-        expect(container.querySelector('.client-more-badge')).not.toBeNull();
-        expect(container.querySelector('button')?.getAttribute('aria-label')).toBe('Plus d’actions : 2 saisons à demander');
-        await act(async () => root.render(<MemoryRouter><Menu item={{ Id: 'm', Type: 'Movie' }} /></MemoryRouter>));
         expect(container.querySelector('.client-more-badge')).toBeNull();
+        expect(container.querySelector('button')?.getAttribute('aria-label')).toBe('Plus d’actions : 2 saisons à demander');
     });
 });

@@ -351,7 +351,10 @@
     .client-filter-options { margin: 12px 0; }
 }
 
-.client-shelf-item { min-width: 0; }
+.client-shelf-item {
+    position: relative;
+    min-width: 0;
+}
 
 .client-shelf-poster {
     position: relative;
@@ -392,17 +395,43 @@
 .client-shelf-organize,
 .client-library.client-folder-unavailable { margin: 18px var(--client-margin); }
 
+/* Card actions sit on the poster and appear on hover or keyboard focus;
+   always shown on touch screens and while organizing. */
 .client-shelf-item-actions {
+    position: absolute;
+    z-index: 2;
+    top: 6px;
+    right: 6px;
     display: flex;
     gap: 4px;
-    margin-top: 5px;
+    opacity: 0;
+    transition: opacity 0.16s ease;
 
     > button.client-button {
-        min-width: 40px;
-        min-height: 44px;
+        width: 32px;
+        height: 32px;
+        min-height: 0;
         justify-content: center;
         padding: 0;
+        border: 1px solid #ffffff40;
+        border-radius: 50%;
+        background: #0d0f13cc;
+        backdrop-filter: blur(8px);
+
+        .client-icon {
+            width: 16px;
+            height: 16px;
+        }
     }
+}
+
+.client-shelf-item:where(:hover, :focus-within) .client-shelf-item-actions,
+.client-shelf-item-actions.is-organizing {
+    opacity: 1;
+}
+
+@media (hover: none) {
+    .client-shelf-item-actions { opacity: 1; }
 }
 
 @media (max-width: 700px) {
