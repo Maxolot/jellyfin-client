@@ -5,6 +5,7 @@ import { formatHours, type PersonalStats } from './personalStats';
 import { useSeerr } from './seerr/SeerrContext';
 import type { Results } from './seerr/model';
 import './personal.scss';
+import './personalCompact.scss';
 
 const REQUEST_STATES = [['pending', 'en attente'], ['processing', 'en préparation'], ['available', 'disponibles']] as const;
 
@@ -25,18 +26,14 @@ function useRequestCounts() {
     });
 }
 
-function StatTile({ value, label, detail, pending, target }: { readonly value: ReactNode; readonly label: string; readonly detail?: ReactNode; readonly pending?: boolean; readonly target?: string }) {
+function StatTile({ value, label, detail, pending, onOpen }: { readonly value: ReactNode; readonly label: string; readonly detail?: ReactNode; readonly pending?: boolean; readonly onOpen?: () => void }) {
     const content = <>
         <strong aria-busy={pending || undefined}>{pending ? <span className='client-stat-placeholder' aria-hidden='true' /> : value}</strong>
         <span>{label}</span>
         {detail && !pending && <small>{detail}</small>}
     </>;
-    if (!target) return <div className='client-stat'>{content}</div>;
-    return <button type='button' className='client-stat' data-target={target} onClick={scrollToTarget}>{content}</button>;
-}
-
-function scrollToTarget(event: React.MouseEvent<HTMLButtonElement>) {
-    document.getElementById(event.currentTarget.dataset.target || '')?.scrollIntoView({ block: 'start' });
+    if (!onOpen) return <div className='client-stat'>{content}</div>;
+    return <button type='button' className='client-stat' onClick={onOpen}>{content}</button>;
 }
 
 function plural(count: number, one: string, many: string) {
@@ -44,7 +41,7 @@ function plural(count: number, one: string, many: string) {
 }
 
 /** Four figures that say something, without small print: what was watched, for how long, and what is still to come. */
-export function PersonalStatsBand({ stats, pending, favorites, favoritesPending }: { readonly stats?: PersonalStats; readonly pending: boolean; readonly favorites: number; readonly favoritesPending: boolean }) {
+export function PersonalStatsBand({ stats, pending, favorites, favoritesPending, open }: { readonly stats?: PersonalStats; readonly pending: boolean; readonly favorites: number; readonly favoritesPending: boolean; readonly open?: (tab: 'requests' | 'list') => void }) {
     const seerr = useSeerr();
     const requests = useRequestCounts();
     const waiting = (requests.data?.states || []).filter(state => state.label !== 'disponibles').reduce((sum, state) => sum + state.count, 0);
@@ -53,8 +50,8 @@ export function PersonalStatsBand({ stats, pending, favorites, favoritesPending 
         <StatTile pending={pending} value={(stats?.series || 0).toLocaleString('fr-FR')} label={(stats?.series || 0) > 1 ? 'Séries suivies' : 'Série suivie'} />
         <StatTile pending={pending} value={formatHours(stats?.hours || 0)} label='Devant l’écran' />
         {seerr.connected ?
-            <StatTile pending={requests.isPending} value={waiting.toLocaleString('fr-FR')} label={waiting > 1 ? 'Demandes en attente' : 'Demande en attente'} target='client-requests' /> :
-            <StatTile pending={favoritesPending} value={favorites.toLocaleString('fr-FR')} label='Dans ma liste' target='client-favorites' />}
+            <StatTile pending={requests.isPending} value={waiting.toLocaleString('fr-FR')} label={waiting > 1 ? 'Demandes en attente' : 'Demande en attente'} onOpen={open && (() => open('requests'))} /> :
+            <StatTile pending={favoritesPending} value={favorites.toLocaleString('fr-FR')} label='Dans ma liste' onOpen={open && (() => open('list'))} />}
     </section>;
 }
 

@@ -839,9 +839,12 @@ function DiscoveryView({ model }: ViewProps) {
     </div>;
 }
 
+type PersonalTab = 'list' | 'folders' | 'upcoming' | 'history' | 'taste' | 'requests';
+
+/** Mon espace fits one screen: who I am, what I am watching, then everything else in tabs. */
 function PersonalView({ model }: ViewProps) {
     const protect = useEpisodeSpoilers();
-    const { user, media, row, image, play, playQueue, queueBusy, seerr } = model;
+    const { user, media, row, image, play, playQueue, queueBusy, seerr, params, setParams } = model;
     const home = useClientMedia('home', '', 0);
     const stats = usePersonalStats();
     const history = useViewingHistory();
@@ -853,27 +856,64 @@ function PersonalView({ model }: ViewProps) {
     const leadBackdrop = lead ? image(lead, true) : '';
     const { setPageAmbient } = model;
     useEffect(() => setPageAmbient(leadBackdrop), [leadBackdrop, setPageAmbient]);
-    return <div className='client-personal'>
-        <header className='client-personal-identity'><span aria-hidden='true'>{user?.PrimaryImageTag ? <img src={`${model.api?.basePath}/Users/${user.Id}/Images/Primary?tag=${user.PrimaryImageTag}&width=160&quality=90`} alt='' /> : user?.Name?.slice(0, 1)}</span><div><h1>Mon espace</h1>
-            <p>{user?.Name}</p></div></header>
-        <PersonalStatsBand stats={stats.data} pending={stats.isPending} favorites={media.data?.total || 0} favoritesPending={media.isPending} />
+    const tabs: [PersonalTab, string, number?][] = [['list', 'Ma liste', media.data?.total], ['folders', 'Dossiers'], ['upcoming', 'À venir', upcoming.data?.length],
+        ['history', 'Vus récemment'], ['taste', 'Mes goûts'], ...(seerr.connected ? [['requests', 'Demandes'] as [PersonalTab, string]] : [])];
+    const tab = tabs.find(([key]) => key === params.get('tab'))?.[0] || 'list';
+    const open = (next: PersonalTab) => setParams(previous => {
+        const changed = new URLSearchParams(previous);
+        changed.set('tab', next);
+        return changed;
+    }, { replace: true });
+    const onTabKey = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+        event.preventDefault();
+        const index = tabs.findIndex(([key]) => key === tab) + (event.key === 'ArrowRight' ? 1 : -1);
+        const next = tabs[(index + tabs.length) % tabs.length][0];
+        open(next);
+        event.currentTarget.querySelector<HTMLButtonElement>(`#client-personal-tab-${next}`)?.focus();
+    };
+    const empty = (text: string) => <p className='client-message'>{text}</p>;
+    return <div className='client-personal client-personal-compact'>
+        <header className='client-personal-top'>
+            <div className='client-personal-identity'><span aria-hidden='true'>{user?.PrimaryImageTag ? <img src={`${model.api?.basePath}/Users/${user.Id}/Images/Primary?tag=${user.PrimaryImageTag}&width=160&quality=90`} alt='' /> : user?.Name?.slice(0, 1)}</span><div><h1>Mon espace</h1>
+                <p>{user?.Name}</p></div></div>
+            <PersonalStatsBand stats={stats.data} pending={stats.isPending} favorites={media.data?.total || 0} favoritesPending={media.isPending} open={open} />
+        </header>
         {home.isPending && <ClientSkeleton layout='episodes' contained count={3} label='Chargement des reprises…' />}
-        {lead && <section className='client-personal-spotlight'><Artwork source={image(lead, true, true)} className={protect(lead) ? 'client-spoiler-art' : undefined} eager /><PreviewClip item={lead} surface='spotlight' /><div><small>ON CONTINUE ?</small><h2>{lead.SeriesName || lead.Name}</h2><p>{lead.Type === 'Episode' ? `${episodeLabel(lead)} · ${lead.Name}` : 'Votre film vous attend'}</p>
-            {progressPercent(lead) > 0 && <span className='client-spotlight-progress' aria-label={`Vu à ${Math.round(progressPercent(lead))} %`}><i style={{ width: `${progressPercent(lead)}%` }} /></span>}
-            <button className='client-play' onClick={() => play(lead)}><ClientIcon name='play' />Reprendre</button><Link className='client-button' to={`/client?id=${lead.SeriesId || lead.Id}`}>Voir la fiche</Link></div></section>}
-        <div id='client-resume'>{row('Continuer à regarder', resume.slice(1), true)}</div>
-        {row('Épisodes à venir', upcoming.data, false, 'upcoming-episodes')}
-        <div className='client-personal-favorites' id='client-favorites'>
-            <header><h2>Ma liste</h2>{!!media.data?.total && <div className='client-queue-actions'>
-                <QueueActions source='favorites' playQueue={playQueue} pending={queueBusy} />
-            </div>}</header>
-            <Suspense fallback={null}><FolderPanel image={image} /></Suspense>
-            <LibraryView model={model} embedded />
+        {lead && <div className={`client-personal-now${resume.length > 1 ? '' : ' is-single'}`}>
+            <section className='client-personal-spotlight'><Artwork source={image(lead, true, true)} className={protect(lead) ? 'client-spoiler-art' : undefined} eager /><PreviewClip item={lead} surface='spotlight' /><div><small>ON CONTINUE ?</small><h2>{lead.SeriesName || lead.Name}</h2><p>{lead.Type === 'Episode' ? `${episodeLabel(lead)} · ${lead.Name}` : 'Votre film vous attend'}</p>
+                {progressPercent(lead) > 0 && <span className='client-spotlight-progress' aria-label={`Vu à ${Math.round(progressPercent(lead))} %`}><i style={{ width: `${progressPercent(lead)}%` }} /></span>}
+                <button className='client-play' onClick={() => play(lead)}><ClientIcon name='play' />Reprendre</button><Link className='client-button' to={`/client?id=${lead.SeriesId || lead.Id}`}>Voir la fiche</Link></div></section>
+            {resume.length > 1 && <section className='client-personal-resume' aria-labelledby='client-personal-resume-title'>
+                <h2 id='client-personal-resume-title'>Continuer à regarder</h2>
+                <ol>{resume.slice(1, 5).map(entry => <li key={entry.Id}>
+                    <button type='button' onClick={() => play(entry)} aria-label={`Reprendre ${[entry.SeriesName, entry.Name].filter(Boolean).join(' · ')}`}>
+                        <span className='client-personal-resume-art'><Artwork source={image(entry, true)} className={protect(entry) ? 'client-spoiler-art' : undefined} />
+                            {progressPercent(entry) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(entry)}%` }} /></span>}</span>
+                        <span className='client-personal-resume-copy'><strong>{entry.SeriesName || entry.Name}</strong>
+                            <small>{entry.Type === 'Episode' ? `${episodeLabel(entry)} · ${entry.Name}` : entry.ProductionYear}</small></span>
+                    </button>
+                </li>)}</ol>
+            </section>}
+        </div>}
+        {/* eslint-disable-next-line jsx-a11y/interactive-supports-focus -- Each tab is a button; the list only moves focus. */}
+        <div className='client-personal-tabs' role='tablist' aria-label='Sections de Mon espace' onKeyDown={onTabKey}>
+            {tabs.map(([key, label, count]) => <button key={key} type='button' role='tab' id={`client-personal-tab-${key}`} aria-selected={tab === key}
+                aria-controls='client-personal-panel' tabIndex={tab === key ? 0 : -1} onClick={() => open(key)}>
+                {label}{!!count && <span>{count}</span>}
+            </button>)}
         </div>
-        {row('Vus récemment', history.data)}
-        {!!stats.data?.genres.length && <div className='client-personal-columns'><GenreTaste stats={stats.data} /></div>}
-        <RatingsOverview />
-        <PersonalRequests connected={seerr.connected} />
+        <div id='client-personal-panel' className='client-personal-panel-area' role='tabpanel' aria-labelledby={`client-personal-tab-${tab}`}>
+            {tab === 'list' && <div className='client-personal-favorites' id='client-favorites'>
+                {!!media.data?.total && <div className='client-queue-actions'><QueueActions source='favorites' playQueue={playQueue} pending={queueBusy} /></div>}
+                <LibraryView model={model} embedded />
+            </div>}
+            {tab === 'folders' && <Suspense fallback={<ClientSkeleton layout='row' label='Chargement des dossiers…' />}><FolderPanel image={image} /></Suspense>}
+            {tab === 'upcoming' && (row('Épisodes à venir', upcoming.data, false, 'upcoming-episodes') || (upcoming.isPending ? <ClientSkeleton layout='row' label='Chargement des épisodes à venir…' /> : empty('Aucun épisode annoncé pour vos séries.')))}
+            {tab === 'history' && (row('Vus récemment', history.data) || (history.isPending ? <ClientSkeleton layout='row' label='Chargement de l’historique…' /> : empty('Rien de vu récemment.')))}
+            {tab === 'taste' && <div className='client-personal-columns'>{!!stats.data?.genres.length && <GenreTaste stats={stats.data} />}<RatingsOverview /></div>}
+            {tab === 'requests' && <PersonalRequests connected={seerr.connected} />}
+        </div>
     </div>;
 }
 
