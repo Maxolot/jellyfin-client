@@ -284,8 +284,8 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
     }
     return <SessionPage title={signedOut ? 'Connexion' : title} background={login?.background} variant={signedOut ? 'login' : 'profiles'}>
         {basePath && (!signedOut || login) ? content : <SessionNotice title='Connexion' message='Chargement des profils…' busy />}
-        {/* The server notice is sanitized by useLoginInfo. */}
-        {login?.disclaimer && <div className='client-session-disclaimer' dangerouslySetInnerHTML={{ __html: login.disclaimer }} />}
+        {/* The server notice is sanitized by useLoginInfo; it only concerns signing in. */}
+        {signedOut && login?.disclaimer && <div className='client-session-disclaimer' dangerouslySetInnerHTML={{ __html: login.disclaimer }} />}
     </SessionPage>;
 }
 /* eslint-enable react/jsx-no-bind */
