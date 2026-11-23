@@ -64,12 +64,12 @@
 // The filter is only rendered in Chromium, the one engine that refracts the backdrop through it.
 // stylelint-disable-next-line no-descending-specificity -- Only backdrop-filter is overridden, hover states are unaffected.
 .client-player:not(.style-minimal) .client-player-center:has(.client-liquid-glass-defs.is-backdrop) > .client-liquid-glass {
-    backdrop-filter: blur(6px) url('#client-liquid-glass') blur(4px) saturate(1.15) brightness(0.94);
+    backdrop-filter: blur(9px) url('#client-liquid-glass') saturate(1.15) brightness(0.94);
 }
 
 // A long bar would stretch the lens: it only gets the swirl.
 .client-player.style-glass:has(.client-liquid-glass-defs.is-backdrop) .client-player-toolbar.client-liquid-glass {
-    backdrop-filter: blur(6px) url('#client-liquid-glass-bar') blur(4px) saturate(1.15) brightness(0.94);
+    backdrop-filter: blur(9px) url('#client-liquid-glass-bar') saturate(1.15) brightness(0.94);
 }
 
 // Firefox: a live copy of the video, aligned behind the control, is blurred and swirled instead.
@@ -85,14 +85,14 @@
     background-size: var(--glass-copy-w) var(--glass-copy-h);
     clip-path: circle(50%);
     content: '';
-    filter: blur(6px) url('#client-liquid-glass') blur(4px) saturate(1.15) brightness(0.94);
+    filter: blur(9px) url('#client-liquid-glass') saturate(1.15) brightness(0.94);
     pointer-events: none;
 }
 
 .client-player.style-glass:has(.client-liquid-glass-defs.is-copy) .client-player-toolbar.client-liquid-glass::after {
     clip-path: inset(0 round 22px);
     // The copy misses the player's scrim: darkened to match what Chromium sees behind the bar.
-    filter: blur(6px) url('#client-liquid-glass-bar') blur(4px) saturate(1.05) brightness(0.55);
+    filter: blur(9px) url('#client-liquid-glass-bar') saturate(1.05) brightness(0.55);
 }
 
 .client-player-sr {
@@ -137,3 +137,6 @@
     right: calc(100% + 0.5em);
     left: auto;
 }
+
+// Nothing is playing yet (start or reload): a black stage rather than the page behind.
+.client-player.is-empty { background: #000; }

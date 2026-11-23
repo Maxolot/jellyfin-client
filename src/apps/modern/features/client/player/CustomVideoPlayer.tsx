@@ -28,6 +28,7 @@ import './player.scss';
 import './polish.scss';
 import './liquidGlass.scss';
 import LiquidGlassFilter from './LiquidGlassFilter';
+import { forgetPlayback, useReloadResume } from './reloadResume';
 import { isPlayingOffline } from '../offline/playback';
 import LoadingTitle from './LoadingTitle';
 
@@ -128,6 +129,10 @@ export default function CustomVideoPlayer() {
         if (paused) setVisible(true);
     }, [paused]);
     const hasPlayer = !!snapshot && !ended;
+    useReloadResume({ hasPlayer, ended, entry: itemId && snapshot?.item?.ServerId ? {
+        itemId, serverId: snapshot.item.ServerId, positionTicks: playState?.PositionTicks || 0, runtimeTicks: snapshot.item.RunTimeTicks || undefined, mediaSourceId: playState?.MediaSourceId || undefined,
+        audioStreamIndex: playState?.AudioStreamIndex ?? undefined, subtitleStreamIndex: playState?.SubtitleStreamIndex ?? undefined
+    } : undefined });
     const canSeek = hasPlayer && playState?.CanSeek === true && duration > 0;
     const next = snapshot?.next;
     const nextLabel = next?.Type === 'Episode' ? 'Épisode suivant' : 'Titre suivant';
@@ -186,6 +191,7 @@ export default function CustomVideoPlayer() {
     }, []);
     const leave = useCallback(() => {
         leaving.current = true;
+        forgetPlayback();
         const offline = isPlayingOffline();
         stopOwnedPlayer();
         if (window.history.state?.idx > 0) navigate(-1);
@@ -394,8 +400,10 @@ export default function CustomVideoPlayer() {
         </button>;
     };
     const timerStatus = sleepEnd ? '· fin de cet épisode' : '';
-    const audio: MediaStream[] = hasPlayer ? playbackManager.audioTracks() : [];
-    const subtitles: MediaStream[] = hasPlayer ? playbackManager.subtitleTracks() : [];
+    // The snapshot can outlive the player for a moment (stop, reload resume): tracks need a live player.
+    const liveTracks = hasPlayer && !!playbackManager.getCurrentPlayer();
+    const audio: MediaStream[] = liveTracks ? playbackManager.audioTracks() : [];
+    const subtitles: MediaStream[] = liveTracks ? playbackManager.subtitleTracks() : [];
     const chapters = item?.Chapters || [];
     const displayPosition = scrub ?? position;
     const endTime = new Date(Date.now() + secondsLeft / (playState?.PlaybackRate || 1) * 1000).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -412,7 +420,7 @@ export default function CustomVideoPlayer() {
     else if (snapshot?.buffering && hasPlayer && !paused) loadingLabel = 'Chargement de la vidéo…';
     return <Page id='customVideoPage' className='client-video-page' isNowPlayingBarEnabled={false} isThemeMediaSupported>
         <style>{`html.client-video-active video::cue { font-size: ${preferences.subtitleSize}%; background-color: ${preferences.subtitleBackground ? 'rgba(0,0,0,.7)' : 'transparent'}; }`}</style>
-        <div ref={root} className={`client-player style-${preferences.style} accent-${preferences.accent} ${visible || panel || ended ? 'controls-visible' : 'controls-hidden'}${loadingLabel ? ' is-loading' : ''}`} style={{ '--player-scale': preferences.size / 100 } as CSSProperties} onPointerMove={wakeFromPointer} onPointerDown={() => { keyboardFocus.current = false; }} onFocusCapture={wakeFromFocus}>
+        <div ref={root} className={`client-player style-${preferences.style} accent-${preferences.accent}${hasPlayer ? '' : ' is-empty'} ${visible || panel || ended ? 'controls-visible' : 'controls-hidden'}${loadingLabel ? ' is-loading' : ''}`} style={{ '--player-scale': preferences.size / 100 } as CSSProperties} onPointerMove={wakeFromPointer} onPointerDown={() => { keyboardFocus.current = false; }} onFocusCapture={wakeFromFocus}>
             <button className='client-player-surface' tabIndex={-1} aria-label={visible ? 'Masquer les commandes' : 'Afficher les commandes'}
                 onPointerDown={event => { pointerKind.current = event.pointerType; }}
                 onClick={event => {
