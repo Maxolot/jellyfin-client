@@ -41,6 +41,7 @@ import ClientIcon from '../features/client/ClientIcon';
 import useArtworkColor from '../features/client/useArtworkColor';
 import PersonalRating from '../features/client/PersonalRating';
 import RatingsOverview from '../features/client/RatingsOverview';
+import TitleLogo from '../features/client/TitleLogo';
 import { GenreTaste, PersonalStatsBand } from '../features/client/PersonalOverview';
 import usePersonalUpcoming from '../features/client/usePersonalUpcoming';
 import { usePersonalStats, useViewingHistory } from '../features/client/usePersonalStats';
@@ -655,7 +656,7 @@ function HeroCopyView({ model, dots }: ViewProps & { dots: ReactNode }) {
     const { hero, id, api } = model;
     if (!hero) return null;
     return <div className='client-hero-copy'>{!id && <span className='client-eyebrow'>À LA UNE</span>}
-        {hero.ImageTags?.Logo && <Artwork className='client-title-logo' source={artworkUrl(api?.basePath || '', hero, 'logo')} eager />}
+        {hero.ImageTags?.Logo && <TitleLogo key={hero.Id} source={artworkUrl(api?.basePath || '', hero, 'logo')} />}
         <h1 className={hero.ImageTags?.Logo ? 'client-title-fallback' : undefined}>{hero.Name}</h1>
         <HeroMetadata item={hero} detailed={!!id} />
         {id && <DetailSynopsis key={hero.Id} overview={hero.Overview} />}
