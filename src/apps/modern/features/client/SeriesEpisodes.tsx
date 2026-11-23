@@ -114,7 +114,7 @@ export default function SeriesEpisodesPanel(props: Readonly<PanelProps>) {
             </div>
             <div className='client-series-controls'>
                 {playing && <QueueAction source={available} playQueue={playQueue} pending={queueBusy} label='Lire la saison' />}
-                {(playing || seasons.length + missing.length > 1) && <button ref={trigger} type='button' className='client-button' aria-haspopup='dialog' onClick={openDrawer}><ClientIcon name='chapter' />Tous les épisodes</button>}
+                {(playing || seasons.length + missing.length > 1) && <button ref={trigger} type='button' className='client-button client-series-all-episodes' aria-haspopup='dialog' onClick={openDrawer}><ClientIcon name='chapter' />Tous les épisodes</button>}
             </div>
         </header>
         {loading && <ClientSkeleton layout='episodes' count={4} contained label='Chargement des épisodes…' />}
@@ -146,6 +146,7 @@ function EpisodeCard({ episode, basePath, nextId, play }: Readonly<EpisodeState 
         {watched && <span className='client-series-episode-seen' aria-hidden='true'><ClientIcon name='check' /></span>}
         {next && <span className='client-series-episode-next' aria-hidden='true'>À suivre</span>}
         <span className='client-series-episode-title'>{episode.Name}</span>
+        {!protect && episode.Overview && <span className='client-series-episode-overview'>{episode.Overview}</span>}
         {progress > 0 && <span className='client-series-episode-progress' aria-hidden='true'><i style={{ width: `${progress}%` }} /></span>}
     </button>;
     return protect && episode.Overview ? <div className='client-series-episode-wrap'>{card}<EpisodeSummary item={episode} protectedContent /></div> : card;
