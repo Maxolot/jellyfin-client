@@ -109,7 +109,10 @@ function QuotaNotice({ label, loaded, restricted, error, onRetry }: Readonly<{ l
 const REQUEST_FILTERS = [['unavailable', 'Pas encore disponibles'], ['all', 'Toutes'], ['pending', 'En attente'], ['processing', 'En préparation'], ['available', 'Disponibles'], ['failed', 'Échecs']] as const;
 
 function RequestHistory({ entries }: { readonly entries: MediaRequest[] }) {
-    return <div className='client-request-history'>{entries.map(entry => <p key={entry.id}>{entry.is4k ? '4K · ' : ''}{entry.seasons?.length ? `${requestSeasonNumbersLabel(entry.seasons.map(season => season.seasonNumber))} · ` : ''}{requestLabel(entry.status)}</p>)}</div>;
+    // Completed requests are already shown as available seasons: only open ones are listed.
+    const open = entries.filter(entry => entry.status !== 5);
+    if (!open.length) return null;
+    return <div className='client-request-history'>{open.map(entry => <p key={entry.id}>{entry.is4k ? '4K · ' : ''}{entry.seasons?.length ? `${requestSeasonNumbersLabel(entry.seasons.map(season => season.seasonNumber))} · ` : ''}{requestLabel(entry.status)}</p>)}</div>;
 }
 
 export function AvailabilityAction({ identity: supplied, localItem }: Readonly<{ identity?: SeerrIdentity; localItem?: BaseItemDto }>) {

@@ -28,7 +28,8 @@ export function RequestProgressNote({ request }: Readonly<{ request: RequestProg
 export function CompactRequest({ identity }: Readonly<{ identity?: SeerrIdentity }>) {
     const query = useRequestProgress(!!identity, !!identity);
     const request = identity ? latestRequest(query.data || [], identity) : undefined;
-    if (!request) return null;
+    // A request that ended up available has nothing left to follow.
+    if (!request || request.stage === 'available') return null;
     return <aside className='client-compact-request' aria-label='Suivi de la demande'>
         <Link to='/client?view=requests'><ClientIcon name='bell' />{requestStageLabel(request.stage)}
             {request.stage === 'downloading' && request.percent != null && <span>{request.percent} %</span>}</Link>
