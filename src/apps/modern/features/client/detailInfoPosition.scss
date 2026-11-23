@@ -55,7 +55,9 @@
         }
 
         .client-title-logo {
-            height: 68px;
+            --logo-h: 68px;
+
+            height: var(--logo-h);
             margin-top: 0;
         }
 

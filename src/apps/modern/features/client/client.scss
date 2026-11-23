@@ -1,4 +1,11 @@
 /* Client-specific surface. Playback and inherited pages keep their own styles. */
+
+/* Every client length is a multiple of this unit (see postcss.config.js): 1px up to a
+   1440px wide window, then proportional to the window, times the account's interface size. */
+:root {
+    --client-px: calc(clamp(1px, 100vw / 1440, 1.6px) * var(--client-ui-scale, 1));
+}
+
 body:has(.client-page:not(.hide)) .skinHeader,
 body:has(.client-page:not(.hide)) .mainDrawer,
 body:has(.client-page:not(.hide)) .backgroundContainer {
@@ -152,11 +159,23 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
 }
 
 .client-title-logo {
+    --logo-h: 110px;
+
     width: min(400px, 100%);
-    height: 110px;
+    height: var(--logo-h);
     margin: 15px 0;
     object-fit: contain;
     object-position: left center;
+}
+
+/* Once its proportions are known, a logo keeps a similar surface whatever its shape:
+   a very wide logo is no longer reduced to a thin line, a square one no longer towers. */
+@supports (width: calc(1px * sqrt(4))) {
+    .client-interface .client-hero .client-title-logo.client-artwork[style*='--logo-ratio'] {
+        width: min(100%, calc(var(--logo-h) * sqrt(3.6 * var(--logo-ratio))));
+        height: auto;
+        max-height: calc(var(--logo-h) * 1.3);
+    }
 }
 
 .client-hero h1 {
@@ -570,7 +589,9 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     }
 
     .client-title-logo {
-        height: 72px;
+        --logo-h: 72px;
+
+        height: var(--logo-h);
     }
 
     .client-overview {

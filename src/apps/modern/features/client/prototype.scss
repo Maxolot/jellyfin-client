@@ -403,7 +403,10 @@
 
     .client-title-logo {
         width: min(42vw, 580px);
-        height: 125px;
+
+        --logo-h: 125px;
+
+        height: var(--logo-h);
         margin: 14px 0 18px;
     }
 
@@ -481,7 +484,10 @@
 
     .client-home-hero .client-title-logo {
         width: 76vw;
-        height: 105px;
+
+        --logo-h: 105px;
+
+        height: var(--logo-h);
     }
 
     .client-home-hero .client-hero-copy {
@@ -527,7 +533,10 @@
 
     .client-title-logo {
         width: min(370px, 100%);
-        height: 85px;
+
+        --logo-h: 85px;
+
+        height: var(--logo-h);
         margin: 12px 0 0;
     }
 
@@ -1014,7 +1023,10 @@
 
     .client-detail .client-title-logo {
         width: 75vw;
-        height: 70px;
+
+        --logo-h: 70px;
+
+        height: var(--logo-h);
     }
 
     .client-detail .client-meta {

@@ -14,6 +14,8 @@ export default function AppearanceSettings({ preferences, savePreference, hasPre
         <SettingCard title='Thème' scope='browser'>
             <PictureChoice label='Style de l’interface' value={preferences.glass} onChange={set('glass')}
                 options={[{ value: true, label: 'Liquid Glass', preview: <InterfacePreview kind='glass' /> }, { value: false, label: 'Classique', preview: <InterfacePreview kind='classic' /> }]} />
+            <Slider label='Taille de l’interface' hint='Textes, boutons et cartes. Sur un grand écran, l’interface s’agrandit déjà avec la fenêtre.'
+                value={preferences.uiScale} min={80} max={150} step={5} unit=' %' onChange={set('uiScale')} />
             <Toggle label='Couleurs inspirées du média' hint='Les fonds prennent la teinte de l’affiche mise en avant.' checked={preferences.chromatic} onChange={set('chromatic')} />
             <Toggle label='Fond immersif au survol' hint='L’image du titre survolé s’étend derrière la page.' checked={preferences.ambient} onChange={set('ambient')} />
         </SettingCard>

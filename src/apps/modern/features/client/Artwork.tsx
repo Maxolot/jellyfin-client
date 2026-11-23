@@ -45,6 +45,8 @@ export default function Artwork({ source, className = '', alt = '', eager = fals
         alt={alt} decoding='async' hidden={failed === source} onLoad={async event => {
             const element = event.currentTarget;
             const loadedSource = source;
+            // Title logos are sized by their proportions, see .client-title-logo.
+            if (className.includes('logo') && element.naturalHeight) element.style.setProperty('--logo-ratio', (element.naturalWidth / element.naturalHeight).toFixed(3));
             try {
                 if (typeof element.decode === 'function') await element.decode();
                 if (element === ref.current && element.getAttribute('src') === loadedSource) {
