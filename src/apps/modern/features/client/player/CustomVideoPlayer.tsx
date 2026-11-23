@@ -40,7 +40,7 @@ function PlayerGlyph({ name }: Readonly<{ name: string }>) {
     const paths: Record<string, string> = {
         play: 'M8 5v14l11-7Z', pause: 'M8 5v14M16 5v14', rewind: 'M4 10a8 8 0 1 1 1 8M4 4v6h6', forward: 'M20 10a8 8 0 1 0-1 8M20 4v6h-6',
         subtitles: 'M3 5h18v14H3ZM10 10H7v4h3M17 10h-3v4h3', audio: 'M9 18V5l12-2v13M9 18a3 3 0 1 1-3-3h3M21 16a3 3 0 1 1-3-3h3',
-        fullscreen: 'M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5', pip: 'M3 4h18v16H3ZM12 12h7v6h-7Z',
+        fullscreen: 'M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5', fullscreenExit: 'M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5', pip: 'M3 4h18v16H3ZM12 12h7v6h-7Z',
         episodes: 'M3 4h18v12H3ZM7 20h10M10 8l5 2-5 3Z', more: 'M5 12h.01M12 12h.01M19 12h.01', chapters: 'M4 5h16M4 12h16M4 19h16', settings: 'M4 6h16M4 12h16M4 18h16M8 3v6M16 9v6M10 15v6'
     };
     return <svg viewBox='0 0 24 24' aria-hidden='true' fill='none' stroke='currentColor' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'><path d={paths[name] || paths.settings} /></svg>;
@@ -74,6 +74,18 @@ export default function CustomVideoPlayer() {
     const ownedPlayer = useRef<ReturnType<typeof playbackManager.getCurrentPlayer>>();
     const skipped = useRef(new Set<string>());
     const lastTouch = useRef({ time: 0, side: 0 });
+    const pointerKind = useRef('mouse');
+    const [fullscreen, setFullscreen] = useState(false);
+    useEffect(() => {
+        const sync = () => {
+            try {
+                setFullscreen(!!playbackManager.isFullscreen());
+            } catch { setFullscreen(false); /* No player yet. */ }
+        };
+        sync();
+        document.addEventListener('fullscreenchange', sync);
+        return () => document.removeEventListener('fullscreenchange', sync);
+    }, []);
     const lastJump = useRef(0);
     const shownAt = useRef(0);
     const visibleNow = useRef(true);
@@ -375,21 +387,29 @@ export default function CustomVideoPlayer() {
     return <Page id='customVideoPage' className='client-video-page' isNowPlayingBarEnabled={false} isThemeMediaSupported>
         <style>{`html.client-video-active video::cue { font-size: ${preferences.subtitleSize}%; background-color: ${preferences.subtitleBackground ? 'rgba(0,0,0,.7)' : 'transparent'}; }`}</style>
         <div ref={root} className={`client-player style-${preferences.style} accent-${preferences.accent} ${visible || panel || ended ? 'controls-visible' : 'controls-hidden'}${loadingLabel ? ' is-loading' : ''}`} style={{ '--player-scale': preferences.size / 100 } as CSSProperties} onPointerMove={wakeFromPointer} onPointerDown={() => { keyboardFocus.current = false; }} onFocusCapture={wakeFromFocus}>
-            <button className='client-player-surface' tabIndex={-1} aria-label={visible ? 'Masquer les commandes' : 'Afficher les commandes'} onClick={toggleControls} onDoubleClick={event => {
-                if (event.detail > 0) action(() => playbackManager.playPause());
-            }} onTouchEnd={event => {
-                const x = event.changedTouches[0]?.clientX || 0;
-                const rightSide = x > window.innerWidth * 0.65 ? 1 : 0;
-                const side = x < window.innerWidth * 0.35 ? -1 : rightSide;
-                if (side && lastTouch.current.side === side && Date.now() - lastTouch.current.time < 350) {
-                    event.preventDefault();
-                    jump(side * preferences.skip);
-                    lastJump.current = Date.now();
-                    lastTouch.current.time = 0;
-                } else {
-                    lastTouch.current = { time: Date.now(), side };
-                }
-            }} />
+            <button className='client-player-surface' tabIndex={-1} aria-label={visible ? 'Masquer les commandes' : 'Afficher les commandes'}
+                onPointerDown={event => { pointerKind.current = event.pointerType; }}
+                onClick={event => {
+                    // A mouse click anywhere on the picture plays or pauses; a tap shows or hides the controls.
+                    if (event.detail > 0 && pointerKind.current !== 'touch') {
+                        wake();
+                        action(() => playbackManager.playPause());
+                    } else { toggleControls(); }
+                }} onDoubleClick={event => {
+                    if (event.detail > 0 && pointerKind.current !== 'touch' && commands.includes('ToggleFullscreen')) action(() => playbackManager.toggleFullscreen());
+                }} onTouchEnd={event => {
+                    const x = event.changedTouches[0]?.clientX || 0;
+                    const rightSide = x > window.innerWidth * 0.65 ? 1 : 0;
+                    const side = x < window.innerWidth * 0.35 ? -1 : rightSide;
+                    if (side && lastTouch.current.side === side && Date.now() - lastTouch.current.time < 350) {
+                        event.preventDefault();
+                        jump(side * preferences.skip);
+                        lastJump.current = Date.now();
+                        lastTouch.current.time = 0;
+                    } else {
+                        lastTouch.current = { time: Date.now(), side };
+                    }
+                }} />
             <header className='client-player-top'>
                 <button type='button' onClick={leave} aria-label='Quitter le lecteur' title='Retour'><ClientIcon name='back' /></button>
                 <div><small>{item?.Type === 'Episode' ? `${item.SeriesName || ''} · Saison ${item.ParentIndexNumber || 1}, épisode ${item.IndexNumber || 1}` : 'EN LECTURE'}</small><h1>{item?.Name || 'Préparation de la lecture…'}</h1></div>
@@ -436,7 +456,7 @@ export default function CustomVideoPlayer() {
                 <div className='client-player-toolbar'>
                     {button(paused ? 'Lecture' : 'Pause', paused ? 'play' : 'pause', () => playbackManager.playPause(), !hasPlayer)}
                     <div className='client-player-volume'><button type='button' aria-label={playState?.IsMuted ? 'Activer le son' : 'Couper le son'} onClick={() => action(() => playbackManager.toggleMute())}><ClientIcon name={playState?.IsMuted ? 'muted' : 'volume'} /></button><input type='range' aria-label='Volume' min={0} max={100} value={playState?.IsMuted ? 0 : playState?.VolumeLevel || 0} disabled={!commands.includes('SetVolume')} onChange={event => action(() => playbackManager.setVolume(Number(event.target.value)))} /></div>
-                    <span className='client-player-time'>{formatTime(displayPosition)} <span>/ {timeLabel}</span></span>
+                    <span className='client-player-time'>{formatTime(displayPosition)} <span>/ {timeLabel}</span>{preferences.time !== 'end' && duration > 0 && <span className='client-player-end'> · Fin à {endTime}</span>}</span>
                     <div className='client-player-tools'>
                         {item?.SeriesId && button('Épisodes et saisons', 'episodes', () => openPanel('episodes'))}
                         {button('Outils du lecteur', 'more', () => openPanel('tools'))}
@@ -445,7 +465,7 @@ export default function CustomVideoPlayer() {
                         {chapters.length > 0 && button('Chapitres', 'chapters', () => openPanel('chapters'))}
                         {button('Réglages de lecture', 'settings', () => openPanel('settings'), !hasPlayer)}
                         {commands.includes('PictureInPicture') && button('Image dans l’image', 'pip', () => playbackManager.togglePictureInPicture())}
-                        {commands.includes('ToggleFullscreen') && button('Plein écran', 'fullscreen', () => playbackManager.toggleFullscreen())}
+                        {commands.includes('ToggleFullscreen') && button(fullscreen ? 'Quitter le plein écran' : 'Plein écran', fullscreen ? 'fullscreenExit' : 'fullscreen', () => playbackManager.toggleFullscreen())}
                     </div>
                 </div>
             </footer>

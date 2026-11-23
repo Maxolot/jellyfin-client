@@ -302,3 +302,15 @@ $chip-groups: '.client-catalogue-switch, .client-period-choices, .client-draw-ch
         }
     }
 }
+
+// Liens dans le texte : pas de soulignement natif, du blanc plein et une graisse marquée.
+.client-interface :is(.client-director-credits a, .client-text-button, .client-session-link, .client-rating-clear, .client-profile-quick, .client-spoiler-summary summary, .client-person-biography summary) {
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+
+    &:hover,
+    &:focus-visible { opacity: 0.72; }
+}

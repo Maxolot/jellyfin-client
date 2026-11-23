@@ -1,42 +1,45 @@
-.client-advanced-filters {
-    margin-block: 0 22px;
+.client-advanced-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
 
-    > summary {
-        cursor: pointer;
-        list-style: none;
-
-        &::-webkit-details-marker {
-            display: none;
-        }
-
-        .client-icon {
-            width: 14px;
-            height: 14px;
-        }
+    .client-icon {
+        width: 14px;
+        height: 14px;
+        transition: transform 0.2s ease;
     }
 
-    &[open] > summary .client-icon {
-        transform: rotate(180deg);
-    }
+    &[aria-expanded='true'] .client-icon { transform: rotate(180deg); }
+}
+
+.client-advanced-count {
+    display: inline-grid;
+    min-width: 20px;
+    height: 20px;
+    place-items: center;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #fff;
+    color: #111;
+    font-size: 11px;
+    font-weight: 700;
 }
 
 .client-advanced-panel {
-    margin-block-start: 12px;
-    padding: clamp(12px, 2vw, 22px);
-    border: 1px solid #ffffff29;
-    border-radius: 16px;
-    background: #151a22;
+    order: 2;
+    flex-basis: 100%;
+    padding: clamp(14px, 2vw, 22px);
+    border: 1px solid #ffffff24;
+    border-radius: 20px;
+    background: #ffffff0d;
     color: #cbd5e3;
+    backdrop-filter: blur(18px);
 
     p {
         margin: 0;
         line-height: 1.45;
     }
-}
-
-.client-advanced-panel .client-select > button {
-    min-width: 0;
-    max-width: none;
 }
 
 .client-classic .client-advanced-panel { background: #181818; }
@@ -51,7 +54,7 @@
     display: grid;
     min-width: 0;
     gap: 6px;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .client-advanced-footer {
@@ -59,6 +62,40 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 10px 16px;
-    margin-block: 12px 0;
+    margin-block: 14px 0;
     font-size: 13px;
+}
+
+// Library filters: one row of identical pills; the advanced panel takes its own line below.
+.client-library .client-filter-options {
+    gap: 10px;
+
+    .client-select > button,
+    .client-advanced-toggle {
+        height: 40px;
+        min-height: 0;
+        padding: 0 16px;
+        border: 1px solid var(--client-surface-border, #fff3);
+        border-radius: 999px;
+        background: var(--client-control-surface, #ffffff14);
+        color: #f2f3f5;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .client-advanced-toggle:hover { border-color: #ffffff70; }
+
+    .client-advanced-toggle[aria-expanded='true'] {
+        border-color: #ffffffb3;
+        background: #ffffff26;
+    }
+
+    .client-advanced-panel .client-select > button {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+    }
+
+    .client-result-count { order: 1; }
 }

@@ -72,12 +72,13 @@ export default function AdvancedLibraryFilters({ view, filters, onChange }: Read
         .sort((a, b) => a.label.localeCompare(b.label, 'fr'));
     const error = metadata.isError || studios.isError;
     const loading = metadata.isFetching || studios.isFetching;
-    return <details className='client-advanced-filters' onToggle={event => setOpen(event.currentTarget.open)}>
-        <summary className='client-button'>
-            Filtres avancés {count > 0 && <span aria-label={`${count} filtres actifs`}>{count}</span>}
+    // Rendered inside the filter row: the toggle sits with the other filters, the panel wraps to a full-width line.
+    return <>
+        <button type='button' className='client-advanced-toggle' aria-expanded={open} aria-controls='client-advanced-panel' onClick={() => setOpen(value => !value)}>
+            Filtres avancés {count > 0 && <span className='client-advanced-count' aria-label={`${count} filtres actifs`}>{count}</span>}
             <ClientIcon name='down' />
-        </summary>
-        <div className='client-advanced-panel'>
+        </button>
+        {open && <div id='client-advanced-panel' className='client-advanced-panel'>
             <div className='client-advanced-controls'>
                 <FilterSelect label='Année' value={filters.year} empty='Toutes les années' choices={years} onChange={assign('year')} />
                 <FilterSelect label='Note du public' value={filters.minRating} empty='Toutes les notes' choices={ratings} onChange={assign('minRating')} />
@@ -94,7 +95,7 @@ export default function AdvancedLibraryFilters({ view, filters, onChange }: Read
                 if (metadata.isError) void metadata.refetch();
                 if (studios.isError) void studios.refetch();
             }}>Réessayer</button></p>}
-        </div>
-    </details>;
+        </div>}
+    </>;
 }
 /* eslint-enable react/jsx-no-bind */

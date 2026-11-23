@@ -1794,10 +1794,11 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     gap: 5px;
 
     abbr {
-        padding: 1px 5px;
-        color: #d3d7df;
-        border: 1px solid rgb(255 255 255 / 34%);
-        border-radius: 3px;
+        padding: 1px 8px;
+        color: #e4e6eb;
+        border: 1px solid rgb(255 255 255 / 30%);
+        border-radius: 999px;
+        background: rgb(255 255 255 / 8%);
         font-size: 10px;
         font-weight: 600;
         letter-spacing: 0.04em;
@@ -1888,7 +1889,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     }
 
     &:focus-visible .client-tonight-invite-action {
-        text-decoration: underline;
+        text-decoration: none;
     }
 
     @media (max-width: 700px) {

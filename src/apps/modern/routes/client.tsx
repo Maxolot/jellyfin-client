@@ -984,10 +984,9 @@ function LibraryView({ model, embedded = false }: ViewProps & { readonly embedde
             </>}
             {sharedView && <ChoiceSelect label='Disponibilité' value={availability || 'all'} options={availabilityChoices} onChange={value => browse(value === 'missing' ?
                 { availability: value, genre: '', audio: '', person: '', collection: '' } : { availability: value })} />}
+            {!withoutFiles && isFullLibrary(view, params.get('mode')) && <AdvancedLibraryFilters key={view} view={view} filters={advanced} onChange={browse} />}
             <LibraryResultCount model={model} embedded={embedded} loaded={local.length} extra={external.length} onlyMissing={withoutFiles} />
         </div>}
-        {!embedded && !withoutFiles && isFullLibrary(view, params.get('mode'))
-            && <AdvancedLibraryFilters key={view} view={view} filters={advanced} onChange={browse} />}
         {model.sharedLocal.isError && sharedView && <p role='status'>Impossible de vérifier quels titres du catalogue sont disponibles.</p>}
         {withoutFiles && !external.length && !model.sharedLocal.isFetching && !model.sharedLocal.isError && <p>Aucun titre suivi à télécharger.</p>}
         {!withoutFiles && media.isPending && <ClientSkeleton layout='grid' count={12} contained label='Chargement des titres…' />}
