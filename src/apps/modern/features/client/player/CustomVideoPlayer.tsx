@@ -493,7 +493,7 @@ export default function CustomVideoPlayer() {
                         setHover(Math.max(0, Math.min(duration, (event.clientX - rect.left) / rect.width * duration)));
                     }} onPointerLeave={() => setHover(undefined)} />
                 </div>
-                <div className='client-player-toolbar'>
+                <div className='client-player-toolbar client-liquid-glass'>
                     {button(paused ? 'Lecture' : 'Pause', paused ? 'play' : 'pause', () => playbackManager.playPause(), !hasPlayer)}
                     <div className='client-player-volume'><button type='button' aria-label={playState?.IsMuted ? 'Activer le son' : 'Couper le son'} onClick={() => action(() => playbackManager.toggleMute())}><ClientIcon name={playState?.IsMuted ? 'muted' : 'volume'} /></button><input type='range' aria-label='Volume' min={0} max={100} value={playState?.IsMuted ? 0 : playState?.VolumeLevel || 0} disabled={!commands.includes('SetVolume')} onChange={event => action(() => playbackManager.setVolume(Number(event.target.value)))} /></div>
                     <span className='client-player-time'>{formatTime(displayPosition)} <span>/ {timeLabel}</span>{preferences.time !== 'end' && duration > 0 && <span className='client-player-end'> · Fin à {endTime}</span>}</span>

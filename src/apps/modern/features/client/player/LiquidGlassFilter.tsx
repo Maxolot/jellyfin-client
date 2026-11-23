@@ -36,12 +36,18 @@ function useVideoCopy(enabled: boolean) {
                 const video = document.querySelector<HTMLVideoElement>('.videoPlayerContainer video, video');
                 if (!video) return;
                 if (!video.id) video.id = VIDEO_ID;
-                const source = video.getBoundingClientRect();
-                document.querySelectorAll<HTMLElement>('.client-player-center > .client-liquid-glass').forEach(control => {
-                    const box = control.getBoundingClientRect();
+                // -moz-element() paints the frame over the whole element, ignoring object-fit:
+                // the copy is sized to the visible frame, letterbox excluded.
+                const box = video.getBoundingClientRect();
+                const scale = video.videoWidth && video.videoHeight ? Math.min(box.width / video.videoWidth, box.height / video.videoHeight) : 0;
+                const width = scale ? video.videoWidth * scale : box.width;
+                const height = scale ? video.videoHeight * scale : box.height;
+                const source = { left: box.left + (box.width - width) / 2, top: box.top + (box.height - height) / 2, width, height };
+                document.querySelectorAll<HTMLElement>('.client-player .client-liquid-glass').forEach(control => {
+                    const area = control.getBoundingClientRect();
                     control.style.setProperty('--glass-copy', `-moz-element(#${video.id})`);
-                    control.style.setProperty('--glass-copy-x', `${source.left - box.left}px`);
-                    control.style.setProperty('--glass-copy-y', `${source.top - box.top}px`);
+                    control.style.setProperty('--glass-copy-x', `${source.left - area.left}px`);
+                    control.style.setProperty('--glass-copy-y', `${source.top - area.top}px`);
                     control.style.setProperty('--glass-copy-w', `${source.width}px`);
                     control.style.setProperty('--glass-copy-h', `${source.height}px`);
                 });
@@ -70,6 +76,10 @@ export default function LiquidGlassFilter() {
             {/* …then the lens bends it at the rim. */}
             <feImage href={MAP} x='0' y='0' width='100%' height='100%' preserveAspectRatio='none' result='map' />
             <feDisplacementMap in='swirl' in2='map' scale='-18' xChannelSelector='R' yChannelSelector='G' />
+        </filter>
+        <filter id='client-liquid-glass-bar' x='0' y='0' width='100%' height='100%' colorInterpolationFilters='sRGB'>
+            <feTurbulence type='fractalNoise' baseFrequency='0.012 0.018' numOctaves='2' seed='7' result='noise' />
+            <feDisplacementMap in='SourceGraphic' in2='noise' scale='42' xChannelSelector='R' yChannelSelector='G' />
         </filter>
     </svg>;
 }

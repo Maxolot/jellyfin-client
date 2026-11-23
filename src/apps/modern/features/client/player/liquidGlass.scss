@@ -7,7 +7,7 @@
     pointer-events: none;
 }
 
-.client-player:not(.style-minimal) .client-player-center > .client-liquid-glass {
+@mixin liquid-glass-surface {
     position: relative;
     isolation: isolate;
     overflow: visible;
@@ -36,6 +36,10 @@
         mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
         pointer-events: none;
     }
+}
+
+.client-player:not(.style-minimal) .client-player-center > .client-liquid-glass {
+    @include liquid-glass-surface;
 
     &:hover:not(:disabled) {
         background:
@@ -47,15 +51,31 @@
     &:active:not(:disabled) { transform: scale(0.94); }
 }
 
+// The glass bar carries its own contrast: a lighter scrim lets the video show through it.
+.client-player.style-glass .client-player-bottom { background: linear-gradient(transparent, rgb(0 0 0 / 45%) 70%); }
+
+// The bottom toolbar of the Glass style shares the same material, without the press bounce.
+.client-player.style-glass .client-player-toolbar.client-liquid-glass {
+    @include liquid-glass-surface;
+
+    border-radius: 22px;
+}
+
 // The filter is only rendered in Chromium, the one engine that refracts the backdrop through it.
 // stylelint-disable-next-line no-descending-specificity -- Only backdrop-filter is overridden, hover states are unaffected.
 .client-player:not(.style-minimal) .client-player-center:has(.client-liquid-glass-defs.is-backdrop) > .client-liquid-glass {
     backdrop-filter: blur(6px) url('#client-liquid-glass') blur(4px) saturate(1.15) brightness(0.94);
 }
 
+// A long bar would stretch the lens: it only gets the swirl.
+.client-player.style-glass:has(.client-liquid-glass-defs.is-backdrop) .client-player-toolbar.client-liquid-glass {
+    backdrop-filter: blur(6px) url('#client-liquid-glass-bar') blur(4px) saturate(1.15) brightness(0.94);
+}
+
 // Firefox: a live copy of the video, aligned behind the control, is blurred and swirled instead.
 // stylelint-disable-next-line no-descending-specificity -- A separate layer, hover states are unaffected.
-.client-player:not(.style-minimal) .client-player-center:has(.client-liquid-glass-defs.is-copy) > .client-liquid-glass::after {
+.client-player:not(.style-minimal) .client-player-center:has(.client-liquid-glass-defs.is-copy) > .client-liquid-glass::after,
+.client-player.style-glass:has(.client-liquid-glass-defs.is-copy) .client-player-toolbar.client-liquid-glass::after {
     position: absolute;
     z-index: -2;
     inset: 0;
@@ -67,6 +87,12 @@
     content: '';
     filter: blur(6px) url('#client-liquid-glass') blur(4px) saturate(1.15) brightness(0.94);
     pointer-events: none;
+}
+
+.client-player.style-glass:has(.client-liquid-glass-defs.is-copy) .client-player-toolbar.client-liquid-glass::after {
+    clip-path: inset(0 round 22px);
+    // The copy misses the player's scrim: darkened to match what Chromium sees behind the bar.
+    filter: blur(6px) url('#client-liquid-glass-bar') blur(4px) saturate(1.05) brightness(0.55);
 }
 
 .client-player-sr {
