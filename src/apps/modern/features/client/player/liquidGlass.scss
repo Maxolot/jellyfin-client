@@ -72,29 +72,6 @@
     backdrop-filter: blur(9px) url('#client-liquid-glass-bar') saturate(1.15) brightness(0.94);
 }
 
-// Firefox: a live copy of the video, aligned behind the control, is blurred and swirled instead.
-// stylelint-disable-next-line no-descending-specificity -- A separate layer, hover states are unaffected.
-.client-player:not(.style-minimal) .client-player-center:has(.client-liquid-glass-defs.is-copy) > .client-liquid-glass::after,
-.client-player.style-glass:has(.client-liquid-glass-defs.is-copy) .client-player-toolbar.client-liquid-glass::after {
-    position: absolute;
-    z-index: -2;
-    inset: 0;
-    border-radius: inherit;
-    background: var(--glass-copy) no-repeat;
-    background-position: var(--glass-copy-x) var(--glass-copy-y);
-    background-size: var(--glass-copy-w) var(--glass-copy-h);
-    clip-path: circle(50%);
-    content: '';
-    filter: blur(9px) url('#client-liquid-glass') saturate(1.15) brightness(0.94);
-    pointer-events: none;
-}
-
-.client-player.style-glass:has(.client-liquid-glass-defs.is-copy) .client-player-toolbar.client-liquid-glass::after {
-    clip-path: inset(0 round 22px);
-    // The copy misses the player's scrim: darkened to match what Chromium sees behind the bar.
-    filter: blur(9px) url('#client-liquid-glass-bar') saturate(1.05) brightness(0.55);
-}
-
 .client-player-sr {
     position: absolute;
     width: 1px;
