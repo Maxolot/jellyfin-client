@@ -1,11 +1,12 @@
 /* eslint-disable react/jsx-no-bind -- Settings use local, typed input handlers. */
 import type { UserConfiguration } from '@jellyfin/sdk/lib/generated-client';
 import React, { type ReactNode, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import appSettings from 'scripts/settings/appSettings';
 import * as userSettings from 'scripts/settings/userSettings';
 import { signOut } from '../profiles/profileSession';
-import { serverInterfaceUrl } from '../session/ServerInterfacePage';
+
 import { Collapsible, SaveNote, Select, SettingCard, type SettingScope, TextField, Toggle } from '../settings/controls';
 import SettingsIcon from '../settings/SettingsIcon';
 
@@ -254,7 +255,7 @@ export function ProfileSettings() {
                 <button type='button' className='client-settings-button client-settings-button-danger' onClick={() => {
                     void signOut(account.api?.basePath, account.account.data?.Id);
                 }}>Se déconnecter</button>
-                {admin && account.api && <a className='client-settings-button' href={serverInterfaceUrl(account.api.basePath, 'dashboard')} target='_blank' rel='noopener noreferrer'><SettingsIcon name='external' />Administration du serveur</a>}
+                {admin && <Link className='client-settings-button' to='/client?view=settings&section=admin'><SettingsIcon name='server' />Administration du serveur</Link>}
             </div>
         </Section>
     </>;

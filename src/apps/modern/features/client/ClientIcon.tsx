@@ -36,7 +36,8 @@ const paths = {
     edit: 'M4 20h4L19 9l-4-4L4 16ZM13.5 6.5l4 4',
     eye: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12ZM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0',
     bell: 'M18 8a6 6 0 0 0-12 0c0 6-2 7-3 9h18c-1-2-3-3-3-9ZM10 21h4',
-    clock: 'M12 7v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0'
+    clock: 'M12 7v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
+    server: 'M4 4h16v6H4ZM4 14h16v6H4ZM8 7h.01M8 17h.01'
 };
 export type ClientIconName = keyof typeof paths;
 

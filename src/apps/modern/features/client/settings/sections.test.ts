@@ -16,6 +16,8 @@ describe('settings sections', () => {
 
     it('never shows server pages to other users', () => {
         expect(resolveSection('serveur', false).key).toBe('apparence');
+        expect(resolveSection('admin-comptes', false).key).toBe('apparence');
+        expect(resolveSection('admin-journal', true).key).toBe('admin-journal');
         expect(resolveSection(null, true).key).toBe('apparence');
         expect(resolveSection('inconnue', true).key).toBe('apparence');
     });

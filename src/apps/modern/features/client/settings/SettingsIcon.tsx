@@ -16,7 +16,11 @@ const paths = {
     external: 'M14 4h6v6M20 4l-9 9M18 14v6H4V6h6',
     restart: 'M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5',
     check: 'm5 12 4 4L19 6',
-    lock: 'M6 11h12v9H6ZM8.5 11V8a3.5 3.5 0 0 1 7 0v3'
+    lock: 'M6 11h12v9H6ZM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
+    activity: 'M3 12h4l3-8 4 16 3-8h4',
+    users: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM22 21v-2a4 4 0 0 0-3-3.9M17 3.1a4 4 0 0 1 0 7.8',
+    tasks: 'M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2',
+    log: 'M6 3h9l4 4v14H6ZM14 3v5h5M9 12h7M9 16h7'
 } as const;
 
 export type SettingsIconName = keyof typeof paths;
