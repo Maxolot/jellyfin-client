@@ -1,5 +1,5 @@
 /* Wide screens: the selected season's episodes stand in a column on the right of the series hero,
-   so choosing a season visibly changes the list without scrolling. */
+   beside the title, with every season on one row underneath both. */
 
 /* Narrower screens keep the panel under the seasons, inside the hero's own margins. */
 .client-series-side .client-series-episodes-panel { margin: 22px 0 0; }
@@ -12,18 +12,41 @@
         --client-episodes-side: clamp(380px, 32vw, 500px);
         --client-episode-thumb: 47%;
 
-        padding-right: calc(var(--client-margin) + var(--client-episodes-side) + 28px);
+        // Title and episodes side by side, the seasons on a full-width row beneath both.
+        display: grid;
+        grid-template:
+            'back episodes' auto
+            'copy episodes' minmax(0, 1fr)
+            'rail rail' auto / minmax(0, 1fr) var(--client-episodes-side);
+        gap: 14px 32px;
+
+        > .client-back {
+            // In the flow of the grid, so a short window cannot slide the title under it.
+            position: relative;
+            inset: auto;
+            margin: 0;
+            grid-area: back;
+            align-self: start;
+            justify-self: start;
+        }
+
+        > .client-hero-copy {
+            grid-area: copy;
+            align-self: end;
+        }
+
+        > .client-season-rail { grid-area: rail; }
 
         .client-season-poster.is-active::after { display: none; }
 
         .client-series-episodes-panel {
-            position: absolute;
+            position: relative;
             z-index: 2;
-            top: 80px;
-            right: var(--client-margin);
-            bottom: 25px;
             display: flex;
-            width: var(--client-episodes-side);
+            // Fills its rows without making them taller: the list scrolls inside.
+            height: 0;
+            min-height: 100%;
+            grid-area: episodes;
             box-sizing: border-box;
             flex-direction: column;
             margin: 0;
