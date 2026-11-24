@@ -10,7 +10,8 @@ Ce client n'affiche plus aucune page, aucun logo ni aucun nom de Jellyfin Web. L
 | Fiche d'un titre (`/details`) | « ⋯ → Informations » : versions, détail technique, chapitres, bonus, liens |
 | Accueil, bibliothèques, recherche, préférences | Redirigés vers le client (`routes/redirects.tsx`) |
 | Musique, livres, TV en direct, listes de lecture | Redirigés vers l'accueil : hors du périmètre de ce client |
-| Administration, première installation | Ouvertes dans l'interface propre au serveur (`/web/`) |
+| Administration | Paramètres → Administration (`features/client/admin`) ; écrans d'origine (`apps/dashboard`) conservés pour les administrateurs comme « Réglages avancés (Jellyfin) » |
+| Première installation | Ouverte dans l'interface propre au serveur (`/web/`) |
 | Messages du moteur (alertes, choix) | Logique d'origine, habillage `session/nativeDialogs.scss` |
 
 Le code d'origine reste dans le dépôt, sans route pour l'atteindre, afin de garder les mises à jour simples.

@@ -310,7 +310,17 @@
     flex-wrap: wrap;
     gap: 8px 16px;
 
-    a:any-link {
+    a:any-link,
+    .client-media-link-button {
         color: #d3d7df;
+    }
+
+    .client-media-link-button {
+        padding: 0;
+        border: 0;
+        background: none;
+        font: inherit;
+        text-decoration: underline;
+        cursor: pointer;
     }
 }

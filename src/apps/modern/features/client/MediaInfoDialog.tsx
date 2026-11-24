@@ -13,7 +13,6 @@ import ClientIcon from './ClientIcon';
 import { describeAudio, describeSubtitle, describeVideo, formatBitrate, formatClock, formatSize, safeLink } from './mediaInfo';
 import { mediaVersions } from './mediaVersions';
 import { clientRequest } from './session';
-import { serverInterfaceUrl } from './session/ServerInterfacePage';
 import type { TrackChoice } from './trackChoice';
 import { useLocalTrailers } from './trailers/useLocalTrailers';
 
@@ -106,7 +105,10 @@ export default function MediaInfoDialog({ item, basePath, open, onClose, play, c
             <PlayList title='Bandes-annonces' entries={trailers} play={start} />
             <PlayList title='Bonus' entries={bonus} play={start} />
             {links.length > 0 && <section><h3>Liens</h3><div className='client-media-links'>{links.map(link => <a key={link.url} href={link.url} target='_blank' rel='noopener noreferrer'>{link.name}</a>)}</div></section>}
-            {user?.Policy?.IsAdministrator && item.Id && <section><h3>Administration</h3><div className='client-media-links'><a href={serverInterfaceUrl(basePath, `details?id=${item.Id}`)} target='_blank' rel='noopener noreferrer'>Modifier ce titre sur le serveur ↗</a></div></section>}
+            {user?.Policy?.IsAdministrator && item.Id && <section><h3>Administration</h3><div className='client-media-links'><button type='button' className='client-media-link-button' onClick={() => {
+                const { Id: id, ServerId: serverId } = item;
+                void import('components/metadataEditor/metadataEditor').then(({ default: editor }) => editor.show(id, serverId)).catch(() => undefined);
+            }}>Modifier les métadonnées</button></div></section>}
         </div>
     </ClientDialog>;
 }

@@ -5,7 +5,7 @@ import React, { type ReactNode, useState } from 'react';
 import { useApi } from 'hooks/useApi';
 import { useWebConfig } from 'hooks/useWebConfig';
 
-import { serverInterfaceUrl } from '../../session/ServerInterfacePage';
+import { serverAdminUrl } from '../../session/ServerInterfacePage';
 import { SettingCard, StatusBadge, TextField } from '../controls';
 import SettingsIcon, { type SettingsIconName } from '../SettingsIcon';
 import seerrLogo from '../logos/seerr.svg';
@@ -154,7 +154,7 @@ function ProblemCard({ extension, plugin }: Readonly<{ extension: Extension; plu
     const { api } = useApi();
     return <SettingCard title='Le plugin ne fonctionne pas' aside={<StatusBadge tone='error'>{plugin.Status || 'Erreur'}</StatusBadge>}
         description={`${extension.packageName} est installé mais Jellyfin ne l’a pas chargé. C’est souvent une version faite pour une autre version de Jellyfin : mettez-le à jour ou réinstallez-le depuis l’administration.`}>
-        {api && <div className='client-settings-actions'><a className='client-settings-button' href={serverInterfaceUrl(api.basePath, 'dashboard/plugins')} target='_blank' rel='noopener noreferrer'>
+        {api && <div className='client-settings-actions'><a className='client-settings-button' href={serverAdminUrl('dashboard/plugins')}>
             <SettingsIcon name='external' />Ouvrir les plugins du serveur</a></div>}
     </SettingCard>;
 }
