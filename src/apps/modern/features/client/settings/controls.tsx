@@ -77,7 +77,8 @@ export function Segmented<T extends string | number | boolean>({ label, hint, va
 /** A list of choices that opens in place: same look on every browser, keyboard included. */
 type ChoiceProps<T> = { label: string; value: T; options: readonly Option<T>[]; disabled?: boolean; onChange: (value: T) => void };
 
-export function ChoiceSelect<T extends string | number>({ label, id: providedId, value, options, disabled, onChange }: Readonly<ChoiceProps<T> & { id?: string }>) {
+/** `placeholder` names the button while its first, empty option ("all") is chosen. */
+export function ChoiceSelect<T extends string | number>({ label, id: providedId, value, options, disabled, onChange, placeholder }: Readonly<ChoiceProps<T> & { id?: string; placeholder?: string }>) {
     const generatedId = useId();
     const id = providedId || generatedId;
     const [open, setOpen] = useState(false);
@@ -149,7 +150,7 @@ export function ChoiceSelect<T extends string | number>({ label, id: providedId,
     }}>
         <button id={id} type='button' role='combobox' aria-label={label} aria-describedby={`${id}-value`} aria-haspopup='listbox' aria-expanded={open} aria-controls={open ? `${id}-list` : undefined} aria-activedescendant={open ? `${id}-option-${active}` : undefined} disabled={disabled || !options.length}
             onClick={() => setOpen(!open)} onKeyDown={keys}>
-            <span id={`${id}-value`}>{current}</span><ClientIcon name='down' />
+            <span id={`${id}-value`}>{placeholder && index === 0 && options[0]?.[0] === '' ? placeholder : current}</span><ClientIcon name='down' />
         </button>
         {open && <ul ref={list} id={`${id}-list`} role='listbox' aria-label={label} aria-activedescendant={`${id}-option-${active}`} tabIndex={-1} onMouseDown={event => event.preventDefault()}>
             {options.map(([key, name, detail], position) => <li key={String(key)} id={`${id}-option-${position}`} role='option' aria-selected={key === value}

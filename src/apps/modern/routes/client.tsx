@@ -817,8 +817,8 @@ function BrowseControls({ model }: ViewProps) {
     return <div className='client-browse-controls'>
         {view !== 'home' && <div className='client-catalogue-switch' aria-label='Présentation du catalogue'><button aria-pressed={discovery} onClick={() => setParams({ view })}>Découvrir</button><button aria-pressed={!discovery} onClick={() => setParams({ view, mode: 'library' })}>Toute la bibliothèque</button></div>}
         {view !== 'home' && <Link className='client-button client-collections-entry' to='/client?view=collections'><ClientIcon name='collection' />Collections publiques</Link>}
-        {(view === 'home' || discovery) && <ChoiceSelect label='Genres' value={genre} options={genreChoices(genres.data, genre)} onChange={value => setParams(changeBrowseParams(params, { genre: value }))} />}
-        <ChoiceSelect label='Langues audio' value={audio} options={[['', 'Toutes les langues'], ...languages]} onChange={value => setParams(changeBrowseParams(params, { audio: value }))} />
+        {(view === 'home' || discovery) && <ChoiceSelect label='Genres' placeholder='Genres' value={genre} options={genreChoices(genres.data, genre)} onChange={value => setParams(changeBrowseParams(params, { genre: value }))} />}
+        <ChoiceSelect label='Langues audio' placeholder='Langues' value={audio} options={[['', 'Toutes les langues'], ...languages]} onChange={value => setParams(changeBrowseParams(params, { audio: value }))} />
     </div>;
 }
 
@@ -973,7 +973,7 @@ function SearchView({ model }: ViewProps) {
         <SearchBar value={searchInput} onChange={setSearchInput} onSubmit={value => setFilter('q', value)} />
         {query ? <>
             <div className='client-filter-options client-search-controls'>
-                <ChoiceSelect label='Genre' value={genre} options={genreChoices(genres.data, genre)} onChange={value => setFilter('genre', value)} />
+                <ChoiceSelect label='Genre' placeholder='Genres' value={genre} options={genreChoices(genres.data, genre)} onChange={value => setFilter('genre', value)} />
                 <ChoiceSelect label='Trier les titres de la bibliothèque' value={sort} options={titleOrder} onChange={value => setFilter('sort', value)} />
                 <span className='client-result-count' role='status'>
                     {waiting ? 'Recherche en cours…' : `${count} ${noun}`}
@@ -1022,7 +1022,7 @@ function LibraryView({ model, embedded = false }: ViewProps & { readonly embedde
         {!embedded
         && <div className='client-filter-options'>
             {!withoutFiles && <>
-                <ChoiceSelect label='Genre' value={genre} options={genreChoices(genres.data, genre)} onChange={value => browse({ genre: value })} />
+                <ChoiceSelect label='Genre' placeholder='Genres' value={genre} options={genreChoices(genres.data, genre)} onChange={value => browse({ genre: value })} />
                 <ChoiceSelect label='Trier' value={sort} options={titleOrder} onChange={value => browse({ sort: value })} />
             </>}
             {sharedView && <ChoiceSelect label='Disponibilité' value={availability || 'all'} options={availabilityChoices} onChange={value => browse(value === 'missing' ?

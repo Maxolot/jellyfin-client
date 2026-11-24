@@ -320,3 +320,14 @@ $chip-groups: '.client-catalogue-switch, .client-period-choices, .client-draw-ch
     &:hover,
     &:focus-visible { opacity: 0.72; }
 }
+
+// Catalogue filters (home, Films, Séries): the same pills as every other control.
+.client-interface .client-browse-controls .client-select > button {
+    height: 40px;
+    min-width: 0;
+    min-height: 0;
+    padding: 0 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+}
