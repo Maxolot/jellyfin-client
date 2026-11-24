@@ -248,7 +248,7 @@ function ExternalSource({ data, identity, owned }: Readonly<{ data: ExternalMedi
 }
 
 /** One badge for a series page: sources for the seasons that can still be requested, with the language tags found. */
-function SeriesSources({ data, missing = false }: Readonly<{ data: ExternalMedia; missing?: boolean }>) {
+function SeriesSources({ data, missing = false, inline = false }: Readonly<{ data: ExternalMedia; missing?: boolean; inline?: boolean }>) {
     const requestable = requestableSeasons(data, false).map(season => season.seasonNumber);
     const imdbId = data.externalIds?.imdbId;
     const statuses = useSeasonSources(imdbId, requestable);
@@ -263,18 +263,19 @@ function SeriesSources({ data, missing = false }: Readonly<{ data: ExternalMedia
     let prefix: string | undefined;
     if (missing) prefix = requestable.length > 1 ? 'Saisons manquantes' : 'Saison manquante';
     // On a library page the downloaded files already carry the language tags; only the source state is added.
-    return <SourceBadge status={status} languages={missing ? [] : languages} variant='meta' prefix={prefix} />;
+    // Beside the season count, only the source state is added: the missing seasons are already listed.
+    return <SourceBadge status={status} languages={missing || inline ? [] : languages} variant='meta' prefix={prefix} />;
 }
 
 /** Same badge on the page of a series already in the library, for its missing seasons. */
-export function LocalSeriesSources({ item }: Readonly<{ item: BaseItemDto }>) {
+export function LocalSeriesSources({ item, inline = false }: Readonly<{ item: BaseItemDto; inline?: boolean }>) {
     const seerr = useSeerr();
     const enabled = canRequestSeasons(item, seerr.connected);
     const identity = enabled ? externalIdentity(item) : undefined;
     const detail = useSeerrDetail(identity?.type, identity?.id, false);
     const localSeasons = useLocalSeasons(enabled ? item : undefined);
     if (!identity || !detail.data || localSeasons.isPending || localSeasons.isError) return null;
-    return <SeriesSources data={withLocalAvailability(detail.data, item, localSeasons.data)} missing />;
+    return <SeriesSources data={withLocalAvailability(detail.data, item, localSeasons.data)} missing={!inline} inline={inline} />;
 }
 
 function ExternalRecommendations({ identity, local, row, data, image }: Readonly<{ identity: SeerrIdentity; local: BaseItemDto[]; row: (title: string, items: BaseItemDto[]) => React.ReactNode; data: ExternalMedia; image: (item: BaseItemDto, backdrop?: boolean) => string }>) {

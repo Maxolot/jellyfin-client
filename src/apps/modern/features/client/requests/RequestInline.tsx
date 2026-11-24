@@ -25,11 +25,12 @@ export function RequestProgressNote({ request }: Readonly<{ request: RequestProg
     </div>;
 }
 
-export function CompactRequest({ identity }: Readonly<{ identity?: SeerrIdentity }>) {
+/** `inLibrary`: on a title already in the library, a partly available request repeats the season row. */
+export function CompactRequest({ identity, inLibrary = false }: Readonly<{ identity?: SeerrIdentity; inLibrary?: boolean }>) {
     const query = useRequestProgress(!!identity, !!identity);
     const request = identity ? latestRequest(query.data || [], identity) : undefined;
     // A request that ended up available has nothing left to follow.
-    if (!request || request.stage === 'available') return null;
+    if (!request || request.stage === 'available' || (inLibrary && request.stage === 'partial')) return null;
     return <aside className='client-compact-request' aria-label='Suivi de la demande'>
         <Link to='/client?view=requests'><ClientIcon name='bell' />{requestStageLabel(request.stage)}
             {request.stage === 'downloading' && request.percent != null && <span>{request.percent} %</span>}</Link>

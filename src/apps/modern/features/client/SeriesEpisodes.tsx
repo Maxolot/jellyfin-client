@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-no-bind -- The controls act on the selected season or episode. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 
 import Artwork from './Artwork';
 import { artworkUrl } from './artwork';
@@ -16,6 +16,9 @@ import { EpisodeSummary, useEpisodeSpoilers } from './spoilers';
 import { episodeCount, partialSeason, seasonChoices, seasonLabel, seasonProgress, seasonSummary, type RemoteSeason } from './seriesEpisodesModel';
 import './seriesEpisodes.scss';
 import './seriesSide.scss';
+
+const LocalSeriesSources = lazy(() => import(/* webpackChunkName: "client-seerr" */ './seerr/SeerrViews')
+    .then(module => ({ default: module.LocalSeriesSources })));
 
 type SeasonSelection = {
     seasons: BaseItemDto[];
@@ -33,6 +36,8 @@ export function SeasonRail({ series, basePath, seasons, selected, select, episod
     return <section className='client-season-rail' aria-labelledby='client-season-heading'>
         <header><h2 id='client-season-heading'>Saisons</h2>
             {!!missing.length && <p className='client-season-count'>{seasonSummary(seasons, missing)}</p>}
+            {/* Where the missing seasons can be found, said once, next to the count. */}
+            {!!missing.length && <Suspense fallback={null}><LocalSeriesSources key={series.Id} item={series} inline /></Suspense>}
         </header>
         <div className='client-season-rail-list'>{choices.map(({ key, season, remote }) => season ?
             <SeasonPoster key={key} season={season} series={series} basePath={basePath} active={selected === key} select={select}

@@ -664,7 +664,7 @@ function HeroCopyView({ model, dots }: ViewProps & { dots: ReactNode }) {
         {id && <DetailSynopsis key={hero.Id} overview={hero.Overview} />}
         <HeroActions model={model} dots={dots} />
         {id && <PersonalRating item={hero} />}
-        {id && <CompactRequest identity={externalIdentity(hero)} />}
+        {id && <CompactRequest identity={externalIdentity(hero)} inLibrary />}
     </div>;
 }
 
