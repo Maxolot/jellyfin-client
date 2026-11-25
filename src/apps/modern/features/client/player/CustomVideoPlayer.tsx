@@ -27,6 +27,7 @@ import { Select } from '../ui/controls';
 import './player.scss';
 import './polish.scss';
 import './liquidGlass.scss';
+import './bar.scss';
 import LiquidGlassFilter from './LiquidGlassFilter';
 import { forgetPlayback, useReloadResume } from './reloadResume';
 import { isPlayingOffline } from '../offline/playback';
@@ -419,9 +420,34 @@ export default function CustomVideoPlayer() {
     let loadingLabel = '';
     if (!hasPlayer && !ended) loadingLabel = 'Préparation de la lecture…';
     else if (snapshot?.buffering && hasPlayer && !paused) loadingLabel = 'Chargement de la vidéo…';
+    const timeline = <div className='client-player-timeline'>
+        {hover !== undefined && <TimelinePreview seconds={hover} duration={duration} chapters={chapters} trickplay={trickplay} itemId={itemId} mediaSourceId={playState?.MediaSourceId} enabled={preferences.previews} />}
+        <div className='client-player-chapter-markers' aria-hidden='true'>{chapters.slice(1).map(chapter => <i key={chapter.StartPositionTicks} style={{ left: `${duration ? (chapter.StartPositionTicks || 0) / SECOND / duration * 100 : 0}%` }} />)}</div>
+        <input type='range' aria-label='Progression de la lecture' min={0} max={duration || 1} step={0.1} value={Math.min(displayPosition, duration || 1)} disabled={!canSeek} aria-valuetext={`${formatTime(displayPosition)} sur ${formatTime(duration)}`} style={{ '--progress': `${duration ? displayPosition / duration * 100 : 0}%` } as CSSProperties} onChange={event => {
+            setScrub(Number(event.target.value));
+            setHover(Number(event.target.value));
+        }} onPointerUp={event => {
+            seek(Number(event.currentTarget.value));
+            setScrub(undefined);
+            if (event.pointerType !== 'mouse') setHover(undefined);
+        }} onPointerCancel={() => {
+            setScrub(undefined);
+            setHover(undefined);
+        }} onKeyUp={event => {
+            if (['ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'].includes(event.key)) {
+                seek(Number(event.currentTarget.value));
+                setScrub(undefined);
+            }
+        }} onBlur={() => setScrub(undefined)} onPointerMove={event => {
+            const rect = event.currentTarget.getBoundingClientRect();
+            setHover(Math.max(0, Math.min(duration, (event.clientX - rect.left) / rect.width * duration)));
+        }} onPointerLeave={() => setHover(undefined)} />
+    </div>;
+    // The bar layouts that put the progress bar inside the island of controls.
+    const barInside = preferences.bar === 'island' || preferences.bar === 'inline' || preferences.bar === 'compact';
     return <Page id='customVideoPage' className='client-video-page' isNowPlayingBarEnabled={false} isThemeMediaSupported>
         <style>{`html.client-video-active video::cue { font-size: ${preferences.subtitleSize}%; background-color: ${preferences.subtitleBackground ? 'rgba(0,0,0,.7)' : 'transparent'}; }`}</style>
-        <div ref={root} className={`client-player style-${preferences.style} accent-${preferences.accent}${hasPlayer ? '' : ' is-empty'} ${visible || panel || ended ? 'controls-visible' : 'controls-hidden'}${loadingLabel ? ' is-loading' : ''}`} style={{ '--player-scale': preferences.size / 100 } as CSSProperties} onPointerMove={wakeFromPointer} onPointerDown={() => { keyboardFocus.current = false; }} onFocusCapture={wakeFromFocus}>
+        <div ref={root} className={`client-player style-${preferences.style} accent-${preferences.accent} bar-${preferences.bar}${hasPlayer ? '' : ' is-empty'} ${visible || panel || ended ? 'controls-visible' : 'controls-hidden'}${loadingLabel ? ' is-loading' : ''}`} style={{ '--player-scale': preferences.size / 100 } as CSSProperties} onPointerMove={wakeFromPointer} onPointerDown={() => { keyboardFocus.current = false; }} onFocusCapture={wakeFromFocus}>
             <button className='client-player-surface' tabIndex={-1} aria-label={visible ? 'Masquer les commandes' : 'Afficher les commandes'}
                 onPointerDown={event => { pointerKind.current = event.pointerType; }}
                 onClick={event => {
@@ -479,30 +505,9 @@ export default function CustomVideoPlayer() {
             </aside>}
             <footer className='client-player-bottom'>
                 {error && <p role='alert' className='client-player-error'>{error}</p>}
-                <div className='client-player-timeline'>
-                    {hover !== undefined && <TimelinePreview seconds={hover} duration={duration} chapters={chapters} trickplay={trickplay} itemId={itemId} mediaSourceId={playState?.MediaSourceId} enabled={preferences.previews} />}
-                    <div className='client-player-chapter-markers' aria-hidden='true'>{chapters.slice(1).map(chapter => <i key={chapter.StartPositionTicks} style={{ left: `${duration ? (chapter.StartPositionTicks || 0) / SECOND / duration * 100 : 0}%` }} />)}</div>
-                    <input type='range' aria-label='Progression de la lecture' min={0} max={duration || 1} step={0.1} value={Math.min(displayPosition, duration || 1)} disabled={!canSeek} aria-valuetext={`${formatTime(displayPosition)} sur ${formatTime(duration)}`} style={{ '--progress': `${duration ? displayPosition / duration * 100 : 0}%` } as CSSProperties} onChange={event => {
-                        setScrub(Number(event.target.value));
-                        setHover(Number(event.target.value));
-                    }} onPointerUp={event => {
-                        seek(Number(event.currentTarget.value));
-                        setScrub(undefined);
-                        if (event.pointerType !== 'mouse') setHover(undefined);
-                    }} onPointerCancel={() => {
-                        setScrub(undefined);
-                        setHover(undefined);
-                    }} onKeyUp={event => {
-                        if (['ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'].includes(event.key)) {
-                            seek(Number(event.currentTarget.value));
-                            setScrub(undefined);
-                        }
-                    }} onBlur={() => setScrub(undefined)} onPointerMove={event => {
-                        const rect = event.currentTarget.getBoundingClientRect();
-                        setHover(Math.max(0, Math.min(duration, (event.clientX - rect.left) / rect.width * duration)));
-                    }} onPointerLeave={() => setHover(undefined)} />
-                </div>
+                {!barInside && timeline}
                 <div className='client-player-toolbar client-liquid-glass'>
+                    {barInside && timeline}
                     {button(paused ? 'Lecture' : 'Pause', paused ? 'play' : 'pause', () => playbackManager.playPause(), !hasPlayer)}
                     <div className='client-player-volume'><button type='button' aria-label={playState?.IsMuted ? 'Activer le son' : 'Couper le son'} onClick={() => action(() => playbackManager.toggleMute())}><ClientIcon name={playState?.IsMuted ? 'muted' : 'volume'} /></button><input type='range' aria-label='Volume' min={0} max={100} value={playState?.IsMuted ? 0 : playState?.VolumeLevel || 0} disabled={!commands.includes('SetVolume')} onChange={event => action(() => playbackManager.setVolume(Number(event.target.value)))} /></div>
                     <span className='client-player-time'>{formatTime(displayPosition)} <span>/ {timeLabel}</span>{preferences.time !== 'end' && duration > 0 && <span className='client-player-end'> · Fin à {endTime}</span>}</span>

@@ -61,6 +61,13 @@
     border-radius: var(--client-radius-panel);
 }
 
+// Two islands layout: the progress bar gets a pill of the same material.
+.client-player.style-glass.bar-stacked .client-player-timeline {
+    @include liquid-glass-surface;
+
+    border-radius: var(--client-radius-pill);
+}
+
 // The filter is only rendered in Chromium, the one engine that refracts the backdrop through it.
 // stylelint-disable-next-line no-descending-specificity -- Only backdrop-filter is overridden, hover states are unaffected.
 .client-player:not(.style-minimal) .client-player-center:has(.client-liquid-glass-defs.is-backdrop) > .client-liquid-glass {
@@ -68,7 +75,8 @@
 }
 
 // A long bar would stretch the lens: it only gets the swirl.
-.client-player.style-glass:has(.client-liquid-glass-defs.is-backdrop) .client-player-toolbar.client-liquid-glass {
+.client-player.style-glass:has(.client-liquid-glass-defs.is-backdrop) .client-player-toolbar.client-liquid-glass,
+.client-player.style-glass.bar-stacked:has(.client-liquid-glass-defs.is-backdrop) .client-player-timeline {
     backdrop-filter: blur(9px) url('#client-liquid-glass-bar') saturate(1.15) brightness(0.94);
 }
 
