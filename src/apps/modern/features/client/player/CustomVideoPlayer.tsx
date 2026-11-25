@@ -60,6 +60,7 @@ export default function CustomVideoPlayer() {
     const [preferences, savePreferences] = usePlayerPreferences(playerPreferenceKey(api?.basePath || '', user?.Id || ''));
     const [visible, setVisible] = useState(true);
     const [panel, setPanel] = useState<Panel>();
+    const controlsShown = visible || panel !== undefined;
     const [details, setDetails] = useState<{ id: string; item: BaseItemDto; segments: MediaSegmentDto[] }>();
     const [error, setError] = useState('');
     const [cancelledFor, setCancelledFor] = useState('');
@@ -361,30 +362,46 @@ export default function CustomVideoPlayer() {
     useEffect(() => {
         const video = document.querySelector<HTMLVideoElement>('.videoPlayerContainer video');
         if (!video) return;
-        const positions = new Map<VTTCue, { line: VTTCue['line']; snap: boolean }>();
+        const positions = new Map<VTTCue, { line: VTTCue['line']; snap: boolean; align: LineAlignSetting }>();
+        // While the controls show, subtitles rise above them (as on YouTube) instead of running under the island.
+        const distance = () => {
+            const bottom = root.current?.querySelector('.client-player-bottom');
+            if (!controlsShown || !bottom) return preferences.subtitlePosition;
+            const box = video.getBoundingClientRect();
+            const tops = Array.from(bottom.querySelectorAll('.client-player-timeline, .client-player-toolbar'), element => element.getBoundingClientRect().top);
+            if (!box.height || !tops.length) return preferences.subtitlePosition;
+            const covered = (box.bottom - Math.min(...tops)) / box.height * 100 + 2;
+            return Math.min(60, Math.max(preferences.subtitlePosition, covered));
+        };
         const apply = () => {
+            const line = 100 - distance();
             for (const track of Array.from(video.textTracks)) {
                 for (const cue of Array.from(track.cues || [])) {
                     if (!('line' in cue)) continue;
                     const textCue = cue as VTTCue;
-                    if (!positions.has(textCue)) positions.set(textCue, { line: textCue.line, snap: textCue.snapToLines });
+                    if (!positions.has(textCue)) positions.set(textCue, { line: textCue.line, snap: textCue.snapToLines, align: textCue.lineAlign });
                     textCue.snapToLines = false;
-                    textCue.line = 100 - preferences.subtitlePosition;
+                    // The setting is the distance from the bottom of the image to the bottom of the text.
+                    textCue.lineAlign = 'end';
+                    if (textCue.line !== line) textCue.line = line;
                 }
             }
         };
         apply();
         video.textTracks.addEventListener('change', apply);
         video.addEventListener('timeupdate', apply);
+        window.addEventListener('resize', apply);
         return () => {
             video.textTracks.removeEventListener('change', apply);
             video.removeEventListener('timeupdate', apply);
+            window.removeEventListener('resize', apply);
             positions.forEach((original, cue) => {
                 cue.line = original.line;
                 cue.snapToLines = original.snap;
+                cue.lineAlign = original.align;
             });
         };
-    }, [preferences.subtitlePosition, itemId, playState?.SubtitleStreamIndex, playState?.MediaSourceId]);
+    }, [preferences.subtitlePosition, preferences.bar, preferences.size, controlsShown, itemId, playState?.SubtitleStreamIndex, playState?.MediaSourceId]);
     const openPanel = (name: Panel) => {
         setPanel(name);
         wake();
