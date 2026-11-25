@@ -27,6 +27,7 @@ import { Select } from '../ui/controls';
 import './player.scss';
 import './polish.scss';
 import './liquidGlass.scss';
+import './timeline.scss';
 import './bar.scss';
 import LiquidGlassFilter from './LiquidGlassFilter';
 import { forgetPlayback, useReloadResume } from './reloadResume';
@@ -420,10 +421,16 @@ export default function CustomVideoPlayer() {
     let loadingLabel = '';
     if (!hasPlayer && !ended) loadingLabel = 'Préparation de la lecture…';
     else if (snapshot?.buffering && hasPlayer && !paused) loadingLabel = 'Chargement de la vidéo…';
-    const timeline = <div className='client-player-timeline'>
+    const percent = (seconds: number) => `${duration ? Math.min(100, Math.max(0, seconds / duration * 100)) : 0}%`;
+    const timeline = <div className='client-player-timeline' style={{ '--progress': percent(displayPosition) } as CSSProperties}>
         {hover !== undefined && <TimelinePreview seconds={hover} duration={duration} chapters={chapters} trickplay={trickplay} itemId={itemId} mediaSourceId={playState?.MediaSourceId} enabled={preferences.previews} />}
+        {/* What the browser has already loaded shows ahead of the playhead, as on YouTube. */}
+        <div className='client-player-track' aria-hidden='true'>
+            {duration > 0 && playState?.BufferedRanges?.map(range => <i key={range.start} className='is-buffered' style={{ left: percent((range.start || 0) / SECOND), width: percent(((range.end || 0) - (range.start || 0)) / SECOND) }} />)}
+            <i className='is-played' />
+        </div>
         <div className='client-player-chapter-markers' aria-hidden='true'>{chapters.slice(1).map(chapter => <i key={chapter.StartPositionTicks} style={{ left: `${duration ? (chapter.StartPositionTicks || 0) / SECOND / duration * 100 : 0}%` }} />)}</div>
-        <input type='range' aria-label='Progression de la lecture' min={0} max={duration || 1} step={0.1} value={Math.min(displayPosition, duration || 1)} disabled={!canSeek} aria-valuetext={`${formatTime(displayPosition)} sur ${formatTime(duration)}`} style={{ '--progress': `${duration ? displayPosition / duration * 100 : 0}%` } as CSSProperties} onChange={event => {
+        <input type='range' aria-label='Progression de la lecture' min={0} max={duration || 1} step={0.1} value={Math.min(displayPosition, duration || 1)} disabled={!canSeek} aria-valuetext={`${formatTime(displayPosition)} sur ${formatTime(duration)}`} onChange={event => {
             setScrub(Number(event.target.value));
             setHover(Number(event.target.value));
         }} onPointerUp={event => {

@@ -117,15 +117,6 @@
     object-fit: cover;
 }
 
-.client-player-timeline > input {
-    height: 32px;
-    border-radius: 0;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 100% 5px;
-}
-
-.client-player-chapter-markers i { top: calc(50% - 3px); }
 .client-player-scrub-preview { bottom: calc(50% + 16px); }
 .client-player-tools { flex-wrap: wrap; }
 
