@@ -25,18 +25,6 @@
     }
 }
 
-.client-collections-back {
-    display: inline-flex;
-    min-height: 44px;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 10px;
-    font-size: var(--client-text-14);
-    text-decoration: none;
-
-    &:hover { text-decoration: none; }
-}
-
 .client-collections-entry {
     flex: none;
     text-decoration: none;

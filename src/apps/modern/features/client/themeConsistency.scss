@@ -1,6 +1,8 @@
 /* stylelint-disable no-descending-specificity -- Component and theme scopes intentionally override earlier shared states. */
-// Réglages communs à plusieurs pages : titres de page, barre de navigation, filtres, liens.
-// Les boutons et les pastilles sont dans ui/ (charte : ActionButton, Chip).
+
+/* Réglages communs à plusieurs pages : titres de page, barre de navigation, filtres, liens. */
+
+/* Les boutons et les pastilles sont dans ui/ (charte : ActionButton, Chip). */
 
 @use 'design' as ds;
 
@@ -62,11 +64,6 @@
         &:hover { background: #ffffff20; }
     }
 
-    .client-episodes header button {
-        min-height: var(--client-size-icon-target);
-        border-radius: var(--client-radius-control);
-    }
-
     :is(.client-personal-spotlight, .client-advanced-panel, .client-stat) {
         border-radius: var(--client-radius-panel);
     }
@@ -84,7 +81,7 @@
     }
 }
 
-// Reprendre et Voir la fiche côte à côte, sur la même ligne.
+/* Reprendre et Voir la fiche côte à côte, sur la même ligne. */
 .client-personal-spotlight :is(.client-play, .client-button) {
     margin-top: 0;
     margin-bottom: 0;
@@ -111,7 +108,7 @@
     }
 }
 
-// Liens dans le texte : pas de soulignement natif, du blanc plein et une graisse marquée.
+/* Liens dans le texte : pas de soulignement natif, du blanc plein et une graisse marquée. */
 .client-interface .client-director-credits a,
 .client-interface .client-text-button,
 .client-interface .client-session-link,
@@ -129,7 +126,7 @@
     &:focus-visible { opacity: 0.72; }
 }
 
-// Catalogue filters (home, Films, Séries): the same pills as every other control.
+/* Catalogue filters (home, Films, Séries): the same pills as every other control. */
 .client-interface .client-browse-controls .client-select > button {
     height: 40px;
     min-width: 0;

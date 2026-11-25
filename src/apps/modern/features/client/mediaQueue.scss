@@ -22,16 +22,6 @@
     }
 }
 
-.client-episodes header > [aria-label='Saison'] {
-    min-width: 0;
-    max-width: 100%;
-}
-
-.client-episodes header .client-queue-button {
-    min-width: 0;
-    flex-direction: row;
-}
-
 .client-personal-favorites > header {
     flex-wrap: wrap;
     gap: 8px 16px;

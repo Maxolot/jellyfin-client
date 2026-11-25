@@ -29,7 +29,7 @@
     opacity: 0;
 }
 
-// Extrait qui change de page : la même vidéo continue, sans fondu d'apparition.
+/* Extrait qui change de page : la même vidéo continue, sans fondu d'apparition. */
 .client-preview-media.is-resuming:not(.is-fading) video {
     opacity: 1;
     transition: none;
@@ -42,7 +42,7 @@
     border-radius: var(--client-radius-control);
 }
 
-// Version de meilleure qualité qui se prépare, invisible, avant de prendre le relais.
+/* Version de meilleure qualité qui se prépare, invisible, avant de prendre le relais. */
 .client-preview-media.is-resuming video.is-loading {
     opacity: 0;
 }
@@ -90,23 +90,6 @@
 
 .client-personal-spotlight > .client-preview-media {
     z-index: 0;
-}
-
-.client-interface .client-episode > .client-preview-media {
-    z-index: 0;
-    inset: 0;
-}
-
-.client-episode .client-episode-play,
-.client-episode-caption {
-    z-index: 1;
-}
-
-.client-preview-setting > label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 15px 0;
 }
 
 @include ds.phone {

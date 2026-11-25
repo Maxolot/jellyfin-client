@@ -170,7 +170,7 @@
     }
 }
 
-// The fluid drop replaces the active dot; the gooey filter merges head, neck and tail as in the mockup.
+/* The fluid drop replaces the active dot; the gooey filter merges head, neck and tail as in the mockup. */
 .client-liquid-marker {
     position: absolute;
     z-index: 1;
@@ -250,7 +250,7 @@
     animation-play-state: paused;
 }
 
-// Copy and buttons enter per slide; the carousel dots stay put so the drop can flow between slides.
+/* Copy and buttons enter per slide; the carousel dots stay put so the drop can flow between slides. */
 .client-hero-copy > :not(.client-actions),
 .client-hero-copy > .client-actions > :not(.client-hero-dots) {
     animation: client-copy-enter var(--client-duration-fade) var(--client-ease-move) both;
@@ -265,8 +265,7 @@
     animation: client-section-enter var(--client-duration-fade) var(--client-ease-move) both;
 }
 
-.client-profile-menu,
-.client-cast-dialog[open] {
+.client-profile-menu {
     animation: client-copy-enter var(--client-duration-state) var(--client-ease-move) both;
 }
 
@@ -282,10 +281,6 @@
 
 .client-person:hover {
     transform: translateY(-4px);
-}
-
-.client-episodes header button[aria-pressed='true'] {
-    box-shadow: inset 0 0 0 1px #ffffff65;
 }
 
 @keyframes client-artwork-drift {
@@ -336,7 +331,7 @@
     }
 }
 
-// Changer d'onglet doit répondre vite : les longues transitions restent réservées au carrousel.
+/* Changer d'onglet doit répondre vite : les longues transitions restent réservées au carrousel. */
 .client-interface[data-tab-switch] {
     .client-hero .client-background {
         transition-duration: var(--client-duration-move);
@@ -349,7 +344,7 @@
     }
 }
 
-// « Bientôt à découvrir » : grandes affiches 2:3 de la maquette, hauteur bornée selon l'écran.
+/* « Bientôt à découvrir » : grandes affiches 2:3 de la maquette, hauteur bornée selon l'écran. */
 .client-upcoming {
     --release-height: clamp(420px, 34vw, 560px);
 }

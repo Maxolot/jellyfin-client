@@ -79,31 +79,7 @@
 
 .client-detail-dialog-body { padding: 22px; }
 
-.client-detail-links {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px 20px;
-    margin-top: 16px;
-
-    .client-original-link { margin-top: 0; }
-}
-
-.client-detail-links .client-cast-action {
-    min-height: 32px;
-    padding: 4px 0;
-    border: 0;
-    background: none;
-    color: var(--client-ink-muted);
-    font-size: var(--client-text-12);
-
-    &:hover {
-        color: var(--client-ink);
-        text-decoration: none;
-    }
-}
-
-// La fiche forme son propre plan : le menu ouvert doit passer le plan entier au-dessus des cartes qui suivent, sous la navigation.
+/* La fiche forme son propre plan : le menu ouvert doit passer le plan entier au-dessus des cartes qui suivent, sous la navigation. */
 .client-hero.client-detail:has(.client-more-menu) {
     position: relative;
     z-index: 15;
@@ -221,7 +197,7 @@
     }
 }
 
-// Informations d'un titre : remplacent la fiche d'origine, sans rien afficher par défaut sur la page.
+/* Informations d'un titre : remplacent la fiche d'origine, sans rien afficher par défaut sur la page. */
 .client-media-info {
     display: grid;
     gap: 24px;

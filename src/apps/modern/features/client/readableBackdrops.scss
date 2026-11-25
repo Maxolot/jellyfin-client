@@ -1,8 +1,9 @@
 @use 'design' as ds;
 
 .client-hero-background .client-home-hero {
-    // Full screen at the top of the page, then a framed card while scrolling (useHeroBackground):
-    // no blurred bottom edge, the image and its clip are only cut, never faded or resized.
+    /* Full screen at the top of the page, then a framed card while scrolling (useHeroBackground): */
+
+    /* no blurred bottom edge, the image and its clip are only cut, never faded or resized. */
     --hero-cut: calc(var(--hero-frame, 0) * var(--client-margin));
 
     > .client-hero-image-layer,
@@ -16,7 +17,7 @@
         transform-origin: 50% 0;
     }
 
-    // The frame of the encadré mode appears with the card.
+    /* The frame of the encadré mode appears with the card. */
     &::after {
         position: absolute;
         z-index: -1;
@@ -60,28 +61,6 @@
 .client-treatment-clear .client-detail-readability { background: none; }
 
 .client-detail .client-hero-copy { text-shadow: 0 2px 12px #0008; }
-
-.client-backdrop-settings {
-    display: grid;
-    max-width: 680px;
-    gap: 24px;
-    margin: 28px 0;
-
-    label {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 12px;
-        font-size: var(--client-text-14);
-    }
-
-    output { color: var(--client-ink-subtle); }
-
-    input {
-        width: 100%;
-        grid-column: 1 / -1;
-        accent-color: white;
-    }
-}
 
 @include ds.phone {
     .client-detail .client-detail-readability {
