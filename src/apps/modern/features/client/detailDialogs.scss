@@ -48,8 +48,8 @@
         padding: 12px;
         border: 0;
         border-radius: 50%;
-        background: #ffffff12;
-        color: white;
+        background: var(--client-surface-highlight);
+        color: var(--client-ink);
     }
 
     .client-request-panel {
@@ -92,11 +92,11 @@
     padding: 4px 0;
     border: 0;
     background: none;
-    color: #d3d4d9;
+    color: var(--client-ink-muted);
     font-size: 12px;
 
     &:hover {
-        color: white;
+        color: var(--client-ink);
         text-decoration: none;
     }
 }
@@ -155,7 +155,7 @@
         border: 0;
         border-radius: 10px;
         background: transparent;
-        color: #f2f4f7;
+        color: var(--client-ink);
         font: inherit;
         font-size: 14px;
         text-align: left;
@@ -182,14 +182,14 @@
     padding: 6px 0;
 
     > .client-menu-hint {
-        color: #a4afc0;
+        color: var(--client-ink-subtle);
         font-size: 12px;
     }
 }
 
 .client-more-heading {
     padding: 10px 14px 4px;
-    color: #a4afc0;
+    color: var(--client-ink-subtle);
     font-size: 12px;
 }
 
@@ -223,12 +223,12 @@
 .client-media-info {
     display: grid;
     gap: 24px;
-    color: #d3d7df;
+    color: var(--client-ink-muted);
     font-size: 14px;
 
     h3 {
         margin: 0 0 10px;
-        color: #fff;
+        color: var(--client-ink);
         font-size: 15px;
         font-weight: 600;
     }
@@ -241,7 +241,7 @@
     }
 
     dt {
-        color: #a4afc0;
+        color: var(--client-ink-subtle);
     }
 
     dd {
@@ -265,7 +265,7 @@
     align-items: center;
     gap: 12px;
     padding: 4px 12px;
-    color: #f2f4f7;
+    color: var(--client-ink);
     background: rgb(255 255 255 / 6%);
     border: 0;
     border-radius: 10px;
@@ -286,7 +286,7 @@
     time,
     small {
         margin-left: auto;
-        color: #a4afc0;
+        color: var(--client-ink-subtle);
         font-size: 12px;
     }
 
@@ -312,7 +312,7 @@
 
     a:any-link,
     .client-media-link-button {
-        color: #d3d7df;
+        color: var(--client-ink-muted);
     }
 
     .client-media-link-button {

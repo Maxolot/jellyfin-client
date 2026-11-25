@@ -71,7 +71,7 @@
     border: 1px solid #ffffff70;
     border-radius: 50%;
     background: #35353585;
-    color: white;
+    color: var(--client-ink);
     cursor: pointer;
 
     &::before {

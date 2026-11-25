@@ -13,7 +13,7 @@
     }
 
     .client-saga-eyebrow {
-        color: #8e98a5;
+        color: var(--client-ink-subtle);
         font-size: 9px;
         letter-spacing: 0.16em;
     }
@@ -27,12 +27,12 @@
 
     .client-saga-count {
         margin: 8px 0 0;
-        color: #909aa8;
+        color: var(--client-ink-subtle);
         font-size: 11px;
     }
 
     .client-saga-order {
-        color: #828d9c;
+        color: var(--client-ink-subtle);
         font-size: 11px;
         white-space: nowrap;
     }
@@ -57,8 +57,8 @@
     height: var(--saga-height);
     overflow: hidden;
     border-radius: 9px;
-    background: #191e26;
-    color: #fff;
+    background: #1e1e1e;
+    color: var(--client-ink);
     isolation: isolate;
     contain: layout paint;
     transform-origin: left center;
@@ -69,7 +69,7 @@
     }
 
     &:focus-visible {
-        outline: 2px solid #fff;
+        outline: 2px solid var(--client-focus);
         outline-offset: -3px;
     }
 
@@ -107,10 +107,10 @@
     top: 11px;
     left: 11px;
     padding: 5px 8px;
-    border: 1px solid #ffffff30;
+    border: 1px solid var(--client-line);
     border-radius: 5px;
     background: #111b;
-    color: #e7eaf0;
+    color: var(--client-ink);
     font-size: 10px;
 }
 
@@ -135,7 +135,7 @@
     }
 
     small {
-        color: #c9cfd8;
+        color: var(--client-ink-muted);
         font-size: 10px;
     }
 }
@@ -154,7 +154,7 @@
     padding: 5px 8px;
     border: 1px solid #ffffff36;
     border-radius: 20px;
-    background: #11151bd9;
+    background: #151515d9;
     font-size: 10px;
     font-weight: 600;
 

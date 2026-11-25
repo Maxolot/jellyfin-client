@@ -8,8 +8,8 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
 
 .client-page {
     padding: 0 !important;
-    background: #090a0d;
-    color: #f4f4f5;
+    background: var(--client-page);
+    color: var(--client-ink);
     font-family: Arial, Helvetica, sans-serif;
     font-size: 16px;
     line-height: normal;
@@ -65,7 +65,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     padding: 13px 20px;
     border: 1px solid #ffffff24;
     border-radius: 28px;
-    background: #191c24b3;
+    background: #1d1d1db3;
     backdrop-filter: blur(22px);
 
     > div {
@@ -83,8 +83,8 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     }
 
     a[aria-current='page'] {
-        background: #ffffff1c;
-        box-shadow: inset 0 0 0 1px #ffffff48;
+        background: var(--client-surface-highlight);
+        box-shadow: inset 0 0 0 1px var(--client-line);
     }
 }
 
@@ -101,7 +101,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
 }
 
 .client-profile {
-    background: #303746;
+    background: #373737;
 }
 
 .client-floating .client-nav {
@@ -143,7 +143,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     position: absolute;
     z-index: -1;
     inset: -118px 0 0;
-    background: linear-gradient(90deg, #090a0dcc, #090a0d66 24%, transparent 60%), linear-gradient(0deg, #090a0d, transparent 55%);
+    background: linear-gradient(90deg, #090a0dcc, #090a0d66 24%, transparent 60%), linear-gradient(0deg, var(--client-page), transparent 55%);
     content: '';
 }
 
@@ -182,11 +182,11 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     display: block;
     font-size: 11px;
     letter-spacing: 0.14em;
-    color: #c9cbd4;
+    color: var(--client-ink-muted);
 }
 
 .client-meta {
-    color: #d3d7df;
+    color: var(--client-ink-muted);
     font-size: 12px;
     line-height: 1.8;
 }
@@ -195,7 +195,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     display: -webkit-box;
     overflow: hidden;
     margin: 20px 0;
-    color: #e0e1e8;
+    color: var(--client-ink-muted);
     font-size: 15px;
     line-height: 1.8;
     -webkit-line-clamp: 4;
@@ -219,7 +219,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     padding: 13px 20px;
     border: 1px solid #ffffff64;
     border-radius: 99px;
-    background: #ffffff18;
+    background: var(--client-surface-highlight);
     font-size: 13px;
     font-weight: 600;
 }
@@ -227,7 +227,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
 .client-original-link {
     display: inline-block;
     margin-top: 19px;
-    color: #c8cfdb !important;
+    color: var(--client-ink-muted) !important;
     font-size: 11px;
 }
 
@@ -238,7 +238,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     padding: 12px 18px;
     border: 1px solid #fff6;
     border-radius: 99px;
-    background: #15191d80;
+    background: #19191980;
 }
 
 .client-detail {
@@ -259,7 +259,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     right: 0;
     left: 0;
     height: 400px;
-    background: linear-gradient(#090a0d, #090a0dc0 35%, transparent);
+    background: linear-gradient(var(--client-page), #090a0dc0 35%, transparent);
     content: '';
 }
 
@@ -299,7 +299,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     aspect-ratio: 2 / 3;
     overflow: hidden;
     border-radius: 10px;
-    background: #1c222d;
+    background: #222;
     isolation: isolate;
     transition: transform 0.25s;
 }
@@ -339,7 +339,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
 
 .client-card-caption small {
     font-size: 11px;
-    color: #c7d1e0;
+    color: var(--client-ink-muted);
 }
 
 .client-card-fallback {
@@ -396,13 +396,13 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     padding: 10px 13px;
     border: 1px solid #ffffff48;
     border-radius: 10px;
-    background: #10151b80;
+    background: #15151580;
     font-size: 12px;
 }
 
 .client-episodes [aria-pressed='true'] {
     background: #eee;
-    color: #171a20;
+    color: #1a1a1a;
 }
 
 .client-episodes .client-strip {
@@ -418,7 +418,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     padding: 0;
     border: 1px solid #fff2;
     border-radius: 10px;
-    background: #191f2a;
+    background: #1f1f1f;
 }
 
 .client-episode img {
@@ -446,7 +446,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
 
 .client-episode small {
     font-size: 11px;
-    color: #c2ccdb;
+    color: var(--client-ink-muted);
 }
 
 .client-settings,
@@ -474,8 +474,8 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
 }
 
 .client-settings button[aria-pressed='true'] {
-    background: #e8eaf0;
-    color: #15191f;
+    background: #ebebeb;
+    color: #191919;
 }
 
 .client-settings-link {
@@ -493,7 +493,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     padding: 14px 18px;
     border: 1px solid #ffffff40;
     border-radius: 99px;
-    background: #ffffff08;
+    background: var(--client-surface-layer);
 }
 
 .client-grid {
@@ -517,7 +517,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
 }
 
 .client-interface :is(button, a, input):focus-visible {
-    outline: 2px solid #fff;
+    outline: 2px solid var(--client-focus);
     outline-offset: 4px;
 }
 
@@ -564,7 +564,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     }
 
     .client-hero::before {
-        background: linear-gradient(0deg, #090a0d, #090a0d88 65%, #090a0d22);
+        background: linear-gradient(0deg, var(--client-page), #090a0d88 65%, #090a0d22);
     }
 
     .client-background {

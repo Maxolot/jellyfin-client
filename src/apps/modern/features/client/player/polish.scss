@@ -17,7 +17,7 @@
     padding: 1em;
     border: 1px solid #ffffff25;
     border-radius: 12px;
-    background: #ffffff06;
+    background: var(--client-surface-layer);
 
     h3 {
         margin: 0;
@@ -25,7 +25,7 @@
     }
 
     p {
-        color: #bbb;
+        color: var(--client-ink-subtle);
         font-size: 0.85em;
     }
 
@@ -62,7 +62,7 @@
 
     &[aria-current=true] {
         border-color: var(--player-accent);
-        background: #ffffff15;
+        background: var(--client-surface-highlight);
     }
 
     img {
@@ -80,7 +80,7 @@
     }
 
     small {
-        color: #bbb;
+        color: var(--client-ink-subtle);
         font-size: 0.75em;
     }
 }
@@ -93,7 +93,7 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
     gap: 0.8em 1em;
     font-size: 0.9em;
-    dt { color: #bdbdbd; }
+    dt { color: var(--client-ink-subtle); }
 
     dd {
         margin: 0;
@@ -105,7 +105,7 @@
     display: block;
     max-width: 200px;
     padding: 0.25em 0.5em;
-    color: #ccc;
+    color: var(--client-ink-muted);
     font-size: 0.7em;
 }
 

@@ -36,7 +36,7 @@
         border: 1px solid transparent;
         border-radius: 50%;
         background: transparent;
-        color: #ebeff6;
+        color: var(--client-ink);
         box-shadow: none;
 
         .client-icon {
@@ -45,8 +45,8 @@
         }
 
         &:is(:hover, :focus-visible, [aria-current='page']) {
-            border-color: #ffffff30;
-            background: #ffffff12;
+            border-color: var(--client-line);
+            background: var(--client-surface-highlight);
         }
     }
 
@@ -55,7 +55,7 @@
     .client-row-heading h2 { font-size: clamp(18px, 2vw, 24px); }
 
     .client-row-heading button {
-        color: #e1e8f4;
+        color: var(--client-ink);
 
         &:hover { background: #ffffff20; }
     }
@@ -117,7 +117,7 @@
 .client-interface .client-profile-quick,
 .client-interface .client-spoiler-summary summary,
 .client-interface .client-person-biography summary {
-    color: #fff;
+    color: var(--client-ink);
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;

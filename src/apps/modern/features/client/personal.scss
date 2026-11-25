@@ -16,7 +16,7 @@
     border: 1px solid #ffffff1a;
     border-radius: 16px;
     background: linear-gradient(160deg, #ffffff0d, #ffffff04);
-    color: #aebaca;
+    color: var(--client-ink-subtle);
     font: inherit;
     font-size: 12px;
     text-align: left;
@@ -25,7 +25,7 @@
         display: flex;
         min-height: 34px;
         align-items: center;
-        color: #f2f4f7;
+        color: var(--client-ink);
         font-size: 28px;
         font-variant-numeric: tabular-nums;
         font-weight: 600;
@@ -35,7 +35,7 @@
     small {
         overflow: hidden;
         max-width: 100%;
-        color: #7f8ca0;
+        color: #8b8b8b;
         font-size: 11px;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -55,7 +55,7 @@ button.client-stat {
     &:hover,
     &:focus-visible {
         border-color: #ffffff3d;
-        background-color: #ffffff0a;
+        background-color: var(--client-surface-layer);
     }
 }
 
@@ -64,7 +64,7 @@ button.client-stat {
     width: 56px;
     height: 24px;
     border-radius: 6px;
-    background: #ffffff14;
+    background: var(--client-surface-highlight);
 }
 
 /* The preview video is positioned: keep a readable shade and the actions above it. */
@@ -72,7 +72,7 @@ button.client-stat {
     position: absolute;
     z-index: 0;
     inset: 0;
-    background: linear-gradient(90deg, #0a0d13e6 0%, #0a0d13a6 40%, #0a0d1300 75%);
+    background: linear-gradient(90deg, #0d0d0de6 0%, #0d0d0da6 40%, #0d0d0d00 75%);
     content: '';
     pointer-events: none;
 }
@@ -120,7 +120,7 @@ button.client-stat {
     padding: 20px 22px;
     border: 1px solid #ffffff1a;
     border-radius: 18px;
-    background: #ffffff06;
+    background: var(--client-surface-layer);
 }
 
 .client-genre-taste ol {
@@ -148,7 +148,7 @@ button.client-stat {
         height: 6px;
         overflow: hidden;
         border-radius: 6px;
-        background: #ffffff12;
+        background: var(--client-surface-highlight);
     }
 
     b {
@@ -159,7 +159,7 @@ button.client-stat {
     }
 
     small {
-        color: #7f8ca0;
+        color: #8b8b8b;
         font-size: 11px;
         text-align: right;
     }
@@ -222,7 +222,7 @@ button.client-stat {
             aspect-ratio: 2 / 3;
             border-radius: 10px;
             object-fit: cover;
-            background: #ffffff0d;
+            background: var(--client-surface-layer);
         }
 
         .client-tracked-art {
@@ -240,8 +240,8 @@ button.client-stat {
             bottom: 0;
             left: 0;
             padding: 24px 8px 9px;
-            background: linear-gradient(transparent, #0b0d13 72%);
-            color: #fff;
+            background: linear-gradient(transparent, #0e0e0e 72%);
+            color: var(--client-ink);
             font-size: 12px;
             line-height: 1.3;
             opacity: 0;
@@ -250,7 +250,7 @@ button.client-stat {
         &:where(:hover, :focus-visible) .client-tracked-title { opacity: 1; }
 
         small {
-            color: #8c98aa;
+            color: var(--client-ink-subtle);
             font-size: 11px;
         }
 
@@ -263,7 +263,7 @@ button.client-stat {
         display: flex;
         align-items: center;
         gap: 10px;
-        color: #aebaca;
+        color: var(--client-ink-subtle);
         font-size: 12px;
     }
 
@@ -272,7 +272,7 @@ button.client-stat {
         border: 1px solid #ffffff40;
         border-radius: 8px;
         background: #191919;
-        color: #f2f4f7;
+        color: var(--client-ink);
     }
 
     .client-pagination {
@@ -283,10 +283,10 @@ button.client-stat {
 
     .client-pagination button {
         padding: 7px 14px;
-        border: 1px solid #ffffff30;
+        border: 1px solid var(--client-line);
         border-radius: 999px;
-        background: #ffffff0a;
-        color: #f2f4f7;
+        background: var(--client-surface-layer);
+        color: var(--client-ink);
         font: inherit;
         cursor: pointer;
     }

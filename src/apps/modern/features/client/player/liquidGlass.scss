@@ -93,7 +93,7 @@
     left: calc(100% + 0.5em);
     display: flex;
     align-items: baseline;
-    color: #fff;
+    color: var(--client-ink);
     font-size: 1.15em;
     font-variant-numeric: tabular-nums;
     font-weight: 700;

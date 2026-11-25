@@ -106,7 +106,7 @@
     height: 44px;
     overflow: hidden;
     border-radius: 4px;
-    background: #ffffff12;
+    background: var(--client-surface-highlight);
 }
 
 .client-collection-thumb .client-artwork {

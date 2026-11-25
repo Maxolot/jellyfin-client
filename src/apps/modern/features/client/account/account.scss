@@ -16,7 +16,7 @@
 }
 
 .client-account-scope {
-    color: #8c98aa;
+    color: var(--client-ink-subtle);
     font-size: 12px;
 }
 
@@ -36,7 +36,7 @@
     }
 
     small {
-        color: #9aa5b5;
+        color: var(--client-ink-subtle);
         font-size: 12px;
         line-height: 1.45;
     }
@@ -45,7 +45,7 @@
 .client-account-status {
     min-height: 1.4em;
     margin: 0.6em 0 0;
-    color: #9aa5b5;
+    color: var(--client-ink-subtle);
     font-size: 12px;
 
     &.error {
@@ -88,7 +88,7 @@
 
     summary {
         margin-bottom: 1em;
-        color: #c3cbd7;
+        color: var(--client-ink-muted);
         cursor: pointer;
     }
 }
@@ -128,7 +128,7 @@
         border: 1px solid #ffffff40;
         border-radius: 8px;
         background: #191919;
-        color: #f2f4f7;
+        color: var(--client-ink);
         font: inherit;
     }
 
@@ -148,23 +148,23 @@
     .client-settings & a {
         flex: none;
         padding: 9px 16px;
-        border: 1px solid #ffffff30;
+        border: 1px solid var(--client-line);
         border-radius: 99px;
-        color: #d7deea;
+        color: var(--client-ink-muted);
         font-size: 14px;
         white-space: nowrap;
 
         &[aria-current='page'] {
-            border-color: #e8eaf0;
-            background: #e8eaf0;
-            color: #15191f;
+            border-color: var(--client-line);
+            background: var(--client-surface-highlight);
+            color: var(--client-ink);
         }
     }
 }
 
 .client-account-section > .client-player-hint {
     margin: 0.4em 0 0;
-    color: #bdbdbd;
+    color: var(--client-ink-subtle);
     font-size: 13px;
     line-height: 1.5;
 }

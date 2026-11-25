@@ -7,10 +7,10 @@
     width: 24px;
     height: 24px;
     place-items: center;
-    border: 1px solid #fff5;
+    border: 1px solid var(--client-line-strong);
     border-radius: 50%;
-    background: #18232c;
-    color: #eef8f5;
+    background: #222;
+    color: var(--client-ink);
     box-shadow: 0 2px 6px #0005;
     pointer-events: none;
 
@@ -22,9 +22,9 @@
 
 .client-classic .client-watched-marker,
 .client-spotlight-classic .client-watched-marker {
-    border-color: #ffffff80;
+    border-color: var(--client-line-hover);
     background: #202124;
-    color: #fff;
+    color: var(--client-ink);
 }
 
 .client-spotlight-thumb .client-watched-marker {

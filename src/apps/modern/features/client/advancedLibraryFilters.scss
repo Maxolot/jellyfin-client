@@ -21,7 +21,7 @@
     padding: 0 6px;
     border-radius: 999px;
     background: #fff;
-    color: #111;
+    color: var(--client-ink-inverse);
     font-size: 11px;
     font-weight: 700;
 }
@@ -32,8 +32,8 @@
     padding: clamp(14px, 2vw, 22px);
     border: 1px solid #ffffff24;
     border-radius: 20px;
-    background: #ffffff0d;
-    color: #cbd5e3;
+    background: var(--client-surface-layer);
+    color: var(--client-ink-muted);
     backdrop-filter: blur(18px);
 
     p {
@@ -78,7 +78,7 @@
         border: 1px solid var(--client-line);
         border-radius: 999px;
         background: var(--client-surface-control);
-        color: #f2f3f5;
+        color: var(--client-ink);
         font: inherit;
         font-size: 13px;
         font-weight: 500;

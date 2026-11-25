@@ -28,7 +28,7 @@
     display: block;
     overflow: hidden;
     border-radius: 7px;
-    background: #ffffff0a;
+    background: var(--client-surface-layer);
 
     &::after {
         position: absolute;

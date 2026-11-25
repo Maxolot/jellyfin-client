@@ -185,7 +185,7 @@
     gap: 4px;
     padding: 20px 8px 9px;
     background: linear-gradient(transparent, var(--client-art-scrim) 46%);
-    color: #fff;
+    color: var(--client-ink);
     font-size: clamp(11px, 1.2vw, 15px);
     strong { display: none; }
 

@@ -110,7 +110,7 @@
             &:hover,
             &:focus-visible {
                 border-color: var(--client-line);
-                background: #ffffff12;
+                background: var(--client-surface-highlight);
             }
 
             &.is-next {

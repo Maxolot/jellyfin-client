@@ -1,6 +1,6 @@
 .client-personal-rating {
     margin-top: 17px;
-    color: #a4adbb;
+    color: var(--client-ink-subtle);
     font-size: 12px;
 
     > small {
@@ -19,13 +19,13 @@
 .client-rating-stars {
     display: flex;
     gap: 0;
-    color: #8e929a;
+    color: var(--client-ink-subtle);
 }
 
 .client-rating-fill {
     position: absolute;
     inset: 8px;
-    color: #f4f4f5;
+    color: var(--client-ink);
     pointer-events: none;
 
     .client-icon {
@@ -42,7 +42,7 @@
     padding: 8px;
     border: 0;
     background: transparent;
-    color: #c8c9cd;
+    color: var(--client-ink-muted);
 
     .client-icon {
         width: 20px;
@@ -57,14 +57,14 @@
 
 .client-rating-value {
     min-width: 42px;
-    color: #ddd;
+    color: var(--client-ink-muted);
 }
 
 .client-interface .client-rating-clear {
     padding: 7px 0;
     border: 0;
     background: transparent;
-    color: #b9bdc6;
+    color: var(--client-ink-subtle);
     font-size: 11px;
     text-decoration: none;
 }
@@ -87,7 +87,7 @@
     }
 
     > p {
-        color: #b5b7bd;
+        color: var(--client-ink-subtle);
         line-height: 1.5;
     }
 }
@@ -101,10 +101,10 @@
     right: 8px;
     bottom: 10px;
     padding: 6px 9px;
-    border: 1px solid #ffffff30;
+    border: 1px solid var(--client-line);
     border-radius: 20px;
     background: #141414d9;
-    color: white;
+    color: var(--client-ink);
     font-size: 12px;
 }
 

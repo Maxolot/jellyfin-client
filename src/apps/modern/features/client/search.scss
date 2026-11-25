@@ -20,25 +20,25 @@
         gap: clamp(6px, 1.3vw, 16px);
         padding: 6px 7px 6px clamp(12px, 2vw, 23px);
         margin: 0 0 24px;
-        border: 1px solid #f1f5ff33;
+        border: 1px solid #f5f5f533;
         border-radius: 100px;
-        background: #1b202a;
+        background: #202020;
         box-shadow: 0 9px 28px #0004;
         transition: border-color 160ms ease, background-color 160ms ease;
 
         &:focus-within {
-            border-color: #e2eaffad;
-            background: #222936;
+            border-color: #eaeaeaad;
+            background: #292929;
         }
 
         input {
             height: 52px;
-            color: #f2f5fc;
+            color: var(--client-ink);
             font-size: clamp(16px, 2vw, 19px);
             outline: none;
 
             &::placeholder {
-                color: #bdc9dd;
+                color: var(--client-ink-muted);
                 opacity: 1;
             }
 
@@ -58,36 +58,36 @@
         }
 
         > button:focus-visible {
-            outline: 2px solid #c8ddff;
+            outline: 2px solid var(--client-focus);
             outline-offset: 2px;
         }
 
         .client-search-magnifier {
             display: grid;
             place-items: center;
-            color: #bdc9dd;
+            color: var(--client-ink-muted);
         }
 
         .client-search-clear {
             padding: 0;
-            color: #e8edf7;
+            color: var(--client-ink);
             background: transparent;
 
             &:hover {
-                background: #ecf2ff17;
+                background: #f2f2f217;
             }
         }
 
         .client-search-submit {
             min-height: 48px;
             padding-inline: 22px;
-            background: #eff4ff;
-            color: #191f2a;
+            background: #f4f4f4;
+            color: #1f1f1f;
             font-size: 14px;
             font-weight: 700;
 
             &:hover {
-                background: #dce8ff;
+                background: #e8e8e8;
             }
 
             svg {
@@ -105,7 +105,7 @@
     }
 
     .client-search-feedback {
-        color: #c1cadb;
+        color: var(--client-ink-muted);
         max-width: 62ch;
     }
 
@@ -114,7 +114,7 @@
         scroll-margin-block-start: 100px;
 
         & + .client-search-group {
-            border-top: 1px solid #e7eeff25;
+            border-top: 1px solid #eeeeee25;
             padding-block-start: clamp(22px, 3vw, 36px);
         }
 

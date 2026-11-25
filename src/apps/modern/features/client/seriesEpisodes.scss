@@ -138,7 +138,7 @@
     font-size: clamp(24px, 4.5vw, 56px);
     font-weight: 800;
     line-height: 1;
-    text-shadow: 0 5px 20px #050915bd;
+    text-shadow: 0 5px 20px #0a0a0abd;
     transform: translate(-50%, -50%);
 }
 
@@ -251,7 +251,7 @@
     font-size: clamp(32px, 4vw, 60px);
     font-weight: 750;
     line-height: 1;
-    -webkit-text-stroke: 1px #f2f5ffe0;
+    -webkit-text-stroke: 1px #f6f6f6e0;
 }
 
 .client-series-episode-title {
@@ -277,7 +277,7 @@
     padding: 3px 7px;
     border-radius: 999px;
     background: var(--client-surface-raised);
-    color: #fff;
+    color: var(--client-ink);
     font-size: 11px;
     font-weight: 690;
 }

@@ -35,8 +35,8 @@
         padding: 6px;
         border: 1px solid #ffffff1a;
         border-radius: 14px;
-        background: #ffffff0a;
-        color: #fff;
+        background: var(--client-surface-layer);
+        color: var(--client-ink);
         font: inherit;
         text-align: start;
         cursor: pointer;
@@ -45,7 +45,7 @@
         &:hover,
         &:focus-visible {
             border-color: #ffffff40;
-            background: #ffffff14;
+            background: var(--client-surface-highlight);
         }
     }
 }
@@ -85,7 +85,7 @@
     strong { font-size: 14px; }
 
     small {
-        color: #aab0bb;
+        color: var(--client-ink-subtle);
         font-size: 12px;
     }
 }
@@ -170,7 +170,7 @@
         overflow-x: auto;
         border: 1px solid #ffffff1f;
         border-radius: 999px;
-        background: #ffffff0d;
+        background: var(--client-surface-layer);
         backdrop-filter: blur(18px);
         scrollbar-width: none;
 
@@ -184,18 +184,18 @@
             border: 0;
             border-radius: 999px;
             background: transparent;
-            color: #c3c9d3;
+            color: var(--client-ink-muted);
             font: inherit;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.2s ease, color 0.2s ease;
 
-            &:hover { color: #fff; }
+            &:hover { color: var(--client-ink); }
 
             &[aria-selected='true'] {
                 background: #fff;
-                color: #111;
+                color: var(--client-ink-inverse);
             }
 
             span {

@@ -102,7 +102,7 @@
 }
 
 .client-glass :is(.client-media-card, .client-saga-card):focus-visible {
-    outline: 1px solid #ffffff80;
+    outline: 1px solid var(--client-line-hover);
     outline-offset: 3px;
 }
 
@@ -112,7 +112,7 @@
 }
 
 .client-glass :is(button, a.client-button, .client-nav a):not(:disabled, .client-liquid-dots button, .client-profile):is(:hover, :focus-visible) {
-    border-color: #ffffff59;
+    border-color: var(--client-line-strong);
     box-shadow: inset 0 1px 0 #fff6, inset 0 0 16px #ffffff2e, 0 0 20px #ffffff26, 0 6px 22px #0004;
 }
 
@@ -179,11 +179,11 @@
     pointer-events: none;
 
     .marker-fluid {
-        fill: #f2f4f6;
+        fill: var(--client-ink);
     }
 
     .marker-glint {
-        fill: #fff;
+        fill: var(--client-ink);
         opacity: 0.65;
     }
 }
@@ -368,8 +368,8 @@
     height: var(--release-height);
     overflow: hidden;
     border-radius: 12px;
-    background: #1a1d22;
-    color: #fff;
+    background: #1d1d1d;
+    color: var(--client-ink);
     scroll-snap-align: start;
 
     .client-artwork {
@@ -391,7 +391,7 @@
     }
 
     &:focus-visible {
-        outline: 2px solid #fff;
+        outline: 2px solid var(--client-focus);
         outline-offset: 3px;
     }
 }
@@ -419,7 +419,7 @@
     right: 20px;
     bottom: 18px;
     left: 20px;
-    color: #e1e4e9;
+    color: var(--client-ink);
     font-size: 12px;
 }
 

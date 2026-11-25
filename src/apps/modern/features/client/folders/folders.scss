@@ -90,7 +90,7 @@
         flex-shrink: 0;
         place-items: center;
         padding: 0;
-        border-color: #fff5;
+        border-color: var(--client-line-strong);
         background: var(--client-surface-raised);
     }
 }

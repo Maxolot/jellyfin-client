@@ -6,8 +6,8 @@
     gap: 3px;
     padding: 34px 10px 12px;
     border-radius: inherit;
-    background: linear-gradient(transparent, #0b0d13ea 45%, #0b0d13);
-    color: #fff;
+    background: linear-gradient(transparent, #0e0e0eea 45%, #0e0e0e);
+    color: var(--client-ink);
     pointer-events: none;
 
     strong {
@@ -19,13 +19,13 @@
     }
 
     small {
-        color: #c3cad7;
+        color: var(--client-ink-muted);
         font-size: 11px;
     }
 
     time {
         margin-top: 3px;
-        color: #e9edf6;
+        color: var(--client-ink);
         font-size: 12px;
         font-weight: 650;
     }

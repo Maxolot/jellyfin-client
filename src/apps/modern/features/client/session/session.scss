@@ -11,8 +11,8 @@
     padding: clamp(84px, 12vh, 140px) clamp(16px, 5vw, 80px) clamp(36px, 7vh, 76px);
     overflow: hidden;
     isolation: isolate;
-    background: radial-gradient(ellipse at 50% 0%, #1a2638, #0b0e14 64%);
-    color: #f4f6fc;
+    background: radial-gradient(ellipse at 50% 0%, #262626, #0e0e0e 64%);
+    color: var(--client-ink);
 
     &.client-session-classic {
         --session-surface: #17191e;
@@ -39,7 +39,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    color: #eaf0fc;
+    color: var(--client-ink);
     font-size: 15px;
     font-weight: 650;
 
@@ -48,9 +48,9 @@
         width: 36px;
         height: 36px;
         place-items: center;
-        border: 1px solid #d5e2fb55;
+        border: 1px solid #e2e2e255;
         border-radius: 11px;
-        background: #101723d9;
+        background: #171717d9;
     }
 
     .client-icon { width: 17px; }
@@ -60,7 +60,7 @@
     position: absolute;
     z-index: -1;
     inset: 0;
-    background: linear-gradient(90deg, #080b14b0, #0b0e17a8 46%, #0b0e17e8), linear-gradient(0deg, #0b0e17c7, transparent 55%);
+    background: linear-gradient(90deg, #0c0c0cb0, #0f0f0fa8 46%, #0f0f0fe8), linear-gradient(0deg, #0f0f0fc7, transparent 55%);
     content: '';
 }
 
@@ -110,7 +110,7 @@
 
     label {
         gap: 8px;
-        color: #dae2f1;
+        color: var(--client-ink);
         font-weight: 550;
     }
 
@@ -119,33 +119,33 @@
         width: 100%;
         min-height: 50px;
         padding: 0 15px;
-        border: 1px solid #d4e1fc40;
+        border: 1px solid #e1e1e140;
         border-radius: 12px;
         background: var(--session-field);
-        color: #f5f7fc;
+        color: var(--client-ink);
     }
 
-    input::placeholder { color: #a1aec4; }
+    input::placeholder { color: var(--client-ink-subtle); }
 
     button { min-height: 46px; }
 
     .client-profile-primary {
-        border: 1px solid #f0f4ff;
-        background: #edf2ff;
-        color: #151c2a;
+        border: 1px solid #f4f4f4;
+        background: #f2f2f2;
+        color: #1c1c1c;
         font-weight: 700;
 
         &:hover:not(:disabled) { background: #fff; }
     }
 
     .client-profile-quick {
-        border: 1px solid #d4e1fc38;
-        background: #d8e4ff0b;
-        color: #e7edfc;
+        border: 1px solid #e1e1e138;
+        background: #e4e4e40b;
+        color: var(--client-ink);
         font-size: 14px;
         text-decoration: none;
 
-        &:hover:not(:disabled) { background: #d8e4ff22; }
+        &:hover:not(:disabled) { background: #e4e4e422; }
     }
 
     .client-profile-error {
@@ -164,7 +164,7 @@
 }
 
 .client-session :is(button, a, input, summary):focus-visible {
-    outline: 2px solid #c3d5ff;
+    outline: 2px solid var(--client-focus);
     outline-offset: 3px;
 }
 
@@ -178,13 +178,13 @@
     display: grid;
     min-height: 36px;
     place-items: center;
-    color: #c9d3e9;
+    color: var(--client-ink-muted);
     font-size: 14px;
     text-align: center;
     text-decoration: none;
-    text-decoration-color: #75839d;
+    text-decoration-color: #838383;
 
-    &:hover { color: #fff; }
+    &:hover { color: var(--client-ink); }
 }
 
 .client-session-button {
@@ -200,7 +200,7 @@
 .client-session-disclaimer {
     width: min(100%, 455px);
     margin-top: 18px;
-    color: #bbc6dc;
+    color: var(--client-ink-muted);
     font-size: 13px;
     line-height: 1.5;
     text-align: center;
@@ -210,7 +210,7 @@
 
 .client-session-details {
     margin: 4px 0;
-    color: #c3cee3;
+    color: var(--client-ink-muted);
     font-size: 14px;
 
     summary {
@@ -242,7 +242,7 @@
         width: 32%;
         height: 100%;
         border-radius: inherit;
-        background: #d4e0ff;
+        background: #e0e0e0;
         content: '';
         animation: client-session-progress 1.15s ease-in-out infinite alternate;
     }
@@ -270,7 +270,7 @@
     align-items: center;
     justify-content: center;
     margin-top: 26px;
-    background: #eff4ff0b;
+    background: #f4f4f40b;
     text-decoration: none;
 }
 
@@ -292,7 +292,7 @@
         border: 1px solid var(--session-border);
         border-radius: 12px;
         background: var(--session-field);
-        color: #f1f5ff;
+        color: var(--client-ink);
         text-align: start;
     }
 
@@ -306,7 +306,7 @@
         width: 36px;
         flex: none;
         border-radius: 9px;
-        background: #d7e3fd17;
+        background: #e3e3e317;
     }
 
     small {
@@ -337,7 +337,7 @@
     }
 
     .client-session.has-backdrop::after {
-        background: linear-gradient(180deg, #0b0e17ca, #0b0e17a8 40%, #0b0e17ef 82%);
+        background: linear-gradient(180deg, #0f0f0fca, #0f0f0fa8 40%, #0f0f0fef 82%);
     }
 }
 
