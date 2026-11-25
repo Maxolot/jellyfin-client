@@ -3,7 +3,7 @@
     max-width: 100%;
     align-items: center;
     gap: 5px;
-    color: var(--client-surface-text);
+    color: var(--client-ink);
     font-size: 11px;
     line-height: 1.2;
     vertical-align: middle;
@@ -31,7 +31,7 @@
     flex: none;
     place-items: center;
     overflow: hidden;
-    border: 1px solid var(--client-surface-edge);
+    border: 1px solid var(--client-line-strong);
     border-radius: 50%;
     color: #fff;
     font-size: 10px;
@@ -52,6 +52,6 @@
     width: auto;
     min-width: 21px;
     padding-inline: 3px;
-    border-radius: var(--client-control-radius);
+    border-radius: var(--client-radius-control);
     background: var(--client-art-placeholder);
 }

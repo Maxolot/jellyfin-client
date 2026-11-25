@@ -72,6 +72,7 @@ import { episodeLabel, isWatchedCard, progressPercent, uniqueItems } from '../fe
 import { clientRequest } from '../features/client/session';
 import { pickHeroes, type HeroMix } from '../features/client/heroSelection';
 import { useClientDetails, useClientFilters, useClientMedia, useHeroPool, useMoreBrowse } from '../features/client/useClientMedia';
+import '../features/client/design/theme.scss';
 import '../features/client/client.scss';
 import '../features/client/prototype.scss';
 import '../features/client/motion.scss';

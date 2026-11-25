@@ -36,6 +36,8 @@ jobs:
         run: npm run lint
       - name: Stylesheet style
         run: npm run stylelint
+      - name: Design tokens and hard-coded style budget
+        run: npm run design:check
       - name: Production build (bounded memory)
         env:
           NODE_ENV: production

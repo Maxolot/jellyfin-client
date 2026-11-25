@@ -169,7 +169,10 @@
     "lint": "eslint",
     "test": "vitest --watch=false --config vite.config.ts",
     "test:watch": "vitest --config vite.config.ts",
-    "stylelint": "stylelint \"src/**/*.{css,scss}\""
+    "stylelint": "stylelint \"src/**/*.{css,scss}\"",
+    "design:tokens": "node scripts/fork/design-tokens.mjs",
+    "design:check": "node scripts/fork/design-tokens.mjs --check && node scripts/fork/style-metrics.mjs --check",
+    "design:metrics": "node scripts/fork/style-metrics.mjs"
   },
   "engines": {
     "node": ">=24.0.0",

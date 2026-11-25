@@ -1,0 +1,257 @@
+// Généré par scripts/fork/design-tokens.mjs depuis tokens.json. Ne pas modifier à la main.
+// stylelint-disable
+
+$color-classique: (
+    'page': #090a0d,
+    'ink': #f4f4f4,
+    'ink-muted': #c9c9c9,
+    'ink-subtle': #b4b4b4,
+    'ink-inverse': #111111,
+    'surface-panel': #1b1b1b,
+    'surface-raised': #202020,
+    'surface-header': #202020,
+    'surface-control': #242424,
+    'surface-layer': #ffffff08,
+    'surface-highlight': #ffffff18,
+    'line': #ffffff2e,
+    'line-strong': #ffffff59,
+    'art-placeholder': #252525,
+    'art-scrim': #090a0ded,
+    'chip-on-art': #15171bd9,
+    'action-primary': #f4f4f4,
+    'on-action-primary': #111111,
+    'action-secondary': #ffffff18,
+    'action-secondary-line': #ffffff4d,
+    'selected': #f4f4f4,
+    'on-selected': #111111,
+    'selected-line': #f4f4f4,
+    'focus': #ffffff,
+    'track': #ffffff30,
+    'progress': #f4f4f4,
+    'warning-surface': #e9b87920,
+    'warning-line': #e9b87967,
+    'warning-ink': #ffe0b4,
+    'status-ok': #8fe3a6,
+    'status-warning': #f3cf7a,
+    'status-error': #ff9a8f,
+    'status-off': #a3a7b0,
+);
+
+$color-glass: (
+    'page': #090a0d,
+    'ink': #f4f4f4,
+    'ink-muted': #c9c9c9,
+    'ink-subtle': #b4b4b4,
+    'ink-inverse': #111111,
+    'surface-panel': #111111aa,
+    'surface-raised': #151515b8,
+    'surface-header': #232323dc,
+    'surface-control': #171717a8,
+    'surface-layer': #ffffff08,
+    'surface-highlight': #ffffff18,
+    'line': #ffffff40,
+    'line-strong': #ffffff73,
+    'art-placeholder': #252525,
+    'art-scrim': #090a0ded,
+    'chip-on-art': #15171bd9,
+    'action-primary': #ffffff38,
+    'on-action-primary': #ffffff,
+    'action-secondary': #ffffff1c,
+    'action-secondary-line': #ffffff4d,
+    'selected': #ffffff40,
+    'on-selected': #ffffff,
+    'selected-line': #ffffffb3,
+    'focus': #ffffff,
+    'track': #ffffff30,
+    'progress': #f4f4f4,
+    'warning-surface': #e9b87920,
+    'warning-line': #e9b87967,
+    'warning-ink': #ffe0b4,
+    'status-ok': #8fe3a6,
+    'status-warning': #f3cf7a,
+    'status-error': #ff9a8f,
+    'status-off': #a3a7b0,
+);
+
+$spacing: (
+    'space-4': 4px,
+    'space-8': 8px,
+    'space-12': 12px,
+    'space-16': 16px,
+    'space-24': 24px,
+    'space-32': 32px,
+    'space-48': 48px,
+    'space-page-margin': #{"clamp(20px, 4vw, 80px)"},
+    'space-row-gap': 27px,
+    'space-row-heading': 18px,
+    'space-card-gap': 15px,
+    'space-action-x': 24px,
+    'space-chip-x': 16px,
+);
+
+$radius: (
+    'radius-small': 8px,
+    'radius-control': 12px,
+    'radius-card': 16px,
+    'radius-panel': 20px,
+    'radius-pill': 999px,
+);
+
+$size: (
+    'size-card-height': #{"clamp(240px, 25vw, 390px)"},
+    'size-action': 48px,
+    'size-action-small': 32px,
+    'size-chip': 40px,
+    'size-icon-target': 44px,
+    'size-focus-ring': 2px,
+);
+
+$fontSize: (
+    'text-11': 11px,
+    'text-12': 12px,
+    'text-13': 13px,
+    'text-14': 14px,
+    'text-16': 16px,
+    'text-18': 18px,
+    'text-24': 24px,
+    'text-30': 30px,
+);
+
+$motion: (
+    'duration-hover': 120ms,
+    'duration-state': 200ms,
+    'duration-move': 280ms,
+    'duration-fade': 500ms,
+    'ease-move': #{"cubic-bezier(0.22, 0.8, 0.2, 1)"},
+);
+
+$opacity: (
+    'opacity-disabled': 0.45,
+);
+
+$breakpoint: (
+    'phone': 700px,
+    'tablet': 1100px,
+    'short': 820px,
+);
+
+$type: (
+    'hero-title': ('size': #{"clamp(28px, 3.7vw, 60px)"}, 'line-height': 1.1, 'weight': 700, 'letter-spacing': -0.025em),
+    'page-heading': ('size': #{"clamp(28px, 3.25vw, 43px)"}, 'line-height': 1.1, 'weight': 700, 'letter-spacing': -0.025em),
+    'card-title': ('size': #{"clamp(20px, 2vw, 30px)"}, 'line-height': 1.1, 'weight': 700),
+    'row-title': ('size': #{"clamp(18px, 2vw, 24px)"}, 'line-height': 1.2, 'weight': 700),
+    'section-title': ('size': 18px, 'line-height': 1.3, 'weight': 700),
+    'item-title': ('size': 16px, 'line-height': 1.3, 'weight': 600),
+    'body': ('size': 16px, 'line-height': 1.55, 'weight': 400),
+    'action': ('size': 16px, 'line-height': 1.25, 'weight': 700),
+    'body-small': ('size': 14px, 'line-height': 1.45, 'weight': 400),
+    'chip': ('size': 13px, 'line-height': 1.2, 'weight': 500),
+    'caption': ('size': 13px, 'line-height': 1.45, 'weight': 400),
+    'meta': ('size': 12px, 'line-height': 1.5, 'weight': 400),
+    'eyebrow': ('size': 11px, 'line-height': 1.4, 'weight': 700, 'letter-spacing': 0.14em),
+    'badge': ('size': 11px, 'line-height': 1.2, 'weight': 600, 'letter-spacing': 0.02em),
+    'pill-label': ('size': 12.5px, 'line-height': 1, 'weight': 600, 'letter-spacing': 0.04em),
+);
+
+@mixin base-properties {
+    --client-page: #090a0d;
+    --client-ink: #f4f4f4;
+    --client-ink-muted: #c9c9c9;
+    --client-ink-subtle: #b4b4b4;
+    --client-ink-inverse: #111111;
+    --client-surface-panel: #1b1b1b;
+    --client-surface-raised: #202020;
+    --client-surface-header: #202020;
+    --client-surface-control: #242424;
+    --client-surface-layer: #ffffff08;
+    --client-surface-highlight: #ffffff18;
+    --client-line: #ffffff2e;
+    --client-line-strong: #ffffff59;
+    --client-art-placeholder: #252525;
+    --client-art-scrim: #090a0ded;
+    --client-chip-on-art: #15171bd9;
+    --client-action-primary: #f4f4f4;
+    --client-on-action-primary: #111111;
+    --client-action-secondary: #ffffff18;
+    --client-action-secondary-line: #ffffff4d;
+    --client-selected: #f4f4f4;
+    --client-on-selected: #111111;
+    --client-selected-line: #f4f4f4;
+    --client-focus: #ffffff;
+    --client-track: #ffffff30;
+    --client-progress: #f4f4f4;
+    --client-warning-surface: #e9b87920;
+    --client-warning-line: #e9b87967;
+    --client-warning-ink: #ffe0b4;
+    --client-status-ok: #8fe3a6;
+    --client-status-warning: #f3cf7a;
+    --client-status-error: #ff9a8f;
+    --client-status-off: #a3a7b0;
+    --client-shadow-surface: 0 14px 38px #00000077;
+    --client-shadow-card: 0 7px 18px #00000055;
+    --client-space-4: 4px;
+    --client-space-8: 8px;
+    --client-space-12: 12px;
+    --client-space-16: 16px;
+    --client-space-24: 24px;
+    --client-space-32: 32px;
+    --client-space-48: 48px;
+    --client-space-page-margin: clamp(20px, 4vw, 80px);
+    --client-space-row-gap: 27px;
+    --client-space-row-heading: 18px;
+    --client-space-card-gap: 15px;
+    --client-space-action-x: 24px;
+    --client-space-chip-x: 16px;
+    --client-radius-small: 8px;
+    --client-radius-control: 12px;
+    --client-radius-card: 16px;
+    --client-radius-panel: 20px;
+    --client-radius-pill: 999px;
+    --client-size-card-height: clamp(240px, 25vw, 390px);
+    --client-size-action: 48px;
+    --client-size-action-small: 32px;
+    --client-size-chip: 40px;
+    --client-size-icon-target: 44px;
+    --client-size-focus-ring: 2px;
+    --client-text-11: 11px;
+    --client-text-12: 12px;
+    --client-text-13: 13px;
+    --client-text-14: 14px;
+    --client-text-16: 16px;
+    --client-text-18: 18px;
+    --client-text-24: 24px;
+    --client-text-30: 30px;
+    --client-duration-hover: 120ms;
+    --client-duration-state: 200ms;
+    --client-duration-move: 280ms;
+    --client-duration-fade: 500ms;
+    --client-ease-move: cubic-bezier(0.22, 0.8, 0.2, 1);
+    --client-opacity-disabled: 0.45;
+    --client-blur-surface: none;
+    --client-blur-action: none;
+    --client-blur-primary: none;
+    --client-blur-chip: none;
+    --client-reflection: none;
+}
+
+@mixin glass-properties {
+    --client-surface-panel: linear-gradient(145deg, #ffffff21, #ffffff07 70%), #111111aa;
+    --client-surface-raised: linear-gradient(145deg, #ffffff24, #ffffff0a 68%), #151515b8;
+    --client-surface-header: linear-gradient(145deg, #ffffff0c, transparent), #232323dc;
+    --client-surface-control: linear-gradient(145deg, #ffffff17, #ffffff07), #171717a8;
+    --client-line: #ffffff40;
+    --client-line-strong: #ffffff73;
+    --client-action-primary: #ffffff38;
+    --client-on-action-primary: #ffffff;
+    --client-action-secondary: #ffffff1c;
+    --client-selected: #ffffff40;
+    --client-on-selected: #ffffff;
+    --client-selected-line: #ffffffb3;
+    --client-shadow-surface: inset 0 1px 0 #ffffff3b, 0 18px 45px #00000077;
+    --client-shadow-card: inset 0 1px 0 #ffffff25, 0 9px 24px #00000055;
+    --client-blur-surface: blur(22px) saturate(115%);
+    --client-blur-action: blur(18px) saturate(140%);
+    --client-blur-primary: blur(20px) saturate(155%);
+    --client-blur-chip: blur(14px);
+    --client-reflection: inset 0 1px 0 #ffffff38;
+}

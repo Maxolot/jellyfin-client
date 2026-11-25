@@ -16,7 +16,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
 }
 
 .client-interface {
-    --client-margin: clamp(20px, 4vw, 80px);
+    --client-margin: var(--client-space-page-margin);
 
     position: relative;
     min-height: 100vh;

@@ -43,9 +43,9 @@
         max-width: 100%;
         min-height: 40px;
         padding: 0 12px;
-        border: 1px solid var(--client-surface-border);
-        border-radius: var(--client-control-radius);
-        background: var(--client-control-surface);
+        border: 1px solid var(--client-line);
+        border-radius: var(--client-radius-control);
+        background: var(--client-surface-control);
         color-scheme: dark;
         color: inherit;
     }
@@ -92,8 +92,8 @@
 }
 
 .client-tonight-table .client-draw-shell {
-    border-radius: var(--client-card-radius);
-    box-shadow: var(--client-card-shadow);
+    border-radius: var(--client-radius-card);
+    box-shadow: var(--client-shadow-card);
 }
 
 .client-tonight-table .client-draw-poster {
@@ -153,8 +153,8 @@
     align-items: center;
     gap: 5px;
     padding: 4px 8px;
-    border: 1px solid var(--client-surface-border);
-    border-radius: var(--client-pill-radius);
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-pill);
     background: var(--client-surface-raised);
     font-size: 12px;
     font-weight: 600;

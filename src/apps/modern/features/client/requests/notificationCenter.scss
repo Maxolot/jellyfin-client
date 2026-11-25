@@ -54,14 +54,14 @@
     justify-content: space-between;
     gap: 8px;
     padding: 10px 12px;
-    border: 1px solid var(--client-surface-border);
-    border-radius: var(--client-control-radius);
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-control);
     background: var(--client-surface-layer);
 
     &.is-unread {
-        border-color: var(--client-surface-edge);
+        border-color: var(--client-line-strong);
         background: var(--client-surface-highlight);
-        box-shadow: var(--client-surface-reflection);
+        box-shadow: var(--client-reflection);
     }
 
     > a {
@@ -74,14 +74,14 @@
     }
 
     time {
-        color: var(--client-surface-subtle);
+        color: var(--client-ink-subtle);
         font-size: 11px;
     }
 }
 
 .client-notification-event,
 .client-notification-detail {
-    color: var(--client-surface-muted);
+    color: var(--client-ink-muted);
     font-size: 12px;
 }
 

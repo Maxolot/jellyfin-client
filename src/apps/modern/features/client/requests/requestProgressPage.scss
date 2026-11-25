@@ -18,11 +18,11 @@
     grid-template-columns: clamp(104px, 15vw, 158px) minmax(0, 1fr);
     gap: clamp(13px, 2vw, 25px);
     padding: clamp(13px, 2vw, 23px);
-    border: 1px solid var(--client-surface-border);
-    border-radius: var(--client-panel-radius);
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-panel);
     background: var(--client-surface-panel);
-    box-shadow: var(--client-card-shadow);
-    backdrop-filter: var(--client-surface-blur);
+    box-shadow: var(--client-shadow-card);
+    backdrop-filter: var(--client-blur-surface);
 }
 
 .client-request-card-poster {
@@ -31,8 +31,8 @@
     aspect-ratio: 2 / 3;
     align-self: start;
     overflow: hidden;
-    border: 1px solid var(--client-surface-border);
-    border-radius: var(--client-control-radius);
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-control);
     background: var(--client-art-placeholder);
 
     .client-artwork {
@@ -75,17 +75,17 @@
 .client-request-quality-badge {
     align-self: start;
     padding: 5px 10px;
-    border: 1px solid var(--client-surface-border);
-    border-radius: var(--client-pill-radius);
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-pill);
     background: var(--client-surface-highlight);
-    color: var(--client-surface-text);
+    color: var(--client-ink);
     font-size: 13px;
 }
 
 .is-blocked .client-request-stage {
-    border-color: var(--client-state-warning-edge);
-    background: var(--client-state-warning-surface);
-    color: var(--client-state-warning-text);
+    border-color: var(--client-warning-line);
+    background: var(--client-warning-surface);
+    color: var(--client-warning-ink);
 }
 
 .client-request-steps {
@@ -102,7 +102,7 @@
         flex-direction: column;
         align-items: center;
         gap: 5px;
-        color: var(--client-surface-muted);
+        color: var(--client-ink-muted);
         text-align: center;
     }
 
@@ -111,7 +111,7 @@
         width: 25px;
         height: 25px;
         place-items: center;
-        border: 1px solid var(--client-state-track);
+        border: 1px solid var(--client-track);
         border-radius: 50%;
         font-size: 12px;
     }
@@ -122,9 +122,9 @@
     }
 
     [aria-current] span {
-        border-color: var(--client-state-emphasis);
-        background: var(--client-state-emphasis);
-        color: var(--client-state-contrast);
+        border-color: var(--client-progress);
+        background: var(--client-progress);
+        color: var(--client-ink-inverse);
         animation: client-request-step-in 260ms ease both;
     }
 
@@ -142,19 +142,19 @@
         border: 0;
         border-radius: 10px;
         // The legacy dashboard gives every progress element an important background.
-        background: var(--client-state-track) !important;
-        color: var(--client-state-emphasis);
+        background: var(--client-track) !important;
+        color: var(--client-progress);
         appearance: none;
 
         &::-webkit-progress-bar { background: transparent; }
 
         &::-webkit-progress-value {
             border-radius: 10px;
-            background: var(--client-state-emphasis);
+            background: var(--client-progress);
             transition: width 350ms ease;
         }
 
-        &::-moz-progress-bar { background: var(--client-state-emphasis); }
+        &::-moz-progress-bar { background: var(--client-progress); }
     }
 
     p {
@@ -162,7 +162,7 @@
         flex-wrap: wrap;
         gap: 4px 9px;
         margin: 6px 0 0;
-        color: var(--client-surface-muted);
+        color: var(--client-ink-muted);
         font-size: 13px;
     }
 }
@@ -179,9 +179,9 @@
         display: grid;
         gap: 4px;
         padding: 6px 9px;
-        border: 1px solid var(--client-surface-border);
+        border: 1px solid var(--client-line);
         border-radius: 9px;
-        color: var(--client-surface-text);
+        color: var(--client-ink);
         font-size: 12px;
     }
 }

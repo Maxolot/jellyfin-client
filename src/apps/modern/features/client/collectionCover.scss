@@ -19,7 +19,7 @@
     &:focus-visible {
         outline: 2px solid rgb(var(--cover-color));
         outline-offset: 4px;
-        border-radius: var(--client-card-radius);
+        border-radius: var(--client-radius-card);
     }
 }
 
@@ -30,10 +30,10 @@
     min-width: 0;
     aspect-ratio: 1.27;
     place-items: center;
-    border: 1px solid var(--client-surface-border);
-    border-radius: var(--client-card-radius);
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-card);
     background: var(--client-surface-panel);
-    box-shadow: var(--client-card-shadow);
+    box-shadow: var(--client-shadow-card);
 }
 
 .client-folder-tile .client-cover-art:not([data-posters='0']) {
@@ -88,7 +88,7 @@
     place-items: center;
     border-color: #ffffff60;
     background: var(--client-surface-raised);
-    color: var(--client-surface-muted);
+    color: var(--client-ink-muted);
 
     &::after,
     &::before {
@@ -122,7 +122,7 @@
     }
 
     small {
-        color: var(--client-surface-muted);
+        color: var(--client-ink-muted);
         font-size: 12px;
     }
 }
@@ -137,8 +137,8 @@
 .client-cover-meta .client-cover-badge {
     max-width: 100%;
     padding: 2px 7px;
-    border: 1px solid var(--client-surface-border);
-    border-radius: var(--client-pill-radius);
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-pill);
     background: var(--client-surface-layer);
     overflow-wrap: anywhere;
 }
@@ -271,7 +271,7 @@
     .client-folder-sharing {
         min-height: 30px;
         padding: 3px 9px;
-        border: 1px solid var(--client-surface-border);
+        border: 1px solid var(--client-line);
         border-radius: 999px;
         background: var(--client-surface-layer);
         font-size: 12px;
@@ -280,7 +280,7 @@
 
 .client-shelf-meta {
     margin: 0;
-    color: var(--client-surface-text);
+    color: var(--client-ink);
     font-weight: 560;
 }
 
@@ -312,11 +312,11 @@
     width: max-content;
     min-width: 164px;
     padding: 5px;
-    border: 1px solid var(--client-surface-border);
-    border-radius: var(--client-card-radius);
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-card);
     background: var(--client-surface-raised);
-    box-shadow: var(--client-surface-shadow);
-    backdrop-filter: var(--client-surface-blur);
+    box-shadow: var(--client-shadow-surface);
+    backdrop-filter: var(--client-blur-surface);
 
     button {
         min-height: 44px;

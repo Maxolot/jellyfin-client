@@ -250,7 +250,7 @@
 // Copy and buttons enter per slide; the carousel dots stay put so the drop can flow between slides.
 .client-hero-copy > :not(.client-actions),
 .client-hero-copy > .client-actions > :not(.client-hero-dots) {
-    animation: client-copy-enter 0.5s var(--client-ease) both;
+    animation: client-copy-enter 0.5s var(--client-ease-move) both;
 }
 
 .client-reveal-pending {
@@ -259,12 +259,12 @@
 }
 
 .client-reveal-enter {
-    animation: client-section-enter 0.48s var(--client-ease) both;
+    animation: client-section-enter 0.48s var(--client-ease-move) both;
 }
 
 .client-profile-menu,
 .client-cast-dialog[open] {
-    animation: client-copy-enter 0.22s var(--client-ease) both;
+    animation: client-copy-enter 0.22s var(--client-ease-move) both;
 }
 
 .client-interface button,

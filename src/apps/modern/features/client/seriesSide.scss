@@ -109,7 +109,7 @@
 
             &:hover,
             &:focus-visible {
-                border-color: var(--client-surface-border);
+                border-color: var(--client-line);
                 background: #ffffff12;
             }
 
@@ -167,7 +167,7 @@
             overflow: hidden;
             align-self: start;
             grid-column: 2;
-            color: var(--client-surface-muted);
+            color: var(--client-ink-muted);
             font-size: 12px;
             line-height: 1.35;
             -webkit-box-orient: vertical;

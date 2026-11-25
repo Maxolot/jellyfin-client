@@ -48,9 +48,9 @@
         width: 100%;
         min-height: 44px;
         padding: 10px 12px;
-        border: 1px solid var(--client-surface-border);
-        border-radius: var(--client-control-radius);
-        background: var(--client-control-surface);
+        border: 1px solid var(--client-line);
+        border-radius: var(--client-radius-control);
+        background: var(--client-surface-control);
         color: inherit;
         font: inherit;
     }
@@ -69,7 +69,7 @@
 .client-folder-empty {
     display: block;
     margin-top: 3px;
-    color: var(--client-surface-muted);
+    color: var(--client-ink-muted);
     font-size: 13px;
 }
 

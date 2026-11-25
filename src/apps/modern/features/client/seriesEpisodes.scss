@@ -24,7 +24,7 @@
     align-items: center;
     gap: 8px 14px;
     margin: 12px 0;
-    color: var(--client-surface-muted);
+    color: var(--client-ink-muted);
 
     p { margin: 0; }
 }
@@ -38,7 +38,7 @@
 
 .client-season-count {
     margin: 0;
-    color: var(--client-surface-muted);
+    color: var(--client-ink-muted);
     font-size: 12px;
 }
 
@@ -59,16 +59,16 @@
     flex: none;
     aspect-ratio: 2 / 3;
     padding: 0;
-    border: 1px solid var(--client-surface-border);
-    border-radius: var(--client-control-radius);
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-control);
     background: var(--client-art-placeholder);
-    color: var(--client-surface-text);
+    color: var(--client-ink);
     text-align: start;
     transition: transform 170ms ease, border-color 170ms;
 }
 
 .client-season-poster.is-active {
-    border-color: var(--client-state-emphasis);
+    border-color: var(--client-progress);
     transform: scale(1.065);
 
     &::after {
@@ -76,7 +76,7 @@
         inset: auto auto -9px calc(50% - 6px);
         width: 0;
         height: 0;
-        border-top: 7px solid var(--client-state-emphasis);
+        border-top: 7px solid var(--client-progress);
         border-right: 6px solid transparent;
         border-left: 6px solid transparent;
         content: '';
@@ -134,7 +134,7 @@
     z-index: 1;
     top: 45%;
     left: 50%;
-    color: var(--client-surface-text);
+    color: var(--client-ink);
     font-size: clamp(24px, 4.5vw, 56px);
     font-weight: 800;
     line-height: 1;
@@ -151,7 +151,7 @@
     height: 3px;
     overflow: hidden;
     border-radius: 6px;
-    background: var(--client-state-track);
+    background: var(--client-track);
 
     i {
         display: block;
@@ -164,11 +164,11 @@
 .client-series-episodes-panel {
     margin: 0 var(--client-margin) clamp(22px, 4vw, 48px);
     padding: clamp(14px, 2vw, 28px);
-    border: 1px solid var(--client-surface-border);
-    border-radius: var(--client-panel-radius);
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-panel);
     background: var(--client-surface-panel);
-    box-shadow: var(--client-surface-reflection);
-    backdrop-filter: var(--client-surface-blur);
+    box-shadow: var(--client-reflection);
+    backdrop-filter: var(--client-blur-surface);
 }
 
 .client-series-episodes-heading {
@@ -187,7 +187,7 @@
 
     p {
         margin: 4px 0 0;
-        color: var(--client-surface-muted);
+        color: var(--client-ink-muted);
         font-size: 13px;
     }
 }
@@ -225,10 +225,10 @@
     aspect-ratio: 16 / 9;
     overflow: hidden;
     padding: 0;
-    border: 1px solid var(--client-surface-border);
-    border-radius: var(--client-control-radius);
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-control);
     background: var(--client-art-placeholder);
-    color: var(--client-surface-text);
+    color: var(--client-ink);
     text-align: start;
 
     &::after {
@@ -349,7 +349,7 @@
         list-style: none;
     }
 
-    li + li { border-top: 1px solid var(--client-surface-border); }
+    li + li { border-top: 1px solid var(--client-line); }
 }
 
 .client-episode-editorial-seasons {
@@ -360,12 +360,12 @@
     margin: 0 -16px 5px;
     padding: 10px 16px;
     overflow-x: auto;
-    background: var(--client-control-surface);
+    background: var(--client-surface-control);
 
     [aria-pressed='true'] {
-        border-color: var(--client-state-emphasis);
-        background: var(--client-state-emphasis);
-        color: var(--client-state-contrast);
+        border-color: var(--client-progress);
+        background: var(--client-progress);
+        color: var(--client-ink-inverse);
     }
 }
 
@@ -387,7 +387,7 @@
 }
 
 .client-episode-editorial-number {
-    color: var(--client-surface-subtle);
+    color: var(--client-ink-subtle);
     font-variant-numeric: tabular-nums;
     text-align: center;
 }
@@ -405,7 +405,7 @@
     gap: 4px;
 
     strong {
-        color: var(--client-surface-text);
+        color: var(--client-ink);
         font-size: 14px;
         font-weight: 670;
         overflow-wrap: anywhere;
@@ -417,7 +417,7 @@
 .client-episode-editorial-summary {
     display: -webkit-box;
     overflow: hidden;
-    color: var(--client-surface-muted);
+    color: var(--client-ink-muted);
     font-size: 12px;
     line-height: 1.35;
     -webkit-box-orient: vertical;
@@ -445,14 +445,14 @@
 }
 
 .client-season-poster.is-remote {
-    border-color: var(--client-surface-border);
+    border-color: var(--client-line);
 
     .client-artwork {
         opacity: 0.6;
         filter: saturate(0.28);
     }
 
-    &.is-requestable:hover { border-color: var(--client-state-emphasis); }
+    &.is-requestable:hover { border-color: var(--client-progress); }
 
     .client-season-poster-label { bottom: 8px; }
 }
@@ -466,10 +466,10 @@
     align-items: center;
     gap: 3px;
     padding: 4px 5px;
-    border: 1px solid var(--client-surface-border);
+    border: 1px solid var(--client-line);
     border-radius: 8px;
     background: var(--client-surface-raised);
-    color: var(--client-surface-text);
+    color: var(--client-ink);
     font-size: 10px;
     font-weight: 650;
     line-height: 1.15;

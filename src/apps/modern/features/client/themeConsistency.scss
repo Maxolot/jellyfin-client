@@ -11,37 +11,6 @@ $secondary: '.client-button';
 $chip-groups: '.client-catalogue-switch, .client-period-choices, .client-draw-choices, .client-person-role-tabs';
 
 .client-interface {
-    --client-heading-size: clamp(28px, 3.25vw, 43px);
-    --client-panel-radius: 18px;
-    --client-card-radius: 14px;
-    --client-control-radius: 12px;
-    --client-pill-radius: 999px;
-    --client-surface-panel: #1b1b1b;
-    --client-surface-raised: #202020;
-    --client-surface-header: #202020;
-    --client-surface-layer: #ffffff08;
-    --client-surface-highlight: #ffffff18;
-    --client-surface-border: #ffffff2e;
-    --client-surface-edge: #ffffff59;
-    --client-surface-blur: none;
-    --client-surface-reflection: none;
-    --client-surface-shadow: 0 14px 38px #0007;
-    --client-card-shadow: 0 7px 18px #0005;
-    --client-control-surface: #242424;
-    --client-control-menu: #242424;
-    --client-surface-text: #f4f4f4;
-    --client-surface-muted: #c9c9c9;
-    --client-surface-subtle: #b4b4b4;
-    --client-art-placeholder: #252525;
-    --client-art-scrim: #101010ed;
-    --client-state-emphasis: #f3f3f3;
-    --client-state-contrast: #171717;
-    --client-state-track: #ffffff30;
-    --client-state-warning-surface: #e9b87920;
-    --client-state-warning-edge: #e9b87967;
-    --client-state-warning-text: #ffe0b4;
-    --client-icon-target: 44px;
-
     :is(#{$primary}, #{$secondary}) {
         display: inline-flex;
         align-items: center;
@@ -71,7 +40,7 @@ $chip-groups: '.client-catalogue-switch, .client-period-choices, .client-draw-ch
         border: 1px solid #ffffff30;
         border-radius: 999px;
         background: transparent;
-        color: var(--client-surface-muted);
+        color: var(--client-ink-muted);
         font-size: 13px;
         font-weight: 500;
         transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.22s ease;
@@ -99,7 +68,7 @@ $chip-groups: '.client-catalogue-switch, .client-period-choices, .client-draw-ch
     .client-catalogue-switch {
         flex-wrap: wrap;
 
-        button { min-height: var(--client-icon-target); }
+        button { min-height: var(--client-size-icon-target); }
     }
 
     .client-filter-options {
@@ -110,9 +79,9 @@ $chip-groups: '.client-catalogue-switch, .client-period-choices, .client-draw-ch
     .client-row-heading button,
     .client-actions .client-action-circle {
         display: inline-grid;
-        width: var(--client-icon-target);
-        height: var(--client-icon-target);
-        min-height: var(--client-icon-target);
+        width: var(--client-size-icon-target);
+        height: var(--client-size-icon-target);
+        min-height: var(--client-size-icon-target);
         flex: none;
         place-items: center;
         padding: 0;
@@ -159,18 +128,18 @@ $chip-groups: '.client-catalogue-switch, .client-period-choices, .client-draw-ch
     }
 
     .client-episodes header button {
-        min-height: var(--client-icon-target);
+        min-height: var(--client-size-icon-target);
         border-radius: 12px;
     }
 
     :is(.client-personal-spotlight, .client-advanced-panel, .client-stat) {
-        border-radius: var(--client-panel-radius);
+        border-radius: var(--client-radius-panel);
     }
 
     .client-detail-dialog {
         box-sizing: border-box;
         max-width: 100%;
-        border-radius: var(--client-panel-radius);
+        border-radius: var(--client-radius-panel);
     }
 
     .client-detail-dialog > header > button {
@@ -230,18 +199,6 @@ $chip-groups: '.client-catalogue-switch, .client-period-choices, .client-draw-ch
 }
 
 .client-interface.client-glass {
-    --client-surface-panel: linear-gradient(145deg, #ffffff21, #ffffff07 70%), #111a;
-    --client-surface-raised: linear-gradient(145deg, #ffffff24, #ffffff0a 68%), #151515b8;
-    --client-surface-header: linear-gradient(145deg, #ffffff0c, transparent), #232323dc;
-    --client-surface-border: #ffffff40;
-    --client-surface-edge: #ffffff73;
-    --client-surface-blur: blur(22px) saturate(115%);
-    --client-surface-reflection: inset 0 1px 0 #ffffff38;
-    --client-surface-shadow: inset 0 1px 0 #ffffff3b, 0 18px 45px #0007;
-    --client-card-shadow: inset 0 1px 0 #ffffff25, 0 9px 24px #0005;
-    --client-control-surface: linear-gradient(145deg, #ffffff17, #ffffff07), #171717a8;
-    --client-control-menu: var(--client-surface-raised);
-
     :is(#{$secondary}) {
         border: 1px solid #ffffff4d;
         background: linear-gradient(140deg, #ffffff1c, #ffffff06), #15151547;
@@ -285,8 +242,8 @@ $chip-groups: '.client-catalogue-switch, .client-period-choices, .client-draw-ch
 @media (max-width: 700px) {
     .client-interface {
         .client-actions .client-action-circle {
-            width: var(--client-icon-target);
-            height: var(--client-icon-target);
+            width: var(--client-size-icon-target);
+            height: var(--client-size-icon-target);
         }
 
         .client-nav :is(.client-nav-tool, .client-brand.client-search-shortcut, .client-profile) { width: 40px; }

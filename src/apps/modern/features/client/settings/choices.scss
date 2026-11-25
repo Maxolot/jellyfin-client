@@ -13,9 +13,9 @@
         justify-content: space-between;
         gap: 10px;
         padding: 8px 14px;
-        border: 1px solid var(--client-surface-border, #fff3);
-        border-radius: var(--client-control-radius, 12px);
-        background: var(--client-control-surface, #242424);
+        border: 1px solid var(--client-line);
+        border-radius: var(--client-radius-control);
+        background: var(--client-surface-control);
         color: #f2f3f5;
         font: inherit;
         font-size: 14px;
@@ -47,7 +47,7 @@
     .client-choice-copy small {
         display: block;
         margin-top: 3px;
-        color: var(--client-surface-muted, #c9c9c9);
+        color: var(--client-ink-muted);
         font-size: 12px;
         font-weight: 400;
     }
@@ -69,11 +69,11 @@
         padding: 5px;
         overflow-y: auto;
         overscroll-behavior: contain;
-        border: 1px solid var(--client-surface-border, #fff3);
-        border-radius: var(--client-card-radius, 14px);
-        background: var(--client-control-menu, #242424);
-        box-shadow: var(--client-surface-shadow, 0 14px 30px #0008);
-        backdrop-filter: var(--client-surface-blur, none);
+        border: 1px solid var(--client-line);
+        border-radius: var(--client-radius-card);
+        background: var(--client-control-menu);
+        box-shadow: var(--client-shadow-surface);
+        backdrop-filter: var(--client-blur-surface);
         list-style: none;
     }
 

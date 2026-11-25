@@ -8,6 +8,7 @@ import { useWebConfig } from 'hooks/useWebConfig';
 
 import ClientIcon from '../ClientIcon';
 import { interfacePreferenceKey, readInterfacePreferences } from '../interfacePreferences';
+import '../design/theme.scss';
 import '../client.scss';
 import '../profiles/profiles.scss';
 import './session.scss';

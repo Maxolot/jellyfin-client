@@ -21,7 +21,7 @@
 
     p {
         margin: 6px 0 0;
-        color: var(--client-surface-muted);
+        color: var(--client-ink-muted);
     }
 }
 
@@ -44,7 +44,7 @@
 
 .client-collections-note {
     margin: 0;
-    color: var(--client-surface-muted);
+    color: var(--client-ink-muted);
 }
 
 .client-detail-dialog.client-collection-modal { width: min(560px, calc(100vw - 32px)); }
@@ -59,9 +59,9 @@
         width: 100%;
         min-height: 44px;
         padding: 10px 12px;
-        border: 1px solid var(--client-surface-border);
-        border-radius: var(--client-control-radius);
-        background: var(--client-control-surface);
+        border: 1px solid var(--client-line);
+        border-radius: var(--client-radius-control);
+        background: var(--client-surface-control);
         color: inherit;
         font: inherit;
     }
@@ -83,9 +83,9 @@
         align-items: center;
         gap: 12px;
         padding: 7px 10px;
-        border: 1px solid var(--client-surface-border);
+        border: 1px solid var(--client-line);
         border-radius: 9px;
-        background: var(--client-control-surface);
+        background: var(--client-surface-control);
         color: inherit;
         text-align: start;
 

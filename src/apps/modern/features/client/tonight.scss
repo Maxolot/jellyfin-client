@@ -34,7 +34,7 @@
 
 .client-tonight-table .client-tonight-table-head h1 {
     margin: 0;
-    font-size: var(--client-heading-size, 40px);
+    font-size: var(--client-heading-size);
     font-weight: 600;
     line-height: 1.05;
     letter-spacing: -0.035em;
@@ -70,7 +70,7 @@
 .client-draw-keywords {
     display: block;
     margin: 0;
-    color: var(--client-surface-muted);
+    color: var(--client-ink-muted);
     font-size: 12px;
 }
 
@@ -85,7 +85,7 @@
     border: 1px solid #ffffff35;
     border-radius: 99px;
     background: transparent;
-    color: var(--client-surface-muted);
+    color: var(--client-ink-muted);
     font-size: 12px;
 
     &[aria-pressed='true'] {
@@ -100,14 +100,14 @@
     width: 100%;
     min-height: 44px;
     padding: 10px 14px;
-    border: 1px solid var(--client-surface-border);
-    border-radius: var(--client-control-radius);
-    background: var(--client-control-surface);
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-control);
+    background: var(--client-surface-control);
     color: #f2f3f5;
     font: inherit;
     font-size: 16px;
 
-    &::placeholder { color: var(--client-surface-subtle); }
+    &::placeholder { color: var(--client-ink-subtle); }
 }
 
 .client-draw-stage {
@@ -143,7 +143,7 @@
 .client-draw-card .client-draw-shell {
     position: absolute;
     inset: 0;
-    border-radius: var(--client-control-radius);
+    border-radius: var(--client-radius-control);
     animation: draw-turn 0.75s ease both;
     animation-delay: calc(var(--draw-order) * 130ms + 100ms);
     transform-style: preserve-3d;
@@ -168,7 +168,7 @@
     place-items: center;
     border: 1px solid #ffffff50;
     background: var(--client-surface-raised);
-    box-shadow: var(--client-surface-reflection);
+    box-shadow: var(--client-reflection);
     transform: rotateY(180deg);
 
     &::before {
@@ -193,7 +193,7 @@
 .client-draw-open {
     display: block;
     height: 100%;
-    border-radius: var(--client-control-radius);
+    border-radius: var(--client-radius-control);
     outline-offset: -3px;
 }
 
@@ -203,7 +203,7 @@
     height: 100%;
     overflow: hidden;
     border: 1px solid #ffffff24;
-    border-radius: var(--client-control-radius);
+    border-radius: var(--client-radius-control);
     background: var(--client-art-placeholder);
     transition: border-color 0.25s, box-shadow 0.25s;
 
@@ -222,7 +222,7 @@
 
 .client-draw-empty {
     padding: 75px 0;
-    color: var(--client-surface-muted);
+    color: var(--client-ink-muted);
     text-align: center;
 }
 
