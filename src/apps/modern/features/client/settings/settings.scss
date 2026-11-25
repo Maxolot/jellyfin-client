@@ -61,10 +61,10 @@
             gap: 12px;
             padding: 0 14px;
             color: var(--client-ink-subtle);
-            border-radius: 99px;
+            border-radius: var(--client-radius-pill);
             font-size: var(--client-text-14);
             text-decoration: none;
-            transition: background-color 0.15s ease, color 0.15s ease;
+            transition: background-color var(--client-duration-state) ease, color var(--client-duration-state) ease;
 
             svg {
                 width: 20px;
@@ -86,7 +86,7 @@
             }
 
             &:focus-visible {
-                outline: 2px solid var(--client-focus);
+                outline: var(--client-size-focus-ring) solid var(--client-focus);
                 outline-offset: 2px;
             }
         }
@@ -196,7 +196,7 @@
         color: var(--client-ink);
         background: var(--client-surface-raised);
         border: 1px solid #ffffff1a;
-        border-radius: 18px;
+        border-radius: var(--client-radius-panel);
 
         svg {
             width: 32px;
@@ -239,12 +239,12 @@
         font-size: var(--client-text-13);
         line-height: 1.45;
         text-decoration: none;
-        transition: border-color 0.15s ease;
+        transition: border-color var(--client-duration-state) ease;
 
         .client-extension-logo {
             width: 48px;
             height: 48px;
-            border-radius: 14px;
+            border-radius: var(--client-radius-card);
 
             svg {
                 width: 24px;
@@ -268,7 +268,7 @@
         }
 
         &:focus-visible {
-            outline: 2px solid var(--client-focus);
+            outline: var(--client-size-focus-ring) solid var(--client-focus);
             outline-offset: 3px;
         }
     }
@@ -307,7 +307,7 @@
         div {
             padding: 12px 14px;
             background: var(--client-surface-control);
-            border-radius: 12px;
+            border-radius: var(--client-radius-control);
         }
 
         dt {
@@ -379,7 +379,7 @@
             color: var(--client-ink);
             background: var(--client-surface-control);
             border: 1px solid #ffffff14;
-            border-radius: 14px;
+            border-radius: var(--client-radius-card);
             text-decoration: none;
 
             span {
@@ -552,5 +552,5 @@
     margin: 20px 0;
     padding: 16px;
     border: 1px solid #ffffff1a;
-    border-radius: 16px;
+    border-radius: var(--client-radius-card);
 }

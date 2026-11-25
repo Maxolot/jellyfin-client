@@ -16,7 +16,7 @@
 .client-player-offset {
     padding: 1em;
     border: 1px solid #ffffff25;
-    border-radius: 12px;
+    border-radius: var(--client-radius-control);
     background: var(--client-surface-layer);
 
     h3 {
@@ -68,7 +68,7 @@
     img {
         width: 36%;
         aspect-ratio: 16 / 9;
-        border-radius: 6px;
+        border-radius: var(--client-radius-small);
         object-fit: cover;
     }
 
@@ -113,7 +113,7 @@
     display: block;
     width: min(220px, 40vw);
     aspect-ratio: 16 / 9;
-    border-radius: 6px;
+    border-radius: var(--client-radius-small);
     object-fit: cover;
 }
 

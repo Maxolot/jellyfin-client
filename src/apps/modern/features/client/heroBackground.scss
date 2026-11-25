@@ -62,7 +62,7 @@
         position: absolute;
         inset: 45px 12px 10px;
         border: 1px solid #ffffff50;
-        border-radius: 12px;
+        border-radius: var(--client-radius-control);
         background: radial-gradient(ellipse at 80% 28%, #7093a8, transparent 40%), linear-gradient(130deg, #151515, #3e3e3e 65%, #202020);
         content: '';
     }

@@ -56,14 +56,14 @@
     gap: 9px;
     padding: 11px 18px;
     border: 0;
-    border-radius: 99px;
+    border-radius: var(--client-radius-pill);
     background: #f3f3f5;
     color: var(--client-ink-inverse);
     font-size: var(--client-text-14);
     font-weight: 600;
 
     &:disabled {
-        opacity: 0.65;
+        opacity: var(--client-opacity-disabled);
     }
 }
 
@@ -118,11 +118,11 @@
     min-width: 0;
     aspect-ratio: 2 / 3;
     margin: 0 -7px;
-    animation: draw-deal 0.85s cubic-bezier(0.18, 0.8, 0.25, 1) both;
+    animation: draw-deal 0.85s var(--client-ease-move) both;
     animation-delay: calc(var(--draw-order) * 130ms);
     transform: translateY(var(--card-lift)) rotate(var(--card-angle));
     transform-origin: 50% 130%;
-    transition: transform 0.4s ease;
+    transition: transform var(--client-duration-fade) var(--client-ease-move);
 }
 
 .client-draw-card .client-draw-shell {
@@ -160,7 +160,7 @@
         position: absolute;
         inset: 12px;
         border: 1px solid var(--client-line);
-        border-radius: 8px;
+        border-radius: var(--client-radius-small);
         content: '';
     }
 
@@ -190,7 +190,7 @@
     border: 1px solid #ffffff24;
     border-radius: var(--client-radius-control);
     background: var(--client-art-placeholder);
-    transition: border-color 0.25s, box-shadow 0.25s;
+    transition: border-color var(--client-duration-state), box-shadow var(--client-duration-state);
 
     img {
         position: absolute;

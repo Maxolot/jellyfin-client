@@ -41,9 +41,9 @@
     align-items: center;
     justify-content: center;
     color: var(--client-ink);
-    border-radius: 10px;
+    border-radius: var(--client-radius-small);
     font-size: clamp(44px, 5vw, 68px);
-    transition: box-shadow 0.15s ease;
+    transition: box-shadow var(--client-duration-state) ease;
 
     img {
         display: block;
@@ -146,7 +146,7 @@
     color: var(--client-ink-subtle);
     background: none;
     border: 1px solid rgb(255 255 255 / 34%);
-    border-radius: 99px;
+    border-radius: var(--client-radius-pill);
     cursor: pointer;
 
     &:hover,
@@ -184,7 +184,7 @@
         color: var(--client-ink);
         background: rgb(255 255 255 / 8%);
         border: 1px solid rgb(255 255 255 / 24%);
-        border-radius: 10px;
+        border-radius: var(--client-radius-small);
         font: inherit;
         font-size: var(--client-text-16);
     }
@@ -200,7 +200,7 @@
         color: var(--client-ink);
         background: none;
         border: 1px solid rgb(255 255 255 / 34%);
-        border-radius: 99px;
+        border-radius: var(--client-radius-pill);
         cursor: pointer;
     }
 }
@@ -211,7 +211,7 @@
     border-color: #fff;
 
     &:disabled {
-        opacity: 0.5;
+        opacity: var(--client-opacity-disabled);
         cursor: default;
     }
 }
@@ -266,7 +266,7 @@
         color: var(--client-ink);
         background: none;
         border: 1px solid rgb(255 255 255 / 34%);
-        border-radius: 99px;
+        border-radius: var(--client-radius-pill);
         cursor: pointer;
     }
 
@@ -278,7 +278,7 @@
         color: var(--client-ink);
         background: rgb(255 255 255 / 8%);
         border: 1px solid rgb(255 255 255 / 24%);
-        border-radius: 99px;
+        border-radius: var(--client-radius-pill);
         font: inherit;
         font-size: var(--client-text-16);
     }
@@ -304,13 +304,13 @@
         padding: 0;
         background: rgb(255 255 255 / 8%);
         border: 0;
-        border-radius: 8px;
+        border-radius: var(--client-radius-small);
         cursor: pointer;
     }
 
     li button:focus-visible,
     li button:hover:not(:disabled) {
-        outline: 3px solid var(--client-focus);
+        outline: var(--client-size-focus-ring) solid var(--client-focus);
         outline-offset: -3px;
     }
 

@@ -12,7 +12,7 @@
     align-items: center;
     gap: 8px;
     padding: 8px 12px;
-    border-radius: 999px;
+    border-radius: var(--client-radius-pill);
     font-size: var(--client-text-13);
     white-space: nowrap;
 

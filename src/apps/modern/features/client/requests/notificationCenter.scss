@@ -9,7 +9,7 @@
     place-items: center;
     padding: 1px 3px;
     border: 1px solid #441e2a;
-    border-radius: 12px;
+    border-radius: var(--client-radius-control);
     background: #ffb1bc;
     color: #321622;
     font-size: var(--client-text-11);

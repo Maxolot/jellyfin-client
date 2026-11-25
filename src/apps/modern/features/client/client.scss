@@ -64,7 +64,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     margin: 0 var(--client-margin) 22px;
     padding: 13px 20px;
     border: 1px solid #ffffff24;
-    border-radius: 28px;
+    border-radius: var(--client-radius-panel);
     background: #1d1d1db3;
     backdrop-filter: blur(22px);
 
@@ -77,7 +77,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
 
     > div a {
         padding: 11px 17px;
-        border-radius: 99px;
+        border-radius: var(--client-radius-pill);
         white-space: nowrap;
         font-size: var(--client-text-16);
     }
@@ -94,7 +94,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     place-items: center;
     width: 35px;
     height: 35px;
-    border-radius: 12px;
+    border-radius: var(--client-radius-control);
     background: #a53242;
     font-weight: 600;
     flex-shrink: 0;
@@ -218,7 +218,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     justify-content: center;
     padding: 13px 20px;
     border: 1px solid #ffffff64;
-    border-radius: 99px;
+    border-radius: var(--client-radius-pill);
     background: var(--client-surface-highlight);
     font-size: var(--client-text-13);
     font-weight: 600;
@@ -237,7 +237,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     left: var(--client-margin);
     padding: 12px 18px;
     border: 1px solid #fff6;
-    border-radius: 99px;
+    border-radius: var(--client-radius-pill);
     background: #19191980;
 }
 
@@ -298,10 +298,10 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     flex: 0 0 clamp(130px, 13vw, 220px);
     aspect-ratio: 2 / 3;
     overflow: hidden;
-    border-radius: 10px;
+    border-radius: var(--client-radius-small);
     background: #222;
     isolation: isolate;
-    transition: transform 0.25s;
+    transition: transform var(--client-duration-state);
 }
 
 .client-card img {
@@ -395,7 +395,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     flex-shrink: 0;
     padding: 10px 13px;
     border: 1px solid #ffffff48;
-    border-radius: 10px;
+    border-radius: var(--client-radius-small);
     background: #15151580;
     font-size: var(--client-text-12);
 }
@@ -417,7 +417,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     overflow: hidden;
     padding: 0;
     border: 1px solid #fff2;
-    border-radius: 10px;
+    border-radius: var(--client-radius-small);
     background: #1f1f1f;
 }
 
@@ -492,7 +492,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     width: min(500px, 70%);
     padding: 14px 18px;
     border: 1px solid #ffffff40;
-    border-radius: 99px;
+    border-radius: var(--client-radius-pill);
     background: var(--client-surface-layer);
 }
 
@@ -512,12 +512,12 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
 }
 
 .client-interface button:disabled {
-    opacity: 0.4;
+    opacity: var(--client-opacity-disabled);
     cursor: default;
 }
 
 .client-interface :is(button, a, input):focus-visible {
-    outline: 2px solid var(--client-focus);
+    outline: var(--client-size-focus-ring) solid var(--client-focus);
     outline-offset: 4px;
 }
 
@@ -538,7 +538,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
         gap: 6px;
         margin: 0 10px 10px;
         padding: 10px 8px;
-        border-radius: 20px;
+        border-radius: var(--client-radius-panel);
     }
 
     .client-nav > div a {
@@ -550,7 +550,7 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     .client-profile {
         width: 28px;
         height: 28px;
-        border-radius: 9px;
+        border-radius: var(--client-radius-small);
         font-size: var(--client-text-12);
     }
 

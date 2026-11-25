@@ -7,7 +7,7 @@
     .client-icon {
         width: 14px;
         height: 14px;
-        transition: transform 0.2s ease;
+        transition: transform var(--client-duration-state) var(--client-ease-move);
     }
 
     &[aria-expanded='true'] .client-icon { transform: rotate(180deg); }
@@ -19,7 +19,7 @@
     height: 20px;
     place-items: center;
     padding: 0 6px;
-    border-radius: 999px;
+    border-radius: var(--client-radius-pill);
     background: #fff;
     color: var(--client-ink-inverse);
     font-size: var(--client-text-11);
@@ -31,7 +31,7 @@
     flex-basis: 100%;
     padding: clamp(14px, 2vw, 22px);
     border: 1px solid #ffffff24;
-    border-radius: 20px;
+    border-radius: var(--client-radius-panel);
     background: var(--client-surface-layer);
     color: var(--client-ink-muted);
     backdrop-filter: blur(18px);
@@ -76,7 +76,7 @@
         min-height: 0;
         padding: 0 16px;
         border: 1px solid var(--client-line);
-        border-radius: 999px;
+        border-radius: var(--client-radius-pill);
         background: var(--client-surface-control);
         color: var(--client-ink);
         font: inherit;

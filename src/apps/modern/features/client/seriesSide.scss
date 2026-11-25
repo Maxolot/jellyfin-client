@@ -83,10 +83,10 @@
             gap: 4px 14px;
             padding: 6px 12px 6px 6px;
             border-color: transparent;
-            border-radius: 14px;
+            border-radius: var(--client-radius-card);
             background: transparent;
             aspect-ratio: auto;
-            transition: background-color 0.18s ease, border-color 0.18s ease;
+            transition: background-color var(--client-duration-state) ease, border-color var(--client-duration-state) ease;
 
             // Thumbnail height, also when an episode has no image.
             min-height: calc((var(--client-episodes-side) - 54px) * 0.47 * 9 / 16 + 12px);
@@ -100,7 +100,7 @@
                 top: 50%;
                 left: 6px;
                 width: calc((100% - 18px) * 0.47);
-                border-radius: 9px;
+                border-radius: var(--client-radius-small);
                 background: var(--client-art-placeholder);
                 aspect-ratio: 16 / 9;
                 content: '';
@@ -123,7 +123,7 @@
                 grid-row: 1 / span 2;
                 width: 100%;
                 height: auto;
-                border-radius: 9px;
+                border-radius: var(--client-radius-small);
                 aspect-ratio: 16 / 9;
             }
 
@@ -131,7 +131,7 @@
                 inset: 6px auto 6px 6px;
                 width: calc((100% - 18px) * 0.47);
                 overflow: hidden;
-                border-radius: 9px;
+                border-radius: var(--client-radius-small);
             }
         }
 

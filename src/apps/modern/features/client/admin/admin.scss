@@ -105,14 +105,14 @@
         overflow: hidden;
         height: 6px;
         background: var(--client-track);
-        border-radius: 99px;
+        border-radius: var(--client-radius-pill);
 
         i {
             display: block;
             height: 100%;
             background: var(--client-progress);
             border-radius: inherit;
-            transition: width 0.4s ease;
+            transition: width var(--client-duration-fade) var(--client-ease-move);
         }
 
         &.is-warning i {
@@ -129,7 +129,7 @@
         padding: 10px 12px;
         color: var(--client-ink-muted);
         background: var(--client-surface-layer);
-        border-radius: 10px;
+        border-radius: var(--client-radius-small);
         font: inherit;
         font-size: var(--client-text-13);
         line-height: 1.5;
@@ -170,7 +170,7 @@
         div {
             padding: 10px 12px;
             background: var(--client-surface-layer);
-            border-radius: 12px;
+            border-radius: var(--client-radius-control);
         }
 
         dt {
@@ -279,7 +279,7 @@
             fill: none;
             stroke: currentcolor;
             stroke-width: 1.8;
-            transition: transform 0.2s ease;
+            transition: transform var(--client-duration-state) var(--client-ease-move);
         }
     }
 
@@ -290,7 +290,7 @@
     .client-admin-editor {
         padding: 4px 16px 8px;
         background: var(--client-surface-layer);
-        border-radius: 14px;
+        border-radius: var(--client-radius-card);
     }
 
     .client-admin-checks {

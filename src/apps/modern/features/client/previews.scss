@@ -37,7 +37,7 @@
     position: fixed;
     z-index: 5;
     inset: auto;
-    border-radius: 12px;
+    border-radius: var(--client-radius-control);
 }
 
 // Version de meilleure qualité qui se prépare, invisible, avant de prendre le relais.

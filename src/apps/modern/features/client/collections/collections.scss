@@ -84,7 +84,7 @@
         gap: 12px;
         padding: 7px 10px;
         border: 1px solid var(--client-line);
-        border-radius: 9px;
+        border-radius: var(--client-radius-small);
         background: var(--client-surface-control);
         color: inherit;
         text-align: start;

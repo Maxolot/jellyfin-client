@@ -22,7 +22,7 @@
         inset 0 12px 24px -16px rgb(255 255 255 / 22%),
         0 8px 26px rgb(0 0 0 / 22%);
     backdrop-filter: blur(18px) saturate(1.15) brightness(0.94);
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, box-shadow 0.2s ease;
+    transition: transform var(--client-duration-move) var(--client-ease-move), background-color var(--client-duration-state) ease, box-shadow var(--client-duration-state) ease;
 
     // Specular rim: brighter on the top-left and bottom-right edges, like light caught by a lens.
     &::before {
@@ -58,7 +58,7 @@
 .client-player.style-glass .client-player-toolbar.client-liquid-glass {
     @include liquid-glass-surface;
 
-    border-radius: 22px;
+    border-radius: var(--client-radius-panel);
 }
 
 // The filter is only rendered in Chromium, the one engine that refracts the backdrop through it.

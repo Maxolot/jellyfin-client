@@ -125,7 +125,7 @@
         border-color: var(--client-progress);
         background: var(--client-progress);
         color: var(--client-ink-inverse);
-        animation: client-request-step-in 260ms ease both;
+        animation: client-request-step-in var(--client-duration-move) ease both;
     }
 
     .is-complete span { background: var(--client-surface-highlight); }
@@ -140,7 +140,7 @@
         height: 8px;
         overflow: hidden;
         border: 0;
-        border-radius: 10px;
+        border-radius: var(--client-radius-small);
         // The legacy dashboard gives every progress element an important background.
         background: var(--client-track) !important;
         color: var(--client-progress);
@@ -149,9 +149,9 @@
         &::-webkit-progress-bar { background: transparent; }
 
         &::-webkit-progress-value {
-            border-radius: 10px;
+            border-radius: var(--client-radius-small);
             background: var(--client-progress);
-            transition: width 350ms ease;
+            transition: width var(--client-duration-move) var(--client-ease-move);
         }
 
         &::-moz-progress-bar { background: var(--client-progress); }
@@ -180,7 +180,7 @@
         gap: 4px;
         padding: 6px 9px;
         border: 1px solid var(--client-line);
-        border-radius: 9px;
+        border-radius: var(--client-radius-small);
         color: var(--client-ink);
         font-size: var(--client-text-12);
     }

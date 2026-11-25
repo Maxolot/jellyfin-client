@@ -29,7 +29,7 @@
         }
 
         &:focus-visible {
-            outline: 2px solid var(--client-focus);
+            outline: var(--client-size-focus-ring) solid var(--client-focus);
             outline-offset: 2px;
         }
 
@@ -84,7 +84,7 @@
         justify-content: space-between;
         gap: 8px;
         padding: 7px 10px;
-        border-radius: 8px;
+        border-radius: var(--client-radius-small);
         color: var(--client-ink);
         font-size: var(--client-text-14);
         line-height: 1.3;

@@ -68,7 +68,7 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: opacity 0.5s, transform 0.65s var(--client-ease-move);
+        transition: opacity var(--client-duration-fade), transform var(--client-duration-fade) var(--client-ease-move);
     }
 
     .client-card-backdrop {
@@ -80,7 +80,7 @@
     position: relative;
     flex: 0 0 var(--client-card-poster);
     height: var(--client-card-height);
-    border-radius: 11px;
+    border-radius: var(--client-radius-control);
     background: var(--client-art-placeholder);
     isolation: isolate;
     contain: layout paint;
@@ -118,7 +118,7 @@
     inset: 25% 0 0;
     background: linear-gradient(transparent, #000d);
     opacity: 0;
-    transition: opacity 0.35s;
+    transition: opacity var(--client-duration-move);
 }
 
 .client-card-overlay {
@@ -136,7 +136,7 @@
     bottom: 18px;
     left: 6%;
     opacity: 0;
-    transition: opacity 0.4s 0.1s;
+    transition: opacity var(--client-duration-fade) 0.1s;
 
     strong {
         display: block;
@@ -171,7 +171,7 @@
     opacity: 0;
     pointer-events: none;
     visibility: hidden;
-    transition: opacity 0.25s;
+    transition: opacity var(--client-duration-state);
 }
 
 // Saison et épisode à reprendre : pastille discrète, seulement sur la carte dépliée.
@@ -185,7 +185,7 @@
     height: 26px;
     padding: 0 11px;
     border: 1px solid #ffffff38;
-    border-radius: 999px;
+    border-radius: var(--client-radius-pill);
     background: var(--client-chip-on-art);
     backdrop-filter: blur(8px);
     color: #fffc;
@@ -196,7 +196,7 @@
     line-height: 1;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s 0.1s, visibility 0s 0.4s;
+    transition: opacity var(--client-duration-move) 0.1s, visibility 0s 0.4s;
 
     b {
         color: var(--client-ink);
@@ -214,7 +214,7 @@
 .client-media-card.active .client-episode-pill {
     opacity: 1;
     visibility: visible;
-    transition: opacity 0.3s 0.1s, visibility 0s;
+    transition: opacity var(--client-duration-move) 0.1s, visibility 0s;
 }
 
 .client-row-info {
@@ -246,11 +246,11 @@
     right: auto;
     left: 0;
     height: var(--client-card-height);
-    border-radius: 22px;
+    border-radius: var(--client-radius-panel);
     background: rgb(var(--client-media-color, 115 139 175) / 0.24);
     filter: blur(38px);
     opacity: 0;
-    transition: opacity 0.3s;
+    transition: opacity var(--client-duration-move);
     pointer-events: none;
     transform: scale(1.04);
 }
@@ -286,7 +286,7 @@
 
 .client-nav {
     height: 76px;
-    border-radius: 30px;
+    border-radius: var(--client-radius-panel);
     border-color: #9aafd059;
     background: linear-gradient(145deg, #ffffff16, #ffffff03), #191919a8;
     box-shadow: inset 0 1px 0 #ffffff40, 0 14px 45px #0004;
@@ -313,7 +313,7 @@
         padding: 18px;
         overflow: visible;
         border: 1px solid #ffffff38;
-        border-radius: 22px;
+        border-radius: var(--client-radius-panel);
         background: #1b1b1bf5;
         box-shadow: 0 15px 50px #0008;
         backdrop-filter: blur(28px);
@@ -326,7 +326,7 @@
     .client-profile-menu > button {
         padding: 11px 17px;
         border: 0;
-        border-radius: 16px;
+        border-radius: var(--client-radius-card);
         background: var(--client-surface-layer);
         text-align: left;
     }
@@ -380,7 +380,7 @@
     padding: 42px;
     overflow: hidden;
     border: 1px solid var(--client-line);
-    border-radius: 28px;
+    border-radius: var(--client-radius-panel);
     background: #191919;
 
     .client-background {
@@ -456,7 +456,7 @@
 @media (max-width: 700px) {
     .client-nav {
         height: 62px;
-        border-radius: 23px;
+        border-radius: var(--client-radius-panel);
     }
 
     .client-home-hero {
@@ -464,7 +464,7 @@
         min-height: 570px;
         margin: 10px 10px 24px;
         padding: 30px 22px;
-        border-radius: 23px;
+        border-radius: var(--client-radius-panel);
     }
 
     .client-home-hero .client-title-logo {
@@ -616,7 +616,7 @@
     gap: 5px;
     padding: 9px 13px;
     border-color: #ffffff20;
-    border-radius: 10px;
+    border-radius: var(--client-radius-small);
     background: var(--client-surface-layer);
     text-align: left;
 }
@@ -642,7 +642,7 @@
 .client-episode {
     flex-basis: clamp(230px, 20vw, 320px);
     border: 1px solid #ffffff16;
-    border-radius: 10px;
+    border-radius: var(--client-radius-small);
 }
 
 .client-episode-caption {
@@ -738,7 +738,7 @@
     height: 119px;
     place-items: center;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: var(--client-radius-small);
     background: #242424;
 }
 
@@ -851,7 +851,7 @@
     flex-direction: column;
     gap: 14px;
     padding: 12px;
-    border-radius: 14px;
+    border-radius: var(--client-radius-card);
     text-align: left;
 }
 
@@ -867,7 +867,7 @@
     width: 100%;
     height: 130px;
     overflow: hidden;
-    border-radius: 9px;
+    border-radius: var(--client-radius-small);
     background: radial-gradient(ellipse at 80% 28%, #7093a8, transparent 40%), linear-gradient(130deg, #151515, #3e3e3e 65%, #202020);
 }
 
@@ -882,7 +882,7 @@
     gap: 8px;
     height: 25px;
     border: 1px solid #ffffff38;
-    border-radius: 12px;
+    border-radius: var(--client-radius-control);
     background: #ffffff10;
 }
 
@@ -935,7 +935,7 @@
 .preview-content i {
     width: 34%;
     height: 10px;
-    border-radius: 8px;
+    border-radius: var(--client-radius-small);
     background: #ffffffb8;
 }
 
@@ -1088,7 +1088,7 @@
     margin: 0 0 20px;
     padding: 0 16px;
     border: 1px solid #4f4f4f;
-    border-radius: 10px;
+    border-radius: var(--client-radius-small);
     background: #252525;
 }
 
@@ -1113,7 +1113,7 @@
     flex: none;
     padding: 7px 12px;
     border: 0;
-    border-radius: 999px;
+    border-radius: var(--client-radius-pill);
     background: var(--client-surface-layer);
     color: var(--client-ink-muted);
     font-size: var(--client-text-12);
@@ -1142,7 +1142,7 @@
     margin: 20px var(--client-margin) 45px;
     padding: 12px 20px;
     border: 1px solid #ffffff38;
-    border-radius: 999px;
+    border-radius: var(--client-radius-pill);
     background: var(--client-surface-layer);
     color: var(--client-ink-muted);
     font-size: var(--client-text-13);
@@ -1162,7 +1162,7 @@
     height: 64px;
     flex: none;
     place-items: center;
-    border-radius: 16px;
+    border-radius: var(--client-radius-card);
     background: #c6323b;
     font-size: var(--client-text-24);
 
@@ -1214,7 +1214,7 @@
     margin: 0 var(--client-margin) 32px;
     overflow: hidden;
     border: 1px solid #ffffff24;
-    border-radius: 18px;
+    border-radius: var(--client-radius-panel);
     isolation: isolate;
 }
 
@@ -1374,11 +1374,11 @@
     place-items: center;
     padding: 0;
     border: 0;
-    border-radius: 12px;
+    border-radius: var(--client-radius-control);
     background: none;
     color: #ffffffc7;
     cursor: pointer;
-    transition: color 0.2s;
+    transition: color var(--client-duration-state);
 
     &:hover,
     &:focus-visible {
@@ -1406,7 +1406,7 @@
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    border-radius: 99px;
+    border-radius: var(--client-radius-pill);
 }
 
 .client-film-finish {
@@ -1436,7 +1436,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .osdControls {
     margin: 0 24px 14px;
     padding: 13px 24px 14px;
     border: 1px solid #ffffff26;
-    border-radius: 25px;
+    border-radius: var(--client-radius-panel);
     background: linear-gradient(145deg, #ffffff13, #ffffff02), #18181859;
     box-shadow: inset 0 1px 0 #ffffff36, 0 12px 45px #0003;
     backdrop-filter: blur(23px);
@@ -1455,7 +1455,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     body[data-client-player-theme='glass'] #videoOsdPage .osdControls {
         margin: 0 12px 10px;
         padding: 10px 12px;
-        border-radius: 20px;
+        border-radius: var(--client-radius-panel);
     }
 }
 
@@ -1528,7 +1528,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     top: 122px;
     padding: 28px;
     border: 1px solid var(--client-line);
-    border-radius: 24px;
+    border-radius: var(--client-radius-panel);
     background: linear-gradient(145deg, #ffffff0e, #ffffff02), #1717179b;
     box-shadow: inset 0 1px 0 #ffffff18;
     backdrop-filter: blur(26px);
@@ -1564,7 +1564,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
 .client-time-choices button {
     padding: 9px 13px;
     border: 1px solid #ffffff26;
-    border-radius: 999px;
+    border-radius: var(--client-radius-pill);
     background: var(--client-surface-layer);
     color: var(--client-ink-muted);
     font-size: var(--client-text-12);
@@ -1639,7 +1639,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     .client-tonight-form {
         position: static;
         padding: 22px;
-        border-radius: 20px;
+        border-radius: var(--client-radius-panel);
     }
 }
 
@@ -1693,7 +1693,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
         padding: 1px 8px;
         color: var(--client-ink);
         border: 1px solid rgb(255 255 255 / 30%);
-        border-radius: 999px;
+        border-radius: var(--client-radius-pill);
         background: rgb(255 255 255 / 8%);
         font-size: var(--client-text-11);
         font-weight: 600;
@@ -1740,7 +1740,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     border-top: 1px solid #ffffff16;
     border-bottom: 1px solid #ffffff16;
     text-decoration: none;
-    transition: background-color 0.2s;
+    transition: background-color var(--client-duration-state);
 
     .client-tonight-invite-copy {
         display: flex;

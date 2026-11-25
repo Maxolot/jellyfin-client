@@ -27,7 +27,7 @@
     position: relative;
     display: block;
     overflow: hidden;
-    border-radius: 7px;
+    border-radius: var(--client-radius-small);
     background: var(--client-surface-layer);
 
     &::after {
@@ -79,7 +79,7 @@
 .client-skeleton-cover {
     width: 100%;
     aspect-ratio: 2 / 3;
-    border-radius: 10px;
+    border-radius: var(--client-radius-small);
 }
 
 .client-skeleton-hero,
@@ -103,7 +103,7 @@
     > span {
         width: 120px;
         height: 44px;
-        border-radius: 24px;
+        border-radius: var(--client-radius-panel);
     }
 }
 

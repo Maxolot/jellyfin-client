@@ -49,7 +49,7 @@
         height: 36px;
         place-items: center;
         border: 1px solid #e2e2e255;
-        border-radius: 11px;
+        border-radius: var(--client-radius-control);
         background: #171717d9;
     }
 
@@ -72,7 +72,7 @@
     height: 114%;
     object-fit: cover;
     opacity: 0;
-    transition: opacity 500ms ease;
+    transition: opacity var(--client-duration-fade) ease;
     animation: client-session-drift 90s ease-in-out infinite alternate;
 
     &.is-shown { opacity: 1; }
@@ -90,7 +90,7 @@
     gap: 16px;
     padding: clamp(24px, 5vw, 42px);
     border: 1px solid var(--session-border);
-    border-radius: 24px;
+    border-radius: var(--client-radius-panel);
     background: var(--session-surface);
     box-shadow: 0 24px 70px #0007;
 
@@ -120,7 +120,7 @@
         min-height: 50px;
         padding: 0 15px;
         border: 1px solid #e1e1e140;
-        border-radius: 12px;
+        border-radius: var(--client-radius-control);
         background: var(--session-field);
         color: var(--client-ink);
     }
@@ -151,7 +151,7 @@
     .client-profile-error {
         padding: 12px 14px;
         border: 1px solid #ffae9e48;
-        border-radius: 12px;
+        border-radius: var(--client-radius-control);
         background: #54253166;
         color: #ffd4cc;
         font-size: var(--client-text-14);
@@ -164,7 +164,7 @@
 }
 
 .client-session :is(button, a, input, summary):focus-visible {
-    outline: 2px solid var(--client-focus);
+    outline: var(--client-size-focus-ring) solid var(--client-focus);
     outline-offset: 3px;
 }
 
@@ -193,7 +193,7 @@
     align-items: center;
     justify-content: center;
     padding: 8px 20px;
-    border-radius: 99px;
+    border-radius: var(--client-radius-pill);
     text-decoration: none;
 }
 
@@ -224,7 +224,7 @@
         margin: 8px 0 0;
         padding: 12px;
         overflow: auto;
-        border-radius: 10px;
+        border-radius: var(--client-radius-small);
         background: var(--session-field);
         white-space: pre-wrap;
         overflow-wrap: anywhere;
@@ -234,7 +234,7 @@
 .client-session-progress {
     height: 4px;
     overflow: hidden;
-    border-radius: 99px;
+    border-radius: var(--client-radius-pill);
     background: #a6bdf42b;
 
     &::after {
@@ -255,7 +255,7 @@
 .client-session .client-quick-code {
     padding: 14px 0 14px 0.14em;
     border: 1px solid var(--session-border);
-    border-radius: 12px;
+    border-radius: var(--client-radius-control);
     background: var(--session-field);
     font-size: clamp(28px, 7vw, 42px);
     font-variant-numeric: tabular-nums;
@@ -263,7 +263,7 @@
 }
 
 .client-session .client-profile-avatar,
-.client-session .client-avatar-picker li button { border-radius: 16px; }
+.client-session .client-avatar-picker li button { border-radius: var(--client-radius-card); }
 
 .client-session .client-profile-manage {
     display: inline-flex;
@@ -290,7 +290,7 @@
         gap: 12px;
         padding: 9px 11px;
         border: 1px solid var(--session-border);
-        border-radius: 12px;
+        border-radius: var(--client-radius-control);
         background: var(--session-field);
         color: var(--client-ink);
         text-align: start;
@@ -305,7 +305,7 @@
     .client-profile-avatar {
         width: 36px;
         flex: none;
-        border-radius: 9px;
+        border-radius: var(--client-radius-small);
         background: #e3e3e317;
     }
 

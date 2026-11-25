@@ -34,13 +34,13 @@
         gap: 12px;
         padding: 6px;
         border: 1px solid #ffffff1a;
-        border-radius: 14px;
+        border-radius: var(--client-radius-card);
         background: var(--client-surface-layer);
         color: var(--client-ink);
         font: inherit;
         text-align: start;
         cursor: pointer;
-        transition: background-color 0.2s ease, border-color 0.2s ease;
+        transition: background-color var(--client-duration-state) ease, border-color var(--client-duration-state) ease;
 
         &:hover,
         &:focus-visible {
@@ -55,7 +55,7 @@
     height: 100%;
     max-height: 72px;
     overflow: hidden;
-    border-radius: 9px;
+    border-radius: var(--client-radius-small);
     aspect-ratio: 16 / 9;
 
     img {
@@ -113,7 +113,7 @@
         min-width: 112px;
         gap: 2px;
         padding: 9px 16px;
-        border-radius: 14px;
+        border-radius: var(--client-radius-card);
 
         strong {
             min-height: 0;
@@ -169,7 +169,7 @@
         padding: 4px;
         overflow-x: auto;
         border: 1px solid #ffffff1f;
-        border-radius: 999px;
+        border-radius: var(--client-radius-pill);
         background: var(--client-surface-layer);
         backdrop-filter: blur(18px);
         scrollbar-width: none;
@@ -182,14 +182,14 @@
             gap: 7px;
             padding: 0 16px;
             border: 0;
-            border-radius: 999px;
+            border-radius: var(--client-radius-pill);
             background: transparent;
             color: var(--client-ink-muted);
             font: inherit;
             font-size: var(--client-text-14);
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s ease, color 0.2s ease;
+            transition: background-color var(--client-duration-state) ease, color var(--client-duration-state) ease;
 
             &:hover { color: var(--client-ink); }
 

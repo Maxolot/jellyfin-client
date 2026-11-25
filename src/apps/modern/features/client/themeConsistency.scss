@@ -50,7 +50,7 @@
         }
     }
 
-    .client-nav .client-profile { border-radius: 12px; }
+    .client-nav .client-profile { border-radius: var(--client-radius-control); }
 
     .client-row-heading h2 { font-size: clamp(18px, 2vw, 24px); }
 
@@ -62,7 +62,7 @@
 
     .client-episodes header button {
         min-height: var(--client-size-icon-target);
-        border-radius: 12px;
+        border-radius: var(--client-radius-control);
     }
 
     :is(.client-personal-spotlight, .client-advanced-panel, .client-stat) {
@@ -121,7 +121,7 @@
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
-    transition: opacity 0.2s ease;
+    transition: opacity var(--client-duration-state) ease;
 
     &:hover,
     &:focus-visible { opacity: 0.72; }
@@ -133,7 +133,7 @@
     min-width: 0;
     min-height: 0;
     padding: 0 16px;
-    border-radius: 999px;
+    border-radius: var(--client-radius-pill);
     font-size: var(--client-text-13);
     font-weight: 500;
 }

@@ -26,7 +26,7 @@
         flex: none;
         padding: 7px 12px;
         border: 1px solid var(--client-line);
-        border-radius: 999px;
+        border-radius: var(--client-radius-pill);
         background: var(--client-surface-layer);
         color: var(--client-ink);
         font-size: var(--client-text-12);
@@ -60,7 +60,7 @@
     place-items: center;
     border: 1.5px solid #ffffff60;
     border-radius: 50%;
-    transition: background 0.2s ease, border-color 0.2s ease;
+    transition: background var(--client-duration-state) ease, border-color var(--client-duration-state) ease;
 
     [aria-pressed='true'] &::after {
         width: 5px;
@@ -96,9 +96,9 @@
         height: 24px;
         flex: none;
         border: 1px solid #ffffff38;
-        border-radius: 999px;
+        border-radius: var(--client-radius-pill);
         background: var(--client-surface-highlight);
-        transition: background 0.2s ease, border-color 0.2s ease;
+        transition: background var(--client-duration-state) ease, border-color var(--client-duration-state) ease;
     }
 
     > i::after {
@@ -111,7 +111,7 @@
         background: #ddd;
         box-shadow: 0 1px 3px #0006;
         content: '';
-        transition: transform 0.22s ease, background 0.2s ease;
+        transition: transform var(--client-duration-state) var(--client-ease-move), background var(--client-duration-state) ease;
     }
 
     &[aria-checked='true'] > i {
@@ -125,7 +125,7 @@
     }
 
     &:focus-visible {
-        outline: 2px solid var(--client-focus);
+        outline: var(--client-size-focus-ring) solid var(--client-focus);
         outline-offset: 4px;
     }
 }
@@ -148,7 +148,7 @@
     button {
         padding: 9px 15px;
         border: 1px solid var(--client-line);
-        border-radius: 999px;
+        border-radius: var(--client-radius-pill);
         background: none;
         color: var(--client-ink-muted);
         font-size: var(--client-text-12);
@@ -194,7 +194,7 @@
     gap: 16px;
     min-width: 0;
     padding: 12px;
-    border-radius: 14px;
+    border-radius: var(--client-radius-card);
     background: var(--client-surface-layer);
 
     .client-tracked-art {
@@ -207,7 +207,7 @@
     img {
         width: 100%;
         height: 80px;
-        border-radius: 6px;
+        border-radius: var(--client-radius-small);
         object-fit: cover;
     }
 
@@ -236,7 +236,7 @@
     max-width: calc(100% - 16px);
     padding: 7px 10px;
     border: 1px solid var(--client-line);
-    border-radius: 20px;
+    border-radius: var(--client-radius-panel);
     background: var(--client-surface-raised);
     color: var(--client-ink);
     font-size: var(--client-text-11);
@@ -259,7 +259,7 @@
 }
 
 .client-request-panel button:disabled {
-    opacity: 0.45;
+    opacity: var(--client-opacity-disabled);
     cursor: default;
 }
 
@@ -285,7 +285,7 @@
     min-height: 150px;
     overflow: hidden;
     padding: 18px;
-    border-radius: 16px;
+    border-radius: var(--client-radius-card);
     background: var(--client-art-placeholder);
     isolation: isolate;
 
@@ -329,7 +329,7 @@
         width: 76px;
         aspect-ratio: 2 / 3;
         overflow: hidden;
-        border-radius: 9px;
+        border-radius: var(--client-radius-small);
         background: var(--client-art-placeholder);
         box-shadow: 0 8px 24px #0009;
 
@@ -378,10 +378,10 @@
         overflow: hidden;
         margin-bottom: 7px;
         border: 2px solid transparent;
-        border-radius: 12px;
+        border-radius: var(--client-radius-control);
         background: var(--client-art-placeholder);
         box-shadow: 0 8px 22px #0006;
-        transition: border-color 0.2s ease, transform 0.2s ease, filter 0.2s ease;
+        transition: border-color var(--client-duration-state) ease, transform var(--client-duration-state) var(--client-ease-move), filter var(--client-duration-state) ease;
 
         img {
             width: 100%;
@@ -411,7 +411,7 @@
             bottom: 8px;
             left: 8px;
             padding: 3px 9px;
-            border-radius: 999px;
+            border-radius: var(--client-radius-pill);
             background: #0b0b0bcc;
             font-size: var(--client-text-11);
             font-style: normal;
@@ -536,7 +536,7 @@
     color: var(--client-ink);
     background: #202020;
     border: 1px solid rgb(255 255 255 / 20%);
-    border-radius: 8px;
+    border-radius: var(--client-radius-small);
     font-size: var(--client-text-13);
     line-height: 1.35;
     text-align: left;
@@ -577,7 +577,7 @@
     }
 
     &:focus-visible {
-        outline: 2px solid white;
+        outline: var(--client-size-focus-ring) solid var(--client-focus);
         outline-offset: 3px;
     }
 

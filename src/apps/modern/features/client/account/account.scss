@@ -72,7 +72,7 @@
         justify-content: stretch;
         gap: 0.4em;
         padding: 14px 16px;
-        border-radius: 14px;
+        border-radius: var(--client-radius-card);
         text-align: left;
     }
 
@@ -106,7 +106,7 @@
         height: 88px;
         flex: none;
         place-items: center;
-        border-radius: 22px;
+        border-radius: var(--client-radius-panel);
         background: #c6323b;
         font-size: 36px;
         object-fit: cover;
@@ -126,7 +126,7 @@
         width: min(100%, 320px);
         padding: 10px 12px;
         border: 1px solid #ffffff40;
-        border-radius: 8px;
+        border-radius: var(--client-radius-small);
         background: #191919;
         color: var(--client-ink);
         font: inherit;
@@ -149,7 +149,7 @@
         flex: none;
         padding: 9px 16px;
         border: 1px solid var(--client-line);
-        border-radius: 99px;
+        border-radius: var(--client-radius-pill);
         color: var(--client-ink-muted);
         font-size: var(--client-text-14);
         white-space: nowrap;

@@ -64,7 +64,7 @@
     background: var(--client-art-placeholder);
     color: var(--client-ink);
     text-align: start;
-    transition: transform 170ms ease, border-color 170ms;
+    transition: transform var(--client-duration-state) var(--client-ease-move), border-color var(--client-duration-state);
 }
 
 .client-season-poster.is-active {
@@ -150,7 +150,7 @@
     display: block;
     height: 3px;
     overflow: hidden;
-    border-radius: 6px;
+    border-radius: var(--client-radius-small);
     background: var(--client-track);
 
     i {
@@ -275,7 +275,7 @@
     min-height: 25px;
     place-items: center;
     padding: 3px 7px;
-    border-radius: 999px;
+    border-radius: var(--client-radius-pill);
     background: var(--client-surface-raised);
     color: var(--client-ink);
     font-size: var(--client-text-11);
@@ -307,7 +307,7 @@
     &[open] {
         display: flex;
         flex-direction: column;
-        animation: client-episode-drawer-in 190ms ease-out;
+        animation: client-episode-drawer-in var(--client-duration-state) ease-out;
     }
 
     > header {
@@ -373,7 +373,7 @@
     gap: 10px;
     padding: 10px 2px;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--client-radius-small);
     background: none;
     color: inherit;
     text-align: start;
@@ -391,7 +391,7 @@
     position: relative;
     aspect-ratio: 16 / 9;
     overflow: hidden;
-    border-radius: 7px;
+    border-radius: var(--client-radius-small);
     background: var(--client-art-placeholder);
 }
 
@@ -462,7 +462,7 @@
     gap: 3px;
     padding: 4px 5px;
     border: 1px solid var(--client-line);
-    border-radius: 8px;
+    border-radius: var(--client-radius-small);
     background: var(--client-surface-raised);
     color: var(--client-ink);
     font-size: var(--client-text-11);

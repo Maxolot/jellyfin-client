@@ -12,7 +12,7 @@
 .client-trailer-frame {
     position: relative;
     overflow: hidden;
-    border-radius: 10px;
+    border-radius: var(--client-radius-small);
     background: #131313;
 }
 

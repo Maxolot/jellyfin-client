@@ -33,7 +33,7 @@ body.client-spotlight-open {
     position: absolute;
     inset: 0;
     background: #05070bb3;
-    animation: client-spotlight-fade 0.24s ease-out;
+    animation: client-spotlight-fade var(--client-duration-state) ease-out;
     backdrop-filter: blur(14px) saturate(120%);
 }
 
@@ -52,7 +52,7 @@ body.client-spotlight-open {
     margin: 11vh auto 0;
     overflow: hidden;
     border: 1px solid #ffffff1f;
-    border-radius: 22px;
+    border-radius: var(--client-radius-panel);
     background: #151515f7;
     box-shadow: 0 30px 90px #000a, 0 0 0 1px #0006;
     transform-origin: 50% 28px;
@@ -130,7 +130,7 @@ body.client-spotlight-open {
     gap: 6px;
     padding: 6px;
     border: 0;
-    border-radius: 999px;
+    border-radius: var(--client-radius-pill);
     background: transparent;
     color: #ffffffb3;
     cursor: pointer;
@@ -164,7 +164,7 @@ body.client-spotlight-open {
         flex: none;
         padding: 6px 14px;
         border: 1px solid #ffffff26;
-        border-radius: 999px;
+        border-radius: var(--client-radius-pill);
         background: transparent;
         color: #ffffffc7;
         cursor: pointer;
@@ -180,7 +180,7 @@ body.client-spotlight-open {
         }
 
         &:focus-visible {
-            outline: 2px solid var(--client-focus);
+            outline: var(--client-size-focus-ring) solid var(--client-focus);
             outline-offset: 2px;
         }
     }
@@ -238,10 +238,10 @@ body.client-spotlight-open {
 
 .client-spotlight-option {
     position: relative;
-    border-radius: 12px;
+    border-radius: var(--client-radius-control);
     cursor: pointer;
     outline: 0;
-    transition: background-color 0.12s ease, box-shadow 0.12s ease;
+    transition: background-color var(--client-duration-state) ease, box-shadow var(--client-duration-state) ease;
 
     &.active {
         background: #ffffff1f;
@@ -275,7 +275,7 @@ body.client-spotlight-open {
     height: 51px;
     flex: none;
     overflow: hidden;
-    border-radius: 6px;
+    border-radius: var(--client-radius-small);
     background: var(--client-surface-highlight);
 
     img {
@@ -321,7 +321,7 @@ body.client-spotlight-open {
 .client-spotlight-badge {
     flex: none;
     padding: 3px 9px;
-    border-radius: 999px;
+    border-radius: var(--client-radius-pill);
     background: var(--client-surface-highlight);
     color: #ffffffb3;
     font-size: var(--client-text-11);
@@ -346,7 +346,7 @@ body.client-spotlight-open {
     width: 220px;
     flex: none;
     overflow: hidden;
-    border-radius: 10px;
+    border-radius: var(--client-radius-small);
     aspect-ratio: 16 / 9;
     background: var(--client-surface-highlight);
 
@@ -421,7 +421,7 @@ body.client-spotlight-open {
     position: relative;
     display: block;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: var(--client-radius-small);
     aspect-ratio: 2 / 3;
     background: var(--client-surface-highlight);
 
@@ -451,7 +451,7 @@ body.client-spotlight-open {
     top: 10px;
     left: 10px;
     padding: 2px 7px;
-    border-radius: 999px;
+    border-radius: var(--client-radius-pill);
     background: #000000b3;
     font-size: var(--client-text-11);
     font-weight: 700;
@@ -480,7 +480,7 @@ body.client-spotlight-open {
     background: #000000a6;
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.9);
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    transition: opacity var(--client-duration-state) ease, transform var(--client-duration-state) var(--client-ease-move);
 
     svg {
         width: 18px;
@@ -499,7 +499,7 @@ body.client-spotlight-open {
     bottom: 16px;
     left: 8px;
     padding: 2px 7px;
-    border-radius: 999px;
+    border-radius: var(--client-radius-pill);
     background: #000c;
     color: var(--client-ink);
     font-size: var(--client-text-11);
@@ -516,7 +516,7 @@ body.client-spotlight-open {
     gap: 6px;
     padding: 6px 12px;
     border: 1px solid #ffffff24;
-    border-radius: 999px;
+    border-radius: var(--client-radius-pill);
     font-size: var(--client-text-13);
 
     svg {

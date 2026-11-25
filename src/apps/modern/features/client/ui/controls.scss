@@ -110,7 +110,7 @@
         align-items: center;
         gap: 6px;
         padding: 0 10px;
-        border-radius: 99px;
+        border-radius: var(--client-radius-pill);
         font-size: var(--client-text-11);
         font-weight: 600;
         letter-spacing: 0.02em;
@@ -179,9 +179,9 @@
         padding: 0;
         background: var(--client-track);
         border: 0;
-        border-radius: 99px;
+        border-radius: var(--client-radius-pill);
         cursor: pointer;
-        transition: background-color 0.2s ease;
+        transition: background-color var(--client-duration-state) ease;
 
         span {
             position: absolute;
@@ -192,7 +192,7 @@
             background: #fff;
             border-radius: 50%;
             box-shadow: 0 1px 3px #0006;
-            transition: transform 0.2s ease;
+            transition: transform var(--client-duration-state) var(--client-ease-move);
         }
 
         &[aria-checked='true'] {
@@ -206,11 +206,11 @@
 
         &:disabled {
             cursor: default;
-            opacity: 0.4;
+            opacity: var(--client-opacity-disabled);
         }
 
         &:focus-visible {
-            outline: 2px solid var(--client-focus);
+            outline: var(--client-size-focus-ring) solid var(--client-focus);
             outline-offset: 3px;
         }
 
@@ -231,7 +231,7 @@
         padding: 4px;
         background: var(--client-surface-control);
         border: 1px solid #ffffff14;
-        border-radius: 99px;
+        border-radius: var(--client-radius-pill);
 
         button {
             min-height: 36px;
@@ -239,11 +239,11 @@
             color: var(--client-ink-muted);
             background: transparent;
             border: 0;
-            border-radius: 99px;
+            border-radius: var(--client-radius-pill);
             font: inherit;
             font-size: var(--client-text-13);
             cursor: pointer;
-            transition: background-color 0.15s ease, color 0.15s ease;
+            transition: background-color var(--client-duration-state) ease, color var(--client-duration-state) ease;
 
             &:hover:not(:disabled) {
                 color: var(--client-ink);
@@ -256,20 +256,20 @@
             }
 
             &:focus-visible {
-                outline: 2px solid var(--client-focus);
+                outline: var(--client-size-focus-ring) solid var(--client-focus);
                 outline-offset: 2px;
             }
 
             &:disabled {
                 cursor: default;
-                opacity: 0.45;
+                opacity: var(--client-opacity-disabled);
             }
         }
     }
 
     .client-setting-row.is-stacked .client-segmented {
         align-self: flex-start;
-        border-radius: 18px;
+        border-radius: var(--client-radius-panel);
     }
 
     // Curseur
@@ -290,19 +290,19 @@
             &::-webkit-slider-runnable-track {
                 height: 6px;
                 background: linear-gradient(90deg, var(--client-progress) var(--fill), var(--client-track) var(--fill));
-                border-radius: 99px;
+                border-radius: var(--client-radius-pill);
             }
 
             &::-moz-range-track {
                 height: 6px;
                 background: var(--client-track);
-                border-radius: 99px;
+                border-radius: var(--client-radius-pill);
             }
 
             &::-moz-range-progress {
                 height: 6px;
                 background: #f2f3f5;
-                border-radius: 99px;
+                border-radius: var(--client-radius-pill);
             }
 
             &::-webkit-slider-thumb {
@@ -326,14 +326,14 @@
             }
 
             &:focus-visible {
-                outline: 2px solid var(--client-focus);
+                outline: var(--client-size-focus-ring) solid var(--client-focus);
                 outline-offset: 4px;
-                border-radius: 99px;
+                border-radius: var(--client-radius-pill);
             }
 
             &:disabled {
                 cursor: default;
-                opacity: 0.4;
+                opacity: var(--client-opacity-disabled);
             }
         }
 
@@ -354,7 +354,7 @@
         color: var(--client-ink);
         background: var(--client-surface-control);
         border: 1px solid #ffffff24;
-        border-radius: 12px;
+        border-radius: var(--client-radius-control);
         font: inherit;
         font-size: var(--client-text-16);
 
@@ -380,7 +380,7 @@
         color: var(--client-ink);
         background: transparent;
         border: 1px solid #ffffff38;
-        border-radius: 99px;
+        border-radius: var(--client-radius-pill);
         font: inherit;
         font-size: var(--client-text-13);
         font-weight: 600;
@@ -395,7 +395,7 @@
 
         &:disabled {
             cursor: default;
-            opacity: 0.45;
+            opacity: var(--client-opacity-disabled);
         }
     }
 
@@ -433,7 +433,7 @@
     @media (max-width: 700px) {
         .client-setting-card {
             padding: 4px 16px;
-            border-radius: 14px;
+            border-radius: var(--client-radius-card);
         }
 
         .client-setting-row:not(.is-stacked):has(.client-select, .client-slider, .client-segmented) {
@@ -483,12 +483,12 @@
             color: var(--client-ink-muted);
             background: var(--client-surface-control);
             border: 1px solid #ffffff14;
-            border-radius: 14px;
+            border-radius: var(--client-radius-card);
             font: inherit;
             font-size: var(--client-text-13);
             text-align: left;
             cursor: pointer;
-            transition: border-color 0.15s ease, background-color 0.15s ease;
+            transition: border-color var(--client-duration-state) ease, background-color var(--client-duration-state) ease;
 
             > span:last-child {
                 display: flex;
@@ -522,7 +522,7 @@
             }
 
             &:focus-visible {
-                outline: 2px solid var(--client-focus);
+                outline: var(--client-size-focus-ring) solid var(--client-focus);
                 outline-offset: 3px;
             }
 
@@ -562,11 +562,11 @@
                 fill: none;
                 stroke: currentcolor;
                 stroke-width: 2;
-                transition: transform 0.2s ease;
+                transition: transform var(--client-duration-state) var(--client-ease-move);
             }
 
             &:focus-visible {
-                outline: 2px solid var(--client-focus);
+                outline: var(--client-size-focus-ring) solid var(--client-focus);
                 outline-offset: 2px;
             }
         }

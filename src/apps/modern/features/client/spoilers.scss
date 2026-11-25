@@ -29,7 +29,7 @@
 .client-player-episodes .client-player-episode > .client-player-episode-art {
     flex: 0 0 36%;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: var(--client-radius-small);
 
     > img {
         display: block;
