@@ -5,6 +5,12 @@
 html.client-video-active {
     overflow: hidden;
 
+    // Set by the player while its controls show, so the subtitles clear them.
+    .videoSubtitles {
+        transform: translateY(calc(-1 * var(--client-subtitle-lift, 0px)));
+        transition: transform var(--client-duration-state) var(--client-ease-move);
+    }
+
     .skinHeader,
     .appfooter,
     .skip-button-container {

@@ -364,17 +364,31 @@ export default function CustomVideoPlayer() {
         if (!video) return;
         const positions = new Map<VTTCue, { line: VTTCue['line']; snap: boolean; align: LineAlignSetting }>();
         // While the controls show, subtitles rise above them (as on YouTube) instead of running under the island.
-        const distance = () => {
+        const controlsTop = () => {
             const bottom = root.current?.querySelector('.client-player-bottom');
-            if (!controlsShown || !bottom) return preferences.subtitlePosition;
-            const box = video.getBoundingClientRect();
+            if (!controlsShown || !bottom) return undefined;
             const tops = Array.from(bottom.querySelectorAll('.client-player-timeline, .client-player-toolbar'), element => element.getBoundingClientRect().top);
-            if (!box.height || !tops.length) return preferences.subtitlePosition;
-            const covered = (box.bottom - Math.min(...tops)) / box.height * 100 + 2;
+            return tops.length ? Math.min(...tops) : undefined;
+        };
+        const distance = (top: number | undefined) => {
+            const box = video.getBoundingClientRect();
+            if (top === undefined || !box.height) return preferences.subtitlePosition;
+            const covered = (box.bottom - top) / box.height * 100 + 2;
             return Math.min(60, Math.max(preferences.subtitlePosition, covered));
         };
+        // Firefox and Safari draw text subtitles in Jellyfin's own element rather than as cues: it is lifted instead.
+        const page = document.documentElement;
+        const liftElement = (top: number | undefined) => {
+            const text = document.querySelector('.videoSubtitles .videoSubtitlesInner');
+            const current = parseFloat(page.style.getPropertyValue('--client-subtitle-lift')) || 0;
+            const resting = text ? text.getBoundingClientRect().bottom + current : 0;
+            const lift = text && top !== undefined ? Math.max(0, Math.round(resting - top + 12)) : 0;
+            if (lift !== current) page.style.setProperty('--client-subtitle-lift', `${lift}px`);
+        };
         const apply = () => {
-            const line = 100 - distance();
+            const top = controlsTop();
+            liftElement(top);
+            const line = 100 - distance(top);
             for (const track of Array.from(video.textTracks)) {
                 for (const cue of Array.from(track.cues || [])) {
                     if (!('line' in cue)) continue;
@@ -395,6 +409,7 @@ export default function CustomVideoPlayer() {
             video.textTracks.removeEventListener('change', apply);
             video.removeEventListener('timeupdate', apply);
             window.removeEventListener('resize', apply);
+            page.style.removeProperty('--client-subtitle-lift');
             positions.forEach((original, cue) => {
                 cue.line = original.line;
                 cue.snapToLines = original.snap;
