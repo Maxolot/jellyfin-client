@@ -22,7 +22,7 @@
     border-radius: 999px;
     background: #fff;
     color: var(--client-ink-inverse);
-    font-size: 11px;
+    font-size: var(--client-text-11);
     font-weight: 700;
 }
 
@@ -54,7 +54,7 @@
     display: grid;
     min-width: 0;
     gap: 6px;
-    font-size: 13px;
+    font-size: var(--client-text-13);
 }
 
 .client-advanced-footer {
@@ -63,7 +63,7 @@
     align-items: center;
     gap: 10px 16px;
     margin-block: 14px 0;
-    font-size: 13px;
+    font-size: var(--client-text-13);
 }
 
 // Library filters: one row of identical pills; the advanced panel takes its own line below.
@@ -80,7 +80,7 @@
         background: var(--client-surface-control);
         color: var(--client-ink);
         font: inherit;
-        font-size: 13px;
+        font-size: var(--client-text-13);
         font-weight: 500;
     }
 

@@ -17,7 +17,7 @@
 
     h2 {
         margin: 0;
-        font-size: 24px;
+        font-size: var(--client-text-24);
         font-weight: 700;
     }
 
@@ -32,7 +32,7 @@
         border: 1px solid var(--client-line);
         border-radius: 50%;
         background: var(--client-surface-layer);
-        font-size: 23px;
+        font-size: var(--client-text-24);
     }
 }
 
@@ -224,7 +224,7 @@
 
     > span {
         color: var(--client-ink-subtle);
-        font-size: 13px;
+        font-size: var(--client-text-13);
     }
 
     p {
@@ -232,7 +232,7 @@
         overflow: hidden;
         margin-top: 9px;
         color: var(--client-ink-subtle);
-        font-size: 16px;
+        font-size: var(--client-text-16);
         line-height: 1.55;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
@@ -265,7 +265,7 @@
     }
 
     .client-row-heading h2 {
-        font-size: 18px;
+        font-size: var(--client-text-18);
     }
 
     .client-row-info {
@@ -298,7 +298,7 @@
 
     .client-search-shortcut {
         padding: 3px 16px;
-        font-size: 30px;
+        font-size: var(--client-text-30);
     }
 
     .client-profile-menu {
@@ -351,8 +351,8 @@
 .client-brand {
     background: none;
     color: #e50914;
-    font-size: 29px;
-    font-weight: 900;
+    font-size: var(--client-text-30);
+    font-weight: 700;
 }
 
 .client-classic .client-nav {
@@ -362,7 +362,7 @@
 }
 
 .client-nav > div a:not(.client-search-shortcut) {
-    font-size: 16px;
+    font-size: var(--client-text-16);
 }
 
 .client-floating .client-nav {
@@ -404,7 +404,7 @@
     }
 
     .client-meta {
-        font-size: 15px;
+        font-size: var(--client-text-16);
         font-weight: 600;
         line-height: normal;
     }
@@ -432,7 +432,7 @@
     border: 1px solid #ffffff70;
     border-radius: 50%;
     background: #15161b88;
-    font-size: 26px;
+    font-size: var(--client-text-24);
 }
 
 @keyframes client-artwork-enter {
@@ -486,7 +486,7 @@
     }
 
     .client-home-hero .client-meta {
-        font-size: 12px;
+        font-size: var(--client-text-12);
     }
 }
 
@@ -527,7 +527,7 @@
 
     .client-meta {
         margin-top: 18px;
-        font-size: 13px;
+        font-size: var(--client-text-13);
         font-weight: 400;
         line-height: 1.6;
     }
@@ -535,7 +535,7 @@
     .client-overview {
         margin-top: 19px;
         margin-bottom: 0;
-        font-size: 15px;
+        font-size: var(--client-text-16);
         line-height: 1.65;
         -webkit-line-clamp: 3;
     }
@@ -551,7 +551,7 @@
     .client-eyebrow {
         letter-spacing: 0;
         color: var(--client-ink-muted);
-        font-size: 11px;
+        font-size: var(--client-text-11);
     }
 
     &::before {
@@ -576,12 +576,12 @@
     border: 0;
     background: transparent;
     color: var(--client-ink-muted);
-    font-size: 11px;
+    font-size: var(--client-text-11);
 }
 
 .client-original-link {
     display: inline-block;
-    font-size: 11px;
+    font-size: var(--client-text-11);
     color: var(--client-ink-subtle);
 }
 
@@ -600,7 +600,7 @@
 }
 
 .client-episodes h2 {
-    font-size: 21px;
+    font-size: var(--client-text-18);
 }
 
 .client-episodes header {
@@ -622,12 +622,12 @@
 }
 
 .client-episodes header button strong {
-    font-size: 12px;
+    font-size: var(--client-text-12);
     font-weight: 600;
 }
 
 .client-episodes header button small {
-    font-size: 10px;
+    font-size: var(--client-text-11);
     font-weight: 400;
     opacity: 0.72;
     white-space: nowrap;
@@ -649,7 +649,7 @@
     padding: 15px 13px 12px;
 
     strong {
-        font-size: 14px;
+        font-size: var(--client-text-14);
     }
 }
 
@@ -675,7 +675,7 @@
 
 .client-detail-extras h2 {
     margin: 0;
-    font-size: 21px;
+    font-size: var(--client-text-18);
     font-weight: 600;
     letter-spacing: -0.02em;
 }
@@ -698,14 +698,14 @@
     border: 0;
     background: transparent;
     color: var(--client-ink-subtle);
-    font-size: 12px;
+    font-size: var(--client-text-12);
 }
 
 .client-directors {
     display: flex;
     gap: 12px;
     margin-bottom: 21px;
-    font-size: 12px;
+    font-size: var(--client-text-12);
     color: var(--client-ink-subtle);
 }
 
@@ -744,7 +744,7 @@
 
 .client-person-portrait > span {
     color: #868686;
-    font-size: 32px;
+    font-size: var(--client-text-30);
 }
 
 .client-person-portrait img {
@@ -758,7 +758,7 @@
 .client-person strong {
     margin-top: 9px;
     color: var(--client-ink-muted);
-    font-size: 12px;
+    font-size: var(--client-text-12);
     font-weight: 500;
     line-height: 1.4;
 }
@@ -766,7 +766,7 @@
 .client-person small {
     margin-top: 3px;
     color: var(--client-ink-subtle);
-    font-size: 10px;
+    font-size: var(--client-text-11);
     line-height: 1.4;
 }
 
@@ -790,7 +790,7 @@
 
 .client-cast-dialog header h2 {
     margin-top: 8px;
-    font-size: 30px;
+    font-size: var(--client-text-30);
 }
 
 .client-cast-dialog header > button {
@@ -798,7 +798,7 @@
     height: 44px;
     border: 1px solid #ffffff50;
     border-radius: 50%;
-    font-size: 26px;
+    font-size: var(--client-text-24);
 }
 
 .client-cast-grid {
@@ -815,11 +815,11 @@
 }
 
 .client-cast-grid .client-person strong {
-    font-size: 16px;
+    font-size: var(--client-text-16);
 }
 
 .client-cast-grid .client-person small {
-    font-size: 12px;
+    font-size: var(--client-text-12);
 }
 
 .client-detail-recommendations {
@@ -857,7 +857,7 @@
 
 .client-setting-options button strong {
     padding: 0 4px 5px;
-    font-size: 13px;
+    font-size: var(--client-text-13);
     font-weight: 500;
 }
 
@@ -958,7 +958,7 @@
 
 @media (max-width: 900px) {
     .client-detail .client-overview {
-        font-size: 14px;
+        font-size: var(--client-text-14);
     }
 
     .client-related-grid {
@@ -968,17 +968,17 @@
 
 @media (max-width: 1100px) {
     .client-nav > div a:not(.client-search-shortcut) {
-        font-size: 14px;
+        font-size: var(--client-text-14);
     }
 }
 
 @media (max-width: 700px) {
     .client-nav > div a:not(.client-search-shortcut) {
-        font-size: 11px;
+        font-size: var(--client-text-11);
     }
 
     .client-episode-caption strong {
-        font-size: 15px;
+        font-size: var(--client-text-16);
     }
 
     .client-detail {
@@ -1002,11 +1002,11 @@
     }
 
     .client-detail .client-meta {
-        font-size: 11px;
+        font-size: var(--client-text-11);
     }
 
     .client-detail .client-overview {
-        font-size: 14px;
+        font-size: var(--client-text-14);
     }
 
     .client-detail-atmosphere {
@@ -1046,7 +1046,7 @@
     }
 
     .client-cast-dialog header h2 {
-        font-size: 24px;
+        font-size: var(--client-text-24);
     }
 }
 
@@ -1070,13 +1070,13 @@
 
 .client-library-heading h1 {
     margin: 0 0 9px;
-    font-size: 32px;
+    font-size: var(--client-text-30);
     letter-spacing: -0.025em;
 }
 
 .client-library-heading p {
     margin: 0;
-    font-size: 14px;
+    font-size: var(--client-text-14);
     color: var(--client-ink-subtle);
 }
 
@@ -1100,12 +1100,12 @@
     padding: 0;
     border: 0;
     background: transparent;
-    font-size: 17px;
+    font-size: var(--client-text-16);
     box-shadow: none;
 }
 
 .client-library form > span {
-    font-size: 25px;
+    font-size: var(--client-text-24);
     color: var(--client-ink-subtle);
 }
 
@@ -1116,7 +1116,7 @@
     border-radius: 999px;
     background: var(--client-surface-layer);
     color: var(--client-ink-muted);
-    font-size: 12px;
+    font-size: var(--client-text-12);
 }
 
 .client-library form:focus-within {
@@ -1134,7 +1134,7 @@
 .client-result-count {
     margin-left: auto;
     color: var(--client-ink-subtle);
-    font-size: 12px;
+    font-size: var(--client-text-12);
 }
 
 .client-explore-library {
@@ -1145,7 +1145,7 @@
     border-radius: 999px;
     background: var(--client-surface-layer);
     color: var(--client-ink-muted);
-    font-size: 13px;
+    font-size: var(--client-text-13);
 }
 
 .client-personal-identity {
@@ -1164,7 +1164,7 @@
     place-items: center;
     border-radius: 16px;
     background: #c6323b;
-    font-size: 24px;
+    font-size: var(--client-text-24);
 
     img {
         width: 100%;
@@ -1175,13 +1175,13 @@
 
 .client-personal-identity h1 {
     margin: 0;
-    font-size: 30px;
+    font-size: var(--client-text-30);
     font-weight: 600;
 }
 
 .client-personal-identity p {
     margin: 8px 0 0;
-    font-size: 13px;
+    font-size: var(--client-text-13);
     color: var(--client-ink-subtle);
 }
 
@@ -1199,12 +1199,12 @@
     border: 0;
     background: none;
     color: var(--client-ink-subtle);
-    font-size: 12px;
+    font-size: var(--client-text-12);
 }
 
 .client-personal-shortcuts strong {
     color: var(--client-ink);
-    font-size: 21px;
+    font-size: var(--client-text-18);
     font-weight: 500;
 }
 
@@ -1242,20 +1242,20 @@
 
 .client-personal-spotlight small {
     color: var(--client-ink-subtle);
-    font-size: 10px;
+    font-size: var(--client-text-11);
     letter-spacing: 0.15em;
 }
 
 .client-personal-spotlight h2 {
     margin: 18px 0 12px;
-    font-size: 34px;
+    font-size: var(--client-text-30);
     font-weight: 500;
 }
 
 .client-personal-spotlight p {
     margin-bottom: 25px;
     color: var(--client-ink-muted);
-    font-size: 13px;
+    font-size: var(--client-text-13);
 }
 
 .client-personal-spotlight .client-button {
@@ -1276,7 +1276,7 @@
 
 .client-personal-favorites > header h2 {
     margin: 0;
-    font-size: 23px;
+    font-size: var(--client-text-24);
     font-weight: 500;
 }
 
@@ -1284,7 +1284,7 @@
     border: 0;
     background: none;
     color: var(--client-ink-subtle);
-    font-size: 12px;
+    font-size: var(--client-text-12);
 }
 
 #client-resume {
@@ -1311,12 +1311,12 @@
     }
 
     .client-library form input {
-        font-size: 15px;
+        font-size: var(--client-text-16);
     }
 
     .client-library form > button {
         padding: 7px;
-        font-size: 11px;
+        font-size: var(--client-text-11);
     }
 
     .client-personal-identity {
@@ -1324,7 +1324,7 @@
     }
 
     .client-personal-identity h1 {
-        font-size: 24px;
+        font-size: var(--client-text-24);
     }
 
     .client-personal-shortcuts {
@@ -1341,7 +1341,7 @@
     }
 
     .client-personal-spotlight h2 {
-        font-size: 26px;
+        font-size: var(--client-text-24);
     }
 }
 
@@ -1414,7 +1414,7 @@
     align-items: center;
     gap: 7px;
     color: var(--client-ink-subtle);
-    font-size: 12px;
+    font-size: var(--client-text-12);
 }
 
 .client-film-finish .client-icon {
@@ -1504,7 +1504,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     max-width: 650px;
     margin: 0;
     color: var(--client-ink-subtle);
-    font-size: 14px;
+    font-size: var(--client-text-14);
     line-height: 1.6;
 }
 
@@ -1536,7 +1536,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
 
 .client-tonight-form h2 {
     margin: 0 0 26px;
-    font-size: 22px;
+    font-size: var(--client-text-24);
     font-weight: 500;
 }
 
@@ -1550,7 +1550,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
 .client-tonight-form legend {
     margin-bottom: 13px;
     color: var(--client-ink-subtle);
-    font-size: 12px;
+    font-size: var(--client-text-12);
 }
 
 .client-mood-choices,
@@ -1567,7 +1567,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     border-radius: 999px;
     background: var(--client-surface-layer);
     color: var(--client-ink-muted);
-    font-size: 12px;
+    font-size: var(--client-text-12);
 }
 
 .client-tonight-form [aria-pressed='true'] {
@@ -1579,7 +1579,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
 .client-tonight-form > p {
     margin-top: 15px;
     color: var(--client-ink-subtle);
-    font-size: 11px;
+    font-size: var(--client-text-11);
     line-height: 1.5;
 }
 
@@ -1590,14 +1590,14 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
 
 .client-tonight-results > h2 {
     margin: 0;
-    font-size: 24px;
+    font-size: var(--client-text-24);
     font-weight: 500;
 }
 
 .client-tonight-results > p {
     margin: 10px 0 25px;
     color: var(--client-ink-subtle);
-    font-size: 12px;
+    font-size: var(--client-text-12);
 }
 
 .client-tonight-results .client-expanding-row {
@@ -1613,7 +1613,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     display: block;
     margin-top: 14px;
     color: var(--client-ink-subtle);
-    font-size: 11px;
+    font-size: var(--client-text-11);
 }
 
 @media (max-width: 1000px) {
@@ -1629,7 +1629,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     }
 
     .client-page-heading h1 {
-        font-size: 29px;
+        font-size: var(--client-text-30);
     }
 
     .client-tonight-layout {
@@ -1653,19 +1653,19 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     align-items: center;
     gap: 12px;
     color: var(--client-ink-subtle);
-    font-size: 13px;
+    font-size: var(--client-text-13);
 }
 
 .client-preview-setting small {
     margin-left: 4px;
-    font-size: 11px;
+    font-size: var(--client-text-11);
     color: #858585;
 }
 
 .client-preview-setting p {
     margin-top: 13px;
     color: #858585;
-    font-size: 12px;
+    font-size: var(--client-text-12);
 }
 
 .client-quickfacts {
@@ -1695,7 +1695,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
         border: 1px solid rgb(255 255 255 / 30%);
         border-radius: 999px;
         background: rgb(255 255 255 / 8%);
-        font-size: 10px;
+        font-size: var(--client-text-11);
         font-weight: 600;
         letter-spacing: 0.04em;
         line-height: 1.4;
@@ -1709,8 +1709,8 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
 
 .client-interface .client-brand {
     color: #e50914;
-    font-size: 34px;
-    font-weight: 900;
+    font-size: var(--client-text-30);
+    font-weight: 700;
 }
 
 .client-chromatic.client-glass:not(.client-floating) .client-nav {
@@ -1723,7 +1723,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     align-items: center;
     gap: 12px;
     margin: 20px 0 30px;
-    font-size: 13px;
+    font-size: var(--client-text-13);
     color: var(--client-ink-subtle);
 }
 
@@ -1750,13 +1750,13 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
         gap: 6px;
 
         strong {
-            font-size: 18px;
+            font-size: var(--client-text-18);
             font-weight: 600;
         }
 
         span {
             color: var(--client-ink-subtle);
-            font-size: 13px;
+            font-size: var(--client-text-13);
         }
     }
 
@@ -1766,7 +1766,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
         align-items: center;
         gap: 12px;
         color: var(--client-ink-muted);
-        font-size: 14px;
+        font-size: var(--client-text-14);
 
         .client-icon {
             width: 18px;
@@ -1789,16 +1789,16 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
         padding: 17px 0;
 
         .client-tonight-invite-copy strong {
-            font-size: 16px;
+            font-size: var(--client-text-16);
         }
 
         .client-tonight-invite-copy span {
-            font-size: 11px;
+            font-size: var(--client-text-11);
         }
 
         .client-tonight-invite-action {
             gap: 6px;
-            font-size: 12px;
+            font-size: var(--client-text-12);
         }
     }
 }

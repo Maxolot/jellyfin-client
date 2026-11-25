@@ -22,21 +22,21 @@
             h3 {
                 margin: 0;
                 color: var(--client-ink);
-                font-size: 16px;
+                font-size: var(--client-text-16);
                 font-weight: 600;
             }
 
             p {
                 margin: 4px 0 0;
                 color: var(--client-ink-subtle);
-                font-size: 13px;
+                font-size: var(--client-text-13);
                 line-height: 1.45;
             }
         }
 
         > p {
             color: var(--client-ink-muted);
-            font-size: 14px;
+            font-size: var(--client-text-14);
             line-height: 1.5;
         }
     }
@@ -77,7 +77,7 @@
         flex-direction: column;
         gap: 3px;
         color: var(--client-ink);
-        font-size: 14px;
+        font-size: var(--client-text-14);
 
         label,
         span {
@@ -86,7 +86,7 @@
 
         small {
             color: var(--client-ink-subtle);
-            font-size: 12px;
+            font-size: var(--client-text-12);
             line-height: 1.4;
         }
     }
@@ -111,7 +111,7 @@
         gap: 6px;
         padding: 0 10px;
         border-radius: 99px;
-        font-size: 11px;
+        font-size: var(--client-text-11);
         font-weight: 600;
         letter-spacing: 0.02em;
         white-space: nowrap;
@@ -241,7 +241,7 @@
             border: 0;
             border-radius: 99px;
             font: inherit;
-            font-size: 13px;
+            font-size: var(--client-text-13);
             cursor: pointer;
             transition: background-color 0.15s ease, color 0.15s ease;
 
@@ -340,7 +340,7 @@
         output {
             min-width: 52px;
             color: var(--client-ink-muted);
-            font-size: 13px;
+            font-size: var(--client-text-13);
             font-variant-numeric: tabular-nums;
             text-align: right;
         }
@@ -356,7 +356,7 @@
         border: 1px solid #ffffff24;
         border-radius: 12px;
         font: inherit;
-        font-size: 15px;
+        font-size: var(--client-text-16);
 
         &::placeholder {
             color: #737373;
@@ -382,7 +382,7 @@
         border: 1px solid #ffffff38;
         border-radius: 99px;
         font: inherit;
-        font-size: 13px;
+        font-size: var(--client-text-13);
         font-weight: 600;
         text-decoration: none;
         cursor: pointer;
@@ -423,7 +423,7 @@
         margin: 0;
         padding: 0 0 12px;
         color: var(--client-ink-subtle);
-        font-size: 12px;
+        font-size: var(--client-text-12);
 
         &.is-error {
             color: #ffb4ab;
@@ -485,7 +485,7 @@
             border: 1px solid #ffffff14;
             border-radius: 14px;
             font: inherit;
-            font-size: 13px;
+            font-size: var(--client-text-13);
             text-align: left;
             cursor: pointer;
             transition: border-color 0.15s ease, background-color 0.15s ease;
@@ -551,7 +551,7 @@
             background: transparent;
             border: 0;
             font: inherit;
-            font-size: 14px;
+            font-size: var(--client-text-14);
             font-weight: 600;
             text-align: left;
             cursor: pointer;

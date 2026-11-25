@@ -8,7 +8,7 @@
 
     > h1 {
         margin: 0 0 28px;
-        font-size: 32px;
+        font-size: var(--client-text-30);
         font-weight: 500;
     }
 
@@ -33,7 +33,7 @@
             gap: 6px;
             margin: 0 0 8px 14px;
             color: var(--client-ink-subtle);
-            font-size: 11px;
+            font-size: var(--client-text-11);
             font-weight: 700;
             letter-spacing: 0.08em;
             text-transform: uppercase;
@@ -62,7 +62,7 @@
             padding: 0 14px;
             color: var(--client-ink-subtle);
             border-radius: 99px;
-            font-size: 14px;
+            font-size: var(--client-text-14);
             text-decoration: none;
             transition: background-color 0.15s ease, color 0.15s ease;
 
@@ -102,14 +102,14 @@
 
         h2 {
             margin: 0;
-            font-size: 24px;
+            font-size: var(--client-text-24);
             font-weight: 500;
         }
 
         p {
             margin: 6px 0 0;
             color: var(--client-ink-subtle);
-            font-size: 14px;
+            font-size: var(--client-text-14);
             line-height: 1.5;
         }
     }
@@ -123,7 +123,7 @@
     .client-setting-note {
         margin: 10px 0;
         color: var(--client-ink-subtle);
-        font-size: 13px;
+        font-size: var(--client-text-13);
         line-height: 1.5;
 
         a {
@@ -165,14 +165,14 @@
 
         h2 {
             margin: 0;
-            font-size: 24px;
+            font-size: var(--client-text-24);
             font-weight: 500;
         }
 
         p {
             margin: 6px 0 0;
             color: var(--client-ink-subtle);
-            font-size: 14px;
+            font-size: var(--client-text-14);
             line-height: 1.5;
         }
     }
@@ -184,7 +184,7 @@
         gap: 10px;
         margin-top: 12px;
         color: var(--client-ink-subtle);
-        font-size: 12px;
+        font-size: var(--client-text-12);
     }
 
     .client-extension-logo {
@@ -236,7 +236,7 @@
         border: 1px solid var(--client-line);
         border-radius: var(--client-radius-card);
         box-shadow: var(--client-shadow-card);
-        font-size: 13px;
+        font-size: var(--client-text-13);
         line-height: 1.45;
         text-decoration: none;
         transition: border-color 0.15s ease;
@@ -259,7 +259,7 @@
 
         strong {
             color: var(--client-ink);
-            font-size: 16px;
+            font-size: var(--client-text-16);
             font-weight: 600;
         }
 
@@ -312,13 +312,13 @@
 
         dt {
             color: var(--client-ink-subtle);
-            font-size: 12px;
+            font-size: var(--client-text-12);
         }
 
         dd {
             margin: 4px 0 0;
             color: var(--client-ink);
-            font-size: 22px;
+            font-size: var(--client-text-24);
             font-variant-numeric: tabular-nums;
         }
     }
@@ -352,13 +352,13 @@
                 flex: 1;
                 flex-direction: column;
                 gap: 2px;
-                font-size: 14px;
+                font-size: var(--client-text-14);
             }
 
             small {
                 overflow-wrap: anywhere;
                 color: var(--client-ink-subtle);
-                font-size: 12px;
+                font-size: var(--client-text-12);
             }
         }
     }
@@ -390,13 +390,13 @@
             }
 
             strong {
-                font-size: 14px;
+                font-size: var(--client-text-14);
                 font-weight: 600;
             }
 
             small {
                 color: var(--client-ink-subtle);
-                font-size: 12px;
+                font-size: var(--client-text-12);
             }
 
             svg {
@@ -427,7 +427,7 @@
             display: block;
             margin: -6px 0 6px;
             color: var(--client-ink-subtle);
-            font-size: 12px;
+            font-size: var(--client-text-12);
         }
 
         .client-settings-actions {
@@ -448,7 +448,7 @@
         h3 {
             margin: 0 0 2px;
             color: var(--client-ink-subtle);
-            font-size: 12px;
+            font-size: var(--client-text-12);
             font-weight: 700;
             letter-spacing: 0.06em;
             text-transform: uppercase;
@@ -469,7 +469,7 @@
     .client-preferences {
         > h1 {
             margin-bottom: 16px;
-            font-size: 26px;
+            font-size: var(--client-text-24);
         }
 
         .client-preferences-layout {

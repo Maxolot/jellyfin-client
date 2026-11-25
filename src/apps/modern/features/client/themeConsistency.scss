@@ -6,7 +6,7 @@
     :is(.client-page-heading, .client-library-heading, .client-search-heading, .client-personal-identity, .client-tonight-table-head, .client-live-requests) h1,
     .client-preferences > h1 {
         font-size: var(--client-heading-size);
-        font-weight: 650;
+        font-weight: 700;
         line-height: 1.1;
         letter-spacing: -0.025em;
     }
@@ -134,6 +134,6 @@
     min-height: 0;
     padding: 0 16px;
     border-radius: 999px;
-    font-size: 13px;
+    font-size: var(--client-text-13);
     font-weight: 500;
 }

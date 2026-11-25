@@ -123,7 +123,7 @@
 
     small {
         color: var(--client-ink-muted);
-        font-size: 12px;
+        font-size: var(--client-text-12);
     }
 }
 
@@ -241,7 +241,7 @@
         max-width: 20ch;
         margin: 12px 0 10px;
         font-size: clamp(36px, 7.7vw, 96px);
-        font-weight: 760;
+        font-weight: 700;
         line-height: 0.96;
         letter-spacing: -0.038em;
         overflow-wrap: anywhere;
@@ -255,7 +255,7 @@
     align-items: center;
     gap: 7px;
     color: inherit;
-    font-size: 14px;
+    font-size: var(--client-text-14);
     text-decoration: none;
 
     &:hover { text-decoration: none; }
@@ -274,14 +274,14 @@
         border: 1px solid var(--client-line);
         border-radius: 999px;
         background: var(--client-surface-layer);
-        font-size: 12px;
+        font-size: var(--client-text-12);
     }
 }
 
 .client-shelf-meta {
     margin: 0;
     color: var(--client-ink);
-    font-weight: 560;
+    font-weight: 600;
 }
 
 .client-interface .client-shelf-actions {
@@ -343,7 +343,7 @@
     h2 {
         margin: 0;
         font-size: clamp(25px, 2.5vw, 40px);
-        font-weight: 660;
+        font-weight: 700;
     }
 
     .client-filter-options { margin: 12px 0; }

@@ -93,7 +93,7 @@
     border: 0;
     background: none;
     color: var(--client-ink-muted);
-    font-size: 12px;
+    font-size: var(--client-text-12);
 
     &:hover {
         color: var(--client-ink);
@@ -157,7 +157,7 @@
         background: transparent;
         color: var(--client-ink);
         font: inherit;
-        font-size: 14px;
+        font-size: var(--client-text-14);
         text-align: left;
         text-decoration: none;
         cursor: pointer;
@@ -183,14 +183,14 @@
 
     > .client-menu-hint {
         color: var(--client-ink-subtle);
-        font-size: 12px;
+        font-size: var(--client-text-12);
     }
 }
 
 .client-more-heading {
     padding: 10px 14px 4px;
     color: var(--client-ink-subtle);
-    font-size: 12px;
+    font-size: var(--client-text-12);
 }
 
 .client-more-mark {
@@ -205,7 +205,7 @@
     padding: 1px 8px;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.16);
-    font-size: 12px;
+    font-size: var(--client-text-12);
 }
 
 @media (max-width: 700px) {
@@ -224,12 +224,12 @@
     display: grid;
     gap: 24px;
     color: var(--client-ink-muted);
-    font-size: 14px;
+    font-size: var(--client-text-14);
 
     h3 {
         margin: 0 0 10px;
         color: var(--client-ink);
-        font-size: 15px;
+        font-size: var(--client-text-16);
         font-weight: 600;
     }
 
@@ -287,7 +287,7 @@
     small {
         margin-left: auto;
         color: var(--client-ink-subtle);
-        font-size: 12px;
+        font-size: var(--client-text-12);
     }
 
     img {

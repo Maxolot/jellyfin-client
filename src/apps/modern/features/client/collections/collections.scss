@@ -31,7 +31,7 @@
     align-items: center;
     gap: 6px;
     margin-bottom: 10px;
-    font-size: 14px;
+    font-size: var(--client-text-14);
     text-decoration: none;
 
     &:hover { text-decoration: none; }

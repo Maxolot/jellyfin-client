@@ -11,7 +11,7 @@
     }
 
     h3 {
-        font-size: 18px;
+        font-size: var(--client-text-18);
         font-weight: 600;
     }
 }
@@ -70,7 +70,7 @@
     display: block;
     margin-top: 3px;
     color: var(--client-ink-muted);
-    font-size: 13px;
+    font-size: var(--client-text-13);
 }
 
 .client-folder-search-card {

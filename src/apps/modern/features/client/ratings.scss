@@ -1,7 +1,7 @@
 .client-personal-rating {
     margin-top: 17px;
     color: var(--client-ink-subtle);
-    font-size: 12px;
+    font-size: var(--client-text-12);
 
     > small {
         display: block;
@@ -65,7 +65,7 @@
     border: 0;
     background: transparent;
     color: var(--client-ink-subtle);
-    font-size: 11px;
+    font-size: var(--client-text-11);
     text-decoration: none;
 }
 
@@ -83,7 +83,7 @@
 
     h2 {
         margin: 0;
-        font-size: 24px;
+        font-size: var(--client-text-24);
     }
 
     > p {
@@ -105,7 +105,7 @@
     border-radius: 20px;
     background: #141414d9;
     color: var(--client-ink);
-    font-size: 12px;
+    font-size: var(--client-text-12);
 }
 
 @media (pointer: coarse) {

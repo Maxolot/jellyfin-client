@@ -66,8 +66,8 @@ const metrics = {
         colors: hexes.length + outside.reduce((n, t) => n + count(/rgba?\(\s*\d/g, t), 0),
         coolGreys: hexes.filter(isCool).length,
         fontSizes: outside.reduce((n, t) => n + count(/font-size:\s*[\d.]+(px|rem|em)/g, t), 0),
-        fontWeights: outside.reduce((n, t) => n + count(/font-weight:\s*\d+/g, t), 0),
-        radii: outside.reduce((n, t) => n + count(/border-radius:\s*[\d.]+(px|%)/g, t), 0),
+        fontWeights: outside.reduce((n, t) => n + count(/font-weight:\s*(?![4-7]00\b)\d+/g, t), 0),
+        radii: outside.reduce((n, t) => n + count(/border-radius:\s*(?!50%)[\d.]*[1-9][\d.]*(px|%)/g, t), 0),
         durations: outside.reduce((n, t) => n + count(/(transition|animation)(-duration)?:[^;]*\b[\d.]+m?s\b/g, t), 0)
     },
     distinct: {

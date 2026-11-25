@@ -25,7 +25,7 @@
     h1 {
         margin: 0 0 clamp(20px, 4vw, 36px);
         font-size: clamp(30px, 4.2vw, 46px);
-        font-weight: 650;
+        font-weight: 700;
         line-height: 1.12;
         letter-spacing: -0.032em;
         text-wrap: balance;
@@ -40,8 +40,8 @@
     align-items: center;
     gap: 10px;
     color: var(--client-ink);
-    font-size: 15px;
-    font-weight: 650;
+    font-size: var(--client-text-16);
+    font-weight: 700;
 
     span {
         display: grid;
@@ -111,7 +111,7 @@
     label {
         gap: 8px;
         color: var(--client-ink);
-        font-weight: 550;
+        font-weight: 600;
     }
 
     input {
@@ -142,7 +142,7 @@
         border: 1px solid #e1e1e138;
         background: #e4e4e40b;
         color: var(--client-ink);
-        font-size: 14px;
+        font-size: var(--client-text-14);
         text-decoration: none;
 
         &:hover:not(:disabled) { background: #e4e4e422; }
@@ -154,7 +154,7 @@
         border-radius: 12px;
         background: #54253166;
         color: #ffd4cc;
-        font-size: 14px;
+        font-size: var(--client-text-14);
     }
 
     .client-session-actions {
@@ -179,7 +179,7 @@
     min-height: 36px;
     place-items: center;
     color: var(--client-ink-muted);
-    font-size: 14px;
+    font-size: var(--client-text-14);
     text-align: center;
     text-decoration: none;
     text-decoration-color: #838383;
@@ -201,7 +201,7 @@
     width: min(100%, 455px);
     margin-top: 18px;
     color: var(--client-ink-muted);
-    font-size: 13px;
+    font-size: var(--client-text-13);
     line-height: 1.5;
     text-align: center;
 
@@ -211,7 +211,7 @@
 .client-session-details {
     margin: 4px 0;
     color: var(--client-ink-muted);
-    font-size: 14px;
+    font-size: var(--client-text-14);
 
     summary {
         min-height: 40px;

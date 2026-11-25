@@ -23,7 +23,7 @@
     legend {
         padding: 0;
         margin-bottom: 8px;
-        font-size: 14px;
+        font-size: var(--client-text-14);
         font-weight: 600;
     }
 }
@@ -37,7 +37,7 @@
 
 .client-tonight-partner {
     flex-wrap: wrap;
-    font-size: 13px;
+    font-size: var(--client-text-13);
 
     select {
         max-width: 100%;
@@ -60,7 +60,7 @@
 .client-tonight-include {
     width: fit-content;
     min-height: 35px;
-    font-size: 14px;
+    font-size: var(--client-text-14);
 
     input {
         width: 18px;
@@ -72,7 +72,7 @@
 .client-tonight-notice,
 .client-tonight-constraint {
     margin: 12px 0;
-    font-size: 14px;
+    font-size: var(--client-text-14);
 }
 
 .client-tonight-notice:empty {
@@ -124,7 +124,7 @@
         overflow: hidden;
         margin: 3px 0 6px;
         font-size: clamp(17px, 2.15vw, 26px);
-        font-weight: 650;
+        font-weight: 700;
         line-height: 1.12;
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
@@ -136,7 +136,7 @@
         padding-left: 16px;
         margin: 9px 0 12px;
         color: #ffffffe0;
-        font-size: 13px;
+        font-size: var(--client-text-13);
         line-height: 1.35;
     }
 }
@@ -144,7 +144,7 @@
 .client-tonight-meta {
     margin: 0;
     color: var(--client-ink);
-    font-size: 13px;
+    font-size: var(--client-text-13);
 }
 
 .client-tonight-request-state {
@@ -156,7 +156,7 @@
     border: 1px solid var(--client-line);
     border-radius: var(--client-radius-pill);
     background: var(--client-surface-raised);
-    font-size: 12px;
+    font-size: var(--client-text-12);
     font-weight: 600;
 }
 
@@ -172,7 +172,7 @@
     button {
         min-height: 38px;
         padding: 7px 10px;
-        font-size: 13px;
+        font-size: var(--client-text-13);
         white-space: nowrap;
     }
 }

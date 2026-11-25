@@ -7,7 +7,7 @@
 
     h2 {
         margin: 0 0 2px;
-        font-size: 15px;
+        font-size: var(--client-text-16);
         font-weight: 600;
     }
 
@@ -82,11 +82,11 @@
         white-space: nowrap;
     }
 
-    strong { font-size: 14px; }
+    strong { font-size: var(--client-text-14); }
 
     small {
         color: var(--client-ink-subtle);
-        font-size: 12px;
+        font-size: var(--client-text-12);
     }
 }
 
@@ -117,7 +117,7 @@
 
         strong {
             min-height: 0;
-            font-size: 21px;
+            font-size: var(--client-text-18);
         }
     }
 
@@ -186,7 +186,7 @@
             background: transparent;
             color: var(--client-ink-muted);
             font: inherit;
-            font-size: 14px;
+            font-size: var(--client-text-14);
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.2s ease, color 0.2s ease;
@@ -199,7 +199,7 @@
             }
 
             span {
-                font-size: 11px;
+                font-size: var(--client-text-11);
                 font-variant-numeric: tabular-nums;
                 opacity: 0.65;
             }

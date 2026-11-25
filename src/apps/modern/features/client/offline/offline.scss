@@ -122,7 +122,7 @@
     background: var(--offline-panel, #1e1e1e);
 
     strong {
-        font-size: 24px;
+        font-size: var(--client-text-24);
     }
 
     small,
@@ -168,12 +168,12 @@
     align-items: center;
     gap: 14px;
     margin: 42px 0 20px;
-    font-size: 23px;
+    font-size: var(--client-text-24);
 
     small {
         color: var(--client-ink-subtle);
-        font-size: 16px;
-        font-weight: normal;
+        font-size: var(--client-text-16);
+        font-weight: 400;
     }
 }
 
@@ -217,7 +217,7 @@
 
     h2 {
         margin: 8px 0;
-        font-size: 22px;
+        font-size: var(--client-text-24);
         overflow-wrap: anywhere;
     }
 
@@ -255,7 +255,7 @@
     }
 
     h2 {
-        font-size: 22px;
+        font-size: var(--client-text-24);
     }
 
     p {
@@ -271,7 +271,7 @@
 
     h3 {
         margin: 24px 0 14px;
-        font-size: 18px;
+        font-size: var(--client-text-18);
     }
 
     p {
@@ -300,7 +300,7 @@
 
 .client-offline-note {
     color: var(--client-ink-subtle);
-    font-size: 14px;
+    font-size: var(--client-text-14);
     line-height: 1.7;
 }
 
@@ -335,7 +335,7 @@
     }
 
     .client-offline-entry-copy h2 {
-        font-size: 18px;
+        font-size: var(--client-text-18);
     }
 
     .client-offline-heading {
@@ -354,7 +354,7 @@
 
     .client-offline-button {
         padding: 10px 16px;
-        font-size: 14px;
+        font-size: var(--client-text-14);
     }
 }
 

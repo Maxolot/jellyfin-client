@@ -409,7 +409,7 @@
     padding: 7px 10px;
     border-radius: 999px;
     background: #111b;
-    font-size: 11px;
+    font-size: var(--client-text-11);
     font-weight: 600;
     backdrop-filter: blur(8px);
 }
@@ -420,7 +420,7 @@
     bottom: 18px;
     left: 20px;
     color: var(--client-ink);
-    font-size: 12px;
+    font-size: var(--client-text-12);
 }
 
 @media (max-width: 1100px) {

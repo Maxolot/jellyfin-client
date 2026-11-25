@@ -65,7 +65,7 @@ html.client-connectivity-active .appfooter {
 
     strong {
         color: var(--client-ink);
-        font-size: 16px;
+        font-size: var(--client-text-16);
     }
 
     small {
@@ -154,12 +154,12 @@ html.client-connectivity-active .appfooter {
 
     small {
         color: var(--client-ink-subtle);
-        font-size: 11px;
+        font-size: var(--client-text-11);
     }
 
     strong {
         overflow: hidden;
-        font-size: 14px;
+        font-size: var(--client-text-14);
         text-overflow: ellipsis;
         white-space: nowrap;
     }
@@ -206,7 +206,7 @@ html.client-connectivity-active .appfooter {
 .client-remote-title {
     margin: 0;
     color: var(--client-ink);
-    font-size: 18px;
+    font-size: var(--client-text-18);
     font-weight: 600;
 }
 
@@ -215,7 +215,7 @@ html.client-connectivity-active .appfooter {
     justify-content: space-between;
     margin-top: -8px;
     color: var(--client-ink-subtle);
-    font-size: 12px;
+    font-size: var(--client-text-12);
     font-variant-numeric: tabular-nums;
 }
 
@@ -265,12 +265,12 @@ html.client-connectivity-active .appfooter {
     gap: 16px;
     color: var(--client-ink-muted);
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 14px;
+    font-size: var(--client-text-14);
 
     h3 {
         margin: 0 0 8px;
         color: var(--client-ink);
-        font-size: 14px;
+        font-size: var(--client-text-14);
         font-weight: 600;
     }
 }
@@ -297,7 +297,7 @@ html.client-connectivity-active .appfooter {
 
     small {
         color: var(--client-ink-subtle);
-        font-size: 12px;
+        font-size: var(--client-text-12);
     }
 
     > svg {

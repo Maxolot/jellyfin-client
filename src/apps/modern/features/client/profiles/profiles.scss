@@ -79,14 +79,14 @@
     strong {
         overflow: hidden;
         max-width: 100%;
-        font-size: 16px;
+        font-size: var(--client-text-16);
         font-weight: 400;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
 
     small {
-        font-size: 12px;
+        font-size: var(--client-text-12);
     }
 
     &:disabled {
@@ -175,7 +175,7 @@
         display: grid;
         gap: 6px;
         color: var(--client-ink-subtle);
-        font-size: 14px;
+        font-size: var(--client-text-14);
     }
 
     input {
@@ -186,7 +186,7 @@
         border: 1px solid rgb(255 255 255 / 24%);
         border-radius: 10px;
         font: inherit;
-        font-size: 16px;
+        font-size: var(--client-text-16);
     }
 
     div {
@@ -280,13 +280,13 @@
         border: 1px solid rgb(255 255 255 / 24%);
         border-radius: 99px;
         font: inherit;
-        font-size: 16px;
+        font-size: var(--client-text-16);
     }
 
     h2 {
         margin: 24px 0 10px;
         color: var(--client-ink-subtle);
-        font-size: 14px;
+        font-size: var(--client-text-14);
         font-weight: 400;
     }
 

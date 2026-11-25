@@ -7,7 +7,7 @@
     .client-search-heading h1 {
         margin: 0;
         font-size: var(--client-heading-size);
-        font-weight: 650;
+        font-weight: 700;
         line-height: 1.08;
         letter-spacing: -0.035em;
     }
@@ -83,7 +83,7 @@
             padding-inline: 22px;
             background: #f4f4f4;
             color: #1f1f1f;
-            font-size: 14px;
+            font-size: var(--client-text-14);
             font-weight: 700;
 
             &:hover {

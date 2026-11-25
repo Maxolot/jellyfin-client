@@ -13,8 +13,8 @@
 
     h2 {
         margin: 0 0 3px;
-        font-size: 18px;
-        font-weight: 650;
+        font-size: var(--client-text-18);
+        font-weight: 700;
     }
 }
 
@@ -39,7 +39,7 @@
 .client-season-count {
     margin: 0;
     color: var(--client-ink-muted);
-    font-size: 12px;
+    font-size: var(--client-text-12);
 }
 
 .client-season-rail-list {
@@ -124,7 +124,7 @@
     z-index: 2;
     inset: auto 7px 12px;
     font-size: clamp(11px, 1.05vw, 14px);
-    font-weight: 720;
+    font-weight: 700;
     line-height: 1.12;
     overflow-wrap: anywhere;
 }
@@ -136,7 +136,7 @@
     left: 50%;
     color: var(--client-ink);
     font-size: clamp(24px, 4.5vw, 56px);
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1;
     text-shadow: 0 5px 20px #0a0a0abd;
     transform: translate(-50%, -50%);
@@ -182,13 +182,13 @@
     h2 {
         margin: 0;
         font-size: clamp(19px, 2.2vw, 30px);
-        font-weight: 650;
+        font-weight: 700;
     }
 
     p {
         margin: 4px 0 0;
         color: var(--client-ink-muted);
-        font-size: 13px;
+        font-size: var(--client-text-13);
     }
 }
 
@@ -249,7 +249,7 @@
     inset: 4px auto auto 8px;
     color: transparent;
     font-size: clamp(32px, 4vw, 60px);
-    font-weight: 750;
+    font-weight: 700;
     line-height: 1;
     -webkit-text-stroke: 1px #f6f6f6e0;
 }
@@ -260,7 +260,7 @@
     inset: auto 8px 14px;
     overflow: hidden;
     font-size: clamp(12px, 1.15vw, 16px);
-    font-weight: 650;
+    font-weight: 700;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -278,8 +278,8 @@
     border-radius: 999px;
     background: var(--client-surface-raised);
     color: var(--client-ink);
-    font-size: 11px;
-    font-weight: 690;
+    font-size: var(--client-text-11);
+    font-weight: 700;
 }
 
 .client-series-episode-next {
@@ -401,19 +401,19 @@
 
     strong {
         color: var(--client-ink);
-        font-size: 14px;
-        font-weight: 670;
+        font-size: var(--client-text-14);
+        font-weight: 700;
         overflow-wrap: anywhere;
     }
 
-    small { font-size: 11px; }
+    small { font-size: var(--client-text-11); }
 }
 
 .client-episode-editorial-summary {
     display: -webkit-box;
     overflow: hidden;
     color: var(--client-ink-muted);
-    font-size: 12px;
+    font-size: var(--client-text-12);
     line-height: 1.35;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -465,8 +465,8 @@
     border-radius: 8px;
     background: var(--client-surface-raised);
     color: var(--client-ink);
-    font-size: 10px;
-    font-weight: 650;
+    font-size: var(--client-text-11);
+    font-weight: 700;
     line-height: 1.15;
 
     svg {

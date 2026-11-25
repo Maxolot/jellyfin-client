@@ -14,7 +14,7 @@
 
 .client-request-progress-note {
     color: var(--client-ink-muted);
-    font-size: 13px;
+    font-size: var(--client-text-13);
 
     &:empty { display: none; }
 
@@ -48,7 +48,7 @@
         align-items: center;
         gap: 6px;
         color: var(--client-ink);
-        font-size: 13px;
+        font-size: var(--client-text-13);
         font-weight: 600;
         text-decoration: none;
 
@@ -57,7 +57,7 @@
 
     .client-request-progress-note {
         color: var(--client-ink-muted);
-        font-size: 13px;
+        font-size: var(--client-text-13);
 
         p { margin: 0; }
     }

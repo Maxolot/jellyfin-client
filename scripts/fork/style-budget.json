@@ -3,9 +3,9 @@
     "hardcoded": {
         "colors": 625,
         "coolGreys": 14,
-        "fontSizes": 356,
-        "fontWeights": 130,
-        "radii": 262,
+        "fontSizes": 31,
+        "fontWeights": 0,
+        "radii": 223,
         "durations": 80
     }
 }

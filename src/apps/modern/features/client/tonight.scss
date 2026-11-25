@@ -25,7 +25,7 @@
         overflow: hidden;
         margin: 8px 0 0;
         color: var(--client-ink-subtle);
-        font-size: 14px;
+        font-size: var(--client-text-14);
         line-height: 1.4;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -59,7 +59,7 @@
     border-radius: 99px;
     background: #f3f3f5;
     color: var(--client-ink-inverse);
-    font-size: 14px;
+    font-size: var(--client-text-14);
     font-weight: 600;
 
     &:disabled {
@@ -71,7 +71,7 @@
     display: block;
     margin: 0;
     color: var(--client-ink-muted);
-    font-size: 12px;
+    font-size: var(--client-text-12);
 }
 
 .client-draw-choices {
@@ -90,7 +90,7 @@
     background: var(--client-surface-control);
     color: var(--client-ink);
     font: inherit;
-    font-size: 16px;
+    font-size: var(--client-text-16);
 
     &::placeholder { color: var(--client-ink-subtle); }
 }

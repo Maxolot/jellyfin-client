@@ -4,7 +4,7 @@
     align-items: center;
     gap: 5px;
     color: var(--client-ink);
-    font-size: 11px;
+    font-size: var(--client-text-11);
     line-height: 1.2;
     vertical-align: middle;
     overflow-wrap: anywhere;
@@ -34,7 +34,7 @@
     border: 1px solid var(--client-line-strong);
     border-radius: 50%;
     color: var(--client-ink);
-    font-size: 10px;
+    font-size: var(--client-text-11);
     font-weight: 700;
 
     + .client-folder-avatar { margin-inline-start: -5px; }
