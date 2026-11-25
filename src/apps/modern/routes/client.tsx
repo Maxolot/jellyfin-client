@@ -887,7 +887,7 @@ function PersonalView({ model }: ViewProps) {
         {home.isPending && <ClientSkeleton layout='episodes' contained count={3} label='Chargement des reprises…' />}
         {lead && <div className={`client-personal-now${resume.length > 1 ? '' : ' is-single'}`}>
             <section className='client-personal-spotlight'><Artwork source={image(lead, true, true)} className={protect(lead) ? 'client-spoiler-art' : undefined} eager /><PreviewClip item={lead} surface='spotlight' /><div><small>ON CONTINUE ?</small><h2>{lead.SeriesName || lead.Name}</h2><p>{lead.Type === 'Episode' ? `${episodeLabel(lead)} · ${lead.Name}` : 'Votre film vous attend'}</p>
-                {progressPercent(lead) > 0 && <span className='client-spotlight-progress' aria-label={`Vu à ${Math.round(progressPercent(lead))} %`}><i style={{ width: `${progressPercent(lead)}%` }} /></span>}
+                {progressPercent(lead) > 0 && <span className='client-spotlight-progress' role='img' aria-label={`Vu à ${Math.round(progressPercent(lead))} %`}><i style={{ width: `${progressPercent(lead)}%` }} /></span>}
                 <ActionButton variant='primary' onClick={() => play(lead)} icon='play'>Reprendre</ActionButton><ActionLink to={`/client?id=${lead.SeriesId || lead.Id}`}>{LABELS.openDetail}</ActionLink></div></section>
             {resume.length > 1 && <section className='client-personal-resume' aria-labelledby='client-personal-resume-title'>
                 <h2 id='client-personal-resume-title'>Continuer à regarder</h2>

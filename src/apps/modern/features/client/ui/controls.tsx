@@ -43,7 +43,7 @@ type ToggleProps = { label: string; hint?: ReactNode; checked: boolean; disabled
 export function Toggle({ label, hint, checked, disabled, onChange }: Readonly<ToggleProps>) {
     const id = useId();
     return <SettingRow label={label} hint={hint} htmlFor={id}>
-        <button id={id} type='button' role='switch' aria-checked={checked} disabled={disabled} className='client-switch' onClick={() => onChange(!checked)}>
+        <button id={id} type='button' role='switch' aria-label={label} aria-checked={checked} disabled={disabled} className='client-switch' onClick={() => onChange(!checked)}>
             <span aria-hidden='true' />
         </button>
     </SettingRow>;
