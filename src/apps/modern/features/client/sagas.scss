@@ -1,4 +1,7 @@
 // Sagas des fiches : affiches dans l'ordre de sortie ; la carte active s'élargit en 16:9 avec son titre, comme la maquette.
+
+@use 'design' as ds;
+
 .client-saga {
     margin: 0 var(--client-margin);
     padding: 26px 0 32px;
@@ -177,13 +180,13 @@
     overscroll-behavior-x: contain;
 }
 
-@media (max-width: 900px) {
+@include ds.tablet {
     .client-detail-recommendations .client-related-grid {
         grid-auto-columns: calc((100% - 48px) / 4);
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-saga-card,
     .client-saga-card .client-saga-poster,
     .client-saga-card .client-saga-backdrop,
@@ -193,7 +196,7 @@
     }
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     .client-detail-recommendations .client-related-grid {
         grid-auto-columns: calc((100% - 20px) / 3);
     }

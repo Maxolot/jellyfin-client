@@ -1,3 +1,5 @@
+@use '../design' as ds;
+
 .client-notification-count {
     position: absolute;
     z-index: 1;
@@ -91,7 +93,7 @@
     --client-action-font: var(--client-text-12);
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     .client-detail-dialog.client-notifications-panel {
         inset: 61px 9px auto;
         width: calc(100vw - 18px);

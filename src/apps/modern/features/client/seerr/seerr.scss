@@ -1,3 +1,5 @@
+@use '../design' as ds;
+
 .client-request-panel,
 .client-request-tracking {
     margin: 32px var(--client-margin) 50px;
@@ -242,7 +244,7 @@
     font-size: var(--client-text-11);
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     .client-request-list {
         grid-template-columns: minmax(0, 1fr);
     }

@@ -1,6 +1,9 @@
 /* stylelint-disable no-descending-specificity -- Each component has its own class root; generic button, span and link leaves belong to separate components. */
 // Contrôles maison des paramètres : même allure partout, sans l'apparence des navigateurs.
 // Tout est rangé sous .client-controls : les styles des pages et du lecteur ne les écrasent pas.
+
+@use '../design' as ds;
+
 .client-controls {
     .client-setting-card {
         margin: 0 0 18px;
@@ -430,7 +433,7 @@
         }
     }
 
-    @media (max-width: 700px) {
+    @include ds.phone {
         .client-setting-card {
             padding: 4px 16px;
             border-radius: var(--client-radius-card);
@@ -451,7 +454,7 @@
         }
     }
 
-    @media (prefers-reduced-motion: reduce) {
+    @include ds.reduced-motion {
         .client-switch,
         .client-switch span {
             transition: none;

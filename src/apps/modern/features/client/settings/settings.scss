@@ -1,5 +1,8 @@
 /* stylelint-disable no-descending-specificity -- Each component has its own class root; generic button, span and link leaves belong to separate components. */
 // Page des paramètres : menu groupé à gauche, cartes à droite ; menu défilant en haut sur petit écran.
+
+@use '../design' as ds;
+
 .client-preferences {
     box-sizing: border-box;
     padding: 25px var(--client-margin, 4vw) 80px;
@@ -465,7 +468,7 @@
     }
 }
 
-@media (max-width: 900px) {
+@include ds.tablet {
     .client-preferences {
         > h1 {
             margin-bottom: 16px;
@@ -534,7 +537,7 @@
     }
 }
 
-@media (max-width: 560px) {
+@include ds.phone {
     .client-controls .client-extension-header {
         flex-direction: column;
         gap: 14px;

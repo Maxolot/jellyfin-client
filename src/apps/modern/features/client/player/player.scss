@@ -1,4 +1,7 @@
 /* stylelint-disable no-descending-specificity -- Theme and responsive overrides intentionally follow the shared controls. */
+
+@use '../design' as ds;
+
 html.client-video-active {
     overflow: hidden;
 
@@ -624,7 +627,7 @@ html.client-video-active {
     }
 }
 
-@media (width <= 700px) {
+@include ds.phone {
     .client-player-top {
         gap: 0.5em;
         padding: max(0.8em, env(safe-area-inset-top)) 0.6em 3em;
@@ -692,7 +695,7 @@ html.client-video-active {
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-player * { transition: none !important; }
 }
 /* stylelint-enable no-descending-specificity */
@@ -748,7 +751,7 @@ html.client-video-active .docspinner {
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-player-loading-title img,
     .client-player-loading-title strong {
         animation: none;

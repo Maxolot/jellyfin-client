@@ -1,3 +1,5 @@
+@use 'design' as ds;
+
 .client-hero-background .client-home-hero {
     // Full screen at the top of the page, then a framed card while scrolling (useHeroBackground):
     // no blurred bottom edge, the image and its clip are only cut, never faded or resized.
@@ -81,7 +83,7 @@
     }
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     .client-detail .client-detail-readability {
         background: linear-gradient(0deg, rgb(9 10 13 / var(--detail-shade)), transparent 95%);
 

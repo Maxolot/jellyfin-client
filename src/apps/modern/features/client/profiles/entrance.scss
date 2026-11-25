@@ -1,3 +1,5 @@
+@use '../design' as ds;
+
 .client-profiles-leaving {
     > h1,
     > ul,
@@ -50,7 +52,7 @@
     to { opacity: 0; }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-profile-flight { display: none; }
 
     .client-profiles-leaving > * {

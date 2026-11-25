@@ -1,3 +1,5 @@
+@use 'design' as ds;
+
 .client-preview-media {
     position: absolute;
     z-index: 1;
@@ -107,7 +109,7 @@
     margin: 15px 0;
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     .client-detail > .client-preview-media {
         bottom: auto;
         height: 400px;
@@ -120,7 +122,7 @@
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-preview-media {
         display: none;
     }

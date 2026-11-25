@@ -1,3 +1,5 @@
+@use 'design' as ds;
+
 .client-detail-info-bottom .client-detail .client-hero-copy {
     align-content: end;
 }
@@ -17,7 +19,7 @@
     inset-block: 43% auto;
 }
 
-@media (min-width: 701px) {
+@include ds.above-phone {
     .client-hero.client-detail .client-actions {
         width: max-content;
         max-width: calc(100vw - var(--client-margin) * 2);

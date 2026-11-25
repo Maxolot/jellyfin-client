@@ -1,4 +1,7 @@
 // Administration : mêmes cartes que les Paramètres, avec les jetons partagés des deux thèmes.
+
+@use '../design' as ds;
+
 .client-controls .client-admin {
     display: flex;
     flex-direction: column;
@@ -330,13 +333,13 @@
         border-top: 1px solid var(--client-surface-layer);
     }
 
-    @media (width <= 900px) {
+    @include ds.tablet {
         .client-admin-columns {
             grid-template-columns: minmax(0, 1fr);
         }
     }
 
-    @media (width <= 560px) {
+    @include ds.phone {
         .client-admin-stats {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }

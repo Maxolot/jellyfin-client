@@ -1,3 +1,5 @@
+@use 'design' as ds;
+
 .client-tonight-table {
     --draw-poster-height: clamp(220px, calc(100svh - 350px), 560px);
     --draw-gap: 24px;
@@ -230,14 +232,14 @@
     to { transform: rotateY(0); }
 }
 
-@media (max-width: 1100px) {
+@include ds.tablet {
     .client-draw-fan {
         padding-right: 8vw;
         padding-left: 8vw;
     }
 }
 
-@media (max-width: 600px) {
+@include ds.phone {
     .client-tonight-table {
         --draw-gap: 12px;
 
@@ -256,7 +258,7 @@
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-tonight-result.client-draw-card,
     .client-draw-card .client-draw-shell {
         animation: none;

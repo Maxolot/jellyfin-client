@@ -1,4 +1,7 @@
 // Recherche façon Spotlight : posée au-dessus de toutes les pages, sortie de la loupe.
+
+@use '../design' as ds;
+
 .client-spotlight {
     position: fixed;
     z-index: 1200;
@@ -191,7 +194,7 @@ body.client-spotlight-open {
     color: var(--client-ink);
 }
 
-@media (max-width: 580px) {
+@include ds.phone {
     .client-spotlight-filters.allows-description { flex-wrap: wrap; }
 }
 
@@ -576,7 +579,7 @@ body.client-spotlight-open {
 }
 
 // Téléphone : plein écran, clavier déjà ouvert.
-@media (max-width: 700px) {
+@include ds.phone {
     .client-spotlight-panel {
         width: 100vw;
         height: 100vh;
@@ -612,7 +615,7 @@ body.client-spotlight-open {
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-spotlight-backdrop {
         animation: none;
     }

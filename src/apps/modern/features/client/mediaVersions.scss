@@ -1,3 +1,5 @@
+@use 'design' as ds;
+
 .client-version-select {
     min-width: 0;
     max-width: 100%;
@@ -15,11 +17,11 @@
     }
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     .client-version-select .client-select ul { inset-inline: auto 0; }
 }
 
-@media (min-width: 701px) {
+@include ds.above-phone {
     .client-actions.has-versions {
         width: max-content;
         max-width: calc(100vw - var(--client-margin) * 2);

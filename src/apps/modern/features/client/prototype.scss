@@ -2,6 +2,9 @@
 /* stylelint-disable no-descending-specificity -- Scoped prototype layer intentionally overrides the earlier base and component states. */
 
 /* Validated prototype geometry; scoped to the custom client surface. */
+
+@use 'design' as ds;
+
 .client-interface {
     --client-card-height: var(--client-size-card-height);
     --client-card-poster: calc(var(--client-card-height) * 0.6);
@@ -259,7 +262,7 @@
     opacity: 1;
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     .client-interface {
         --client-card-height: 240px;
     }
@@ -273,7 +276,7 @@
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-media-card,
     .client-expanding-row .client-card img,
     .client-expanded-title,
@@ -453,7 +456,7 @@
     }
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     .client-nav {
         height: 62px;
         border-radius: var(--client-radius-panel);
@@ -490,7 +493,7 @@
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-home-hero .client-background {
         animation: none;
     }
@@ -956,7 +959,7 @@
     visibility: hidden;
 }
 
-@media (max-width: 900px) {
+@include ds.tablet {
     .client-detail .client-overview {
         font-size: var(--client-text-14);
     }
@@ -966,13 +969,13 @@
     }
 }
 
-@media (max-width: 1100px) {
+@include ds.tablet {
     .client-nav > div a:not(.client-search-shortcut) {
         font-size: var(--client-text-14);
     }
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     .client-nav > div a:not(.client-search-shortcut) {
         font-size: var(--client-text-11);
     }
@@ -1295,7 +1298,7 @@
     padding-top: 0;
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     .client-browse-controls {
         flex-wrap: wrap;
         gap: 12px;
@@ -1391,7 +1394,7 @@
     }
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     .client-nav .client-nav-tool {
         width: 30px;
 
@@ -1451,7 +1454,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     border-radius: 50%;
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     body[data-client-player-theme='glass'] #videoOsdPage .osdControls {
         margin: 0 12px 10px;
         padding: 10px 12px;
@@ -1482,7 +1485,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     opacity: 1;
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-home-hero .client-background,
     .client-detail .client-background {
         transition: none;
@@ -1616,14 +1619,14 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     font-size: var(--client-text-11);
 }
 
-@media (max-width: 1000px) {
+@include ds.tablet {
     .client-tonight-layout {
         grid-template-columns: 320px minmax(0, 1fr);
         gap: 25px;
     }
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     .client-page-heading {
         margin-top: 25px;
     }
@@ -1784,7 +1787,7 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
         text-decoration: none;
     }
 
-    @media (max-width: 700px) {
+    @include ds.phone {
         gap: 12px;
         padding: 17px 0;
 

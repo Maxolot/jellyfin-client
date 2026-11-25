@@ -1,4 +1,7 @@
 /* stylelint-disable no-descending-specificity -- Search form and results have separate button scopes. */
+
+@use 'design' as ds;
+
 .client-library.client-search-page {
     .client-search-heading {
         margin-block: 0 clamp(20px, 3vw, 32px);
@@ -130,7 +133,7 @@
         }
     }
 
-    @media (max-width: 560px) {
+    @include ds.phone {
         .client-search-form {
             min-height: 58px;
             padding-block: 4px;
@@ -159,7 +162,7 @@
         }
     }
 
-    @media (prefers-reduced-motion: reduce) {
+    @include ds.reduced-motion {
         .client-search-form {
             transition: none;
         }

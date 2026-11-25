@@ -1,3 +1,5 @@
+@use '../design' as ds;
+
 .client-live-requests {
     max-width: 1120px;
     margin: 0 var(--client-margin) 64px;
@@ -186,7 +188,7 @@
     }
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     .client-request-steps {
         grid-template-columns: repeat(7, minmax(0, 1fr));
 
@@ -213,7 +215,7 @@
     to { transform: scale(1); }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-request-steps [aria-current] span { animation: none; }
     .client-request-meter progress::-webkit-progress-value { transition: none; }
 }

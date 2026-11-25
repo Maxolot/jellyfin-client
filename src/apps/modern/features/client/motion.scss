@@ -1,4 +1,7 @@
 /* Motion only animates opacity and transforms, except the intentional card expansion. */
+
+@use 'design' as ds;
+
 .client-ambient {
     position: fixed;
     z-index: -1;
@@ -161,7 +164,7 @@
     }
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     .client-liquid-dots {
         margin-left: 0;
     }
@@ -314,7 +317,7 @@
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-glass:not(.client-floating) .client-nav::before {
         background: linear-gradient(140deg, #ffffff0e, transparent);
     }
@@ -423,13 +426,13 @@
     font-size: var(--client-text-12);
 }
 
-@media (max-width: 1100px) {
+@include ds.tablet {
     .client-upcoming {
         --release-height: 450px;
     }
 }
 
-@media (max-width: 600px) {
+@include ds.phone {
     .client-upcoming {
         --release-height: 390px;
     }

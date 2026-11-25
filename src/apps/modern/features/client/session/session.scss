@@ -1,4 +1,7 @@
 /* stylelint-disable no-descending-specificity -- Session variants intentionally refine the shared card and controls. */
+
+@use '../design' as ds;
+
 .client-session {
     --session-surface: #151a24f2;
     --session-border: #e0e9ff36;
@@ -330,7 +333,7 @@
     }
 }
 
-@media (max-width: 600px) {
+@include ds.phone {
     .client-session {
         justify-content: flex-start;
         padding-bottom: max(28px, env(safe-area-inset-bottom));
@@ -341,7 +344,7 @@
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-session-backdrop,
     .client-session-progress::after {
         animation: none;

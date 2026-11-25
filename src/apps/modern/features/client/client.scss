@@ -1,5 +1,7 @@
 /* Client-specific surface. Playback and inherited pages keep their own styles. */
 
+@use 'design' as ds;
+
 body:has(.client-page:not(.hide)) .skinHeader,
 body:has(.client-page:not(.hide)) .mainDrawer,
 body:has(.client-page:not(.hide)) .backgroundContainer {
@@ -521,13 +523,13 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     outline-offset: 4px;
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-card {
         transition: none;
     }
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     .client-interface {
         padding-top: 9px;
     }

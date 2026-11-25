@@ -1,4 +1,7 @@
 /* Compact layout: identity and figures on one line, the current watch beside its queue, the rest in tabs. */
+
+@use 'design' as ds;
+
 .client-personal-resume {
     display: flex;
     min-height: 0;
@@ -209,7 +212,7 @@
     .client-personal-panel-area { min-height: 40vh; }
 }
 
-@media (max-width: 900px) {
+@include ds.tablet {
     .client-personal-compact .client-personal-now {
         height: auto;
         grid-template-columns: minmax(0, 1fr);

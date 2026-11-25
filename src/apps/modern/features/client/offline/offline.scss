@@ -1,4 +1,7 @@
 /* stylelint-disable no-descending-specificity -- Components and their responsive variants have independent scoped selectors. */
+
+@use '../design' as ds;
+
 .client-offline-page {
     --offline-panel: #181e29;
     --offline-muted: #b4bdd0;
@@ -315,7 +318,7 @@
     background: rgb(180 40 40 / 15%);
 }
 
-@media (max-width: 600px) {
+@include ds.phone {
     .client-offline-shell {
         padding: 22px 5vw 50px;
     }
@@ -358,7 +361,7 @@
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-offline-button,
     .client-offline-choices button {
         transition: none;

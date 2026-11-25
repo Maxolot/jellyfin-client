@@ -1,3 +1,5 @@
+@use '../design' as ds;
+
 .client-tonight-questions {
     position: relative;
     z-index: 2;
@@ -177,13 +179,13 @@
     }
 }
 
-@media (max-width: 1070px) {
+@include ds.tablet {
     .client-tonight-quick-choices {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
-@media (max-width: 760px) {
+@include ds.phone {
     .client-tonight-table .client-draw-fan {
         justify-content: start;
         padding: 16px 3px 26px;
@@ -199,7 +201,7 @@
     }
 }
 
-@media (max-width: 600px) {
+@include ds.phone {
     .client-tonight-questions {
         grid-template-columns: minmax(0, 1fr);
     }

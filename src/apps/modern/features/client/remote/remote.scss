@@ -1,4 +1,7 @@
 // Le client présente sa propre télécommande, sans la barre native du moteur.
+
+@use '../design' as ds;
+
 html.client-connectivity-active .appfooter {
     display: none !important;
 }
@@ -390,7 +393,7 @@ html.client-connectivity-active .appfooter {
     }
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     .client-remote-bar {
         bottom: max(72px, env(safe-area-inset-bottom));
     }
@@ -400,7 +403,7 @@ html.client-connectivity-active .appfooter {
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-together-sync {
         animation: none;
     }
