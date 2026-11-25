@@ -28,6 +28,7 @@ import { useApi } from 'hooks/useApi';
 import SourceBadge from './SourceBadge';
 import { useMovieLanguages, useMovieSource, useSeasonLanguages, useSeasonSources, type SourceLanguage, type SourceStatus } from './sources';
 import { ActionButton, ActionLink } from '../ui';
+import { LABELS } from '../labels';
 
 export function SeerrSettings() {
     const seerr = useSeerr();
@@ -103,7 +104,7 @@ function SeasonPicker({ data, is4k, selected, disabled, sources, toggle, selectA
 }
 
 function QuotaNotice({ label, loaded, restricted, error, onRetry }: Readonly<{ label: string; loaded: boolean; restricted: boolean; error: boolean; onRetry: () => void }>) {
-    return <>{loaded && <p className='client-request-quota'>{label}</p>}{restricted && <p role='status'>Votre quota ne permet pas cette sélection.</p>}{error && <p role='alert'>Impossible de vérifier le quota. <button className='client-text-button' onClick={onRetry}>Réessayer</button></p>}</>;
+    return <>{loaded && <p className='client-request-quota'>{label}</p>}{restricted && <p role='status'>Votre quota ne permet pas cette sélection.</p>}{error && <p role='alert'>Impossible de vérifier le quota. <button className='client-text-button' onClick={onRetry}>{LABELS.retry}</button></p>}</>;
 }
 
 // « Pas encore disponibles » d'abord et par défaut : c'est ce qu'on vient vérifier.
@@ -143,12 +144,12 @@ export function RequestPanel({ identity, localItem, initialSeason }: Readonly<{ 
     if (!detail.data) {
         return <section className='client-request-panel'><p>Les disponibilités ne peuvent pas être vérifiées.</p><ActionButton onClick={() => {
             void detail.refetch();
-        }}>Réessayer</ActionButton></section>;
+        }}>{LABELS.retry}</ActionButton></section>;
     }
     if (localItem?.Type === 'Series' && localSeasons.isError) {
         return <section className='client-request-panel'><p>Les saisons présentes dans votre bibliothèque ne peuvent pas être vérifiées.</p><ActionButton onClick={() => {
             void localSeasons.refetch();
-        }}>Réessayer</ActionButton></section>;
+        }}>{LABELS.retry}</ActionButton></section>;
     }
     return <RequestForm identity={identity} data={withLocalAvailability(detail.data, localItem, localSeasons.data)} initialSeason={initialSeason} />;
 }
@@ -207,7 +208,7 @@ function RequestForm({ identity, data, initialSeason }: Readonly<{ identity: See
         {!permitted && <p>Votre compte peut consulter ce contenu mais ne peut pas le demander.</p>}
         <QuotaNotice label={quotaLabel} loaded={!!currentQuota} restricted={!!restricted} error={quota.isError} onRetry={() => { void quota.refetch(); }} />
         {!filmRequested && (!confirm ? <ActionButton disabled={disabled} onClick={() => setConfirm(true)} icon='plus'>{identity.type === 'tv' ? 'Demander la sélection' : 'Demander ce film'}</ActionButton> :
-            <div className='client-request-confirm'><p>Demander <strong>{data.title || data.name}</strong>{identity.type === 'tv' ? ` · ${requestSeasonNumbersLabel(selected)}` : ''}{is4k ? ' en 4K' : ''} ?</p><p>Le serveur appliquera la qualité configurée et les éventuelles règles de validation.</p><ActionButton variant='primary' disabled={disabled} onClick={() => mutation.mutate()}>{mutation.isPending ? 'Envoi…' : 'Confirmer la demande'}</ActionButton><ActionButton disabled={mutation.isPending} onClick={() => setConfirm(false)}>Annuler</ActionButton></div>)}
+            <div className='client-request-confirm'><p>Demander <strong>{data.title || data.name}</strong>{identity.type === 'tv' ? ` · ${requestSeasonNumbersLabel(selected)}` : ''}{is4k ? ' en 4K' : ''} ?</p><p>Le serveur appliquera la qualité configurée et les éventuelles règles de validation.</p><ActionButton variant='primary' disabled={disabled} onClick={() => mutation.mutate()}>{mutation.isPending ? 'Envoi…' : 'Confirmer la demande'}</ActionButton><ActionButton disabled={mutation.isPending} onClick={() => setConfirm(false)}>{LABELS.cancel}</ActionButton></div>)}
         {mutation.isSuccess && <p role='status'>Demande enregistrée. Retrouvez son avancement dans Mon espace.</p>}
         {mutation.isError && <p role='alert'>{mutation.error.message}</p>}
         <CompactRequest identity={identity} />
@@ -232,7 +233,7 @@ export function ExternalDetail({ id, row, image }: Readonly<{ id: string; row: (
     if (!detail.data || !identity) {
         return <section className='client-settings'><Link className='client-back' to={back} state={backState}><ClientIcon name='back' />Retour</Link><p role='status'>{detail.isError ? 'La fiche ne peut pas être chargée.' : 'Chargement de la fiche…'}</p>{detail.isError && <ActionButton onClick={() => {
             void detail.refetch();
-        }}>Réessayer</ActionButton>}</section>;
+        }}>{LABELS.retry}</ActionButton>}</section>;
     }
     const data = detail.data;
     const match = localMatch(data, identity.type, local.data || []);
@@ -334,7 +335,7 @@ export function RequestTracking() {
         }}>{label}</button>)}</div>
         {query.isPending && <ClientSkeleton layout='list' count={3} contained label='Chargement de vos demandes…' />}{query.isError && <p role='alert'>Les demandes ne peuvent pas être chargées. <button className='client-text-button' onClick={() => {
             void query.refetch();
-        }}>Réessayer</button></p>}
+        }}>{LABELS.retry}</button></p>}
         <div className='client-request-list'>{query.data?.results.map(entry => <TrackedRequest key={entry.id} entry={entry} local={local.data || []} />)}</div>
         {query.data?.results.length === 0 && <p>Aucune demande dans cette sélection.</p>}
         <div className='client-pagination'><ActionButton disabled={!page} onClick={() => setPage(value => value - 1)}>Précédent</ActionButton><span>Page {page + 1}</span><ActionButton disabled={!query.data || (page + 1) * 12 >= (query.data.pageInfo?.results || 0)} onClick={() => setPage(value => value + 1)}>Suivant</ActionButton></div>

@@ -20,6 +20,7 @@ import { avatarBox, leaveProfiles, type Avatar as FlightAvatar } from './profile
 import './entrance.scss';
 import { dropToken, forgetProfile, markProfileChosen, profileTone, readProfiles, rememberProfile, type SavedProfile } from './profileStore';
 import QuickConnectPanel from './QuickConnectPanel';
+import { LABELS } from '../labels';
 
 type Form = { name: string; locked: boolean; note?: string };
 /** Before anyone is signed in, the same page works directly with the chosen server. */
@@ -251,7 +252,7 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
             {busy && <span className='client-session-progress' aria-hidden='true' />}
             <div>
                 <button type='submit' className='client-profile-primary' disabled={busy || !form.name.trim()}>{busy ? 'Connexion…' : submitLabel}</button>
-                {!!tiles.length && <button type='button' disabled={busy} onClick={closeForm}>Annuler</button>}
+                {!!tiles.length && <button type='button' disabled={busy} onClick={closeForm}>{LABELS.cancel}</button>}
             </div>
             {quickAvailable && <button type='button' className='client-profile-quick' disabled={busy} onClick={() => {
                 closingAtStart.current = closing.current;

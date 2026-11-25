@@ -17,6 +17,7 @@ import { episodeCount, partialSeason, seasonChoices, seasonLabel, seasonProgress
 import './seriesEpisodes.scss';
 import './seriesSide.scss';
 import { ActionButton } from './ui';
+import { LABELS } from './labels';
 
 const LocalSeriesSources = lazy(() => import(/* webpackChunkName: "client-seerr" */ './seerr/SeerrViews')
     .then(module => ({ default: module.LocalSeriesSources })));
@@ -124,7 +125,7 @@ export default function SeriesEpisodesPanel(props: Readonly<PanelProps>) {
             </div>
         </header>
         {loading && <ClientSkeleton layout='episodes' count={4} contained label='Chargement des épisodes…' />}
-        {failed && <p role='alert'>Impossible de charger les épisodes. <ActionButton onClick={retry}>Réessayer</ActionButton></p>}
+        {failed && <p role='alert'>Impossible de charger les épisodes. <ActionButton onClick={retry}>{LABELS.retry}</ActionButton></p>}
         {!loading && !failed && !playing && <p>Aucun épisode disponible dans cette saison.</p>}
         <div className='client-series-episode-grid'>
             {available?.slice(0, visible).map(episode => <EpisodeCard key={episode.Id} episode={episode} {...props} />)}
@@ -183,7 +184,7 @@ function EpisodeList({ seasons, missing, requestSeason, selected, select, items,
 function EditorialEpisodes({ items, loading, failed, retry, ...media }: Readonly<EpisodeState & Pick<PanelProps, 'items' | 'loading' | 'failed' | 'retry'>>) {
     return <>
         {loading && <p role='status'>Chargement des épisodes…</p>}
-        {failed && <p role='alert'>Impossible de charger les épisodes. <ActionButton onClick={retry}>Réessayer</ActionButton></p>}
+        {failed && <p role='alert'>Impossible de charger les épisodes. <ActionButton onClick={retry}>{LABELS.retry}</ActionButton></p>}
         {!loading && !failed && !items?.length && <p>Aucun épisode disponible.</p>}
         <ol>{items?.map(episode => <EpisodeListItem key={episode.Id} episode={episode} {...media} />)}</ol>
     </>;

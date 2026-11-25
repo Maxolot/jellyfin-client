@@ -22,6 +22,7 @@ import { chip, descriptionGroup, openingGroups, searchGroups, type Actions, type
 import { clearSearches, forgetSearch, readRecentSearches, recentSearchesKey, rememberSearch } from './recentSearches';
 import type { SearchFilter } from './searchIndex';
 import { spotlightIndexQuery, spotlightResumeQuery, useSpotlightData } from './useSpotlightData';
+import { LABELS } from '../labels';
 import './spotlight.scss';
 
 export type SpotlightHandle = { open: (origin?: Element | null) => void };
@@ -350,7 +351,7 @@ const Spotlight = forwardRef<SpotlightHandle, Props>(function ClientSpotlight({ 
                     setQuery('');
                     focusField();
                 }}><ClientIcon name='close' /></button>}
-                <button type='button' className='client-spotlight-close' onClick={() => close()}><kbd>Échap</kbd><span>Fermer</span></button>
+                <button type='button' className='client-spotlight-close' onClick={() => close()}><kbd>Échap</kbd><span>{LABELS.close}</span></button>
             </div>
             <div className={`client-spotlight-filters${description.available ? ' allows-description' : ''}`} role='group' aria-label='Filtrer les résultats'>
                 {filters.map(([key, label]) => <button key={key} type='button' aria-pressed={filter === key} onClick={() => {
@@ -368,7 +369,7 @@ const Spotlight = forwardRef<SpotlightHandle, Props>(function ClientSpotlight({ 
             </div>
             <footer className='client-spotlight-hints' aria-hidden='true'>
                 <span><kbd>↑</kbd><kbd>↓</kbd>Naviguer</span><span><kbd>Entrée</kbd>Ouvrir</span><span><kbd>{modKey}</kbd><kbd>Entrée</kbd>Lire</span>
-                <span><kbd>Tab</kbd>Groupe suivant</span><span><kbd>Échap</kbd>Fermer</span>
+                <span><kbd>Tab</kbd>Groupe suivant</span><span><kbd>Échap</kbd>{LABELS.close}</span>
             </footer>
             <p className='client-spotlight-sr' role='status' aria-live='polite'>{status}</p>
         </div>

@@ -13,6 +13,7 @@ import { usePlayRequest, useRequestProgress } from './queries';
 import { RequestProgressNote } from './RequestInline';
 import './requestProgressPage.scss';
 import { ActionButton } from '../ui';
+import { LABELS } from '../labels';
 
 type Play = (item: BaseItemDto) => void;
 
@@ -105,7 +106,7 @@ export default function RequestPage({ play }: Readonly<{ play: Play }>) {
             {filters.map(([value, label]) => <button key={value} type='button' aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}
         </div>
         {query.isPending && <ClientSkeleton layout='list' count={3} contained label='Chargement des demandes…' />}
-        {query.isError && <p role='alert'>Impossible de vérifier l’avancement. <ActionButton onClick={() => { void query.refetch(); }}>Réessayer</ActionButton></p>}
+        {query.isError && <p role='alert'>Impossible de vérifier l’avancement. <ActionButton onClick={() => { void query.refetch(); }}>{LABELS.retry}</ActionButton></p>}
         {query.isSuccess && list.length === 0 && <p>Aucune demande dans cette sélection.</p>}
         <div className='client-request-cards'>{list.map(item => <RequestCard key={item.id} request={item} play={play} />)}</div>
     </section>;

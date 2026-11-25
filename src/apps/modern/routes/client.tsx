@@ -105,6 +105,7 @@ import { CompactRequest } from '../features/client/requests/RequestInline';
 import { useRequestProgress } from '../features/client/requests/queries';
 import { canRequest, externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
 import { ActionButton, ActionLink, Chip } from '../features/client/ui';
+import { LABELS } from '../features/client/labels';
 
 const SettingsPage = lazy(() => import(/* webpackChunkName: "client-settings" */ '../features/client/settings/SettingsPage'));
 const ProfilePage = lazy(() => import(/* webpackChunkName: "client-profiles" */ '../features/client/profiles/ProfilePage'));
@@ -594,7 +595,7 @@ function ClientView({ model }: ViewProps) {
                 </nav>
                 <ProfileEntrance profile={profileButton} />
                 {actionError && <p role='alert' className='client-message'>{actionError}</p>}
-                {error && <div className='client-message' role='alert'><p>Impossible de charger les médias.</p><ActionButton onClick={() => (id ? details.item.refetch() : media.refetch())}>Réessayer</ActionButton></div>}
+                {error && <div className='client-message' role='alert'><p>Impossible de charger les médias.</p><ActionButton onClick={() => (id ? details.item.refetch() : media.refetch())}>{LABELS.retry}</ActionButton></div>}
                 {id && !model.remote && details.item.isPending && <ClientSkeleton layout='detail' label='Chargement de la fiche…' />}
                 <BrowseControls model={model} />
                 {!id && media.isPending && (view === 'home' || model.discovery) && <ClientSkeleton layout='hero' label='Chargement de la sélection…' />}
@@ -887,7 +888,7 @@ function PersonalView({ model }: ViewProps) {
         {lead && <div className={`client-personal-now${resume.length > 1 ? '' : ' is-single'}`}>
             <section className='client-personal-spotlight'><Artwork source={image(lead, true, true)} className={protect(lead) ? 'client-spoiler-art' : undefined} eager /><PreviewClip item={lead} surface='spotlight' /><div><small>ON CONTINUE ?</small><h2>{lead.SeriesName || lead.Name}</h2><p>{lead.Type === 'Episode' ? `${episodeLabel(lead)} · ${lead.Name}` : 'Votre film vous attend'}</p>
                 {progressPercent(lead) > 0 && <span className='client-spotlight-progress' aria-label={`Vu à ${Math.round(progressPercent(lead))} %`}><i style={{ width: `${progressPercent(lead)}%` }} /></span>}
-                <ActionButton variant='primary' onClick={() => play(lead)} icon='play'>Reprendre</ActionButton><ActionLink to={`/client?id=${lead.SeriesId || lead.Id}`}>Voir la fiche</ActionLink></div></section>
+                <ActionButton variant='primary' onClick={() => play(lead)} icon='play'>Reprendre</ActionButton><ActionLink to={`/client?id=${lead.SeriesId || lead.Id}`}>{LABELS.openDetail}</ActionLink></div></section>
             {resume.length > 1 && <section className='client-personal-resume' aria-labelledby='client-personal-resume-title'>
                 <h2 id='client-personal-resume-title'>Continuer à regarder</h2>
                 <ol>{resume.slice(1, 5).map(entry => <li key={entry.Id}>
@@ -991,8 +992,8 @@ function SearchView({ model }: ViewProps) {
                 {catalogue.hasNextPage && <ActionButton disabled={catalogue.isFetchingNextPage} onClick={() => { void catalogue.fetchNextPage(); }}>Plus de titres à demander</ActionButton>}
             </SearchGroup>
             {waiting && !count && <ClientSkeleton layout='grid' contained count={8} label='Recherche en cours…' />}
-            {media.isError && <p className='client-search-feedback' role='status'>Impossible de rechercher dans la bibliothèque. <button type='button' onClick={() => { void media.refetch(); }}>Réessayer</button></p>}
-            {catalogue.isError && <p className='client-search-feedback' role='status'>Les titres à demander sont temporairement indisponibles. <button type='button' onClick={() => { void catalogue.refetch(); }}>Réessayer</button></p>}
+            {media.isError && <p className='client-search-feedback' role='status'>Impossible de rechercher dans la bibliothèque. <button type='button' onClick={() => { void media.refetch(); }}>{LABELS.retry}</button></p>}
+            {catalogue.isError && <p className='client-search-feedback' role='status'>Les titres à demander sont temporairement indisponibles. <button type='button' onClick={() => { void catalogue.refetch(); }}>{LABELS.retry}</button></p>}
             {!waiting && !count && !media.isError && !catalogue.isError && <p className='client-search-feedback'>Aucun résultat pour « {query} ». Essaie un autre titre ou retire un filtre.</p>}
         </> : <p className='client-search-feedback'>Cherche un film ou une série dans ta bibliothèque et parmi les titres à demander.</p>}
     </section>;

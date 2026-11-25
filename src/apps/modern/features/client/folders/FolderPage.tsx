@@ -16,6 +16,7 @@ import { DeleteFolder, FolderError, FolderNameForm, ShareForm } from './FolderFo
 import { canEditFolder, type Folder, type FolderDetail, folderMemberKey, folderMemberPath, foldersPath, moveFolderItem, orderedFolderItems } from './model';
 import { useFolderChange, useFolderDetail, useFolderTargets, useFolderTitles } from './queries';
 import { ActionButton } from '../ui';
+import { LABELS } from '../labels';
 
 type Props = CollectionCardOptions & { id: string; full: boolean; playQueue: PlayQueue; queueBusy: boolean };
 type Editor = 'rename' | 'share' | 'delete';
@@ -28,7 +29,7 @@ export default function FolderPage({ id, ...props }: Readonly<Props>) {
     return <section className='client-library client-folder-unavailable'>
         <Link className='client-shelf-back' to={foldersPath}><ClientIcon name='back' />Ma liste</Link>
         {validId.test(id) && detail.isPending ? <ClientSkeleton layout='hero' contained label='Chargement du dossier…' /> :
-            <p role='alert'>Ce dossier est indisponible ou n’est plus partagé avec toi. {validId.test(id) && <ActionButton onClick={() => detail.refetch()}>Réessayer</ActionButton>}</p>}
+            <p role='alert'>Ce dossier est indisponible ou n’est plus partagé avec toi. {validId.test(id) && <ActionButton onClick={() => detail.refetch()}>{LABELS.retry}</ActionButton>}</p>}
     </section>;
 }
 

@@ -52,7 +52,7 @@ describe('administration model', () => {
     });
 
     it('names an episode with its series and number', () => {
-        expect(itemTitle({ Type: 'Episode', SeriesName: 'Severance', ParentIndexNumber: 1, IndexNumber: 2, Name: 'Pilote' })).toBe('Severance · S1:E2 · Pilote');
+        expect(itemTitle({ Type: 'Episode', SeriesName: 'Severance', ParentIndexNumber: 1, IndexNumber: 2, Name: 'Pilote' })).toBe('Severance · S1 · É2 · Pilote');
         expect(itemTitle({ Type: 'Movie', Name: 'Dune', ProductionYear: 2021 })).toBe('Dune · 2021');
     });
 

@@ -97,9 +97,9 @@ describe('Spotlight', () => {
         expect(dialog().hidden).toBe(false);
         expect(document.activeElement).toBe(field());
         expect(dialog().textContent).toContain('Reprendre');
-        const resume = dialog().querySelector('[aria-label="Reprendre Severance, S1:E1, Pilote"]');
-        expect(resume?.textContent).toBe('S1:E1');
-        expect(resume?.querySelector('.client-spotlight-art')?.textContent).toBe('S1:E1');
+        const resume = dialog().querySelector('[aria-label="Reprendre Severance, S1 · É1, Pilote"]');
+        expect(resume?.textContent).toBe('S1 · É1');
+        expect(resume?.querySelector('.client-spotlight-art')?.textContent).toBe('S1 · É1');
         expect(dialog().querySelector('[aria-label="Premier Contact, 2016"]')?.textContent).toBe('');
         expect(dialog().textContent).toContain('Interstellar');
         expect(dialog().textContent).toContain('Science-fiction');

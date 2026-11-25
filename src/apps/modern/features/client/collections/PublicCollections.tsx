@@ -24,6 +24,7 @@ import { canManageCollections } from './access';
 import { useClientCollections, useCollectionChanges, useCollectionShelf } from './queries';
 import './collections.scss';
 import { ActionButton } from '../ui';
+import { LABELS } from '../labels';
 
 type Surface = CollectionCardOptions & { full: boolean; playQueue: PlayQueue; queueBusy: boolean };
 type Rights = { canManage: boolean; onForbidden: () => void };
@@ -186,6 +187,6 @@ function TitleMatches({ items, image, pending, add }: Readonly<{ items: BaseItem
 }
 
 function LoadError({ message, retry }: Readonly<{ message: string; retry: () => unknown }>) {
-    return <p role='alert' className='client-collections-note'>{message} <ActionButton onClick={retry}>Réessayer</ActionButton></p>;
+    return <p role='alert' className='client-collections-note'>{message} <ActionButton onClick={retry}>{LABELS.retry}</ActionButton></p>;
 }
 /* eslint-enable react/jsx-no-bind */

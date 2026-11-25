@@ -8,6 +8,7 @@ import { SaveNote, Select, SettingCard, StatusBadge, TextField, Toggle } from '.
 import { serverAdminUrl } from '../session/ServerInterfacePage';
 import { disableBlocker, plural, policyChanges, relativeTime } from './model';
 import { useCreateUser, useCurrentUserId, useResetPassword, useSavePolicy, useUsers, useVirtualFolders } from './useAdmin';
+import { LABELS } from '../labels';
 import './admin.scss';
 
 const BITRATES = [
@@ -79,7 +80,7 @@ function Editor({ user, users }: Readonly<{ user: UserDto; users: UserDto[] }>) 
         <Libraries policy={policy} onChange={set} />
         <div className='client-settings-actions'>
             <button type='button' className='client-settings-button client-settings-button-primary' disabled={!dirty || save.isPending} onClick={() => save.mutate({ userId: user.Id!, changes })}>Enregistrer</button>
-            {dirty && <button type='button' className='client-settings-button' onClick={() => setPolicy(start)}>Annuler</button>}
+            {dirty && <button type='button' className='client-settings-button' onClick={() => setPolicy(start)}>{LABELS.cancel}</button>}
             <SaveNote state={save} error='Les droits n’ont pas été enregistrés. Réessayez.' />
         </div>
         <Password user={user} />

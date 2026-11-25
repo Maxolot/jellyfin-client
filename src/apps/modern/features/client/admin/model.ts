@@ -1,4 +1,5 @@
 import type { ActivityLogEntry, BaseItemDto, FolderStorageDto, SessionInfoDto, SystemStorageDto, TaskInfo, TranscodingInfo, UserDto, UserPolicy } from '@jellyfin/sdk/lib/generated-client';
+import { episodeCode } from '../labels';
 
 /** Pure helpers of the Administration section, kept apart from the screens so that they can be tested. */
 
@@ -77,7 +78,7 @@ export function nowPlaying(sessions: SessionInfoDto[] | undefined) {
 export function itemTitle(item: BaseItemDto | null | undefined) {
     if (!item) return '';
     if (item.Type === 'Episode') {
-        const number = item.ParentIndexNumber != null && item.IndexNumber != null ? `S${item.ParentIndexNumber}:E${item.IndexNumber}` : undefined;
+        const number = item.ParentIndexNumber != null && item.IndexNumber != null ? episodeCode(item.ParentIndexNumber, item.IndexNumber) : undefined;
         return [item.SeriesName, number, item.Name].filter(Boolean).join(' · ');
     }
     return [item.Name, item.ProductionYear].filter(Boolean).join(' · ');

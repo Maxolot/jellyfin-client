@@ -12,6 +12,7 @@ import { ChoiceSelect, type Option } from './ui/controls';
 import { countLibraryFilters, libraryFilterKeys, type LibraryFilters } from './libraryFilters';
 import './advancedLibraryFilters.scss';
 import { ActionButton } from './ui';
+import { LABELS } from './labels';
 
 type Choice = Readonly<{ value: string; label: string }>;
 type FilterKey = keyof LibraryFilters;
@@ -95,7 +96,7 @@ export default function AdvancedLibraryFilters({ view, filters, onChange }: Read
             {error && <p role='status'>Certaines options ne sont pas disponibles. <button type='button' onClick={() => {
                 if (metadata.isError) void metadata.refetch();
                 if (studios.isError) void studios.refetch();
-            }}>Réessayer</button></p>}
+            }}>{LABELS.retry}</button></p>}
         </div>}
     </>;
 }

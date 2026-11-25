@@ -13,6 +13,7 @@ import { filterFolderItems, folderTitleCount, type FolderImage, type orderedFold
 import { isWatchedCard, progressPercent } from './model';
 import { ChoiceSelect, type Option } from './ui/controls';
 import { ActionButton } from './ui';
+import { LABELS } from './labels';
 
 export type CollectionCardOptions = {
     image: FolderImage; showWatched: boolean; prepare: (item: BaseItemDto) => void; release: () => void;
@@ -48,7 +49,7 @@ export default function CollectionGrid({ items, pending, error, retry, empty, or
     const location = useLocation();
     const manualOrder = !type && !viewed && !sort;
     if (pending) return <section className='client-library client-shelf-grid'><ClientSkeleton layout='grid' count={8} contained label='Chargement des titres…' /></section>;
-    if (error) return <section className='client-library client-shelf-grid'><p role='alert'>Impossible de charger les titres. <ActionButton onClick={retry}>Réessayer</ActionButton></p></section>;
+    if (error) return <section className='client-library client-shelf-grid'><p role='alert'>Impossible de charger les titres. <ActionButton onClick={retry}>{LABELS.retry}</ActionButton></p></section>;
     if (!items.length) return <section className='client-library client-shelf-grid'><p>{empty}</p></section>;
     return <section className='client-library client-shelf-grid' aria-labelledby='client-shelf-grid-title'>
         <header className='client-shelf-grid-heading'><h2 id='client-shelf-grid-title'>Titres</h2>

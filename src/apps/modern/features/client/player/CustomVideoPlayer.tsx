@@ -31,6 +31,7 @@ import LiquidGlassFilter from './LiquidGlassFilter';
 import { forgetPlayback, useReloadResume } from './reloadResume';
 import { isPlayingOffline } from '../offline/playback';
 import LoadingTitle from './LoadingTitle';
+import { episodeCode, LABELS } from '../labels';
 
 type Panel = 'audio' | 'subtitles' | 'chapters' | 'settings' | 'appearance' | 'episodes' | 'technical' | 'tools' | 'sleep' | 'help';
 const SEEK_BURST_MS = 1100;
@@ -466,13 +467,13 @@ export default function CustomVideoPlayer() {
                 <div className='client-player-next-copy'>
                     <small>À suivre{preferences.next > 0 && secondsLeft <= preferences.next && <span role='status'>{paused ? ' · en pause' : ` · dans ${Math.ceil(secondsLeft)} s`}</span>}</small>
                     <strong>{next.SeriesName || next.Name}</strong>
-                    {next.SeriesName && <span>{next.Type === 'Episode' ? `S${next.ParentIndexNumber || 1}:E${next.IndexNumber || 1} · ` : ''}{next.Name}</span>}
+                    {next.SeriesName && <span>{next.Type === 'Episode' ? `${episodeCode(next.ParentIndexNumber || 1, next.IndexNumber || 1)} · ` : ''}{next.Name}</span>}
                     <div className='client-player-next-actions'>
                         <button type='button' className='is-primary' onClick={() => action(() => playbackManager.nextTrack())}
                             style={preferences.next > 0 && secondsLeft <= preferences.next ? { '--next-progress': `${Math.max(0, Math.min(1, 1 - secondsLeft / preferences.next)) * 100}%` } as CSSProperties : undefined}>
                             <PlayerGlyph name='play' />{nextLabel}
                         </button>
-                        <button type='button' onClick={() => setCancelledFor(itemId)}>Annuler</button>
+                        <button type='button' onClick={() => setCancelledFor(itemId)}>{LABELS.cancel}</button>
                     </div>
                 </div>
             </aside>}

@@ -43,7 +43,7 @@ describe('LoadingTitle', () => {
         expect(status().querySelector('img')?.getAttribute('src')).toContain('/Items/sev/Images/Logo');
         expect(status().textContent).toBe('');
         expect(status().querySelector('.client-player-loading-bar')).toBeNull();
-        expect(status().getAttribute('aria-label')).toBe('Préparation de la lecture… Severance S1:E1 · Pilote');
+        expect(status().getAttribute('aria-label')).toBe('Préparation de la lecture… Severance S1 · É1 · Pilote');
     });
 
     it('still says what happens before the title is known', () => {

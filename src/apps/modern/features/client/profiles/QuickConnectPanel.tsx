@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 import type { ApiClient } from 'jellyfin-apiclient';
+import { LABELS } from '../labels';
 
 const POLL_MS = 3000;
 
@@ -53,6 +54,6 @@ export default function QuickConnectPanel({ legacy, done, cancel }: Readonly<{ l
             <p>Sur un appareil déjà connecté, ouvrez Quick Connect depuis le menu du profil et saisissez ce code.</p>
             {code ? <output className='client-quick-code' aria-live='polite'>{code}</output> : <p role='status'>Création du code…</p>}
         </>}
-        <div><button type='button' onClick={cancel}>Annuler</button></div>
+        <div><button type='button' onClick={cancel}>{LABELS.cancel}</button></div>
     </div>;
 }

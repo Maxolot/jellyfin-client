@@ -14,6 +14,7 @@ import { AUDIO_CHANNELS, BITRATES, formatBitrate, languageOptions, NEXT_UP_DAYS,
     SUBTITLE_MODES, TRANSCODE_AUDIO_CODECS, TRANSCODE_VIDEO_CODECS, VIDEO_WIDTHS } from './accountModel';
 import { useAccount } from './useAccount';
 import ClientDialog from '../ClientDialog';
+import { LABELS } from '../labels';
 import './account.scss';
 
 type Account = ReturnType<typeof useAccount>;
@@ -46,7 +47,7 @@ function Loading({ account }: Readonly<{ account: Account }>) {
             <p className='client-setting-note is-error' role='alert'>Les réglages du compte ne peuvent pas être chargés.</p>
             <button type='button' className='client-settings-button' onClick={() => {
                 void account.account.refetch();
-            }}>Réessayer</button>
+            }}>{LABELS.retry}</button>
         </div>;
     }
     return <p className='client-setting-note' role='status'>Chargement des réglages du compte…</p>;

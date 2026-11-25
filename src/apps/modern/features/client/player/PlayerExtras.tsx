@@ -10,6 +10,7 @@ import type { PlayerState } from 'types/playbackStopInfo';
 import { useApi } from 'hooks/useApi';
 import { playbackManager } from 'components/playback/playbackmanager';
 import { formatTime, SECOND } from './model';
+import { LABELS } from '../labels';
 
 export function SubtitleOffset({ run }: Readonly<{ run: (action: () => unknown) => void }>) {
     const [offset, setOffset] = useState(() => -(playbackManager.getPlayerSubtitleOffset() || 0));
@@ -40,7 +41,7 @@ export function PlayerEpisodes({ item, nextId, play }: Readonly<{ item?: BaseIte
         return <div role='alert'><p>Impossible de charger les épisodes.</p><button type='button' onClick={() => {
             void seasons.refetch();
             void episodes.refetch();
-        }}>Réessayer</button></div>;
+        }}>{LABELS.retry}</button></div>;
     }
     return <div className='client-player-episodes'><div className='client-player-season-list' aria-label='Saisons'>{seasons.data?.map(value => <button type='button' key={value.Id} aria-pressed={selected === value.Id} onClick={() => setSeason(value.Id || '')}>{value.Name}</button>)}</div>
         {(seasons.isLoading || episodes.isLoading) && <p role='status'>Chargement des épisodes…</p>}

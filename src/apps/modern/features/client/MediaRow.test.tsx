@@ -214,7 +214,7 @@ describe('catalogue and upcoming rows', () => {
         await act(async () => root.render(<MemoryRouter><MediaRow title='Épisodes à venir' kind='upcoming-episodes'
             items={upcoming} image={image} logo={noLogo} onPrepare={prepare} /></MemoryRouter>));
         expect(card(0).querySelector('time')?.getAttribute('datetime')).toBe('2099-11-19');
-        expect(card(0).querySelector('.client-upcoming-episode-caption')?.textContent).toContain('S2:E3');
+        expect(card(0).querySelector('.client-upcoming-episode-caption')?.textContent).toContain('S2 · É3');
         expect(card(0).querySelector('a.client-card')?.getAttribute('href')).toContain('?id=series');
         expect(card(0).querySelector('.client-availability')).toBeNull();
     });

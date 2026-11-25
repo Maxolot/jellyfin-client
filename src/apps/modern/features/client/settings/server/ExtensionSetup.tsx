@@ -11,6 +11,7 @@ import SettingsIcon, { type SettingsIconName } from '../SettingsIcon';
 import seerrLogo from '../logos/seerr.svg';
 import { type Extension, type ExtensionKey, type ExtensionStage, findPackage, repositoryProblem } from './extensions';
 import { useEnableExtension, useInstallExtension, useServerCatalogue, useServerRestart } from './useServerExtensions';
+import { LABELS } from '../../labels';
 
 const ICONS: Record<ExtensionKey, SettingsIconName> = { previews: 'previews', moonbase: 'requests', movieSources: 'sources' };
 
@@ -93,7 +94,7 @@ function InstallCard({ extension }: Readonly<{ extension: Extension }>) {
             <p>{extension.packageName} {latest?.version} est proposé par le catalogue {repositoryName ? `« ${repositoryName} »` : 'déjà configuré'}. Le serveur télécharge le plugin, puis il faudra redémarrer Jellyfin.</p>
             <div className='client-settings-actions'>
                 <button type='button' className='client-settings-button-primary' disabled={busy} onClick={() => { void installFrom(latest?.repositoryUrl || undefined); }}>{install.isPending ? 'Installation…' : 'Confirmer l’installation'}</button>
-                <button type='button' className='client-settings-button' disabled={busy} onClick={() => setConfirming(false)}>Annuler</button>
+                <button type='button' className='client-settings-button' disabled={busy} onClick={() => setConfirming(false)}>{LABELS.cancel}</button>
             </div>
         </>;
     } else {
@@ -105,7 +106,7 @@ function InstallCard({ extension }: Readonly<{ extension: Extension }>) {
                 placeholder='https://exemple.fr/jellyfin/manifest.json' value={url} disabled={busy} onChange={setUrl} />
             <div className='client-settings-actions'>
                 <button type='button' className='client-settings-button-primary' disabled={busy || !url.trim()} onClick={() => { void addAndInstall(); }}>{busy ? 'Installation…' : 'Ajouter le catalogue et installer'}</button>
-                <button type='button' className='client-settings-button' disabled={busy} onClick={() => setConfirming(false)}>Annuler</button>
+                <button type='button' className='client-settings-button' disabled={busy} onClick={() => setConfirming(false)}>{LABELS.cancel}</button>
             </div>
         </>;
     }
@@ -131,7 +132,7 @@ export function RestartCard({ what }: Readonly<{ what: string }>) {
         <div className='client-settings-actions'>
             {confirming ? <>
                 <button type='button' className='client-settings-button-primary' disabled={restart.isPending || !known} onClick={() => restart.mutate()}><SettingsIcon name='restart' />{restart.isPending ? 'Redémarrage…' : 'Confirmer le redémarrage'}</button>
-                <button type='button' className='client-settings-button' disabled={restart.isPending} onClick={() => setConfirming(false)}>Annuler</button>
+                <button type='button' className='client-settings-button' disabled={restart.isPending} onClick={() => setConfirming(false)}>{LABELS.cancel}</button>
             </> : <button type='button' className='client-settings-button-primary' onClick={() => setConfirming(true)}><SettingsIcon name='restart' />Redémarrer Jellyfin</button>}
         </div>
         {restart.isPending && <p className='client-setting-note' role='status'>Le serveur redémarre, cette page se met à jour toute seule.</p>}

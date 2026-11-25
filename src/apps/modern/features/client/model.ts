@@ -1,9 +1,10 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
+import { episodeCode, LABELS } from './labels';
 
 export function episodeLabel(item: BaseItemDto): string {
     return item.Type === 'Episode' ?
-        `S${item.ParentIndexNumber ?? 1}:E${item.IndexNumber ?? 1}` :
-        'Lecture';
+        episodeCode(item.ParentIndexNumber ?? 1, item.IndexNumber ?? 1) :
+        LABELS.play;
 }
 
 export function uniqueItems(items: BaseItemDto[], excluded: BaseItemDto[] = []): BaseItemDto[] {

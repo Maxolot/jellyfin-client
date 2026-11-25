@@ -5,6 +5,7 @@ import { ChoiceSelect, type Option } from '../ui/controls';
 import type { Folder, FolderShare } from './model';
 import { useFolderChange, useFolderTargets } from './queries';
 import { ActionButton } from '../ui';
+import { LABELS } from '../labels';
 
 export function FolderNameForm({ folder, onSave }: Readonly<{ folder?: Folder; onSave: (created?: Folder) => void }>) {
     const id = useId();
@@ -32,7 +33,7 @@ export function ShareForm({ folder, shares, onSave }: Readonly<{ folder: Folder;
     const change = useFolderChange();
     const [selection, setSelection] = useState<Record<string, Grant>>(() => Object.fromEntries(shares.map(share => [share.userId, share.canEdit ? 'editor' : 'viewer'])));
     if (targets.isPending) return <p role='status'>Chargement des comptes…</p>;
-    if (targets.isError) return <p role='alert'>Impossible de charger les comptes. <ActionButton onClick={() => targets.refetch()}>Réessayer</ActionButton></p>;
+    if (targets.isError) return <p role='alert'>Impossible de charger les comptes. <ActionButton onClick={() => targets.refetch()}>{LABELS.retry}</ActionButton></p>;
     const accounts = [...targets.data, ...shares.filter(share => !targets.data.some(target => target.userId === share.userId))
         .map(share => ({ userId: share.userId, name: 'Compte indisponible' }))];
     const next = Object.entries(selection).flatMap(([userId, access]) => access === 'none' ? [] : [{ userId, canEdit: access === 'editor' }]);
