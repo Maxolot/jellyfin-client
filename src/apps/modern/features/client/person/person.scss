@@ -23,11 +23,6 @@
     min-width: 0;
     max-width: 720px;
 
-    .client-eyebrow {
-        margin: 0 0 var(--client-space-8);
-        text-transform: uppercase;
-    }
-
     h1 {
         @include ds.type('hero-title');
 
@@ -84,53 +79,6 @@
         margin: 0 0 var(--client-space-row-heading);
     }
 }
-
-.client-credit-card {
-    // The request state sits at the top, clear of the role written at the bottom.
-    .client-external-badge {
-        z-index: 1;
-        top: var(--client-space-8);
-        right: auto;
-        bottom: auto;
-        left: var(--client-space-8);
-    }
-}
-
-.client-credit-poster {
-    position: relative;
-    display: block;
-}
-
-// The character or job, on the artwork: never a media title under the card.
-.client-credit-copy {
-    position: absolute;
-    z-index: 1;
-    inset: auto 0 0;
-    display: grid;
-    gap: var(--client-space-4);
-    padding: var(--client-space-24) var(--client-space-8) var(--client-space-8);
-    background: linear-gradient(transparent, var(--client-art-scrim) 46%);
-    color: var(--client-ink);
-
-    @include ds.type('meta');
-
-    strong {
-        display: none;
-
-        @include ds.type('item-title');
-    }
-
-    small {
-        display: -webkit-box;
-        overflow: hidden;
-        color: var(--client-ink-muted);
-        font-size: inherit;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2;
-    }
-}
-
-.client-credit-poster:where(:hover, :focus-visible) .client-credit-copy strong { display: block; }
 
 @include ds.phone {
     .client-person-hero { padding-top: var(--client-space-8); }

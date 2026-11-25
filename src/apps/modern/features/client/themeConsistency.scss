@@ -126,8 +126,9 @@
     &:focus-visible { opacity: 0.72; }
 }
 
-/* Catalogue filters (home, Films, Séries): the same pills as every other control. */
-.client-interface .client-browse-controls .client-select > button {
+/* Filters of the catalogue (home, Films, Séries) and of every grid (folders, collections, person):
+   the same pills as every other control. Lists in settings stay fields. */
+.client-interface :is(.client-browse-controls, .client-filter-options) .client-select > button {
     height: 40px;
     min-width: 0;
     min-height: 0;

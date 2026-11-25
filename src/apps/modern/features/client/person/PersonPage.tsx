@@ -48,7 +48,7 @@ function PersonHero({ name, portrait, job, birth, place, death, bio, counts }: R
     const previous = location.state as Navigation | null;
     const born = [dateLabel(birth), place].filter(Boolean).join(', ');
     const died = dateLabel(death);
-    const meta = [born && `Naissance ${born}`, died && `Décès ${died}`, counts].filter(Boolean).join(' · ');
+    const meta = [job, born && `Naissance ${born}`, died && `Décès ${died}`, counts].filter(Boolean).join(' · ');
     return <header className='client-person-hero'>
         <Link className='client-shelf-back' to={previous?.returnTo || '/client?view=search'}
             state={{ ...(previous?.returnState as object), restoreFocus: true }}><ClientIcon name='back' />Retour</Link>
@@ -58,7 +58,6 @@ function PersonHero({ name, portrait, job, birth, place, death, bio, counts }: R
                 <span aria-hidden='true'>{name.slice(0, 1).toLocaleUpperCase('fr')}</span>
             </span>
             <div className='client-person-copy'>
-                {job && <p className='client-eyebrow'>{job}</p>}
                 <h1>{name}</h1>
                 {meta && <p className='client-meta'>{meta}</p>}
                 <DetailSynopsis overview={bio} />
@@ -132,8 +131,6 @@ function CreditTile({ entry, role, image, play, request, permissions }: Readonly
     const location = useLocation();
     const { item, status } = entry;
     const credits = (role ? entry.roles[role as FilmographyRole] : Object.values(entry.roles).flat()) || [];
-    // The section already says available or to request: a badge only adds what it does not, such as a request state.
-    const badge = status === 'tracked' ? entry.label : undefined;
     const statusLabel = entry.label || (status === 'available' ? 'Disponible' : 'À demander');
     const poster = status === 'available' ? image(item) : imageUrl((item as CatalogueItem).Seerr?.posterPath);
     const fallback = entry.followed ? <SharedCatalogArtwork item={item} backdrop={false} /> : <span className='client-card-fallback'>{item.Name}</span>;
@@ -143,10 +140,6 @@ function CreditTile({ entry, role, image, play, request, permissions }: Readonly
             state={{ returnTo: location.pathname + location.search, returnState: location.state }}
             aria-label={[item.Name, ...credits, statusLabel].filter(Boolean).join(' · ')}>
             {poster ? <Artwork source={poster} /> : fallback}
-            {badge && <span className='client-external-badge'>{badge}</span>}
-            <span className='client-credit-copy' aria-hidden='true'><strong>{item.Name}</strong>
-                {credits.length > 0 && <small>{credits.join(' · ')}</small>}
-            </span>
         </Link>
         {/* Same quick actions as the posters of a folder: on the card, shown on hover or focus. */}
         {(status === 'available' || requestable) && <div className='client-shelf-item-actions'>
