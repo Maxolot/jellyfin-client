@@ -51,6 +51,15 @@ function PlayerGlyph({ name }: Readonly<{ name: string }>) {
     };
     return <svg viewBox='0 0 24 24' aria-hidden='true' fill='none' stroke='currentColor' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'><path d={paths[name] || paths.settings} /></svg>;
 }
+/** The central controls after Apple's player: solid shapes, and the skip amount written inside its arrow. */
+function CenterGlyph({ name, amount }: Readonly<{ name: 'play' | 'pause' | 'back' | 'forward'; amount?: number }>) {
+    if (name === 'play') return <svg viewBox='0 0 24 24' aria-hidden='true' fill='currentColor' stroke='currentColor' strokeWidth='2.4' strokeLinejoin='round'><path d='M8.5 5.8v12.4l9.8-6.2Z' /></svg>;
+    if (name === 'pause') return <svg viewBox='0 0 24 24' aria-hidden='true' fill='currentColor'><rect x='6' y='4.5' width='4.3' height='15' rx='1.5' /><rect x='13.7' y='4.5' width='4.3' height='15' rx='1.5' /></svg>;
+    return <svg viewBox='0 0 24 24' aria-hidden='true' fill='none' stroke='currentColor' strokeWidth='1.7' strokeLinecap='round' strokeLinejoin='round'>
+        <path d={name === 'back' ? 'M12 4.5A8.5 8.5 0 1 1 4.64 8.75M14 2.3l-2.4 2.2 2.4 2.2' : 'M12 4.5A8.5 8.5 0 1 0 19.36 8.75M10 2.3l2.4 2.2-2.4 2.2'} />
+        <text x='12' y='15.8' textAnchor='middle' fill='currentColor' stroke='none' fontSize='7.5' fontWeight='650'>{amount}</text>
+    </svg>;
+}
 // eslint-disable-next-line sonarjs/cognitive-complexity -- Capability-gated controls share one playback snapshot.
 export default function CustomVideoPlayer() {
     const { api, user } = useApi();
@@ -412,7 +421,7 @@ export default function CustomVideoPlayer() {
         const part = side < 0 ? 'back' : 'forward';
         // Same elements every time: the effect on jumpFeedback replays their animations.
         return <button type='button' className={`client-player-jump client-liquid-glass${side < 0 ? ' is-back' : ''}`} aria-label={`${label} de ${preferences.skip} secondes`} disabled={!canSeek} onClick={() => jump(side * preferences.skip)}>
-            <span ref={element => { jumpParts.current[`${part}-icon`] = element; }} className='client-player-jump-icon'><PlayerGlyph name={side < 0 ? 'rewind' : 'forward'} /></span>
+            <span ref={element => { jumpParts.current[`${part}-icon`] = element; }} className='client-player-jump-icon'><CenterGlyph name={side < 0 ? 'back' : 'forward'} amount={preferences.skip} /></span>
             <strong ref={element => { jumpParts.current[`${part}-burst`] = element; }} className='client-player-jump-burst' aria-hidden='true'>{active ? <>{sign}{Math.abs(jumpFeedback.offset)}<small>s</small></> : null}</strong>
             <span className='client-player-sr' aria-live='polite'>{active ? `${sign}${Math.abs(jumpFeedback.offset)} secondes` : ''}</span>
         </button>;
@@ -505,7 +514,7 @@ export default function CustomVideoPlayer() {
                 return playbackManager.nextTrack();
             })}>{nextLabel} · {next.Name}</button>}<button type='button' onClick={leave}>Retour à la fiche</button></div> : <div className='client-player-center'><LiquidGlassFilter />
                 {jumpButton(-1)}
-                <button type='button' className='client-player-main-play client-liquid-glass' aria-label={paused ? 'Reprendre la lecture' : 'Mettre en pause'} disabled={!hasPlayer} onClick={() => action(() => playbackManager.playPause())}>{paused ? <ClientIcon name='play' /> : <PlayerGlyph name='pause' />}</button>
+                <button type='button' className='client-player-main-play client-liquid-glass' aria-label={paused ? 'Reprendre la lecture' : 'Mettre en pause'} disabled={!hasPlayer} onClick={() => action(() => playbackManager.playPause())}><CenterGlyph name={paused ? 'play' : 'pause'} /></button>
                 {jumpButton(1)}
             </div>}
             {segment && canSeek && !(showNext && segment.Type === 'Outro') && (segment.Type !== 'Intro' || preferences.intro === 'button') && <button className='client-player-skip' type='button' onClick={() => seek((segment.EndTicks || 0) / SECOND)}>{segmentLabels[segment.Type || 'Outro']} <ClientIcon name='next' /></button>}

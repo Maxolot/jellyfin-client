@@ -1,15 +1,14 @@
 /* stylelint-disable no-descending-specificity -- Independent player components share child tag selectors. */
 .client-player-center .client-player-jump {
     position: relative;
-    width: 4.1em;
-    height: 4.1em;
+    width: 3.9em;
+    height: 3.9em;
     flex-direction: column;
     gap: 0.1em;
-    border: 1px solid #ffffff24;
 
     svg {
-        width: 1.6em;
-        height: 1.6em;
+        width: 2.4em;
+        height: 2.4em;
     }
 }
 

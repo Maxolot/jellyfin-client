@@ -1,5 +1,5 @@
-/* Liquid Glass for the central player controls, after visionOS glass and the SVG liquid-glass demos:
-   a thick, quiet blur with a faint rim, swirled by low-frequency noise and bent at the edge in Chromium. */
+/* Liquid Glass for the player controls, after the Apple TV player: a dark, very thick blur that still lets
+   the colour of the image through, a fine rim lit at the top and bottom, bent at the edge in Chromium. */
 .client-liquid-glass-defs {
     position: absolute;
     width: 0;
@@ -13,25 +13,26 @@
     overflow: visible;
     border: 0;
     background:
-        radial-gradient(110% 80% at 30% 12%, rgb(255 255 255 / 10%), transparent 60%),
-        rgb(24 24 28 / 22%);
+        radial-gradient(120% 90% at 50% 0%, rgb(255 255 255 / 7%), transparent 55%),
+        rgb(22 20 20 / 50%);
     box-shadow:
-        inset 0 1px 0 rgb(255 255 255 / 32%),
-        inset 0 -1px 0 rgb(255 255 255 / 8%),
-        inset 0 0 0 1px rgb(255 255 255 / 9%),
-        inset 0 12px 24px -16px rgb(255 255 255 / 22%),
-        0 8px 26px rgb(0 0 0 / 22%);
-    backdrop-filter: blur(18px) saturate(1.15) brightness(0.94);
+        inset 0 1px 0 rgb(255 255 255 / 30%),
+        inset 0 -1px 0 rgb(255 255 255 / 14%),
+        inset 0 0 0 1px rgb(255 255 255 / 6%),
+        inset 0 12px 24px -16px rgb(255 255 255 / 12%),
+        0 10px 30px rgb(0 0 0 / 25%);
+    // Strong saturation keeps the hue of the image under the glass, as the yellow under Apple's buttons.
+    backdrop-filter: blur(28px) saturate(1.8) brightness(0.85);
     transition: transform var(--client-duration-move) var(--client-ease-move), background-color var(--client-duration-state) ease, box-shadow var(--client-duration-state) ease;
 
-    // Specular rim: brighter on the top-left and bottom-right edges, like light caught by a lens.
+    // Specular rim: lit at the top, softer at the bottom, almost gone on the sides.
     &::before {
         position: absolute;
         z-index: -1;
         inset: 0;
-        padding: 1.5px;
+        padding: 1px;
         border-radius: inherit;
-        background: conic-gradient(from 210deg, rgb(255 255 255 / 42%), rgb(255 255 255 / 4%) 25%, rgb(255 255 255 / 20%) 50%, rgb(255 255 255 / 4%) 75%, rgb(255 255 255 / 42%));
+        background: conic-gradient(rgb(255 255 255 / 45%), rgb(255 255 255 / 5%) 25%, rgb(255 255 255 / 25%) 50%, rgb(255 255 255 / 5%) 75%, rgb(255 255 255 / 45%));
         content: '';
         mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
         pointer-events: none;
@@ -43,8 +44,8 @@
 
     &:hover:not(:disabled) {
         background:
-            radial-gradient(110% 80% at 30% 12%, rgb(255 255 255 / 14%), transparent 60%),
-            rgb(40 40 46 / 26%);
+            radial-gradient(120% 90% at 50% 0%, rgb(255 255 255 / 11%), transparent 55%),
+            rgb(44 40 40 / 55%);
         transform: scale(1.06);
     }
 
@@ -87,13 +88,13 @@
 // The filter is only rendered in Chromium, the one engine that refracts the backdrop through it.
 // stylelint-disable-next-line no-descending-specificity -- Only backdrop-filter is overridden, hover states are unaffected.
 .client-player:not(.style-minimal) .client-player-center:has(.client-liquid-glass-defs.is-backdrop) > .client-liquid-glass {
-    backdrop-filter: blur(9px) url('#client-liquid-glass') saturate(1.15) brightness(0.94);
+    backdrop-filter: blur(24px) url('#client-liquid-glass') saturate(1.8) brightness(0.85);
 }
 
 // A long bar would stretch the lens: it only gets the swirl.
 .client-player.style-glass:not(.bar-float):has(.client-liquid-glass-defs.is-backdrop) .client-player-toolbar.client-liquid-glass,
 .client-player.style-glass.bar-stacked:has(.client-liquid-glass-defs.is-backdrop) .client-player-timeline {
-    backdrop-filter: blur(9px) url('#client-liquid-glass-bar') saturate(1.15) brightness(0.94);
+    backdrop-filter: blur(24px) url('#client-liquid-glass-bar') saturate(1.8) brightness(0.85);
 }
 
 .client-player-sr {

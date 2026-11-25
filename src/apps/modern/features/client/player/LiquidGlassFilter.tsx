@@ -75,13 +75,10 @@ export default function LiquidGlassFilter() {
     const tile = useNoiseTile(refractionSupported);
     if (!refractionSupported) return null;
     return <svg className='client-liquid-glass-defs is-backdrop' width='0' height='0' aria-hidden='true' focusable='false'>
+        {/* The round buttons are a clean lens, as on Apple's player: no swirl, only the rim bends the backdrop. */}
         <filter id='client-liquid-glass' x='0' y='0' width='100%' height='100%' colorInterpolationFilters='sRGB'>
-            {/* Low-frequency noise smears the blurred backdrop into soft swirls… */}
-            <Noise tile={tile} />
-            <feDisplacementMap in='SourceGraphic' in2='noise' scale='42' xChannelSelector='R' yChannelSelector='G' result='swirl' />
-            {/* …then the lens bends it at the rim. */}
             <feImage href={MAP} x='0' y='0' width='100%' height='100%' preserveAspectRatio='none' result='map' />
-            <feDisplacementMap in='swirl' in2='map' scale='-18' xChannelSelector='R' yChannelSelector='G' />
+            <feDisplacementMap in='SourceGraphic' in2='map' scale='-22' xChannelSelector='R' yChannelSelector='G' />
         </filter>
         <filter id='client-liquid-glass-bar' x='0' y='0' width='100%' height='100%' colorInterpolationFilters='sRGB'>
             <Noise tile={tile} />
