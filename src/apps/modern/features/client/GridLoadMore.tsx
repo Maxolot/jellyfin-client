@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 
 import ClientSkeleton from './ClientSkeleton';
+import { ActionButton } from './ui';
 
 /** Asks for the next titles well before the end of the page is reached. */
 export default function GridLoadMore({ loading, failed, pages, load }: Readonly<{ loading: boolean; failed: boolean; pages: number; load: () => void }>) {
@@ -19,6 +20,6 @@ export default function GridLoadMore({ loading, failed, pages, load }: Readonly<
     return <div ref={marker} className='client-load-more'>
         {loading && <ClientSkeleton layout='grid' count={6} contained label='Chargement des titres suivants…' />}
         {failed && <p role='alert'>Impossible de charger la suite. <button type='button' onClick={load}>Réessayer</button></p>}
-        {!supported && !loading && !failed && <button type='button' className='client-button' onClick={load}>Afficher plus</button>}
+        {!supported && !loading && !failed && <ActionButton onClick={load}>Afficher plus</ActionButton>}
     </div>;
 }

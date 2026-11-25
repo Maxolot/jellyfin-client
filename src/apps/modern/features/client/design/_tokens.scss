@@ -15,13 +15,16 @@ $color-classique: (
     'surface-highlight': #ffffff18,
     'line': #ffffff2e,
     'line-strong': #ffffff59,
+    'line-hover': #ffffff80,
     'art-placeholder': #252525,
     'art-scrim': #090a0ded,
     'chip-on-art': #15171bd9,
     'action-primary': #f4f4f4,
     'on-action-primary': #111111,
+    'action-primary-hover': #ffffff,
     'action-secondary': #ffffff18,
     'action-secondary-line': #ffffff4d,
+    'action-secondary-hover': #ffffff2b,
     'selected': #f4f4f4,
     'on-selected': #111111,
     'selected-line': #f4f4f4,
@@ -51,13 +54,16 @@ $color-glass: (
     'surface-highlight': #ffffff18,
     'line': #ffffff40,
     'line-strong': #ffffff73,
+    'line-hover': #ffffff80,
     'art-placeholder': #252525,
     'art-scrim': #090a0ded,
     'chip-on-art': #15171bd9,
     'action-primary': #ffffff38,
     'on-action-primary': #ffffff,
+    'action-primary-hover': #ffffff,
     'action-secondary': #ffffff1c,
     'action-secondary-line': #ffffff4d,
+    'action-secondary-hover': #ffffff2b,
     'selected': #ffffff40,
     'on-selected': #ffffff,
     'selected-line': #ffffffb3,
@@ -167,13 +173,16 @@ $type: (
     --client-surface-highlight: #ffffff18;
     --client-line: #ffffff2e;
     --client-line-strong: #ffffff59;
+    --client-line-hover: #ffffff80;
     --client-art-placeholder: #252525;
     --client-art-scrim: #090a0ded;
     --client-chip-on-art: #15171bd9;
     --client-action-primary: #f4f4f4;
     --client-on-action-primary: #111111;
+    --client-action-primary-hover: #ffffff;
     --client-action-secondary: #ffffff18;
     --client-action-secondary-line: #ffffff4d;
+    --client-action-secondary-hover: #ffffff2b;
     --client-selected: #f4f4f4;
     --client-on-selected: #111111;
     --client-selected-line: #f4f4f4;

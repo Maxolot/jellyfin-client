@@ -6,7 +6,6 @@ import { useApi } from 'hooks/useApi';
 
 import { CastDialog, hasCast } from './DetailExtras';
 import ActionLabel from './ActionLabel';
-import ClientIcon from './ClientIcon';
 import DownloadDialog from './offline/DownloadDialog';
 import { useFileTracks } from './languageTags';
 import MediaInfoDialog from './MediaInfoDialog';
@@ -17,6 +16,7 @@ import StorageRemoval, { useStorageRemovalAvailable } from './StorageRemoval';
 import { FollowCatalogAction } from './sharedCatalog';
 import { choiceSummary, type TrackChoice } from './trackChoice';
 import TrackMenu from './TrackMenu';
+import { ActionButton } from './ui';
 
 const RequestDialog = lazy(() => import(/* webpackChunkName: "client-seerr" */ './seerr/SeerrViews')
     .then(module => ({ default: module.RequestDialog })));
@@ -84,7 +84,7 @@ export default function DetailMenu({ item, basePath, play, choice, chooseTracks 
     // Keyboard handling for the menu items; the wrapper itself is not interactive.
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     return <div className='client-more' ref={root} onKeyDown={onKeyDown}>
-        <button ref={trigger} type='button' className='client-button client-action-circle' aria-label={triggerLabel} title={missing ? 'Des saisons peuvent être demandées' : 'Plus d’actions'} aria-haspopup='menu' aria-expanded={open} onClick={() => setOpen(!open)}><ClientIcon name='more' /></button>
+        <ActionButton ref={trigger} round aria-label={triggerLabel} title={missing ? 'Des saisons peuvent être demandées' : 'Plus d’actions'} aria-haspopup='menu' aria-expanded={open} onClick={() => setOpen(!open)} icon='more'></ActionButton>
         {open && <div className='client-more-menu' role='menu' aria-label={tracksOpen ? 'Audio et sous-titres' : 'Plus d’actions'}>
             {tracksOpen ? <TrackMenu audio={tracks.audio} subtitles={tracks.subtitles} choice={choice} onChange={chooseTracks} onBack={() => setTracksOpen(false)} /> : <>
                 {externalIdentity(item) && <FollowCatalogAction key={item.Id} item={item} menu />}

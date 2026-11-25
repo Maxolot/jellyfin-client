@@ -59,7 +59,7 @@ import { useTitleTrackChoice } from '../features/client/useTitleTrackChoice';
 import { chosenTracks } from '../features/client/languageTags';
 import { RecentPage } from '../features/client/LocalDiscoveryPages';
 import MediaRow, { type MediaRowKind } from '../features/client/MediaRow';
-import { ChoiceSelect, type Option } from '../features/client/settings/controls';
+import { ChoiceSelect, type Option } from '../features/client/ui/controls';
 import AdvancedLibraryFilters from '../features/client/AdvancedLibraryFilters';
 import { countLibraryFilters, isFullLibrary, readLibraryFilters } from '../features/client/libraryFilters';
 import { QueueActions } from '../features/client/QueueActions';
@@ -104,6 +104,7 @@ import NotificationCenter from '../features/client/requests/NotificationCenter';
 import { CompactRequest } from '../features/client/requests/RequestInline';
 import { useRequestProgress } from '../features/client/requests/queries';
 import { canRequest, externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
+import { ActionButton, ActionLink, Chip } from '../features/client/ui';
 
 const SettingsPage = lazy(() => import(/* webpackChunkName: "client-settings" */ '../features/client/settings/SettingsPage'));
 const ProfilePage = lazy(() => import(/* webpackChunkName: "client-profiles" */ '../features/client/profiles/ProfilePage'));
@@ -593,7 +594,7 @@ function ClientView({ model }: ViewProps) {
                 </nav>
                 <ProfileEntrance profile={profileButton} />
                 {actionError && <p role='alert' className='client-message'>{actionError}</p>}
-                {error && <div className='client-message' role='alert'><p>Impossible de charger les médias.</p><button type='button' className='client-button' onClick={() => (id ? details.item.refetch() : media.refetch())}>Réessayer</button></div>}
+                {error && <div className='client-message' role='alert'><p>Impossible de charger les médias.</p><ActionButton onClick={() => (id ? details.item.refetch() : media.refetch())}>Réessayer</ActionButton></div>}
                 {id && !model.remote && details.item.isPending && <ClientSkeleton layout='detail' label='Chargement de la fiche…' />}
                 <BrowseControls model={model} />
                 {!id && media.isPending && (view === 'home' || model.discovery) && <ClientSkeleton layout='hero' label='Chargement de la sélection…' />}
@@ -683,13 +684,13 @@ function HeroActions({ model, dots }: ViewProps & { dots: ReactNode }) {
     if (playable?.UserData?.PlaybackPositionTicks) playLabel = 'Reprendre';
     if (playable?.Type === 'Episode') playLabel = episodeLabel(playable);
     return <div className={`client-actions${showVersions ? ' has-versions' : ''}`}>
-        {playable && <button className='client-play' onClick={() => play(playable, undefined, showVersions ? version : undefined)}><ClientIcon name='play' />{playLabel}</button>}
+        {playable && <ActionButton variant='primary' onClick={() => play(playable, undefined, showVersions ? version : undefined)} icon='play'>{playLabel}</ActionButton>}
         {showVersions && <div className='client-version-select'>
             <ChoiceSelect label='Version à lire' value={version} options={options} onChange={entry => chooseTracks({ ...choice, version: entry || undefined })} />
         </div>}
-        {!id && <Link className='client-button' data-client-focus={`info-${hero.Id}`} to={`/client?id=${hero.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }}><ClientIcon name='info' />Plus d’infos</Link>}
+        {!id && <ActionLink data-client-focus={`info-${hero.Id}`} to={`/client?id=${hero.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }} icon='info'>Plus d’infos</ActionLink>}
         {id && <><TrailerAction key={hero.Id} item={hero} backdrop={image(hero, true, true)} play={play} /><ListAction item={hero} disabled={busy} fallback={() => updateState('favorite')} />
-            <button className='client-button client-action-circle' aria-label={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} title={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} disabled={busy} aria-pressed={!!item?.UserData?.Played} onClick={() => updateState('played')}><ClientIcon name={item?.UserData?.Played ? 'check' : 'eye'} /></button>
+            <ActionButton round aria-label={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} title={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} disabled={busy} aria-pressed={!!item?.UserData?.Played} onClick={() => updateState('played')} icon={item?.UserData?.Played ? 'check' : 'eye'}></ActionButton>
             <DetailMenu key={hero.Id} item={hero} basePath={api?.basePath || ''} play={play} choice={choice} chooseTracks={chooseTracks} /></>}
         {dots}
     </div>;
@@ -816,8 +817,8 @@ function BrowseControls({ model }: ViewProps) {
     const languages = filters.data?.AudioLanguages?.flatMap((entry): Option<string>[] => entry.Value ? [[entry.Value, entry.Name || entry.Value]] : []) || [];
     if (audio && !languages.some(([key]) => key === audio)) languages.push([audio, audio]);
     return <div className='client-browse-controls'>
-        {view !== 'home' && <div className='client-catalogue-switch' aria-label='Présentation du catalogue'><button aria-pressed={discovery} onClick={() => setParams({ view })}>Découvrir</button><button aria-pressed={!discovery} onClick={() => setParams({ view, mode: 'library' })}>Toute la bibliothèque</button></div>}
-        {view !== 'home' && <Link className='client-button client-collections-entry' to='/client?view=collections'><ClientIcon name='collection' />Collections publiques</Link>}
+        {view !== 'home' && <div className='client-catalogue-switch' aria-label='Présentation du catalogue'><Chip pressed={discovery} onClick={() => setParams({ view })}>Découvrir</Chip><Chip pressed={!discovery} onClick={() => setParams({ view, mode: 'library' })}>Toute la bibliothèque</Chip></div>}
+        {view !== 'home' && <ActionLink className='client-collections-entry' to='/client?view=collections' icon='collection'>Collections publiques</ActionLink>}
         {(view === 'home' || discovery) && <ChoiceSelect label='Genres' placeholder='Genres' value={genre} options={genreChoices(genres.data, genre)} onChange={value => setParams(changeBrowseParams(params, { genre: value }))} />}
         <ChoiceSelect label='Langues audio' placeholder='Langues' value={audio} options={[['', 'Toutes les langues'], ...languages]} onChange={value => setParams(changeBrowseParams(params, { audio: value }))} />
     </div>;
@@ -886,7 +887,7 @@ function PersonalView({ model }: ViewProps) {
         {lead && <div className={`client-personal-now${resume.length > 1 ? '' : ' is-single'}`}>
             <section className='client-personal-spotlight'><Artwork source={image(lead, true, true)} className={protect(lead) ? 'client-spoiler-art' : undefined} eager /><PreviewClip item={lead} surface='spotlight' /><div><small>ON CONTINUE ?</small><h2>{lead.SeriesName || lead.Name}</h2><p>{lead.Type === 'Episode' ? `${episodeLabel(lead)} · ${lead.Name}` : 'Votre film vous attend'}</p>
                 {progressPercent(lead) > 0 && <span className='client-spotlight-progress' aria-label={`Vu à ${Math.round(progressPercent(lead))} %`}><i style={{ width: `${progressPercent(lead)}%` }} /></span>}
-                <button className='client-play' onClick={() => play(lead)}><ClientIcon name='play' />Reprendre</button><Link className='client-button' to={`/client?id=${lead.SeriesId || lead.Id}`}>Voir la fiche</Link></div></section>
+                <ActionButton variant='primary' onClick={() => play(lead)} icon='play'>Reprendre</ActionButton><ActionLink to={`/client?id=${lead.SeriesId || lead.Id}`}>Voir la fiche</ActionLink></div></section>
             {resume.length > 1 && <section className='client-personal-resume' aria-labelledby='client-personal-resume-title'>
                 <h2 id='client-personal-resume-title'>Continuer à regarder</h2>
                 <ol>{resume.slice(1, 5).map(entry => <li key={entry.Id}>
@@ -927,7 +928,7 @@ function PersonalRequests({ connected }: Readonly<{ connected: boolean }>) {
     return <div id='client-requests' className='client-personal-requests'>
         {query.data ? <section className='client-request-overview'>
             <div><h2>Mes demandes</h2><p>{active ? `${active} en cours` : 'Aucune demande en cours'}</p></div>
-            <Link className='client-button' to='/client?view=requests'><ClientIcon name='bell' />Voir le suivi</Link>
+            <ActionLink to='/client?view=requests' icon='bell'>Voir le suivi</ActionLink>
         </section> : <RequestTracking />}
     </div>;
 }
@@ -987,7 +988,7 @@ function SearchView({ model }: ViewProps) {
             <SearchGroup title='Catalogue partagé' count={results.saved.length}><div className='client-grid'>{cards(results.saved, false, hasFolders)}</div></SearchGroup>
             <SearchGroup title='À demander' count={results.suggestion.length || Number(catalogue.hasNextPage)}>
                 <div className='client-grid'>{cards(results.suggestion)}</div>
-                {catalogue.hasNextPage && <button type='button' className='client-button' disabled={catalogue.isFetchingNextPage} onClick={() => { void catalogue.fetchNextPage(); }}>Plus de titres à demander</button>}
+                {catalogue.hasNextPage && <ActionButton disabled={catalogue.isFetchingNextPage} onClick={() => { void catalogue.fetchNextPage(); }}>Plus de titres à demander</ActionButton>}
             </SearchGroup>
             {waiting && !count && <ClientSkeleton layout='grid' contained count={8} label='Recherche en cours…' />}
             {media.isError && <p className='client-search-feedback' role='status'>Impossible de rechercher dans la bibliothèque. <button type='button' onClick={() => { void media.refetch(); }}>Réessayer</button></p>}

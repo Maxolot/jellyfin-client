@@ -32,11 +32,7 @@
     gap: 7px;
     margin-bottom: 13px;
 
-    .client-button {
-        min-height: 40px;
-        padding: 5px 11px;
-        font-size: 13px;
-    }
+    --client-action-padding: var(--client-space-12);
 }
 
 .client-notifications-list {
@@ -90,11 +86,9 @@
     flex-wrap: wrap;
     gap: 5px;
 
-    .client-button {
-        min-height: 34px;
-        padding: 3px 9px;
-        font-size: 12px;
-    }
+    --client-action-height: var(--client-size-action-small);
+    --client-action-padding: var(--client-space-8);
+    --client-action-font: var(--client-text-12);
 }
 
 @media (max-width: 700px) {

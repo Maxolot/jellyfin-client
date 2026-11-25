@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 
 import { useApi } from 'hooks/useApi';
 
-import { ChoiceSelect, type Option } from './settings/controls';
+import { ChoiceSelect, type Option } from './ui/controls';
 import ClientDialog from './ClientDialog';
 import { formatSize } from './mediaInfo';
 import { resolveCatalogueArtwork } from './catalogArtwork';
@@ -14,6 +14,7 @@ import { externalIdentity } from './seerr/model';
 import { useSharedCatalog } from './sharedCatalog';
 import { useCatalogArtworkLookup } from './useCatalogArtwork';
 import { useLocalSeasons } from './seerr/queries';
+import { ActionButton } from './ui';
 
 type Plan = { revision: string; bytes: number; files: { id: number; name: string; size: number }[] };
 type Capabilities = { radarr?: boolean; sonarr?: boolean };
@@ -127,10 +128,10 @@ export default function StorageRemoval({ item, onClose }: Props & Readonly<{ onC
                 </section>}
             </>}
             <div className='client-actions'>
-                <button type='button' className='client-button' disabled={pending} onClick={onClose}>{done ? 'Fermer' : 'Annuler'}</button>
-                {!done && (plan.isError || removal.isError) && <button type='button' className='client-button' onClick={refresh}>Vérifier à nouveau</button>}
-                {!done && !removal.isError && <button type='button' className='client-button' disabled={!current || plan.isError || plan.isFetching || pending}
-                    onClick={() => { if (current) removal.mutate(current); }}>{pending ? 'Retrait en cours…' : 'Confirmer la suppression des fichiers'}</button>}
+                <ActionButton disabled={pending} onClick={onClose}>{done ? 'Fermer' : 'Annuler'}</ActionButton>
+                {!done && (plan.isError || removal.isError) && <ActionButton onClick={refresh}>Vérifier à nouveau</ActionButton>}
+                {!done && !removal.isError && <ActionButton disabled={!current || plan.isError || plan.isFetching || pending}
+                    onClick={() => { if (current) removal.mutate(current); }}>{pending ? 'Retrait en cours…' : 'Confirmer la suppression des fichiers'}</ActionButton>}
             </div>
         </div>
     </ClientDialog>;

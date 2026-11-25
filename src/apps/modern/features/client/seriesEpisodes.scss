@@ -200,15 +200,10 @@
     gap: 8px;
 }
 
-.client-interface .client-series-controls .client-button,
-.client-interface .client-series-detail .client-hero-copy .client-queue-button {
-    height: 40px;
-    min-height: 40px;
-    padding-block: 0;
-    border-radius: 999px;
-    font-size: 14px;
-    font-weight: 600;
-    white-space: nowrap;
+.client-series-controls,
+.client-series-detail .client-hero-copy .client-queue-button {
+    --client-action-height: var(--client-size-chip);
+    --client-action-font: var(--client-text-14);
 }
 
 .client-series-episode-grid {

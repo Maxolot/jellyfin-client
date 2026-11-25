@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 import { serverAdminUrl } from '../../session/ServerInterfacePage';
-import { SettingCard, StatusBadge } from '../controls';
+import { SettingCard, StatusBadge } from '../../ui/controls';
 import SettingsIcon from '../SettingsIcon';
 import { ExtensionLogo, RestartCard, StageBadge } from './ExtensionSetup';
 import { EXTENSIONS, extensionStage, findPlugin } from './extensions';

@@ -77,22 +77,7 @@
 .client-draw-choices {
     display: flex;
     flex-wrap: wrap;
-    gap: 7px;
-}
-
-.client-tonight-table .client-draw-choices button {
-    padding: 8px 12px;
-    border: 1px solid #ffffff35;
-    border-radius: 99px;
-    background: transparent;
-    color: var(--client-ink-muted);
-    font-size: 12px;
-
-    &[aria-pressed='true'] {
-        border-color: white;
-        background: white;
-        color: #171717;
-    }
+    gap: var(--client-space-8);
 }
 
 .client-tonight-table .client-draw-keywords input {

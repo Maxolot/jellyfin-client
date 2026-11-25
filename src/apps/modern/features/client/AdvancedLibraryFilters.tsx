@@ -8,9 +8,10 @@ import React, { useState } from 'react';
 import { useApi } from 'hooks/useApi';
 
 import ClientIcon from './ClientIcon';
-import { ChoiceSelect, type Option } from './settings/controls';
+import { ChoiceSelect, type Option } from './ui/controls';
 import { countLibraryFilters, libraryFilterKeys, type LibraryFilters } from './libraryFilters';
 import './advancedLibraryFilters.scss';
+import { ActionButton } from './ui';
 
 type Choice = Readonly<{ value: string; label: string }>;
 type FilterKey = keyof LibraryFilters;
@@ -88,7 +89,7 @@ export default function AdvancedLibraryFilters({ view, filters, onChange }: Read
             </div>
             <div className='client-advanced-footer'>
                 <p>Ces critères s’appliquent aux titres disponibles dans la bibliothèque.</p>
-                {count > 0 && <button type='button' className='client-button' onClick={clear}>Effacer les filtres avancés</button>}
+                {count > 0 && <ActionButton onClick={clear}>Effacer les filtres avancés</ActionButton>}
             </div>
             {loading && <p role='status'>Chargement des options…</p>}
             {error && <p role='status'>Certaines options ne sont pas disponibles. <button type='button' onClick={() => {

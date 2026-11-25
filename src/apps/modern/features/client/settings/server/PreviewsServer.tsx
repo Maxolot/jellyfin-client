@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { type Option, SaveNote, Segmented, Select, SettingCard, StatusBadge, Toggle } from '../controls';
+import { type Option, SaveNote, Segmented, Select, SettingCard, StatusBadge, Toggle } from '../../ui/controls';
 import ExtensionSetup, { ExtensionHeader } from './ExtensionSetup';
 import PreviewScenes from './PreviewScenes';
 import { EXTENSIONS } from './extensions';

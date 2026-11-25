@@ -15,6 +15,7 @@ import FolderSharing from './FolderSharing';
 import { DeleteFolder, FolderError, FolderNameForm, ShareForm } from './FolderForms';
 import { canEditFolder, type Folder, type FolderDetail, folderMemberKey, folderMemberPath, foldersPath, moveFolderItem, orderedFolderItems } from './model';
 import { useFolderChange, useFolderDetail, useFolderTargets, useFolderTitles } from './queries';
+import { ActionButton } from '../ui';
 
 type Props = CollectionCardOptions & { id: string; full: boolean; playQueue: PlayQueue; queueBusy: boolean };
 type Editor = 'rename' | 'share' | 'delete';
@@ -27,7 +28,7 @@ export default function FolderPage({ id, ...props }: Readonly<Props>) {
     return <section className='client-library client-folder-unavailable'>
         <Link className='client-shelf-back' to={foldersPath}><ClientIcon name='back' />Ma liste</Link>
         {validId.test(id) && detail.isPending ? <ClientSkeleton layout='hero' contained label='Chargement du dossier…' /> :
-            <p role='alert'>Ce dossier est indisponible ou n’est plus partagé avec toi. {validId.test(id) && <button type='button' className='client-button' onClick={() => detail.refetch()}>Réessayer</button>}</p>}
+            <p role='alert'>Ce dossier est indisponible ou n’est plus partagé avec toi. {validId.test(id) && <ActionButton onClick={() => detail.refetch()}>Réessayer</ActionButton>}</p>}
     </section>;
 }
 
@@ -60,7 +61,7 @@ function FolderContent({ detail, full, playQueue, queueBusy, ...card }: Readonly
         remove={() => change.mutate({ method: 'DELETE', path: `/${folder.id}${folderMemberPath(entry)}` })} /> : undefined;
     return <CollectionHero tinted title={folder.name} items={queue} count={items.length} metadata={metadata} metadataBadge={<FolderSharing folder={folder} shares={shares} targets={targets.data} />}
         backTo={foldersPath} backLabel='Ma liste' full={full} image={card.image} playQueue={playQueue} queueBusy={queueBusy} actions={actions}>
-        {organizing && editable && <p className='client-shelf-organize' role='status'>Utilise les flèches dans l’ordre du dossier pour déplacer un titre. <button type='button' className='client-button' onClick={() => setOrganizing(false)}>Terminer</button></p>}
+        {organizing && editable && <p className='client-shelf-organize' role='status'>Utilise les flèches dans l’ordre du dossier pour déplacer un titre. <ActionButton onClick={() => setOrganizing(false)}>Terminer</ActionButton></p>}
         {change.isError && <div className='client-shelf-organize'><FolderError /></div>}
         <CollectionGrid {...card} items={entries} pending={!!items.length && titles.isPending} error={titles.isError} retry={() => titles.refetch()}
             empty={editable ? 'Ajoute un titre à ce dossier depuis sa fiche ou la recherche.' : 'Ce dossier ne contient aucun titre disponible.'}
@@ -84,7 +85,7 @@ type Actions = { folder: Folder; hasTitles: boolean; organizing: boolean; toggle
 function FolderActions(props: Readonly<Actions>) {
     const { folder, edit } = props;
     return <>
-        {folder.access === 'owner' && <button type='button' className='client-button' aria-haspopup='dialog' onClick={() => edit('share')}><ClientIcon name='people' />Partager</button>}
+        {folder.access === 'owner' && <ActionButton aria-haspopup='dialog' onClick={() => edit('share')} icon='people'>Partager</ActionButton>}
         <FolderMenu {...props} />
     </>;
 }
@@ -107,8 +108,8 @@ function FolderMenu({ folder, hasTitles, organizing, toggle, edit }: Readonly<Ac
     return <div className='client-shelf-menu' onBlur={event => {
         if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
     }}>
-        <button ref={trigger} type='button' className='client-button' aria-label='Options du dossier' aria-expanded={open}
-            onKeyDown={escape} onClick={() => setOpen(value => !value)}><ClientIcon name='more' /></button>
+        <ActionButton ref={trigger} aria-label='Options du dossier' aria-expanded={open}
+            onKeyDown={escape} onClick={() => setOpen(value => !value)} icon='more'></ActionButton>
         {open && <div className='client-shelf-menu-list'>
             <button type='button' onKeyDown={escape} onClick={() => choose(() => edit('rename'))}><ActionLabel icon='edit'>Renommer</ActionLabel></button>
             {hasTitles && <button type='button' onKeyDown={escape} onClick={() => choose(toggle)}><ActionLabel icon={organizing ? 'check' : 'settings'}>{organizing ? 'Terminer l’organisation' : 'Organiser les titres'}</ActionLabel></button>}
@@ -120,10 +121,10 @@ function FolderMenu({ folder, hasTitles, organizing, toggle, edit }: Readonly<Ac
 function FolderItemActions({ name, pending, move, previous, next, remove }: Readonly<{ name: string; pending: boolean; move?: (direction: -1 | 1) => void; previous: boolean; next: boolean; remove: () => void }>) {
     return <div className={`client-shelf-item-actions${move ? ' is-organizing' : ''}`}>
         {move && <>
-            <button type='button' className='client-button' aria-label={`Avancer ${name}`} disabled={pending || !previous} onClick={() => move(-1)}><ClientIcon name='back' /></button>
-            <button type='button' className='client-button' aria-label={`Reculer ${name}`} disabled={pending || !next} onClick={() => move(1)}><ClientIcon name='next' /></button>
+            <ActionButton aria-label={`Avancer ${name}`} disabled={pending || !previous} onClick={() => move(-1)} icon='back'></ActionButton>
+            <ActionButton aria-label={`Reculer ${name}`} disabled={pending || !next} onClick={() => move(1)} icon='next'></ActionButton>
         </>}
-        <button type='button' className='client-button' aria-label={`Retirer ${name} du dossier`} title='Retirer du dossier' disabled={pending} onClick={remove}><ClientIcon name='close' /></button>
+        <ActionButton aria-label={`Retirer ${name} du dossier`} title='Retirer du dossier' disabled={pending} onClick={remove} icon='close'></ActionButton>
     </div>;
 }
 

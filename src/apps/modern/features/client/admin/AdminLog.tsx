@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 
 import { useApi } from 'hooks/useApi';
 
-import { Segmented, SettingCard } from '../settings/controls';
+import { Segmented, SettingCard } from '../ui/controls';
 import { plural, relativeTime, severityTone } from './model';
 import { type LogFilters, useActivityLog } from './useAdmin';
 import './admin.scss';

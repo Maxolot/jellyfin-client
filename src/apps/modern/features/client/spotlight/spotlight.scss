@@ -382,19 +382,9 @@ body.client-spotlight-open {
     gap: 8px;
     margin-top: 6px;
 
-    .client-play {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 18px;
-        border: 0;
-        border-radius: 999px;
-        cursor: pointer;
-        font-family: inherit;
-        font-size: 14px;
-        font-weight: 700;
-        line-height: 1;
-    }
+    --client-action-height: var(--client-size-action-small);
+    --client-action-font: var(--client-text-14);
+    --client-action-weight: 700;
 
     svg {
         width: 16px;
@@ -618,15 +608,7 @@ body.client-spotlight-open {
         flex-wrap: nowrap;
         gap: 6px;
 
-        .client-play {
-            padding: 8px 14px;
-        }
-
-        .client-action-circle {
-            width: 34px;
-            height: 34px;
-            flex: none;
-        }
+        --client-action-padding: var(--client-space-12);
     }
 }
 

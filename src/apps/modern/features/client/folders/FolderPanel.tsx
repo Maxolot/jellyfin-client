@@ -4,12 +4,12 @@ import { useNavigate } from 'react-router-dom';
 
 import CollectionCover, { useCoverPreview } from '../CollectionCover';
 import ClientDialog from '../ClientDialog';
-import ClientIcon from '../ClientIcon';
 import FolderSharing from './FolderSharing';
 import { FolderNameForm } from './FolderForms';
 import { useFolderPicker } from './FolderPicker';
 import { type Folder, type FolderImage, type FolderTarget, folderPath, folderTitleCount, hasFolderPoster, orderedFolderItems, personalFoldersFirst, shelfPoster } from './model';
 import { useFolderDetail, useFolderTargets, useFolderTitles } from './queries';
+import { ActionButton } from '../ui';
 
 export default function FolderPanel({ image }: Readonly<{ image: FolderImage }>) {
     const folders = useFolderPicker()?.folders;
@@ -19,9 +19,9 @@ export default function FolderPanel({ image }: Readonly<{ image: FolderImage }>)
     return <section className='client-folders' aria-label='Dossiers de Ma liste'>
         <header className='client-folders-header'>
             <h3>Mes dossiers</h3>
-            <button type='button' className='client-button' aria-haspopup='dialog' onClick={() => setCreating(true)}>
-                <ClientIcon name='plus' />Nouveau dossier
-            </button>
+            <ActionButton aria-haspopup='dialog' onClick={() => setCreating(true)} icon='plus'>
+                Nouveau dossier
+            </ActionButton>
             <ClientDialog className='client-folder-modal' label='Nouveau dossier' title='Nouveau dossier' controlled={{ open: creating, onClose: () => setCreating(false) }}>
                 {close => creating && <FolderNameForm onSave={created => {
                     close();

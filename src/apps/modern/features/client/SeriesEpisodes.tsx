@@ -16,6 +16,7 @@ import { EpisodeSummary, useEpisodeSpoilers } from './spoilers';
 import { episodeCount, partialSeason, seasonChoices, seasonLabel, seasonProgress, seasonSummary, type RemoteSeason } from './seriesEpisodesModel';
 import './seriesEpisodes.scss';
 import './seriesSide.scss';
+import { ActionButton } from './ui';
 
 const LocalSeriesSources = lazy(() => import(/* webpackChunkName: "client-seerr" */ './seerr/SeerrViews')
     .then(module => ({ default: module.LocalSeriesSources })));
@@ -119,16 +120,16 @@ export default function SeriesEpisodesPanel(props: Readonly<PanelProps>) {
             </div>
             <div className='client-series-controls'>
                 {playing && <QueueAction source={available} playQueue={playQueue} pending={queueBusy} label='Lire la saison' />}
-                {(playing || seasons.length + missing.length > 1) && <button ref={trigger} type='button' className='client-button client-series-all-episodes' aria-haspopup='dialog' onClick={openDrawer}><ClientIcon name='chapter' />Tous les épisodes</button>}
+                {(playing || seasons.length + missing.length > 1) && <ActionButton ref={trigger} className='client-series-all-episodes' aria-haspopup='dialog' onClick={openDrawer} icon='chapter'>Tous les épisodes</ActionButton>}
             </div>
         </header>
         {loading && <ClientSkeleton layout='episodes' count={4} contained label='Chargement des épisodes…' />}
-        {failed && <p role='alert'>Impossible de charger les épisodes. <button type='button' className='client-button' onClick={retry}>Réessayer</button></p>}
+        {failed && <p role='alert'>Impossible de charger les épisodes. <ActionButton onClick={retry}>Réessayer</ActionButton></p>}
         {!loading && !failed && !playing && <p>Aucun épisode disponible dans cette saison.</p>}
         <div className='client-series-episode-grid'>
             {available?.slice(0, visible).map(episode => <EpisodeCard key={episode.Id} episode={episode} {...props} />)}
         </div>
-        {!!available && visible < available.length && <button type='button' className='client-button client-series-more-episodes' onClick={() => setPage({ season: selected, count: visible + 24 })}>Afficher plus d’épisodes</button>}
+        {!!available && visible < available.length && <ActionButton className='client-series-more-episodes' onClick={() => setPage({ season: selected, count: visible + 24 })}>Afficher plus d’épisodes</ActionButton>}
         <ClientDialog label='Tous les épisodes' title='Tous les épisodes' subtitle={season ? seasonLabel(season) : undefined}
             className='client-episodes-drawer' controlled={{ open: drawer, onClose: closeDrawer }}>
             {drawer && <EpisodeList {...props} items={available} />}
@@ -164,17 +165,17 @@ function EpisodeList({ seasons, missing, requestSeason, selected, select, items,
     return <div className='client-episode-editorial'>
         {choices.length > 1 && <div className='client-series-controls client-episode-editorial-seasons' role='group' aria-label='Saison'>
             {choices.map(({ key, season, remote }) => season ?
-                <button key={key} type='button' className='client-button' aria-pressed={!remoteSeason && selected === key} onClick={() => {
+                <ActionButton key={key} aria-pressed={!remoteSeason && selected === key} onClick={() => {
                     setNumber(undefined);
                     select(key);
-                }}>{seasonLabel(season)}</button> :
-                remote && <button key={key} type='button' className='client-button is-remote' aria-pressed={remoteSeason?.number === remote.number}
-                    onClick={() => setNumber(remote.number)}>{seasonLabel({ IndexNumber: remote.number })}</button>)}
+                }}>{seasonLabel(season)}</ActionButton> :
+                remote && <ActionButton key={key} className='is-remote' aria-pressed={remoteSeason?.number === remote.number}
+                    onClick={() => setNumber(remote.number)}>{seasonLabel({ IndexNumber: remote.number })}</ActionButton>)}
         </div>}
         {remoteSeason ? <div className='client-episode-remote'>
             <p>{remoteSeason.status}</p>
-            {remoteSeason.quality && <button type='button' className='client-button' aria-haspopup='dialog'
-                onClick={() => requestSeason(remoteSeason)}><ClientIcon name='plus' />Demander</button>}
+            {remoteSeason.quality && <ActionButton aria-haspopup='dialog'
+                onClick={() => requestSeason(remoteSeason)} icon='plus'>Demander</ActionButton>}
         </div> : <EditorialEpisodes items={items} loading={loading} failed={failed} retry={retry} {...media} />}
     </div>;
 }
@@ -182,7 +183,7 @@ function EpisodeList({ seasons, missing, requestSeason, selected, select, items,
 function EditorialEpisodes({ items, loading, failed, retry, ...media }: Readonly<EpisodeState & Pick<PanelProps, 'items' | 'loading' | 'failed' | 'retry'>>) {
     return <>
         {loading && <p role='status'>Chargement des épisodes…</p>}
-        {failed && <p role='alert'>Impossible de charger les épisodes. <button type='button' className='client-button' onClick={retry}>Réessayer</button></p>}
+        {failed && <p role='alert'>Impossible de charger les épisodes. <ActionButton onClick={retry}>Réessayer</ActionButton></p>}
         {!loading && !failed && !items?.length && <p>Aucun épisode disponible.</p>}
         <ol>{items?.map(episode => <EpisodeListItem key={episode.Id} episode={episode} {...media} />)}</ol>
     </>;

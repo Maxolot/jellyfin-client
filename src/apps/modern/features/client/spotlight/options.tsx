@@ -13,6 +13,7 @@ import { descriptionItem, type DescriptionHit } from './descriptionSearch';
 import type { Layout } from './navigation';
 import { matchesFilter, type SearchFilter } from './searchIndex';
 import type { SpotlightResults } from './useSpotlightData';
+import { ActionButton } from '../ui';
 
 export type Option = { key: string; label: string; run: (play: boolean) => void; playable?: boolean; view: () => ReactNode };
 export type Group = { id: string; title?: string; layout: Layout; options: Option[]; status?: string; extra?: ReactNode };
@@ -100,13 +101,13 @@ function BestActions({ item, actions }: Readonly<{ item: BaseItemDto; actions: A
     const requestLabel = actions.shared.has(item.Id || '') ? 'Voir la fiche' : 'Demander';
     return <span className='client-spotlight-best-actions'>
         {isExternal(item) ?
-            <button type='button' className='client-play' tabIndex={-1} onClick={alone(() => actions.openItem(item))}><ClientIcon name='plus' />{requestLabel}</button> :
-            <button type='button' className='client-play' tabIndex={-1} onClick={alone(() => actions.playItem(item))}><ClientIcon name='play' />Lecture</button>}
+            <ActionButton variant='primary' tabIndex={-1} onClick={alone(() => actions.openItem(item))} icon='plus'>{requestLabel}</ActionButton> :
+            <ActionButton variant='primary' tabIndex={-1} onClick={alone(() => actions.playItem(item))} icon='play'>Lecture</ActionButton>}
         {isExternal(item) ? <ListAction item={item} tabIndex={-1} /> : <ListAction item={item} favorite={favorite} tabIndex={-1}
             // eslint-disable-next-line react/jsx-no-bind -- This action belongs to the current search result.
             fallback={() => actions.toggleFavorite(item)} />}
-        <button type='button' className='client-button client-action-circle' tabIndex={-1} aria-label='Plus d’infos' title='Plus d’infos'
-            onClick={alone(() => actions.openItem(item))}><ClientIcon name='info' /></button>
+        <ActionButton round tabIndex={-1} aria-label='Plus d’infos' title='Plus d’infos'
+            onClick={alone(() => actions.openItem(item))} icon='info'></ActionButton>
     </span>;
 }
 

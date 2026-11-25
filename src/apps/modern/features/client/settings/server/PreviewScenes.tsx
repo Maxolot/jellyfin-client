@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { useApi } from 'hooks/useApi';
 
-import { SaveNote, Select, SettingCard, TextField, Toggle } from '../controls';
+import { SaveNote, Select, SettingCard, TextField, Toggle } from '../../ui/controls';
 import { EXTENSIONS } from './extensions';
 import { type PreviewScene, sameItem, sceneProblem, sceneState } from './sceneModel';
 import { useExtensionEndpoint } from './useServerExtensions';

@@ -6,7 +6,7 @@ import { useApi } from 'hooks/useApi';
 import { seerrUrlProblem, withSeerrUrl } from '../../seerr/setup';
 import { useSeerr } from '../../seerr/SeerrContext';
 import { serverAdminUrl } from '../../session/ServerInterfacePage';
-import { SettingCard, StatusBadge, TextField } from '../controls';
+import { SettingCard, StatusBadge, TextField } from '../../ui/controls';
 import SettingsIcon from '../SettingsIcon';
 import ExtensionSetup, { ExtensionHeader } from './ExtensionSetup';
 import { EXTENSIONS } from './extensions';

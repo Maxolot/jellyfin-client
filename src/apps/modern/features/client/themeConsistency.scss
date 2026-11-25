@@ -1,57 +1,8 @@
 /* stylelint-disable no-descending-specificity -- Component and theme scopes intentionally override earlier shared states. */
-// Mêmes boutons sur toutes les pages, dans chacun des deux thèmes.
-// Chargé en dernier : il l'emporte sur les styles propres à chaque page.
-//
-// - Bouton principal : Lecture, Reprendre, Autres idées, Appliquer.
-// - Bouton secondaire : Voir la fiche, Plus d’infos.
-// - Pastilles de choix : Découvrir/Bibliothèque, périodes des Nouveautés, ambiances et durées de Ce soir.
-
-$primary: '.client-play, .client-draw-reroll';
-$secondary: '.client-button';
-$chip-groups: '.client-catalogue-switch, .client-period-choices, .client-draw-choices, .client-person-role-tabs';
+// Réglages communs à plusieurs pages : titres de page, barre de navigation, filtres, liens.
+// Les boutons et les pastilles sont dans ui/ (charte : ActionButton, Chip).
 
 .client-interface {
-    :is(#{$primary}, #{$secondary}) {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        border-radius: 99px;
-        transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.22s ease, color 0.2s ease;
-
-        &:disabled {
-            opacity: 0.55;
-        }
-    }
-
-    // Les actions qui se répondent ont la même taille, où qu'elles soient.
-    :is(.client-actions, .client-personal-spotlight, .client-tonight-actions) :is(#{$primary}, #{$secondary}) {
-        height: 48px;
-        padding: 0 24px;
-        font-size: 16px;
-        font-weight: 700;
-        line-height: 1.25;
-        white-space: nowrap;
-    }
-
-    :is(#{$chip-groups}) button {
-        min-height: 40px;
-        padding: 9px 17px;
-        border: 1px solid #ffffff30;
-        border-radius: 999px;
-        background: transparent;
-        color: var(--client-ink-muted);
-        font-size: 13px;
-        font-weight: 500;
-        transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.22s ease;
-
-        &:hover,
-        &:focus-visible {
-            border-color: #ffffff70;
-            color: #fff;
-        }
-    }
-
     :is(.client-page-heading, .client-library-heading, .client-search-heading, .client-personal-identity, .client-tonight-table-head, .client-live-requests) h1,
     .client-preferences > h1 {
         font-size: var(--client-heading-size);
@@ -65,19 +16,12 @@ $chip-groups: '.client-catalogue-switch, .client-period-choices, .client-draw-ch
         gap: 8px 12px;
     }
 
-    .client-catalogue-switch {
-        flex-wrap: wrap;
-
-        button { min-height: var(--client-size-icon-target); }
-    }
-
     .client-filter-options {
         gap: 10px 12px;
     }
 
     .client-nav :is(.client-nav-tool, .client-brand.client-search-shortcut, .client-profile),
-    .client-row-heading button,
-    .client-actions .client-action-circle {
+    .client-row-heading button {
         display: inline-grid;
         width: var(--client-size-icon-target);
         height: var(--client-size-icon-target);
@@ -107,17 +51,6 @@ $chip-groups: '.client-catalogue-switch, .client-period-choices, .client-draw-ch
     }
 
     .client-nav .client-profile { border-radius: 12px; }
-
-    .client-actions .client-action-circle {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-
-        .client-icon {
-            width: 20px;
-            height: 20px;
-        }
-    }
 
     .client-row-heading h2 { font-size: clamp(18px, 2vw, 24px); }
 
@@ -149,85 +82,6 @@ $chip-groups: '.client-catalogue-switch, .client-period-choices, .client-draw-ch
     }
 }
 
-// Classique : aplats nets, sans flou.
-.client-interface.client-classic {
-    :is(#{$primary}) {
-        border: 1px solid #f4f4f4;
-        background: #f4f4f4;
-        color: #111;
-        backdrop-filter: none;
-        box-shadow: none;
-
-        &:hover:not(:disabled),
-        &:focus-visible {
-            border-color: #fff;
-            background: #fff;
-        }
-    }
-
-    :is(#{$secondary}) {
-        border: 1px solid #ffffff4d;
-        background: #ffffff18;
-        color: #f4f4f4;
-        backdrop-filter: none;
-        box-shadow: none;
-
-        &:hover:not(:disabled),
-        &:focus-visible {
-            border-color: #ffffff8c;
-            background: #ffffff2b;
-        }
-    }
-
-    :is(#{$chip-groups}) button {
-        &[aria-pressed='true'] {
-            border-color: #f2f3f5;
-            background: #f2f3f5;
-            color: #111;
-        }
-    }
-}
-
-// Liquid Glass : verre translucide partout, reflet diffus au survol (motion.scss).
-// L'option chromatique garde sa propre teinte sur le bouton principal.
-.client-interface.client-glass:not(.client-chromatic) :is(#{$primary}) {
-    border: 1px solid #ffffff6b;
-    background: linear-gradient(140deg, #ffffff38, #ffffff12), #15151566;
-    color: #fff;
-    box-shadow: inset 0 1px 0 #ffffff8c, 0 5px 20px #0004;
-    backdrop-filter: blur(20px) saturate(155%);
-}
-
-.client-interface.client-glass {
-    :is(#{$secondary}) {
-        border: 1px solid #ffffff4d;
-        background: linear-gradient(140deg, #ffffff1c, #ffffff06), #15151547;
-        color: #f4f5f7;
-        box-shadow: inset 0 1px 0 #ffffff59, 0 5px 20px #0003;
-        backdrop-filter: blur(18px) saturate(140%);
-    }
-
-    :is(#{$chip-groups}) button {
-        background: linear-gradient(140deg, #ffffff0d, #ffffff02);
-        backdrop-filter: blur(14px);
-
-        &[aria-pressed='true'] {
-            border-color: #ffffffb3;
-            background: linear-gradient(140deg, #ffffff40, #ffffff14), #15151540;
-            color: #fff;
-            box-shadow: inset 0 1px 0 #ffffff80;
-        }
-    }
-}
-
-@media (max-width: 700px) {
-    .client-interface :is(.client-actions, .client-personal-spotlight, .client-tonight-actions) :is(#{$primary}, #{$secondary}):not(.client-action-circle) {
-        height: 42px;
-        padding: 0 18px;
-        font-size: 14px;
-    }
-}
-
 // Reprendre et Voir la fiche côte à côte, sur la même ligne.
 .client-personal-spotlight :is(.client-play, .client-button) {
     margin-top: 0;
@@ -241,11 +95,6 @@ $chip-groups: '.client-catalogue-switch, .client-period-choices, .client-draw-ch
 
 @media (max-width: 700px) {
     .client-interface {
-        .client-actions .client-action-circle {
-            width: var(--client-size-icon-target);
-            height: var(--client-size-icon-target);
-        }
-
         .client-nav :is(.client-nav-tool, .client-brand.client-search-shortcut, .client-profile) { width: 40px; }
 
         .client-nav .client-nav-links {

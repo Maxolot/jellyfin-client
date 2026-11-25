@@ -6,7 +6,7 @@ import { useApi } from 'hooks/useApi';
 import { useWebConfig } from 'hooks/useWebConfig';
 
 import { serverAdminUrl } from '../../session/ServerInterfacePage';
-import { SettingCard, StatusBadge, TextField } from '../controls';
+import { SettingCard, StatusBadge, TextField } from '../../ui/controls';
 import SettingsIcon, { type SettingsIconName } from '../SettingsIcon';
 import seerrLogo from '../logos/seerr.svg';
 import { type Extension, type ExtensionKey, type ExtensionStage, findPackage, repositoryProblem } from './extensions';

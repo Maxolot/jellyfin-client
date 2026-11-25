@@ -10,6 +10,7 @@ import { remoteTrailer, trailerEmbedUrl } from './trailerSources';
 import { useLocalTrailers } from './useLocalTrailers';
 import { loadYouTube, type YouTubePlayer } from './youtubePlayer';
 import './trailers.scss';
+import { ActionAnchor, ActionButton } from '../ui';
 
 type Trailer = { local: BaseItemDto[] } | { youtube: string };
 type Props = { item: BaseItemDto; backdrop?: string; play: (item: BaseItemDto, startTicks?: number) => unknown };
@@ -27,12 +28,12 @@ export default function TrailerAction({ item, backdrop, play }: Readonly<Props>)
     if (!enabled || (!available && !open)) return null;
     const playable = available;
     return <>
-        <button ref={trigger} type='button' className='client-button client-action-circle' aria-label='Bande-annonce' title='Bande-annonce' aria-haspopup='dialog'
+        <ActionButton ref={trigger} round aria-label='Bande-annonce' title='Bande-annonce' aria-haspopup='dialog'
             onClick={() => {
                 if (!playable) return;
                 previews?.playback.stop();
                 setOpen(playable);
-            }}><ClientIcon name='clapper' /></button>
+            }} icon='clapper'></ActionButton>
         <ClientDialog label='Bande-annonce' title='Bande-annonce' subtitle={item.Name || undefined} className='client-trailer-dialog'
             controlled={{ open: !!open, onClose: () => {
                 setOpen(null);
@@ -51,9 +52,9 @@ function LocalTrailer({ entries, backdrop, play }: Readonly<{ entries: BaseItemD
     return <div className='client-local-trailers'>
         {backdrop && <div className='client-trailer-preview' aria-hidden='true'><Artwork source={backdrop} eager /></div>}
         <ul>{entries.map((trailer, index) => <li key={trailer.Id}>
-            <button type='button' className='client-play' onClick={() => play(trailer)}>
-                <ClientIcon name='play' />{entries.length === 1 ? 'Lire la bande-annonce' : trailer.Name || `Lire la bande-annonce ${index + 1}`}
-            </button>
+            <ActionButton variant='primary' onClick={() => play(trailer)} icon='play'>
+                {entries.length === 1 ? 'Lire la bande-annonce' : trailer.Name || `Lire la bande-annonce ${index + 1}`}
+            </ActionButton>
         </li>)}</ul>
     </div>;
 }
@@ -111,13 +112,13 @@ function RemoteTrailer({ id }: Readonly<{ id: string }>) {
     return <div className='client-remote-trailer'>
         <div className='client-trailer-frame' ref={video} />
         <div className='client-trailer-controls'>
-            {available && <button type='button' className='client-play' onClick={() => {
+            {available && <ActionButton variant='primary' onClick={() => {
                 if (playing) player.current?.pauseVideo();
                 else player.current?.playVideo();
-            }}>{!playing && <ClientIcon name='play' />}{playing ? 'Mettre en pause' : 'Lire la bande-annonce'}</button>}
+            }}>{!playing && <ClientIcon name='play' />}{playing ? 'Mettre en pause' : 'Lire la bande-annonce'}</ActionButton>}
             {state === 'loading' && <p role='status'>Chargement de la bande-annonce…</p>}
             {state === 'unavailable' && <p role='status'>La lecture intégrée est indisponible.</p>}
-            <a className='client-button' href={`https://www.youtube.com/watch?v=${id}`} target='_blank' rel='noopener noreferrer'>Voir sur YouTube</a>
+            <ActionAnchor href={`https://www.youtube.com/watch?v=${id}`} target='_blank' rel='noopener noreferrer'>Voir sur YouTube</ActionAnchor>
         </div>
     </div>;
 }

@@ -18,6 +18,7 @@ import { clientRequest } from '../session';
 import { canEditFolder, canFile, followedMember, followedPath, type Folder } from './model';
 import { useFolderChange, useFolders } from './queries';
 import './folders.scss';
+import { ActionButton } from '../ui';
 
 type Picker = { folders: Folder[] | null; openPicker: (item: BaseItemDto, returnFocus?: HTMLElement | null) => void };
 const FolderPickerContext = createContext<Picker | null>(null);
@@ -75,16 +76,16 @@ function PickerChoices({ item, folders, close }: Readonly<{ item: BaseItemDto; f
         });
     }
     return <div className='client-folder-dialog'>
-        {!isExternal(item) && <button type='button' className='client-button client-folder-choice' aria-pressed={savedFavorite} disabled={favorite.isPending} onClick={() => favorite.mutate()}>
-            <ClientIcon name={savedFavorite ? 'check' : 'plus'} />Favoris
-        </button>}
+        {!isExternal(item) && <ActionButton className='client-folder-choice' aria-pressed={savedFavorite} disabled={favorite.isPending} onClick={() => favorite.mutate()} icon={savedFavorite ? 'check' : 'plus'}>
+            Favoris
+        </ActionButton>}
         <h3>Dossiers</h3>
         {folders.length ? <ul className='client-folder-choices'>{folders.map(folder => <li key={folder.id}>
-            <button type='button' className='client-button client-folder-choice' aria-label={added.includes(folder.id) ? `Ajouté à ${folder.name}` : `Ajouter à ${folder.name}`}
-                disabled={change.isPending || added.includes(folder.id)} onClick={() => addTo(folder)}>
-                <ClientIcon name='folder' /><span>{folder.name}{folder.access === 'editor' && <small>Partagé avec moi</small>}</span>
+            <ActionButton className='client-folder-choice' aria-label={added.includes(folder.id) ? `Ajouté à ${folder.name}` : `Ajouter à ${folder.name}`}
+                disabled={change.isPending || added.includes(folder.id)} onClick={() => addTo(folder)} icon='folder'>
+                <span>{folder.name}{folder.access === 'editor' && <small>Partagé avec moi</small>}</span>
                 <ClientIcon name={added.includes(folder.id) ? 'check' : 'plus'} />
-            </button>
+            </ActionButton>
         </li>)}</ul> : <p>Aucun dossier modifiable. <Link to='/client?view=mine' onClick={close}>Gérer mes dossiers</Link></p>}
         {member && canManageCollections(user?.Policy) && <CollectionChoices member={member} />}
         {(change.isError || favorite.isError) && <p role='alert'>Le changement n’a pas été enregistré. Réessayez.</p>}
@@ -110,12 +111,12 @@ function CollectionChoices({ member }: Readonly<{ member: SeerrIdentity }>) {
         {collections.isError && <p role='alert'>Impossible de charger les collections.</p>}
         {collections.isSuccess && !choices.length && <p>Aucune collection publique.</p>}
         {!!choices.length && <ul className='client-folder-choices'>{choices.map(collection => collection.Id && <li key={collection.Id}>
-            <button type='button' className='client-button client-folder-choice'
+            <ActionButton className='client-folder-choice'
                 aria-label={added.includes(collection.Id) ? `Ajouté à la collection ${collection.Name}` : `Ajouter à la collection ${collection.Name}`}
-                disabled={change.isPending || added.includes(collection.Id)} onClick={() => add(collection.Id!)}>
-                <ClientIcon name='collection' /><span>{collection.Name}</span>
+                disabled={change.isPending || added.includes(collection.Id)} onClick={() => add(collection.Id!)} icon='collection'>
+                <span>{collection.Name}</span>
                 <ClientIcon name={added.includes(collection.Id) ? 'check' : 'plus'} />
-            </button>
+            </ActionButton>
         </li>)}</ul>}
         {change.isError && <p role='alert'>Impossible d’ajouter le titre à la collection.</p>}
         {!!added.length && <p role='status'>Ajouté à la collection {choices.find(collection => collection.Id === added.at(-1))?.Name}.</p>}
@@ -138,10 +139,10 @@ export function ListAction({ item, fallback, disabled, tabIndex, favorite = !!it
         if (available) picker.openPicker(item, event.currentTarget);
         else fallback?.();
     }
-    return <button type='button' className='client-button client-action-circle' aria-label={label} title={label} aria-haspopup={available ? 'dialog' : undefined}
-        data-folder-action={available ? '' : undefined} aria-pressed={available ? undefined : favorite} disabled={disabled} tabIndex={tabIndex} onClick={activate}>
-        <ClientIcon name={favorite && !!fallback ? 'check' : 'plus'} />
-    </button>;
+    return <ActionButton round aria-label={label} title={label} aria-haspopup={available ? 'dialog' : undefined}
+        data-folder-action={available ? '' : undefined} aria-pressed={available ? undefined : favorite} disabled={disabled} tabIndex={tabIndex} onClick={activate} icon={favorite && !!fallback ? 'check' : 'plus'}>
+
+    </ActionButton>;
 }
 
 /* eslint-enable react/jsx-no-bind */

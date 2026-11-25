@@ -23,7 +23,7 @@ import { activeSegment, clampSeek, formatTime, SECOND } from './model';
 import { usePlaybackSnapshot } from './usePlaybackSnapshot';
 import { TimelinePreview } from './TimelinePreview';
 import { PlayerEpisodes, PlayerTechnical, PlayerHelp, SubtitleOffset, sleepLabel } from './PlayerExtras';
-import { Select } from '../settings/controls';
+import { Select } from '../ui/controls';
 import './player.scss';
 import './polish.scss';
 import './liquidGlass.scss';

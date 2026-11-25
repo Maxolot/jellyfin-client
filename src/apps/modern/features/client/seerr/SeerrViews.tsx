@@ -20,13 +20,14 @@ import { withLocalAvailability, externalIdentity, catalogueItem, providerKey, ca
     releaseLabel, type ExternalMedia, type MediaRequest, type MediaType, type Quota, type Results, type SeerrIdentity } from './model';
 import { canRequestSeasons, isRecommendable, useLocalIdentities, useLocalSeasons, useSeerrDetail } from './queries';
 import { useSeerr } from './SeerrContext';
-import { SettingCard, StatusBadge, Toggle } from '../settings/controls';
+import { SettingCard, StatusBadge, Toggle } from '../ui/controls';
 import seerrLogo from '../settings/logos/seerr.svg';
 import { ListAction } from '../folders/FolderPicker';
 
 import { useApi } from 'hooks/useApi';
 import SourceBadge from './SourceBadge';
 import { useMovieLanguages, useMovieSource, useSeasonLanguages, useSeasonSources, type SourceLanguage, type SourceStatus } from './sources';
+import { ActionButton, ActionLink } from '../ui';
 
 export function SeerrSettings() {
     const seerr = useSeerr();
@@ -140,14 +141,14 @@ export function RequestPanel({ identity, localItem, initialSeason }: Readonly<{ 
     if (!seerr.connected) return null;
     if (detail.isPending || (localItem?.Type === 'Series' && localSeasons.isPending)) return <section className='client-request-panel'><ClientSkeleton layout='request' count={6} contained label='Chargement des disponibilités…' /></section>;
     if (!detail.data) {
-        return <section className='client-request-panel'><p>Les disponibilités ne peuvent pas être vérifiées.</p><button className='client-button' onClick={() => {
+        return <section className='client-request-panel'><p>Les disponibilités ne peuvent pas être vérifiées.</p><ActionButton onClick={() => {
             void detail.refetch();
-        }}>Réessayer</button></section>;
+        }}>Réessayer</ActionButton></section>;
     }
     if (localItem?.Type === 'Series' && localSeasons.isError) {
-        return <section className='client-request-panel'><p>Les saisons présentes dans votre bibliothèque ne peuvent pas être vérifiées.</p><button className='client-button' onClick={() => {
+        return <section className='client-request-panel'><p>Les saisons présentes dans votre bibliothèque ne peuvent pas être vérifiées.</p><ActionButton onClick={() => {
             void localSeasons.refetch();
-        }}>Réessayer</button></section>;
+        }}>Réessayer</ActionButton></section>;
     }
     return <RequestForm identity={identity} data={withLocalAvailability(detail.data, localItem, localSeasons.data)} initialSeason={initialSeason} />;
 }
@@ -205,8 +206,8 @@ function RequestForm({ identity, data, initialSeason }: Readonly<{ identity: See
         }} />}
         {!permitted && <p>Votre compte peut consulter ce contenu mais ne peut pas le demander.</p>}
         <QuotaNotice label={quotaLabel} loaded={!!currentQuota} restricted={!!restricted} error={quota.isError} onRetry={() => { void quota.refetch(); }} />
-        {!filmRequested && (!confirm ? <button className='client-button' disabled={disabled} onClick={() => setConfirm(true)}><ClientIcon name='plus' />{identity.type === 'tv' ? 'Demander la sélection' : 'Demander ce film'}</button> :
-            <div className='client-request-confirm'><p>Demander <strong>{data.title || data.name}</strong>{identity.type === 'tv' ? ` · ${requestSeasonNumbersLabel(selected)}` : ''}{is4k ? ' en 4K' : ''} ?</p><p>Le serveur appliquera la qualité configurée et les éventuelles règles de validation.</p><button className='client-play' disabled={disabled} onClick={() => mutation.mutate()}>{mutation.isPending ? 'Envoi…' : 'Confirmer la demande'}</button><button className='client-button' disabled={mutation.isPending} onClick={() => setConfirm(false)}>Annuler</button></div>)}
+        {!filmRequested && (!confirm ? <ActionButton disabled={disabled} onClick={() => setConfirm(true)} icon='plus'>{identity.type === 'tv' ? 'Demander la sélection' : 'Demander ce film'}</ActionButton> :
+            <div className='client-request-confirm'><p>Demander <strong>{data.title || data.name}</strong>{identity.type === 'tv' ? ` · ${requestSeasonNumbersLabel(selected)}` : ''}{is4k ? ' en 4K' : ''} ?</p><p>Le serveur appliquera la qualité configurée et les éventuelles règles de validation.</p><ActionButton variant='primary' disabled={disabled} onClick={() => mutation.mutate()}>{mutation.isPending ? 'Envoi…' : 'Confirmer la demande'}</ActionButton><ActionButton disabled={mutation.isPending} onClick={() => setConfirm(false)}>Annuler</ActionButton></div>)}
         {mutation.isSuccess && <p role='status'>Demande enregistrée. Retrouvez son avancement dans Mon espace.</p>}
         {mutation.isError && <p role='alert'>{mutation.error.message}</p>}
         <CompactRequest identity={identity} />
@@ -229,13 +230,13 @@ export function ExternalDetail({ id, row, image }: Readonly<{ id: string; row: (
     if (!seerr.connected) return <section className='client-settings'><Link className='client-back' to={back} state={backState}><ClientIcon name='back' />Retour</Link><h1>Découvertes et demandes</h1><p>Activez la connexion aux demandes pour retrouver cette fiche.</p><SeerrSettings /></section>;
     if (detail.isPending) return <section className='client-detail-pending'><Link className='client-back' to={back} state={backState}><ClientIcon name='back' />Retour</Link><ClientSkeleton layout='detail' label='Chargement de la fiche…' /></section>;
     if (!detail.data || !identity) {
-        return <section className='client-settings'><Link className='client-back' to={back} state={backState}><ClientIcon name='back' />Retour</Link><p role='status'>{detail.isError ? 'La fiche ne peut pas être chargée.' : 'Chargement de la fiche…'}</p>{detail.isError && <button className='client-button' onClick={() => {
+        return <section className='client-settings'><Link className='client-back' to={back} state={backState}><ClientIcon name='back' />Retour</Link><p role='status'>{detail.isError ? 'La fiche ne peut pas être chargée.' : 'Chargement de la fiche…'}</p>{detail.isError && <ActionButton onClick={() => {
             void detail.refetch();
-        }}>Réessayer</button>}</section>;
+        }}>Réessayer</ActionButton>}</section>;
     }
     const data = detail.data;
     const match = localMatch(data, identity.type, local.data || []);
-    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><div className='client-detail-readability' aria-hidden='true' /><Link className='client-back' to={back} state={backState}><ClientIcon name='back' />Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{[releaseLabel(data.releaseDate || data.firstAirDate), ...(data.genres || []).map(genre => genre.name)].filter(Boolean).join(' · ')}</p><ExternalSource data={data} identity={identity} owned={!!match} /><DetailSynopsis key={identity.id} overview={data.overview} /><div className='client-actions'>{match && <Link className='client-play' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`}><ClientIcon name='play' />Voir dans ma bibliothèque</Link>}<AvailabilityAction identity={identity} localItem={match} /><ListAction item={match || catalogueItem(data, identity.type, [])} /><FollowCatalogAction circle item={catalogueItem(data, identity.type, [])} remote={data} /></div><CompactRequest identity={identity} /></div></section><ExternalRecommendations identity={identity} local={local.data || []} row={row} data={data} image={image} /></>;
+    return <><section className='client-hero client-detail client-external-detail'><HeroArtwork source={imageUrl(data.backdropPath, true)} /><div className='client-detail-readability' aria-hidden='true' /><Link className='client-back' to={back} state={backState}><ClientIcon name='back' />Retour</Link><div className='client-hero-copy'><span className='client-eyebrow'>{match ? 'Dans votre bibliothèque' : mediaLabel(data.mediaInfo)}</span><h1>{data.title || data.name}</h1><p className='client-meta'>{[releaseLabel(data.releaseDate || data.firstAirDate), ...(data.genres || []).map(genre => genre.name)].filter(Boolean).join(' · ')}</p><ExternalSource data={data} identity={identity} owned={!!match} /><DetailSynopsis key={identity.id} overview={data.overview} /><div className='client-actions'>{match && <ActionLink variant='primary' state={{ returnTo: location.pathname + location.search, returnState: location.state }} to={`/client?id=${match.Id}`} icon='play'>Voir dans ma bibliothèque</ActionLink>}<AvailabilityAction identity={identity} localItem={match} /><ListAction item={match || catalogueItem(data, identity.type, [])} /><FollowCatalogAction circle item={catalogueItem(data, identity.type, [])} remote={data} /></div><CompactRequest identity={identity} /></div></section><ExternalRecommendations identity={identity} local={local.data || []} row={row} data={data} image={image} /></>;
 }
 
 function ExternalSource({ data, identity, owned }: Readonly<{ data: ExternalMedia; identity: SeerrIdentity; owned: boolean }>) {
@@ -336,7 +337,7 @@ export function RequestTracking() {
         }}>Réessayer</button></p>}
         <div className='client-request-list'>{query.data?.results.map(entry => <TrackedRequest key={entry.id} entry={entry} local={local.data || []} />)}</div>
         {query.data?.results.length === 0 && <p>Aucune demande dans cette sélection.</p>}
-        <div className='client-pagination'><button className='client-button' disabled={!page} onClick={() => setPage(value => value - 1)}>Précédent</button><span>Page {page + 1}</span><button className='client-button' disabled={!query.data || (page + 1) * 12 >= (query.data.pageInfo?.results || 0)} onClick={() => setPage(value => value + 1)}>Suivant</button></div>
+        <div className='client-pagination'><ActionButton disabled={!page} onClick={() => setPage(value => value - 1)}>Précédent</ActionButton><span>Page {page + 1}</span><ActionButton disabled={!query.data || (page + 1) * 12 >= (query.data.pageInfo?.results || 0)} onClick={() => setPage(value => value + 1)}>Suivant</ActionButton></div>
     </section>;
 }
 

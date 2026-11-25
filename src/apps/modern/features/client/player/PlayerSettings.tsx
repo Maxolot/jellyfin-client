@@ -2,7 +2,7 @@
 import React, { type ReactNode } from 'react';
 import { useApi } from 'hooks/useApi';
 import { playerDefaults, playerPreferenceKey, usePlayerPreferences, type PlayerPreferences } from './preferences';
-import { Segmented, Select, SettingCard, Slider, Toggle } from '../settings/controls';
+import { Segmented, Select, SettingCard, Slider, Toggle } from '../ui/controls';
 import './player.scss';
 
 type Fields = Readonly<{ value: PlayerPreferences; save: (next: PlayerPreferences) => void; layout?: 'cards' | 'panel' }>;

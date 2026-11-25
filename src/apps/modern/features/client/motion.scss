@@ -268,14 +268,12 @@
 }
 
 .client-interface button,
-.client-interface .client-button,
 .client-interface .client-person,
 .client-interface .client-nav a {
     transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.client-interface button:active,
-.client-interface .client-button:active {
+.client-interface button:active {
     transform: scale(0.97);
 }
 

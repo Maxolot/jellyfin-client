@@ -12,6 +12,7 @@
 }
 
 .client-interface.client-glass,
+.client-spotlight-glass,
 .client-session:not(.client-session-classic),
 body[data-client-player-theme='glass'] {
     @include tokens.glass-properties;

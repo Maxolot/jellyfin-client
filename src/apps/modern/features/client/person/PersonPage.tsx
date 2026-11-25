@@ -11,11 +11,12 @@ import ClientSkeleton from '../ClientSkeleton';
 import { canRequest, externalIdentity, imageUrl, type CatalogueItem } from '../seerr/model';
 import { useSeerr } from '../seerr/SeerrContext';
 import { RequestPanel } from '../seerr/SeerrViews';
-import { ChoiceSelect, type Option } from '../settings/controls';
+import { ChoiceSelect, type Option } from '../ui/controls';
 import SharedCatalogArtwork from '../SharedCatalogArtwork';
 import { browseFilmography, filmography, filmographyCounts, personDepartment, type FilmographyEntry, type FilmographyRole, type FilmographyStatus } from './model';
 import { usePersonData } from './queries';
 import './person.scss';
+import { ActionButton, Chip } from '../ui';
 
 type Props = { id: string; basePath: string; image: (item: BaseItemDto) => string; play: (item: BaseItemDto) => void };
 
@@ -101,8 +102,8 @@ export default function PersonPage({ id, basePath, image, play }: Readonly<Props
                 </div>}
             </header>
             {roleTabs.length > 1 && <div className='client-person-role-tabs' role='group' aria-label='Participation'>
-                <button type='button' aria-pressed={!role} onClick={() => setRole('')}>Tous les rôles</button>
-                {roleTabs.map(tab => <button type='button' key={tab.key} aria-pressed={role === tab.key} onClick={() => setRole(tab.key)}>{tab.label}</button>)}
+                <Chip pressed={!role} onClick={() => setRole('')}>Tous les rôles</Chip>
+                {roleTabs.map(tab => <Chip key={tab.key} pressed={role === tab.key} onClick={() => setRole(tab.key)}>{tab.label}</Chip>)}
             </div>}
             {loading && <ClientSkeleton layout='grid' count={6} contained label='Chargement de la filmographie…' />}
             {!loading && !canClassify && <p className='client-person-note'>La filmographie affiche les titres de votre bibliothèque Jellyfin.</p>}
@@ -145,9 +146,9 @@ function CreditTile({ entry, role, image, play, request, permissions }: Readonly
                 {credits.length > 0 && <small>{credits.join(' · ')}</small>}
             </span>
         </Link>
-        {status === 'available' && <button type='button' className='client-button' aria-label={`Lire ${item.Name}`} onClick={() => play(item)}><ClientIcon name='play' />Lecture</button>}
-        {status === 'requestable' && canRequest(permissions, entry.type, false) && <button type='button' className='client-button'
-            aria-label={`Demander ${item.Name}`} onClick={() => request(entry)}><ClientIcon name='plus' />Demander</button>}
+        {status === 'available' && <ActionButton aria-label={`Lire ${item.Name}`} onClick={() => play(item)} icon='play'>Lecture</ActionButton>}
+        {status === 'requestable' && canRequest(permissions, entry.type, false) && <ActionButton
+            aria-label={`Demander ${item.Name}`} onClick={() => request(entry)} icon='plus'>Demander</ActionButton>}
     </article>;
 }
 

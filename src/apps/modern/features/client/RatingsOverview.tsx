@@ -5,12 +5,13 @@ import { Link, useLocation } from 'react-router-dom';
 
 import { useApi } from 'hooks/useApi';
 
-import { ChoiceSelect } from './settings/controls';
+import { ChoiceSelect } from './ui/controls';
 import Artwork from './Artwork';
 import ClientSkeleton from './ClientSkeleton';
 import { artworkUrl } from './artwork';
 import { loadRatedItems, personalStars } from './ratings';
 import { clientRequest } from './session';
+import { ActionButton } from './ui';
 
 function RatedLibrary() {
     const { api, user } = useApi();
@@ -37,7 +38,7 @@ function RatedLibrary() {
         <div className='client-grid'>{items.slice(0, limit).map(item => <Link className='client-card client-rated-card' key={item.Id} data-client-focus={`rating-${item.Id}`} aria-label={`${item.Name} · Votre note : ${personalStars(item)!.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} sur 5`} to={`/client?id=${item.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }}>
             <Artwork source={artworkUrl(api!.basePath, item)} /><span className='client-personal-score'>★ {personalStars(item)!.toLocaleString('fr-FR', { maximumFractionDigits: 1 })}/5</span>
         </Link>)}</div>
-        {items.length > limit && <button className='client-button' onClick={() => setLimit(value => value + 24)}>Voir plus de titres notés</button>}
+        {items.length > limit && <ActionButton onClick={() => setLimit(value => value + 24)}>Voir plus de titres notés</ActionButton>}
     </section>;
 }
 

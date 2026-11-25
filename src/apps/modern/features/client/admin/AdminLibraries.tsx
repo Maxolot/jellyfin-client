@@ -4,7 +4,7 @@ import React from 'react';
 
 import { useApi } from 'hooks/useApi';
 
-import { SaveNote, SettingCard, StatusBadge, Toggle } from '../settings/controls';
+import { SaveNote, SettingCard, StatusBadge, Toggle } from '../ui/controls';
 import { serverAdminUrl } from '../session/ServerInterfacePage';
 import ConfirmButton from './ConfirmButton';
 import { useScanLibraries, useTrickplayOptions, useVirtualFolders } from './useAdmin';

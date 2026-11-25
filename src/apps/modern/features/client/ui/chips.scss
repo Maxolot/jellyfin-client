@@ -1,0 +1,53 @@
+@use '../design' as ds;
+
+// Charte Médiathèque, Chip. Seule définition des pastilles de choix du client.
+
+.client-chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--client-space-8);
+}
+
+.client-interface .client-chip {
+    display: inline-flex;
+    box-sizing: border-box;
+    min-height: var(--client-size-chip);
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--client-space-chip-x);
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-pill);
+    background: transparent;
+    color: var(--client-ink-muted);
+    cursor: pointer;
+
+    @include ds.type('chip');
+    @include ds.state-transition;
+
+    &:disabled {
+        opacity: var(--client-opacity-disabled);
+        cursor: default;
+    }
+}
+
+.client-interface.client-glass .client-chip {
+    background: linear-gradient(140deg, #ffffff0d, #ffffff02);
+    backdrop-filter: var(--client-blur-chip);
+}
+
+.client-interface .client-chip:hover:not(:disabled) {
+    border-color: var(--client-line-hover);
+    color: var(--client-ink);
+}
+
+.client-interface .client-chip[aria-pressed='true'] {
+    border-color: var(--client-selected-line);
+    background: var(--client-selected);
+    color: var(--client-on-selected);
+    font-weight: 700;
+}
+
+.client-interface.client-glass .client-chip[aria-pressed='true'] {
+    background: linear-gradient(140deg, #ffffff40, #ffffff14), #15151540;
+    box-shadow: inset 0 1px 0 #ffffff80;
+}

@@ -288,9 +288,7 @@
     flex-wrap: wrap;
     row-gap: 8px;
 
-    > .client-button,
-    > .client-queue-button,
-    > .client-shelf-menu > .client-button { min-height: 44px; }
+    --client-action-height: var(--client-size-icon-target);
 }
 
 .client-shelf-menu {

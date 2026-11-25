@@ -210,8 +210,6 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     margin-top: 22px;
 }
 
-.client-button,
-.client-play,
 .client-settings button,
 .client-library button,
 .client-message button {
@@ -224,15 +222,6 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
     background: #ffffff18;
     font-size: 13px;
     font-weight: 600;
-}
-
-.client-play {
-    background: #f0f1f4;
-    color: #15191e;
-}
-
-.client-glass .client-button {
-    backdrop-filter: blur(18px);
 }
 
 .client-original-link {
@@ -596,12 +585,6 @@ body:has(.client-page:not(.hide)) .backgroundContainer {
 
     .client-hero h1 {
         font-size: 31px;
-    }
-
-    .client-button,
-    .client-play {
-        padding: 11px 15px;
-        font-size: 12px;
     }
 
     .client-detail {

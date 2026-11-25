@@ -10,6 +10,7 @@ import { requestEta, requestReason, requestRing, type RequestProgress } from './
 import { notificationLabel, useNotifications, type Notification } from './notifications';
 import { usePlayRequest, useRequestProgress } from './queries';
 import './notificationCenter.scss';
+import { ActionButton, ActionLink } from '../ui';
 
 function eventDetails(entry: Notification, current?: RequestProgress) {
     if (entry.event === 'downloading') return (current && requestEta(current)) || requestEta({ stage: 'downloading', etaFrom: entry.etaFrom, etaTo: entry.etaTo });
@@ -48,13 +49,12 @@ function NotificationRow({ entry, match, mark, close, play }: Readonly<{
             <time dateTime={entry.created}>{eventDate(entry.created)}</time>
         </Link>
         <div className='client-notification-actions'>
-            {pending && <button type='button' className='client-button client-action-circle' aria-label={`Marquer « ${entry.title} » comme lue`}
-                onClick={() => mark(entry.id)}><ClientIcon name='check' /></button>}
-            {entry.event === 'available' && match?.stage === 'available' && match.itemId && <button
-                type='button' className='client-button' disabled={action.isPending} onClick={() => {
-                    if (pending) mark(entry.id);
-                    action.mutate(match);
-                }}><ClientIcon name='play' />Lecture</button>}
+            {pending && <ActionButton round aria-label={`Marquer « ${entry.title} » comme lue`}
+                onClick={() => mark(entry.id)} icon='check'></ActionButton>}
+            {entry.event === 'available' && match?.stage === 'available' && match.itemId && <ActionButton disabled={action.isPending} onClick={() => {
+                if (pending) mark(entry.id);
+                action.mutate(match);
+            }} icon='play'>Lecture</ActionButton>}
             {action.isError && <p role='alert'>La lecture n’a pas pu démarrer.</p>}
         </div>
     </li>;
@@ -85,8 +85,8 @@ export default function NotificationCenter({ play }: Readonly<{ play: Play }>) {
         </button>
         <ClientDialog label='Notifications' title='Notifications' className='client-notifications-panel' controlled={{ open, onClose: close }}>
             <div className='client-notifications-tools'>
-                <Link className='client-button' to='/client?view=requests' onClick={close}>Mes demandes</Link>
-                {!!unread && <button className='client-button' type='button' disabled={mark.isPending} onClick={() => mark.mutate(null)}>Tout marquer comme lu</button>}
+                <ActionLink to='/client?view=requests' onClick={close}>Mes demandes</ActionLink>
+                {!!unread && <ActionButton disabled={mark.isPending} onClick={() => mark.mutate(null)}>Tout marquer comme lu</ActionButton>}
             </div>
             {mark.isError && <p role='alert'>La lecture de la notification n’a pas pu être enregistrée.</p>}
             {!entries.length && <p>Aucune notification.</p>}

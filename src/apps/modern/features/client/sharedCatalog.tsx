@@ -4,13 +4,13 @@ import { isAxiosError } from 'axios';
 import React from 'react';
 
 import ActionLabel from './ActionLabel';
-import ClientIcon from './ClientIcon';
 
 import { useApi } from 'hooks/useApi';
 
 import { resolveCatalogueArtwork } from './catalogArtwork';
 import { useCatalogArtworkLookup } from './useCatalogArtwork';
 import { catalogueItem, externalIdentity, type ExternalMedia, type MediaType } from './seerr/model';
+import { ActionButton, actionClassName } from './ui';
 
 export type SharedCatalogEntry = {
     type: MediaType;
@@ -96,13 +96,13 @@ export function FollowCatalogAction({ item, remote, menu = false, circle = false
         mutation.mutate();
     }
     if (circle) {
-        return <button type='button' className='client-button client-action-circle' aria-label={label} title={label} aria-pressed={followed}
+        return <ActionButton round aria-label={label} title={label} aria-pressed={followed}
             disabled={mutation.isPending || (followed && !admin)}
             // eslint-disable-next-line react/jsx-no-bind -- Action belongs to this button.
-            onClick={follow}><ClientIcon name={icon} /></button>;
+            onClick={follow} icon={icon}></ActionButton>;
     }
     return <>
-        <button type='button' className={menu ? undefined : 'client-button'} role={menu ? 'menuitem' : undefined}
+        <button type='button' className={menu ? undefined : actionClassName()} role={menu ? 'menuitem' : undefined}
             disabled={mutation.isPending || (followed && !admin)}
             // eslint-disable-next-line react/jsx-no-bind -- Action belongs to this button.
             onClick={follow}>

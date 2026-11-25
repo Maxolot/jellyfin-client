@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { useApi } from 'hooks/useApi';
 
 import { formatBitrate, formatSize } from '../mediaInfo';
-import { SettingCard, StatusBadge } from '../settings/controls';
+import { SettingCard, StatusBadge } from '../ui/controls';
 import SettingsIcon from '../settings/SettingsIcon';
 import { serverAdminUrl } from '../session/ServerInterfacePage';
 import ConfirmButton from './ConfirmButton';

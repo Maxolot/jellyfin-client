@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 
-import { SettingCard, Toggle } from '../settings/controls';
+import { SettingCard, Toggle } from '../ui/controls';
 import { useTonightAction, useTonightOptions } from './queries';
 
 export default function TonightPrivacy() {

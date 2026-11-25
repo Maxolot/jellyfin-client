@@ -12,6 +12,7 @@ import { requestStageLabel, requestStep, steps, type RequestProgress } from './m
 import { usePlayRequest, useRequestProgress } from './queries';
 import { RequestProgressNote } from './RequestInline';
 import './requestProgressPage.scss';
+import { ActionButton } from '../ui';
 
 type Play = (item: BaseItemDto) => void;
 
@@ -67,8 +68,8 @@ function RequestCard({ request, play }: Readonly<{ request: RequestProgress; pla
             </div>}
             <RequestProgressNote request={request} />
             <SeasonProgress seasons={request.seasons} />
-            {request.stage === 'available' && request.itemId && <button type='button' className='client-button' onClick={() => action.mutate(request)}
-                disabled={action.isPending}><ClientIcon name='play' />Lecture</button>}
+            {request.stage === 'available' && request.itemId && <ActionButton onClick={() => action.mutate(request)}
+                disabled={action.isPending} icon='play'>Lecture</ActionButton>}
             {action.isError && <p role='alert'>La lecture n’a pas pu démarrer. Réessayez.</p>}
         </div>
     </article>;
@@ -104,7 +105,7 @@ export default function RequestPage({ play }: Readonly<{ play: Play }>) {
             {filters.map(([value, label]) => <button key={value} type='button' aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}
         </div>
         {query.isPending && <ClientSkeleton layout='list' count={3} contained label='Chargement des demandes…' />}
-        {query.isError && <p role='alert'>Impossible de vérifier l’avancement. <button type='button' className='client-button' onClick={() => { void query.refetch(); }}>Réessayer</button></p>}
+        {query.isError && <p role='alert'>Impossible de vérifier l’avancement. <ActionButton onClick={() => { void query.refetch(); }}>Réessayer</ActionButton></p>}
         {query.isSuccess && list.length === 0 && <p>Aucune demande dans cette sélection.</p>}
         <div className='client-request-cards'>{list.map(item => <RequestCard key={item.id} request={item} play={play} />)}</div>
     </section>;

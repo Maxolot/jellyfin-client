@@ -365,13 +365,6 @@
     font-size: 16px;
 }
 
-.client-hero .client-actions .client-play,
-.client-hero .client-actions > .client-button {
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 1.25;
-}
-
 .client-floating .client-nav {
     border-color: transparent;
     background: transparent;
@@ -440,14 +433,6 @@
     border-radius: 50%;
     background: #15161b88;
     font-size: 26px;
-}
-
-.client-glass .client-actions :is(.client-play, .client-button) {
-    border: 1px solid #ffffff57;
-    background: linear-gradient(140deg, #ffffff24, #ffffff08), #0f131947;
-    color: #f9fafb;
-    box-shadow: inset 0 1px 0 #ffffff78, 0 5px 20px #0004;
-    backdrop-filter: blur(20px) saturate(155%);
 }
 
 @keyframes client-artwork-enter {
@@ -521,14 +506,6 @@
         font-weight: 600;
         line-height: 1.08;
         letter-spacing: -0.025em;
-    }
-
-    .client-actions .client-play {
-        font-size: 15px;
-    }
-
-    .client-actions > .client-button {
-        font-size: 13px;
     }
 
     .client-title-logo {
@@ -1000,11 +977,6 @@
         font-size: 11px;
     }
 
-    .client-hero .client-actions .client-play,
-    .client-hero .client-actions > .client-button {
-        font-size: 13px;
-    }
-
     .client-episode-caption strong {
         font-size: 15px;
     }
@@ -1088,21 +1060,8 @@
 
 .client-catalogue-switch {
     display: flex;
-    gap: 8px;
+    gap: var(--client-space-8);
     margin-right: auto;
-}
-
-.client-catalogue-switch button {
-    padding: 10px 17px;
-    border: 1px solid #ffffff2b;
-    border-radius: 999px;
-    background: #ffffff04;
-    font-size: 13px;
-}
-
-.client-catalogue-switch [aria-pressed='true'] {
-    border-color: #ffffff90;
-    background: #ffffff15;
 }
 
 .client-library-heading {
@@ -1450,31 +1409,6 @@
     border-radius: 99px;
 }
 
-.client-actions .client-play,
-.client-personal-spotlight .client-play {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 11px;
-    padding: 13px 25px;
-    font-size: 15px;
-    font-weight: 600;
-}
-
-.client-actions .client-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 11px;
-}
-
-.client-actions .client-action-circle {
-    width: 43px;
-    height: 43px;
-    padding: 0;
-    border-radius: 50%;
-}
-
 .client-film-finish {
     display: inline-flex;
     align-items: center;
@@ -1498,15 +1432,6 @@
     height: 14px;
 }
 
-.client-glass .client-actions .client-play {
-    color: #f9fafb;
-}
-
-.client-classic .client-actions .client-play {
-    background: #f4f4f4;
-    color: #111;
-}
-
 body[data-client-player-theme='glass'] #videoOsdPage .osdControls {
     margin: 0 24px 14px;
     padding: 13px 24px 14px;
@@ -1527,16 +1452,6 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
 }
 
 @media (max-width: 700px) {
-    .client-actions .client-play {
-        padding: 12px 21px;
-        font-size: 13px;
-    }
-
-    .client-actions .client-action-circle {
-        width: 40px;
-        height: 40px;
-    }
-
     body[data-client-player-theme='glass'] #videoOsdPage .osdControls {
         margin: 0 12px 10px;
         padding: 10px 12px;
@@ -1596,23 +1511,8 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
 .client-period-choices {
     display: flex;
     flex-wrap: wrap;
-    gap: 9px;
+    gap: var(--client-space-8);
     margin: 0 var(--client-margin) 30px;
-}
-
-.client-period-choices button {
-    padding: 10px 17px;
-    border: 1px solid #ffffff30;
-    border-radius: 999px;
-    background: transparent;
-    color: #b8c0cc;
-    font-size: 13px;
-}
-
-.client-period-choices [aria-pressed='true'] {
-    border-color: #dfe5ee;
-    background: #ffffff18;
-    color: #fff;
 }
 
 .client-tonight-layout {
@@ -1743,10 +1643,6 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
     }
 }
 
-.client-interface .client-play {
-    color: #15191e;
-}
-
 .client-preview-setting {
     max-width: 1080px;
     margin-bottom: 35px;
@@ -1820,10 +1716,6 @@ body[data-client-player-theme='glass'] #videoOsdPage .paper-icon-button-light {
 .client-chromatic.client-glass:not(.client-floating) .client-nav {
     border-color: rgb(var(--client-accent) / 0.48);
     background: linear-gradient(135deg, rgb(var(--client-accent) / 0.26), #ffffff05 60%), #1214197a;
-}
-
-.client-chromatic .client-actions .client-play {
-    background: linear-gradient(140deg, #ffffff24, rgb(var(--client-accent) / 0.18) 58%, #ffffff08), #0f131947;
 }
 
 .client-chromatic-option {

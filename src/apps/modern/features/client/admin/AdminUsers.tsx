@@ -4,7 +4,7 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 
 import { useApi } from 'hooks/useApi';
 
-import { SaveNote, Select, SettingCard, StatusBadge, TextField, Toggle } from '../settings/controls';
+import { SaveNote, Select, SettingCard, StatusBadge, TextField, Toggle } from '../ui/controls';
 import { serverAdminUrl } from '../session/ServerInterfacePage';
 import { disableBlocker, plural, policyChanges, relativeTime } from './model';
 import { useCreateUser, useCurrentUserId, useResetPassword, useSavePolicy, useUsers, useVirtualFolders } from './useAdmin';

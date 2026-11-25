@@ -26,6 +26,7 @@ import { useTonightAction, useTonightLibrary, useTonightOptions, useTonightToget
 import TrailerAction from './trailers/TrailerAction';
 import './tonight.scss';
 import './tonight/tonightSession.scss';
+import { ActionButton, Chip } from './ui';
 
 type Play = (item: BaseItemDto, startTicks?: number) => unknown;
 type Props = {
@@ -105,13 +106,13 @@ function TonightCard({ idea, index, count, now, image, onPrepare, onRelease, pla
                     <p className='client-tonight-meta'>{[titleMetadata(item, minutes), absent ? '' : ending, rating ? `★ ${rating}` : ''].filter(Boolean).join(' · ')}</p>
                     <ul>{reasons.map(reason => <li key={reason}>{reason}</li>)}</ul>
                     <div className='client-tonight-card-actions'>
-                        {absent ? <button type='button' className='client-button' onClick={onRequest}><ClientIcon name='plus' />Demander</button> :
-                            <button type='button' className='client-play' onClick={() => { play(item); }}><ClientIcon name='play' />Lecture</button>}
+                        {absent ? <ActionButton onClick={onRequest} icon='plus'>Demander</ActionButton> :
+                            <ActionButton variant='primary' onClick={() => { play(item); }} icon='play'>Lecture</ActionButton>}
                         {!absent && <TrailerAction item={item} backdrop={image(item, true)} play={play} />}
                     </div>
                     <div className='client-tonight-card-actions secondary'>
-                        <button type='button' className='client-button' onClick={onSkip}>Pas ce soir</button>
-                        {canSave && <button type='button' className='client-button' onClick={onLater}><ClientIcon name='bookmark' />Plus tard</button>}
+                        <ActionButton onClick={onSkip}>Pas ce soir</ActionButton>
+                        {canSave && <ActionButton onClick={onLater} icon='bookmark'>Plus tard</ActionButton>}
                     </div>
                 </div>
             </div>
@@ -134,7 +135,7 @@ function QuickQuestions({ criteria, now, partners, allowRequests, change }: Read
     return <div className='client-tonight-questions'>
         <div className='client-tonight-quick-choices'>
             <fieldset><legend>Avec qui</legend><div className='client-draw-choices'>
-                <button type='button' aria-pressed={!partner} onClick={() => change({ partner: '' })}>Seul</button>
+                <Chip pressed={!partner} onClick={() => change({ partner: '' })}>Seul</Chip>
                 {partners.length > 0 && <label className='client-tonight-partner'><span>À deux avec</span>
                     <select aria-label='Profil partenaire' value={partner?.id || ''} onChange={event => change({ partner: event.target.value })}>
                         <option value=''>Choisir un profil</option>
@@ -142,13 +143,13 @@ function QuickQuestions({ criteria, now, partners, allowRequests, change }: Read
                     </select></label>}
             </div></fieldset>
             <fieldset><legend>Jusqu’à quand</legend><div className='client-draw-choices'>
-                {clocks.map(({ value, label }) => <button type='button' key={value} aria-pressed={current === value}
-                    onClick={() => change({ deadline: value })}>{label}</button>)}
-                <button type='button' aria-pressed={current === -1} onClick={() => change({ deadline: -1 })}>Peu importe</button>
+                {clocks.map(({ value, label }) => <Chip key={value} pressed={current === value}
+                    onClick={() => change({ deadline: value })}>{label}</Chip>)}
+                <Chip pressed={current === -1} onClick={() => change({ deadline: -1 })}>Peu importe</Chip>
             </div></fieldset>
             <fieldset><legend>Énergie</legend><div className='client-draw-choices'>
-                <button type='button' aria-pressed={criteria.energy === 'rest'} onClick={() => change({ energy: 'rest' })}>Se poser</button>
-                <button type='button' aria-pressed={criteria.energy === 'engaged'} onClick={() => change({ energy: 'engaged' })}>Être captivé</button>
+                <Chip pressed={criteria.energy === 'rest'} onClick={() => change({ energy: 'rest' })}>Se poser</Chip>
+                <Chip pressed={criteria.energy === 'engaged'} onClick={() => change({ energy: 'engaged' })}>Être captivé</Chip>
             </div></fieldset>
         </div>
         <label className='client-draw-keywords'>Une envie précise

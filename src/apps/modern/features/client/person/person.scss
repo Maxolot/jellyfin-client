@@ -122,7 +122,7 @@
 .client-person-role-tabs {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: var(--client-space-8);
     margin: 8px 0 18px;
 }
 

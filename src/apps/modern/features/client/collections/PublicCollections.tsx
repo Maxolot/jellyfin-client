@@ -23,6 +23,7 @@ import { useClientMedia } from '../useClientMedia';
 import { canManageCollections } from './access';
 import { useClientCollections, useCollectionChanges, useCollectionShelf } from './queries';
 import './collections.scss';
+import { ActionButton } from '../ui';
 
 type Surface = CollectionCardOptions & { full: boolean; playQueue: PlayQueue; queueBusy: boolean };
 type Rights = { canManage: boolean; onForbidden: () => void };
@@ -60,7 +61,7 @@ function CollectionList({ items, image, canManage }: Readonly<{ items: BaseItemD
 function CreateCollection({ onCreate, onForbidden }: Readonly<{ onCreate: (id: string) => void; onForbidden: () => void }>) {
     const [open, setOpen] = useState(false);
     return <>
-        <button type='button' className='client-button' aria-haspopup='dialog' onClick={() => setOpen(true)}><ClientIcon name='plus' />Créer une collection</button>
+        <ActionButton aria-haspopup='dialog' onClick={() => setOpen(true)} icon='plus'>Créer une collection</ActionButton>
         <ClientDialog className='client-collection-modal' label='Créer une collection' title='Créer une collection' controlled={{ open, onClose: () => setOpen(false) }}>
             {close => open && <CollectionName onForbidden={onForbidden} onCreate={id => {
                 close();
@@ -85,7 +86,7 @@ function CollectionName({ onCreate, onForbidden }: Readonly<{ onCreate: (id: str
     return <form className='client-collection-form' onSubmit={create}>
         <label htmlFor={field}>Nom de la collection</label>
         <input id={field} value={name} required onChange={event => setName(event.target.value)} />
-        <button type='submit' className='client-play' disabled={!trimmed || change.isPending}>Créer</button>
+        <ActionButton type='submit' variant='primary' disabled={!trimmed || change.isPending}>Créer</ActionButton>
         {change.isError && <p role='alert'>Impossible de créer la collection. Réessayez.</p>}
     </form>;
 }
@@ -113,15 +114,15 @@ function CollectionDetail({ collection, canManage, onForbidden, full, queueBusy,
             change.mutate({ type: 'remove', collectionId, itemId: entry.itemId }, { onSuccess });
         }
     }
-    const actions = canManage && titles.isSuccess && <button ref={trigger} type='button' className='client-button' aria-haspopup='dialog' onClick={() => setAdding(true)}><ClientIcon name='plus' />Ajouter des titres</button>;
+    const actions = canManage && titles.isSuccess && <ActionButton ref={trigger} aria-haspopup='dialog' onClick={() => setAdding(true)} icon='plus'>Ajouter des titres</ActionButton>;
     return <CollectionHero title={collection.Name || 'Collection'} items={titles.items} count={titles.count ?? collection.ChildCount ?? 0}
         metadata={canManage ? 'Collection publique' : 'Collection publique · Lecture seule'} backTo={collectionsPath} backLabel='Collections publiques'
         full={full} image={card.image} playQueue={playQueue} queueBusy={queueBusy} actions={actions}>
         <CollectionGrid {...card} items={titles.entries} pending={titles.isPending} error={titles.isError} retry={() => titles.refetch()}
             orderLabel='Ordre de la collection' empty='Cette collection ne contient aucun titre.'
             actions={canManage ? entry => <div className='client-shelf-item-actions'>
-                <button type='button' className='client-button' disabled={change.isPending || promoting} aria-label={`Retirer ${entry.item.Name} de la collection`}
-                    title='Retirer de la collection' onClick={() => remove(entry)}><ClientIcon name='close' /></button>
+                <ActionButton disabled={change.isPending || promoting} aria-label={`Retirer ${entry.item.Name} de la collection`}
+                    title='Retirer de la collection' onClick={() => remove(entry)} icon='close'></ActionButton>
             </div> : undefined} />
         {canManage && change.isError && <p role='alert' className='client-shelf-organize'>Impossible de retirer le titre. Réessayez.</p>}
         {canManage && <ClientDialog className='client-collection-modal' label='Ajouter des titres' title='Ajouter des titres' subtitle={collection.Name || undefined}
@@ -185,6 +186,6 @@ function TitleMatches({ items, image, pending, add }: Readonly<{ items: BaseItem
 }
 
 function LoadError({ message, retry }: Readonly<{ message: string; retry: () => unknown }>) {
-    return <p role='alert' className='client-collections-note'>{message} <button type='button' className='client-button' onClick={retry}>Réessayer</button></p>;
+    return <p role='alert' className='client-collections-note'>{message} <ActionButton onClick={retry}>Réessayer</ActionButton></p>;
 }
 /* eslint-enable react/jsx-no-bind */

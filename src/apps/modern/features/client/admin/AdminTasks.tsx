@@ -4,7 +4,7 @@ import React from 'react';
 
 import { useApi } from 'hooks/useApi';
 
-import { SettingCard, StatusBadge } from '../settings/controls';
+import { SettingCard, StatusBadge } from '../ui/controls';
 import { isRunning, relativeTime, taskGroups, taskResult } from './model';
 import { useTaskAction, useTasks } from './useAdmin';
 import './admin.scss';

@@ -7,7 +7,7 @@ import appSettings from 'scripts/settings/appSettings';
 import * as userSettings from 'scripts/settings/userSettings';
 import { signOut } from '../profiles/profileSession';
 
-import { Collapsible, SaveNote, Select, SettingCard, type SettingScope, TextField, Toggle } from '../settings/controls';
+import { Collapsible, SaveNote, Select, SettingCard, type SettingScope, TextField, Toggle } from '../ui/controls';
 import SettingsIcon from '../settings/SettingsIcon';
 
 import { AUDIO_CHANNELS, BITRATES, formatBitrate, languageOptions, NEXT_UP_DAYS, normalizeQuickConnectCode, passwordProblem, avatarProblem, STILL_WATCHING,

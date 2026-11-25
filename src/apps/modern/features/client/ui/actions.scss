@@ -1,0 +1,141 @@
+@use '../design' as ds;
+
+// Charte Médiathèque, ActionButton. Seule définition des boutons d'action du client :
+// une page règle l'espace autour d'eux, jamais leur apparence.
+//
+// Taille : la classe du bouton (is-large, is-medium, is-small), sinon celle de son groupe.
+// Les actions d'un titre, la reprise de Mon espace et Ce soir sont des groupes de 48 px.
+
+.client-actions,
+.client-personal-spotlight,
+.client-tonight-actions {
+    --client-action-height: var(--client-size-action);
+    --client-action-padding: var(--client-space-action-x);
+    --client-action-font: var(--client-text-16);
+    --client-action-weight: 700;
+}
+
+:is(.client-interface, .client-spotlight) :is(.client-button, .client-play, .client-draw-reroll) {
+    display: inline-flex;
+    box-sizing: border-box;
+    min-height: var(--client-action-height, var(--client-size-chip));
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 var(--client-action-padding, var(--client-space-16));
+    border: 1px solid var(--client-action-secondary-line);
+    border-radius: var(--client-radius-pill);
+    background: var(--client-action-secondary);
+    color: var(--client-ink);
+    font-size: var(--client-action-font, var(--client-text-13));
+    font-weight: var(--client-action-weight, 600);
+    line-height: 1.25;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+
+    @include ds.state-transition(transform var(--client-duration-state) ease);
+
+    .client-icon {
+        width: 20px;
+        height: 20px;
+        flex: none;
+    }
+
+    &:active:not(:disabled) { transform: scale(0.97); }
+
+    &:disabled {
+        opacity: var(--client-opacity-disabled);
+        cursor: default;
+    }
+
+    &.is-large {
+        --client-action-height: var(--client-size-action);
+        --client-action-padding: var(--client-space-action-x);
+        --client-action-font: var(--client-text-16);
+        --client-action-weight: 700;
+    }
+
+    &.is-medium {
+        --client-action-height: var(--client-size-chip);
+        --client-action-padding: var(--client-space-16);
+        --client-action-font: var(--client-text-13);
+        --client-action-weight: 600;
+    }
+
+    &.is-small {
+        --client-action-height: var(--client-size-action-small);
+        --client-action-padding: var(--client-space-12);
+        --client-action-font: var(--client-text-12);
+        --client-action-weight: 600;
+
+        .client-icon {
+            width: 16px;
+            height: 16px;
+        }
+    }
+}
+
+// Principal : aplat clair en Classique, verre clair en Glass.
+:is(.client-interface, .client-spotlight) :is(.client-play, .client-draw-reroll) {
+    border-color: var(--client-action-primary);
+    background: var(--client-action-primary);
+    color: var(--client-on-action-primary);
+}
+
+// Bouton rond : une icône seule, la hauteur de sa taille.
+:is(.client-interface, .client-spotlight) .client-action-circle {
+    width: var(--client-action-height, var(--client-size-chip));
+    height: var(--client-action-height, var(--client-size-chip));
+    flex: none;
+    padding: 0;
+    border-radius: 50%;
+}
+
+:is(.client-interface.client-glass, .client-spotlight-glass) {
+    :is(.client-button, .client-play, .client-draw-reroll) {
+        backdrop-filter: var(--client-blur-action);
+    }
+
+    .client-button {
+        background: linear-gradient(140deg, #ffffff1c, #ffffff06), #15151547;
+        box-shadow: inset 0 1px 0 #ffffff59, 0 5px 20px #0003;
+    }
+
+    :is(.client-play, .client-draw-reroll) {
+        border-color: #ffffff6b;
+        background: linear-gradient(140deg, #ffffff38, #ffffff12), #15151566;
+        box-shadow: inset 0 1px 0 #ffffff8c, 0 5px 20px #0004;
+        backdrop-filter: var(--client-blur-primary);
+    }
+}
+
+// Option chromatique : le bouton principal prend la teinte de l'affiche.
+.client-interface.client-glass.client-chromatic .client-actions .client-play {
+    background: linear-gradient(140deg, #ffffff24, rgb(var(--client-accent) / 0.18) 58%, #ffffff08), #0f131947;
+}
+
+// Survol en Classique ; en Glass, le reflet diffus de motion.scss en tient lieu.
+:is(.client-interface:not(.client-glass), .client-spotlight-classic) .client-button:hover:not(:disabled) {
+    border-color: var(--client-line-hover);
+    background: var(--client-action-secondary-hover);
+}
+
+:is(.client-interface:not(.client-glass), .client-spotlight-classic) :is(.client-play, .client-draw-reroll):hover:not(:disabled) {
+    border-color: var(--client-action-primary-hover);
+    background: var(--client-action-primary-hover);
+}
+
+@include ds.phone {
+    .client-actions,
+    .client-personal-spotlight,
+    .client-tonight-actions {
+        --client-action-height: 42px;
+        --client-action-padding: 18px;
+        --client-action-font: var(--client-text-14);
+    }
+
+    .client-interface .client-actions .client-action-circle {
+        --client-action-height: var(--client-size-icon-target);
+    }
+}

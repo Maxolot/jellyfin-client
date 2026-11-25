@@ -3,7 +3,7 @@ import React from 'react';
 
 import InterfacePreview from '../InterfacePreview';
 import type { Preferences } from '../interfacePreferences';
-import { PictureChoice, Segmented, SettingCard, Slider, Toggle } from './controls';
+import { PictureChoice, Segmented, SettingCard, Slider, Toggle } from '../ui/controls';
 
 type Props = { preferences: Preferences; savePreference: (next: Preferences) => void; hasPreviews: boolean };
 
