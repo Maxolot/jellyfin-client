@@ -1,29 +1,47 @@
+// Person page: the hero of a shelf page beside a portrait, then the filmography as poster grids.
+// Headings, captions and cards follow the charte; this sheet only lays them out.
 @use '../design' as ds;
 
 .client-person-page {
-    margin: 0 var(--client-margin) 60px;
+    margin: 0 var(--client-margin) var(--client-space-48);
 }
 
 .client-person-hero {
-    padding: 20px 0 clamp(28px, 5vw, 68px);
+    padding: var(--client-space-16) 0 var(--client-space-48);
 
-    > .client-shelf-back { margin: 0 0 14px; }
+    > .client-shelf-back { margin-bottom: var(--client-space-16); }
 }
 
 .client-person-intro {
     display: grid;
-    grid-template-columns: clamp(105px, 20vw, 248px) minmax(0, 1fr);
-    align-items: start;
-    gap: clamp(16px, 4vw, 58px);
+    grid-template-columns: clamp(120px, 18vw, 240px) minmax(0, 1fr);
+    align-items: end;
+    gap: var(--client-space-32);
+}
+
+.client-person-copy {
+    min-width: 0;
+    max-width: 720px;
+
+    .client-eyebrow {
+        margin: 0 0 var(--client-space-8);
+        text-transform: uppercase;
+    }
 
     h1 {
+        @include ds.type('hero-title');
+
         margin: 0;
-        font-size: clamp(34px, 6.4vw, 91px);
-        font-weight: 700;
-        letter-spacing: -0.038em;
-        line-height: 1;
         overflow-wrap: anywhere;
     }
+
+    .client-meta { margin: var(--client-space-12) 0 0; }
+
+    .client-overview {
+        margin: var(--client-space-16) 0 0;
+        -webkit-line-clamp: 3;
+    }
+    .client-overview.expanded { display: block; }
 }
 
 .client-person-new-portrait {
@@ -31,14 +49,14 @@
     display: grid;
     isolation: isolate;
     width: 100%;
-    aspect-ratio: 3 / 4;
+    aspect-ratio: 2 / 3;
     place-items: center;
     overflow: hidden;
-    border: 1px solid var(--client-line);
     border-radius: var(--client-radius-card);
     background: var(--client-art-placeholder);
-    font-size: clamp(30px, 10vw, 104px);
-    font-weight: 700;
+    color: var(--client-ink-muted);
+
+    @include ds.type('hero-title');
 
     > .client-artwork {
         position: absolute;
@@ -49,112 +67,32 @@
     }
 }
 
-.client-person-job {
-    margin: 12px 0 10px;
-    color: var(--client-ink);
-    font-size: clamp(14px, 1.65vw, 21px);
-}
-
-.client-person-dates {
-    display: grid;
-    width: fit-content;
-    max-width: 100%;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 4px 9px;
-    margin: 14px 0;
-    color: var(--client-ink-muted);
-    font-size: var(--client-text-13);
-
-    dt { color: var(--client-ink-subtle); }
-
-    dd {
-        margin: 0;
-        overflow-wrap: anywhere;
-    }
-}
-
-.client-person-count {
-    margin: 10px 0 16px;
-    color: var(--client-ink);
-    font-weight: 700;
-}
-
-.client-person-biography {
-    max-width: 65ch;
-    margin-top: 12px;
-
-    summary {
-        min-height: 40px;
-        align-content: center;
-        text-decoration: none;
-        cursor: pointer;
-    }
-
-    p {
-        margin: 4px 0;
-        color: var(--client-ink-muted);
-        line-height: 1.55;
-        white-space: pre-line;
-    }
-}
-
-.client-person-filmography > header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 4px 24px;
-
-    h2 {
-        margin: 0;
-        font-size: clamp(25px, 3.2vw, 40px);
-    }
-
-    .client-filter-options { margin: 10px 0; }
-}
-
-.client-person-appearances {
-    display: inline-flex;
-    min-height: 40px;
-    align-items: center;
-    gap: 6px;
-    color: var(--client-ink-muted);
-    font-size: var(--client-text-13);
-}
-
 .client-person-role-tabs {
     display: flex;
     flex-wrap: wrap;
     gap: var(--client-space-8);
-    margin: 8px 0 18px;
+    margin-bottom: var(--client-space-16);
 }
 
+// Each status is a row of the page, as on the home page: a row title, then the cards.
 .client-credit-section {
-    margin: 18px 0 clamp(22px, 3vw, 44px);
-    padding: clamp(13px, 2.2vw, 28px);
-    border: 1px solid var(--client-line);
-    border-radius: var(--client-radius-panel);
-    background: var(--client-surface-panel);
-    box-shadow: var(--client-reflection);
-    backdrop-filter: var(--client-blur-surface);
+    margin-top: var(--client-space-row-gap);
 
     h3 {
-        margin: 0 0 16px;
-        font-size: clamp(19px, 2.3vw, 29px);
-        font-weight: 700;
+        @include ds.type('row-title');
+
+        margin: 0 0 var(--client-space-row-heading);
     }
 }
 
 .client-credit-card {
-    display: grid;
-    min-width: 0;
-    align-content: start;
-    gap: 6px;
-
-    > button {
-        min-height: 40px;
-        justify-content: center;
-        padding: 4px 5px;
-        font-size: var(--client-text-12);
+    // The request state sits at the top, clear of the role written at the bottom.
+    .client-external-badge {
+        z-index: 1;
+        top: var(--client-space-8);
+        right: auto;
+        bottom: auto;
+        left: var(--client-space-8);
     }
 }
 
@@ -163,47 +101,42 @@
     display: block;
 }
 
-.client-credit-badge {
-    position: absolute;
-    z-index: 1;
-    top: 6px;
-    left: 6px;
-    max-width: calc(100% - 12px);
-    padding: 4px 6px;
-    border: 1px solid var(--client-line);
-    border-radius: var(--client-radius-pill);
-    background: var(--client-surface-raised);
-    color: var(--client-ink);
-    font-size: clamp(9px, 0.92vw, 12px);
-    line-height: 1.2;
-    overflow-wrap: anywhere;
-}
-
+// The character or job, on the artwork: never a media title under the card.
 .client-credit-copy {
     position: absolute;
     z-index: 1;
     inset: auto 0 0;
     display: grid;
-    gap: 4px;
-    padding: 20px 8px 9px;
+    gap: var(--client-space-4);
+    padding: var(--client-space-24) var(--client-space-8) var(--client-space-8);
     background: linear-gradient(transparent, var(--client-art-scrim) 46%);
     color: var(--client-ink);
-    font-size: clamp(11px, 1.2vw, 15px);
-    strong { display: none; }
+
+    @include ds.type('meta');
+
+    strong {
+        display: none;
+
+        @include ds.type('item-title');
+    }
 
     small {
         display: -webkit-box;
         overflow: hidden;
         color: var(--client-ink-muted);
+        font-size: inherit;
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
     }
 }
 
 .client-credit-poster:where(:hover, :focus-visible) .client-credit-copy strong { display: block; }
-.client-person-note { color: var(--client-ink-muted); }
 
 @include ds.phone {
-    .client-person-hero { padding-top: 8px; }
-    .client-credit-section .client-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .client-person-hero { padding-top: var(--client-space-8); }
+
+    .client-person-intro {
+        align-items: start;
+        gap: var(--client-space-16);
+    }
 }

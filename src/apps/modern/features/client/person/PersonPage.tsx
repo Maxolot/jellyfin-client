@@ -8,6 +8,7 @@ import { artworkUrl } from '../artwork';
 import ClientDialog from '../ClientDialog';
 import ClientIcon from '../ClientIcon';
 import ClientSkeleton from '../ClientSkeleton';
+import DetailSynopsis from '../DetailSynopsis';
 import { canRequest, externalIdentity, imageUrl, type CatalogueItem } from '../seerr/model';
 import { useSeerr } from '../seerr/SeerrContext';
 import { RequestPanel } from '../seerr/SeerrViews';
@@ -15,6 +16,8 @@ import { ChoiceSelect, type Option } from '../ui/controls';
 import SharedCatalogArtwork from '../SharedCatalogArtwork';
 import { browseFilmography, filmography, filmographyCounts, personDepartment, type FilmographyEntry, type FilmographyRole, type FilmographyStatus } from './model';
 import { usePersonData } from './queries';
+// Shared with the folder and collection pages: grid heading, poster quick actions.
+import '../collectionCover.scss';
 import './person.scss';
 import { ActionButton, Chip } from '../ui';
 
@@ -43,8 +46,9 @@ function PersonHero({ name, portrait, job, birth, place, death, bio, counts }: R
 }>) {
     const location = useLocation();
     const previous = location.state as Navigation | null;
-    const born = [dateLabel(birth), place].filter(Boolean).join(' · ');
+    const born = [dateLabel(birth), place].filter(Boolean).join(', ');
     const died = dateLabel(death);
+    const meta = [born && `Naissance ${born}`, died && `Décès ${died}`, counts].filter(Boolean).join(' · ');
     return <header className='client-person-hero'>
         <Link className='client-shelf-back' to={previous?.returnTo || '/client?view=search'}
             state={{ ...(previous?.returnState as object), restoreFocus: true }}><ClientIcon name='back' />Retour</Link>
@@ -53,15 +57,11 @@ function PersonHero({ name, portrait, job, birth, place, death, bio, counts }: R
                 {portrait && <Artwork source={portrait} eager />}
                 <span aria-hidden='true'>{name.slice(0, 1).toLocaleUpperCase('fr')}</span>
             </span>
-            <div>
+            <div className='client-person-copy'>
+                {job && <p className='client-eyebrow'>{job}</p>}
                 <h1>{name}</h1>
-                {job && <p className='client-person-job'>{job}</p>}
-                {(born || died) && <dl className='client-person-dates'>
-                    {born && <><dt>Naissance</dt><dd>{born}</dd></>}
-                    {died && <><dt>Décès</dt><dd>{died}</dd></>}
-                </dl>}
-                {counts && <p className='client-person-count'>{counts}</p>}
-                {bio && <details className='client-person-biography'><summary>Biographie</summary><p>{bio}</p></details>}
+                {meta && <p className='client-meta'>{meta}</p>}
+                <DetailSynopsis overview={bio} />
             </div>
         </div>
     </header>;
@@ -93,12 +93,11 @@ export default function PersonPage({ id, basePath, image, play }: Readonly<Props
             job={personDepartment(remote?.knownForDepartment)} birth={remote?.birthday} place={remote?.placeOfBirth}
             death={remote?.deathday} bio={remote?.biography || data.local.data?.Overview} counts={counts} />
         <section className='client-person-filmography' aria-labelledby='client-filmography-heading'>
-            <header><h2 id='client-filmography-heading'>Filmographie</h2>
+            <header className='client-shelf-grid-heading'><h2 id='client-filmography-heading'>Filmographie</h2>
                 {contents.length > 0 && <div className='client-filter-options'>
                     <ChoiceSelect label='Type de titre' value={type} options={mediaKinds} onChange={setType} />
                     <ChoiceSelect label='Trier' value={sort} options={order} onChange={setSort} />
-                    {canClassify && <label className='client-person-appearances'><input type='checkbox' checked={includeAppearances}
-                        onChange={event => setAppearances(event.target.checked)} />Inclure les apparitions et talk-shows</label>}
+                    {canClassify && <Chip pressed={includeAppearances} onClick={() => setAppearances(value => !value)}>Apparitions et talk-shows</Chip>}
                 </div>}
             </header>
             {roleTabs.length > 1 && <div className='client-person-role-tabs' role='group' aria-label='Participation'>
@@ -106,7 +105,7 @@ export default function PersonPage({ id, basePath, image, play }: Readonly<Props
                 {roleTabs.map(tab => <Chip key={tab.key} pressed={role === tab.key} onClick={() => setRole(tab.key)}>{tab.label}</Chip>)}
             </div>}
             {loading && <ClientSkeleton layout='grid' count={6} contained label='Chargement de la filmographie…' />}
-            {!loading && !canClassify && <p className='client-person-note'>La filmographie affiche les titres de votre bibliothèque Jellyfin.</p>}
+            {!loading && !canClassify && <p className='client-meta'>La filmographie affiche les titres de votre bibliothèque Jellyfin.</p>}
             {sections.filter(section => canClassify || section.key === 'available').map(section => <CreditSection key={section.key} label={section.label}
                 status={section.key} entries={shown.filter(entry => entry.status === section.key)} role={role} image={image} play={play}
                 request={entry => setRequest(entry)} permissions={seerr.permissions} />)}
@@ -123,7 +122,7 @@ function CreditSection({ label, status, entries, ...actions }: Readonly<CreditAc
     if (!entries.length && status !== 'available') return null;
     return <section className={`client-credit-section is-${status}`}>
         <h3>{label}</h3>
-        {!entries.length ? <p>Aucun titre disponible pour cette sélection.</p> : <div className='client-grid' data-reveal='static'>
+        {!entries.length ? <p className='client-meta'>Aucun titre disponible pour cette sélection.</p> : <div className='client-grid' data-reveal='static'>
             {entries.map(entry => <CreditTile key={entry.item.Id} entry={entry} {...actions} />)}
         </div>}
     </section>;
@@ -133,22 +132,27 @@ function CreditTile({ entry, role, image, play, request, permissions }: Readonly
     const location = useLocation();
     const { item, status } = entry;
     const credits = (role ? entry.roles[role as FilmographyRole] : Object.values(entry.roles).flat()) || [];
-    const badge = entry.label || (status === 'available' ? 'Disponible' : 'À demander');
+    // The section already says available or to request: a badge only adds what it does not, such as a request state.
+    const badge = status === 'tracked' ? entry.label : undefined;
+    const statusLabel = entry.label || (status === 'available' ? 'Disponible' : 'À demander');
     const poster = status === 'available' ? image(item) : imageUrl((item as CatalogueItem).Seerr?.posterPath);
     const fallback = entry.followed ? <SharedCatalogArtwork item={item} backdrop={false} /> : <span className='client-card-fallback'>{item.Name}</span>;
-    return <article className='client-credit-card'>
+    const requestable = status === 'requestable' && canRequest(permissions, entry.type, false);
+    return <article className='client-credit-card client-shelf-item'>
         <Link className='client-card client-credit-poster' to={`/client?id=${item.Id}`} data-client-focus={item.Id}
             state={{ returnTo: location.pathname + location.search, returnState: location.state }}
-            aria-label={[item.Name, ...credits, badge].filter(Boolean).join(' · ')}>
+            aria-label={[item.Name, ...credits, statusLabel].filter(Boolean).join(' · ')}>
             {poster ? <Artwork source={poster} /> : fallback}
-            <span className='client-credit-badge'>{badge}</span>
+            {badge && <span className='client-external-badge'>{badge}</span>}
             <span className='client-credit-copy' aria-hidden='true'><strong>{item.Name}</strong>
                 {credits.length > 0 && <small>{credits.join(' · ')}</small>}
             </span>
         </Link>
-        {status === 'available' && <ActionButton aria-label={`Lire ${item.Name}`} onClick={() => play(item)} icon='play'>Lecture</ActionButton>}
-        {status === 'requestable' && canRequest(permissions, entry.type, false) && <ActionButton
-            aria-label={`Demander ${item.Name}`} onClick={() => request(entry)} icon='plus'>Demander</ActionButton>}
+        {/* Same quick actions as the posters of a folder: on the card, shown on hover or focus. */}
+        {(status === 'available' || requestable) && <div className='client-shelf-item-actions'>
+            {status === 'available' && <ActionButton aria-label={`Lire ${item.Name}`} title='Lecture' onClick={() => play(item)} icon='play' />}
+            {requestable && <ActionButton aria-label={`Demander ${item.Name}`} title='Demander' onClick={() => request(entry)} icon='plus' />}
+        </div>}
     </article>;
 }
 
