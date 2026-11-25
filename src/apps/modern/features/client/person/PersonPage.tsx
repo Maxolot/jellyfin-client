@@ -19,15 +19,15 @@ import { usePersonData } from './queries';
 // Shared with the folder and collection pages: grid heading, poster quick actions.
 import '../collectionCover.scss';
 import './person.scss';
-import { ActionButton, Chip } from '../ui';
+import { ActionButton } from '../ui';
 
 type Props = { id: string; basePath: string; image: (item: BaseItemDto) => string; play: (item: BaseItemDto) => void };
 
 const mediaKinds: Option<string>[] = [['', 'Films et séries'], ['movie', 'Films'], ['tv', 'Séries']];
 const order: Option<string>[] = [['popular', 'Popularité'], ['date', 'Date de sortie']];
-const roles: Array<{ key: FilmographyRole; label: string }> = [
-    { key: 'acting', label: 'Acteur' }, { key: 'directing', label: 'Réalisation' }, { key: 'other', label: 'Autres postes' }
-];
+const roles: Option<string>[] = [['acting', 'Acteur'], ['directing', 'Réalisation'], ['other', 'Autres postes']];
+/** Talk-shows and appearances as themselves: kept apart, chosen like a role. */
+const APPEARANCES = 'appearances';
 const sections: Array<{ key: FilmographyStatus; label: string }> = [
     { key: 'available', label: 'Disponible maintenant' },
     { key: 'tracked', label: 'Suivi / en cours de demande' },
@@ -73,18 +73,20 @@ export default function PersonPage({ id, basePath, image, play }: Readonly<Props
     const [type, setType] = useState('');
     const [role, setRole] = useState('');
     const [sort, setSort] = useState('popular');
-    const [includeAppearances, setAppearances] = useState(false);
     const [request, setRequest] = useState<FilmographyEntry>();
     const canClassify = seerr.connected && data.remote.isSuccess && data.library.isSuccess;
     const credits = canClassify ? data.remote.data?.credits : undefined;
     const remote = seerr.connected ? data.remote.data?.person : undefined;
-    const contents = filmography({ credits, local: data.localItems, library: data.library.data || [], shared: data.shared.data || [],
-        personId: data.localId, includeAppearances });
-    const shown = browseFilmography(contents, type, role, sort);
+    const sources = { credits, local: data.localItems, library: data.library.data || [], shared: data.shared.data || [], personId: data.localId };
+    const contents = filmography({ ...sources, includeAppearances: false });
+    const known = new Set(contents.map(entry => entry.item.Id));
+    const appearances = canClassify ? filmography({ ...sources, includeAppearances: true }).filter(entry => !known.has(entry.item.Id)) : [];
+    const shown = role === APPEARANCES ? browseFilmography(appearances, type, '', sort) : browseFilmography(contents, type, role, sort);
     const there = contents.filter(entry => entry.status === 'available').length;
     const toRequest = contents.filter(entry => entry.status === 'requestable').length;
     const counts = filmographyCounts(there, canClassify ? toRequest : undefined);
-    const roleTabs = roles.filter(tab => contents.some(entry => entry.roles[tab.key]?.length));
+    const roleOptions: Option<string>[] = [...roles.filter(([key]) => contents.some(entry => entry.roles[key as FilmographyRole]?.length)),
+        ...(appearances.length ? [[APPEARANCES, 'Apparitions et talk-shows'] as Option<string>] : [])];
     const loading = data.associated.isLoading || data.local.isLoading || data.resolving || data.remote.isLoading || (data.remote.isSuccess && data.library.isLoading);
     const portrait = imageUrl(remote?.profilePath) || (data.local.data?.ImageTags?.Primary ? artworkUrl(basePath, data.local.data, 'portrait') : '');
     return <div className='client-person-page'>
@@ -94,19 +96,15 @@ export default function PersonPage({ id, basePath, image, play }: Readonly<Props
         <section className='client-person-filmography' aria-labelledby='client-filmography-heading'>
             <header className='client-shelf-grid-heading'><h2 id='client-filmography-heading'>Filmographie</h2>
                 {contents.length > 0 && <div className='client-filter-options'>
+                    {roleOptions.length > 1 && <ChoiceSelect label='Rôle' value={role} options={[['', 'Tous les rôles'], ...roleOptions]} onChange={setRole} />}
                     <ChoiceSelect label='Type de titre' value={type} options={mediaKinds} onChange={setType} />
                     <ChoiceSelect label='Trier' value={sort} options={order} onChange={setSort} />
-                    {canClassify && <Chip pressed={includeAppearances} onClick={() => setAppearances(value => !value)}>Apparitions et talk-shows</Chip>}
                 </div>}
             </header>
-            {roleTabs.length > 1 && <div className='client-person-role-tabs' role='group' aria-label='Participation'>
-                <Chip pressed={!role} onClick={() => setRole('')}>Tous les rôles</Chip>
-                {roleTabs.map(tab => <Chip key={tab.key} pressed={role === tab.key} onClick={() => setRole(tab.key)}>{tab.label}</Chip>)}
-            </div>}
             {loading && <ClientSkeleton layout='grid' count={6} contained label='Chargement de la filmographie…' />}
             {!loading && !canClassify && <p className='client-meta'>La filmographie affiche les titres de votre bibliothèque Jellyfin.</p>}
             {sections.filter(section => canClassify || section.key === 'available').map(section => <CreditSection key={section.key} label={section.label}
-                status={section.key} entries={shown.filter(entry => entry.status === section.key)} role={role} image={image} play={play}
+                status={section.key} entries={shown.filter(entry => entry.status === section.key)} role={role === APPEARANCES ? '' : role} image={image} play={play}
                 request={entry => setRequest(entry)} permissions={seerr.permissions} />)}
         </section>
         <ClientDialog label='Demander' title='Demander' subtitle={request?.item.Name || undefined} controlled={{ open: !!request, onClose: () => setRequest(undefined) }}>

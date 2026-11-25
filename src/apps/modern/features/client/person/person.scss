@@ -62,13 +62,6 @@
     }
 }
 
-.client-person-role-tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--client-space-8);
-    margin-bottom: var(--client-space-16);
-}
-
 // Each status is a row of the page, as on the home page: a row title, then the cards.
 .client-credit-section {
     margin-top: var(--client-space-row-gap);
