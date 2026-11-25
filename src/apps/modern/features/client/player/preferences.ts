@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 
-export const playerBarLayouts = ['split', 'island', 'inline', 'stacked', 'compact'] as const;
+export const playerBarLayouts = ['split', 'island', 'inline', 'stacked', 'compact', 'float'] as const;
 export type PlayerBarLayout = typeof playerBarLayouts[number];
 
 export type PlayerPreferences = {

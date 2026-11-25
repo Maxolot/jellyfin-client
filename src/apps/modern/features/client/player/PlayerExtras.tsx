@@ -9,7 +9,7 @@ import type { BaseItemDto, SessionInfoDto } from '@jellyfin/sdk/lib/generated-cl
 import type { PlayerState } from 'types/playbackStopInfo';
 import { useApi } from 'hooks/useApi';
 import { playbackManager } from 'components/playback/playbackmanager';
-import { formatTime, SECOND } from './model';
+import { SECOND } from './model';
 import { LABELS } from '../labels';
 
 export function SubtitleOffset({ run }: Readonly<{ run: (action: () => unknown) => void }>) {
@@ -132,10 +132,4 @@ export function PlayerTechnical({ itemId, state }: Readonly<{ itemId: string; st
     return <div className='client-player-technical'><dl>{rows.map(([name, value]) => <React.Fragment key={name}><dt>{name}</dt><dd>{value}</dd></React.Fragment>)}</dl><p className='client-player-hint'>Le média et le serveur annoncent leur débit. Réception sur les fragments des cinq dernières secondes et décodage sur une seconde : mesures disponibles selon le navigateur.</p></div>;
 }
 
-export function PlayerHelp() {
-    return <dl className='client-player-help'>{[['Espace / K', 'Lecture et pause'], ['← / →', 'Reculer et avancer'], ['↑ / ↓', 'Volume'], ['M', 'Couper ou rétablir le son'], ['F', 'Plein écran'], ['C', 'Sous-titres'], ['Échap', 'Fermer le panneau, sortir du plein écran ou quitter']].map(([key, description]) => <React.Fragment key={key}><dt><kbd>{key}</kbd></dt><dd>{description}</dd></React.Fragment>)}</dl>;
-}
-export function sleepLabel(deadline?: number) {
-    return deadline ? `Arrêt dans ${formatTime(Math.max(0, (deadline - Date.now()) / 1000))}` : 'Minuterie désactivée';
-}
 /* eslint-enable react/jsx-no-bind */

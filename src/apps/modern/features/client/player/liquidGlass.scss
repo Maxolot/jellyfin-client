@@ -55,7 +55,7 @@
 .client-player.style-glass .client-player-bottom { background: linear-gradient(transparent, rgb(0 0 0 / 45%) 70%); }
 
 // The bottom toolbar of the Glass style shares the same material, without the press bounce.
-.client-player.style-glass .client-player-toolbar.client-liquid-glass {
+.client-player.style-glass:not(.bar-float) .client-player-toolbar.client-liquid-glass {
     @include liquid-glass-surface;
 
     border-radius: var(--client-radius-panel);
@@ -68,6 +68,22 @@
     border-radius: var(--client-radius-pill);
 }
 
+// Floating layout: no island, each group of controls is a glass pill of its own, after the Apple TV player.
+.client-player.style-glass.bar-float {
+    .client-player-toolbar > button,
+    .client-player-volume,
+    .client-player-tools {
+        @include liquid-glass-surface;
+
+        border-radius: var(--client-radius-pill);
+    }
+
+    .client-player-track {
+        box-shadow: inset 0 0 0 1px var(--client-line);
+        backdrop-filter: blur(18px) saturate(1.15);
+    }
+}
+
 // The filter is only rendered in Chromium, the one engine that refracts the backdrop through it.
 // stylelint-disable-next-line no-descending-specificity -- Only backdrop-filter is overridden, hover states are unaffected.
 .client-player:not(.style-minimal) .client-player-center:has(.client-liquid-glass-defs.is-backdrop) > .client-liquid-glass {
@@ -75,7 +91,7 @@
 }
 
 // A long bar would stretch the lens: it only gets the swirl.
-.client-player.style-glass:has(.client-liquid-glass-defs.is-backdrop) .client-player-toolbar.client-liquid-glass,
+.client-player.style-glass:not(.bar-float):has(.client-liquid-glass-defs.is-backdrop) .client-player-toolbar.client-liquid-glass,
 .client-player.style-glass.bar-stacked:has(.client-liquid-glass-defs.is-backdrop) .client-player-timeline {
     backdrop-filter: blur(9px) url('#client-liquid-glass-bar') saturate(1.15) brightness(0.94);
 }

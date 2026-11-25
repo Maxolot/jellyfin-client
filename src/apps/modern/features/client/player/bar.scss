@@ -69,3 +69,51 @@
     }
     .client-player.bar-inline .client-player-tools { margin-left: auto; }
 }
+
+// Floating: a thick capsule on its own with the times under its ends, the controls as separate pills.
+.client-player.bar-float {
+    .client-player-timeline {
+        --track-height: 10px;
+
+        height: 34px;
+
+        &:hover,
+        &:focus-within { --track-height: 14px; }
+
+        // The thumb only shows while aiming, the capsule alone reads as the playhead otherwise.
+        > input::-webkit-slider-thumb {
+            opacity: 0;
+            transition: opacity var(--client-duration-hover) ease;
+        }
+
+        > input::-moz-range-thumb {
+            opacity: 0;
+            transition: opacity var(--client-duration-hover) ease;
+        }
+
+        // One selector per engine: a pseudo-element unknown to the browser drops the whole rule.
+        &:hover > input::-webkit-slider-thumb { opacity: 1; }
+        &:focus-within > input::-webkit-slider-thumb { opacity: 1; }
+        &:hover > input::-moz-range-thumb { opacity: 1; }
+        &:focus-within > input::-moz-range-thumb { opacity: 1; }
+    }
+
+    .client-player-times {
+        display: flex;
+        justify-content: space-between;
+        margin: 0 0 0.9em;
+        color: var(--client-ink-muted);
+        white-space: normal;
+    }
+
+    .client-player-time { display: none; }
+
+    .client-player-toolbar {
+        gap: 0.6em;
+        padding: 0;
+    }
+
+    .client-player-toolbar > button,
+    .client-player-volume { padding-inline: 0.2em; }
+    .client-player-tools { padding-inline: 0.3em; }
+}
