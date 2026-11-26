@@ -24,6 +24,8 @@ export type MediaRowKind = 'shared-catalog' | 'upcoming-episodes';
 
 type Props = {
     title: string;
+    /** The row title leads to the full list (a folder page, for instance). */
+    link?: string;
     items: BaseItemDto[];
     kind?: MediaRowKind;
     continuation?: boolean;
@@ -35,7 +37,7 @@ type Props = {
     onRelease?: () => void;
 };
 
-export default function MediaRow({ title, items, kind, continuation, showDescription = true, showWatched = true, image, logo, onPrepare, onRelease }: Readonly<Props>) {
+export default function MediaRow({ title, link, items, kind, continuation, showDescription = true, showWatched = true, image, logo, onPrepare, onRelease }: Readonly<Props>) {
     const protect = useEpisodeSpoilers();
     const [readyBackdrops, setReadyBackdrops] = useState<Partial<Record<string, boolean>>>({});
     const preparedSources = useRef<Partial<Record<string, boolean>>>({});
@@ -231,7 +233,7 @@ export default function MediaRow({ title, items, kind, continuation, showDescrip
         list.scrollTo({ left: Math.max(0, left), behavior: reduce ? 'instant' : 'smooth' });
     }
     return <section className={`client-row client-expanding-row${item ? ' has-active-card' : ''}`} aria-label={title} style={{ '--client-media-color': color } as CSSProperties}>
-        <header className='client-row-heading'><h2>{title}</h2><div><button aria-label={`Précédent : ${title}`} onClick={() => step(-1)}><ClientIcon name='back' /></button><button aria-label={`Suivant : ${title}`} onClick={() => step(1)}><ClientIcon name='next' /></button></div></header>
+        <header className='client-row-heading'><h2>{link ? <Link to={link} className='client-row-link'>{title}<ClientIcon name='next' /></Link> : title}</h2><div><button aria-label={`Précédent : ${title}`} onClick={() => step(-1)}><ClientIcon name='back' /></button><button aria-label={`Suivant : ${title}`} onClick={() => step(1)}><ClientIcon name='next' /></button></div></header>
         <div className='client-section-glow' ref={glow} aria-hidden='true' />
         <div className='client-strip' role='toolbar' aria-label={title} ref={strip} onKeyDown={event => {
             if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {

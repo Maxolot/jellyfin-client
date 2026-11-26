@@ -29,6 +29,28 @@
         gap: 8px;
     }
 
+    /* Titre d'une rangée qui mène à sa page complète (un dossier, par exemple). */
+    .client-row-link {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--client-space-4);
+        color: inherit;
+        text-decoration: none;
+
+        .client-icon {
+            width: 20px;
+            height: 20px;
+            color: var(--client-ink-subtle);
+            transition: color var(--client-duration-hover) ease, transform var(--client-duration-hover) ease;
+        }
+
+        &:hover .client-icon,
+        &:focus-visible .client-icon {
+            color: var(--client-ink);
+            transform: translateX(3px);
+        }
+    }
+
     button {
         width: 32px;
         height: 32px;

@@ -68,6 +68,7 @@ import { countLibraryFilters, isFullLibrary, readLibraryFilters } from '../featu
 import { buildMediaQueue, type PlayQueue } from '../features/client/mediaQueue';
 import GridLoadMore from '../features/client/GridLoadMore';
 import { FolderPickerProvider, ListAction, useFolderPicker } from '../features/client/folders/FolderPicker';
+import FolderRows from '../features/client/folders/FolderRows';
 import { canFile } from '../features/client/folders/model';
 import WatchedMarker, { watchedLabel } from '../features/client/WatchedMarker';
 import { episodeLabel, isWatchedCard, progressPercent, uniqueItems } from '../features/client/model';
@@ -489,9 +490,9 @@ function useClientController() {
             return withFolders && (tracked || canFile(i)) ? <div className='client-folder-search-card' key={i.Id}>{card}<ListAction item={i} /></div> : card;
         });
     }
-    function row(title: string, items: BaseItemDto[] | undefined, horizontal = false, kind?: MediaRowKind) {
+    function row(title: string, items: BaseItemDto[] | undefined, horizontal = false, kind?: MediaRowKind, link?: string) {
         if (!items?.length) return null;
-        return <MediaRow key={`${title}:${items.map(entry => entry.Id).join('|')}`} title={title} items={items} kind={kind} continuation={horizontal} showDescription={preferences.hoverDescriptions} showWatched={preferences.watchedMarkers} image={image} logo={logo} onPrepare={prepareDetail} onRelease={releaseDetail} />;
+        return <MediaRow key={`${title}:${items.map(entry => entry.Id).join('|')}`} title={title} link={link} items={items} kind={kind} continuation={horizontal} showDescription={preferences.hoverDescriptions} showWatched={preferences.watchedMarkers} image={image} logo={logo} onPrepare={prepareDetail} onRelease={releaseDetail} />;
     }
     const heroPool = useHeroPool(view === 'home' || discovery ? view : 'disabled', genre);
     const filed = useTonightOptions().data?.filed;
@@ -742,10 +743,12 @@ function HomeContent({ model }: ViewProps) {
     const picks = take(media.data?.picks || [], 12);
     const recent = take([...(media.data?.movies || []), ...(media.data?.series || [])].sort((a, b) => String(b.DateCreated || '').localeCompare(String(a.DateCreated || ''))), 16);
     const trends = take(model.catalogue.items, 20);
+    const folderRow = (title: string, items: BaseItemDto[], link: string) => row(title, items, false, undefined, link);
     return <>
         <TonightInvite prepare={model.prepareTab} />
         {row('Continuer à regarder', continuing, true)}
         {row('À découvrir', picks)}
+        <FolderRows row={folderRow} />
         {row('Ajouts récents', recent)}
         {row('Récemment suivis', model.sharedItems, false, 'shared-catalog')}
         {row('Tendances', trends)}
@@ -840,7 +843,8 @@ function DiscoveryView({ model }: ViewProps) {
         });
         return row(genre, selected);
     }).filter(Boolean).slice(0, 4);
-    return <div className='client-discovery'>{row(view === 'films' ? 'À découvrir dans vos films' : 'À découvrir dans vos séries', items.slice(0, 12))}{row('À découvrir aussi', model.catalogue.items.filter(entry => !used.has(entry.Id || '')))}{row('Catalogue partagé', model.sharedItems.filter(entry => entry.Type === (view === 'films' ? 'Movie' : 'Series') && !used.has(entry.Id || '')))}{groups}
+    const folderRow = (title: string, entries: BaseItemDto[], link: string) => row(title, entries, false, undefined, link);
+    return <div className='client-discovery'>{row(view === 'films' ? 'À découvrir dans vos films' : 'À découvrir dans vos séries', items.slice(0, 12))}<FolderRows row={folderRow} kind={view === 'films' ? 'Movie' : 'Series'} />{row('À découvrir aussi', model.catalogue.items.filter(entry => !used.has(entry.Id || '')))}{row('Catalogue partagé', model.sharedItems.filter(entry => entry.Type === (view === 'films' ? 'Movie' : 'Series') && !used.has(entry.Id || '')))}{groups}
         {model.catalogue.loading && !model.catalogue.items.length && <ClientSkeleton layout='row' label='Chargement des découvertes…' />}
         {media.isSuccess && items.length === 0 && model.catalogue.items.length === 0 && !model.catalogue.loading && <p className='client-message'>Aucun titre pour cette sélection.</p>}
         <button className='client-explore-library' onClick={() => setParams({ view, mode: 'library' })}>Explorer toute la bibliothèque ›</button>

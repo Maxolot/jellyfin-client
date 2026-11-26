@@ -82,7 +82,7 @@ export function useFolderTitles(entries: FolderItem[] | undefined) {
             const library = getLibraryApi(api!);
             const batches = Array.from({ length: Math.ceil(ids.length / 50) }, (_, i) => ids.slice(i * 50, (i + 1) * 50));
             const results = await Promise.all(batches.map(batch => library.getItems({
-                ids: batch, userId: user!.Id, enableImages: true, imageTypeLimit: 1
+                ids: batch, userId: user!.Id, enableImages: true, imageTypeLimit: 1, enableUserData: true
             }, { signal })));
             return results.flatMap(({ data }) => data.Items || []);
         }
