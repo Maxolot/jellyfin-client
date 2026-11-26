@@ -75,3 +75,12 @@ node .fork-local/check-ui.cjs compare avant.json apres.json
   demande de vérifier les gestes du lecteur sur téléphone (double tape).
 - `prototype.scss` (1 800 lignes) et `routes/client.tsx` (1 000 lignes) restent à découper au fil
   des migrations.
+
+## Application Android TV
+
+La TV reprend les mêmes jetons. `scripts/fork/design-tokens-kotlin.mjs <MediathequeTokens.kt>`
+écrit les jetons Compose du fork `jellyfin-androidtv` depuis `tokens.json` (`--check` vérifie
+qu’ils sont à jour). Règle d’échelle : la TV montre le client web comme un écran de 1280 px de
+large. Un pixel web vaut 0,75 dp (une TV 1080p fait 960 dp) et les valeurs fluides
+(`clamp(…, Nvw, …)`) sont prises à 1280 px. Le focus de la télécommande remplace le survol. Le
+fork contrôle ses valeurs en dur avec `scripts/fork/design-check.sh`, comme `design:check` ici.
