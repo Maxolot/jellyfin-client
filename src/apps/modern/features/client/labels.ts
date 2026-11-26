@@ -10,6 +10,7 @@ export const LABELS = {
     play: 'Lecture',
     resume: 'Reprendre',
     moreInfo: 'Plus d’infos',
+    openFolder: 'Voir le dossier',
     myList: 'Ma liste',
     markWatched: 'Marquer vu',
     markUnwatched: 'Marquer non vu',

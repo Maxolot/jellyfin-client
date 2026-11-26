@@ -490,7 +490,7 @@ function useClientController() {
             return withFolders && (tracked || canFile(i)) ? <div className='client-folder-search-card' key={i.Id}>{card}<ListAction item={i} /></div> : card;
         });
     }
-    function row(title: string, items: BaseItemDto[] | undefined, horizontal = false, kind?: MediaRowKind, link?: string) {
+    function row(title: string, items: BaseItemDto[] | undefined, horizontal = false, kind?: MediaRowKind, link?: { to: string; label: string }) {
         if (!items?.length) return null;
         return <MediaRow key={`${title}:${items.map(entry => entry.Id).join('|')}`} title={title} link={link} items={items} kind={kind} continuation={horizontal} showDescription={preferences.hoverDescriptions} showWatched={preferences.watchedMarkers} image={image} logo={logo} onPrepare={prepareDetail} onRelease={releaseDetail} />;
     }
@@ -743,7 +743,7 @@ function HomeContent({ model }: ViewProps) {
     const picks = take(media.data?.picks || [], 12);
     const recent = take([...(media.data?.movies || []), ...(media.data?.series || [])].sort((a, b) => String(b.DateCreated || '').localeCompare(String(a.DateCreated || ''))), 16);
     const trends = take(model.catalogue.items, 20);
-    const folderRow = (title: string, items: BaseItemDto[], link: string) => row(title, items, false, undefined, link);
+    const folderRow = (title: string, items: BaseItemDto[], link: string) => row(title, items, false, undefined, { to: link, label: LABELS.openFolder });
     return <>
         <TonightInvite prepare={model.prepareTab} />
         {row('Continuer à regarder', continuing, true)}
@@ -843,7 +843,7 @@ function DiscoveryView({ model }: ViewProps) {
         });
         return row(genre, selected);
     }).filter(Boolean).slice(0, 4);
-    const folderRow = (title: string, entries: BaseItemDto[], link: string) => row(title, entries, false, undefined, link);
+    const folderRow = (title: string, entries: BaseItemDto[], link: string) => row(title, entries, false, undefined, { to: link, label: LABELS.openFolder });
     return <div className='client-discovery'>{row(view === 'films' ? 'À découvrir dans vos films' : 'À découvrir dans vos séries', items.slice(0, 12))}<FolderRows row={folderRow} kind={view === 'films' ? 'Movie' : 'Series'} />{row('À découvrir aussi', model.catalogue.items.filter(entry => !used.has(entry.Id || '')))}{row('Catalogue partagé', model.sharedItems.filter(entry => entry.Type === (view === 'films' ? 'Movie' : 'Series') && !used.has(entry.Id || '')))}{groups}
         {model.catalogue.loading && !model.catalogue.items.length && <ClientSkeleton layout='row' label='Chargement des découvertes…' />}
         {media.isSuccess && items.length === 0 && model.catalogue.items.length === 0 && !model.catalogue.loading && <p className='client-message'>Aucun titre pour cette sélection.</p>}

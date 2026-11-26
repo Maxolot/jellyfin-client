@@ -5,6 +5,7 @@ import { Link, useLocation } from 'react-router-dom';
 import ResizeObserver from 'resize-observer-polyfill';
 
 import ClientIcon from './ClientIcon';
+import { ActionLink } from './ui';
 import Artwork from './Artwork';
 import { EpisodeSummary, useEpisodeSpoilers } from './spoilers';
 import { rowPosterSizes } from './artwork';
@@ -24,8 +25,8 @@ export type MediaRowKind = 'shared-catalog' | 'upcoming-episodes';
 
 type Props = {
     title: string;
-    /** The row title leads to the full list (a folder page, for instance). */
-    link?: string;
+    /** The full list behind the row (a folder page, for instance), reached from its title and a labelled action. */
+    link?: { to: string; label: string };
     items: BaseItemDto[];
     kind?: MediaRowKind;
     continuation?: boolean;
@@ -233,7 +234,7 @@ export default function MediaRow({ title, link, items, kind, continuation, showD
         list.scrollTo({ left: Math.max(0, left), behavior: reduce ? 'instant' : 'smooth' });
     }
     return <section className={`client-row client-expanding-row${item ? ' has-active-card' : ''}`} aria-label={title} style={{ '--client-media-color': color } as CSSProperties}>
-        <header className='client-row-heading'><h2>{link ? <Link to={link} className='client-row-link'>{title}<ClientIcon name='next' /></Link> : title}</h2><div><button aria-label={`Précédent : ${title}`} onClick={() => step(-1)}><ClientIcon name='back' /></button><button aria-label={`Suivant : ${title}`} onClick={() => step(1)}><ClientIcon name='next' /></button></div></header>
+        <header className='client-row-heading'><h2>{link ? <Link to={link.to} className='client-row-link' tabIndex={-1}>{title}<ClientIcon name='next' /></Link> : title}</h2><div>{link && <ActionLink size='small' to={link.to} className='client-row-more' aria-label={`${link.label} : ${title}`}>{link.label}</ActionLink>}<button aria-label={`Précédent : ${title}`} onClick={() => step(-1)}><ClientIcon name='back' /></button><button aria-label={`Suivant : ${title}`} onClick={() => step(1)}><ClientIcon name='next' /></button></div></header>
         <div className='client-section-glow' ref={glow} aria-hidden='true' />
         <div className='client-strip' role='toolbar' aria-label={title} ref={strip} onKeyDown={event => {
             if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
