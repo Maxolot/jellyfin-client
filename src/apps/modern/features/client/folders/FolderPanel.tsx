@@ -16,9 +16,9 @@ export default function FolderPanel({ image }: Readonly<{ image: FolderImage }>)
     const navigate = useNavigate();
     const [creating, setCreating] = useState(false);
     if (!folders) return null;
-    return <section className='client-folders' aria-label='Dossiers de Ma liste'>
+    return <section className='client-personal-section client-folders' aria-labelledby='client-folders-heading'>
         <header className='client-folders-header'>
-            <h3>Mes dossiers</h3>
+            <h2 id='client-folders-heading'>Mes dossiers</h2>
             <ActionButton aria-haspopup='dialog' onClick={() => setCreating(true)} icon='plus'>
                 Nouveau dossier
             </ActionButton>
@@ -30,7 +30,6 @@ export default function FolderPanel({ image }: Readonly<{ image: FolderImage }>)
             </ClientDialog>
         </header>
         <FolderTiles folders={personalFoldersFirst(folders)} image={image} />
-        <h3 className='client-folder-favorites-heading'>Favoris</h3>
     </section>;
 }
 

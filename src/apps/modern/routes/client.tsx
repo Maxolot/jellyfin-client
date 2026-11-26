@@ -21,7 +21,6 @@ import Events from 'utils/events';
 
 import ActionLabel from '../features/client/ActionLabel';
 import SpoilerProvider from '../features/client/SpoilerProvider';
-import { useEpisodeSpoilers } from '../features/client/spoilers';
 import DetailSynopsis from '../features/client/DetailSynopsis';
 import SeriesEpisodesPanel, { SeasonRail } from '../features/client/SeriesEpisodes';
 import { remoteSeasonChoices, type RemoteSeason } from '../features/client/seriesEpisodesModel';
@@ -42,9 +41,13 @@ import useArtworkColor from '../features/client/useArtworkColor';
 import PersonalRating from '../features/client/PersonalRating';
 import RatingsOverview from '../features/client/RatingsOverview';
 import TitleLogo from '../features/client/TitleLogo';
-import { GenreTaste, PersonalStatsBand } from '../features/client/PersonalOverview';
+import { GenreTaste } from '../features/client/PersonalOverview';
+import { buildJourney, type JourneyEntry } from '../features/client/journey/journey';
+import { JourneyRecap, JourneyTimeline, MonthLine } from '../features/client/journey/JourneyViews';
+import { FavoritesMigration, useSavedTitles } from '../features/client/journey/savedTitles';
 import usePersonalUpcoming from '../features/client/usePersonalUpcoming';
 import { usePersonalStats, useViewingHistory } from '../features/client/usePersonalStats';
+import type { PersonalStats } from '../features/client/personalStats';
 import HeroMetadata from '../features/client/HeroMetadata';
 import DetailExtras from '../features/client/DetailExtras';
 import DetailMenu from '../features/client/DetailMenu';
@@ -62,7 +65,6 @@ import MediaRow, { type MediaRowKind } from '../features/client/MediaRow';
 import { ChoiceSelect, type Option } from '../features/client/ui/controls';
 import AdvancedLibraryFilters from '../features/client/AdvancedLibraryFilters';
 import { countLibraryFilters, isFullLibrary, readLibraryFilters } from '../features/client/libraryFilters';
-import { QueueActions } from '../features/client/QueueActions';
 import { buildMediaQueue, type PlayQueue } from '../features/client/mediaQueue';
 import GridLoadMore from '../features/client/GridLoadMore';
 import { FolderPickerProvider, ListAction, useFolderPicker } from '../features/client/folders/FolderPicker';
@@ -119,7 +121,6 @@ const QuickConnectMenuItem = lazy(() => import(/* webpackChunkName: "client-acco
 const seerrViews = () => import(/* webpackChunkName: "client-seerr" */ '../features/client/seerr/SeerrViews');
 const ExternalDetail = lazy(() => seerrViews().then(module => ({ default: module.ExternalDetail })));
 const RequestDialog = lazy(() => seerrViews().then(module => ({ default: module.RequestDialog })));
-const RequestTracking = lazy(() => seerrViews().then(module => ({ default: module.RequestTracking })));
 const RequestPage = lazy(() => import(/* webpackChunkName: "client-requests" */ '../features/client/requests/RequestPage'));
 const PersonPage = lazy(() => import(/* webpackChunkName: "client-person" */ '../features/client/person/PersonPage'));
 
@@ -846,93 +847,58 @@ function DiscoveryView({ model }: ViewProps) {
     </div>;
 }
 
-type PersonalTab = 'list' | 'folders' | 'upcoming' | 'history' | 'taste' | 'requests';
+type PersonalSection = 'folders' | 'history' | 'taste' | 'bilan';
+const PERSONAL_SECTIONS: Record<PersonalSection, string> = { folders: 'Mes dossiers', history: 'Vus récemment', taste: 'Mes goûts', bilan: 'Mon bilan' };
 
-/** Mon espace fits one screen: who I am, what I am watching, then everything else in tabs. */
-function PersonalView({ model }: ViewProps) {
-    const protect = useEpisodeSpoilers();
-    const { user, media, row, image, play, playQueue, queueBusy, seerr, params, setParams } = model;
-    const home = useClientMedia('home', '', 0);
-    const stats = usePersonalStats();
+/** One section of Mon espace on its own page. */
+function PersonalSectionPage({ model, section, stats, entries }: ViewProps & { readonly section: PersonalSection; readonly stats?: PersonalStats; readonly entries: JourneyEntry[] }) {
+    const { row, image, user } = model;
     const history = useViewingHistory();
-    const watched = stats.isPending ? undefined : stats.data?.watchedSeriesIds || [];
-    const catalog = model.shared.isPending ? undefined : model.shared.data || [];
-    const upcoming = usePersonalUpcoming(watched, catalog);
-    const resume = home.data?.resume || [];
-    const lead = resume[0];
-    const leadBackdrop = lead ? image(lead, true) : '';
-    const { setPageAmbient } = model;
-    useEffect(() => setPageAmbient(leadBackdrop), [leadBackdrop, setPageAmbient]);
-    const tabs: [PersonalTab, string, number?][] = [['list', 'Ma liste', media.data?.total], ['folders', 'Dossiers'], ['upcoming', 'À venir', upcoming.data?.length],
-        ['history', 'Vus récemment'], ['taste', 'Mes goûts'], ...(seerr.connected ? [['requests', 'Demandes'] as [PersonalTab, string]] : [])];
-    const tab = tabs.find(([key]) => key === params.get('tab'))?.[0] || 'list';
-    const open = (next: PersonalTab) => setParams(previous => {
-        const changed = new URLSearchParams(previous);
-        changed.set('tab', next);
-        return changed;
-    }, { replace: true });
-    const onTabKey = (event: React.KeyboardEvent<HTMLDivElement>) => {
-        if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
-        event.preventDefault();
-        const index = tabs.findIndex(([key]) => key === tab) + (event.key === 'ArrowRight' ? 1 : -1);
-        const next = tabs[(index + tabs.length) % tabs.length][0];
-        open(next);
-        event.currentTarget.querySelector<HTMLButtonElement>(`#client-personal-tab-${next}`)?.focus();
-    };
-    const empty = (text: string) => <p className='client-message'>{text}</p>;
-    return <div className='client-personal client-personal-compact'>
-        <header className='client-personal-top'>
-            <div className='client-personal-identity'><span aria-hidden='true'>{user?.PrimaryImageTag ? <img src={`${model.api?.basePath}/Users/${user.Id}/Images/Primary?tag=${user.PrimaryImageTag}&width=160&quality=90`} alt='' /> : user?.Name?.slice(0, 1)}</span><div><h1>Mon espace</h1>
-                <p>{user?.Name}</p></div></div>
-            <PersonalStatsBand stats={stats.data} pending={stats.isPending} favorites={media.data?.total || 0} favoritesPending={media.isPending} open={open} />
+    return <div className='client-personal client-journey'>
+        <header className='client-page-heading'>
+            <Link to='/client?view=mine' className='client-shelf-back'><ClientIcon name='back' />Mon espace</Link>
+            <h1>{PERSONAL_SECTIONS[section]}</h1>
         </header>
-        {home.isPending && <ClientSkeleton layout='episodes' contained count={3} label='Chargement des reprises…' />}
-        {lead && <div className={`client-personal-now${resume.length > 1 ? '' : ' is-single'}`}>
-            <section className='client-personal-spotlight'><Artwork source={image(lead, true, true)} className={protect(lead) ? 'client-spoiler-art' : undefined} eager /><PreviewClip item={lead} surface='spotlight' /><div><small>ON CONTINUE ?</small><h2>{lead.SeriesName || lead.Name}</h2><p>{lead.Type === 'Episode' ? `${episodeLabel(lead)} · ${lead.Name}` : 'Votre film vous attend'}</p>
-                {progressPercent(lead) > 0 && <span className='client-spotlight-progress' role='img' aria-label={`Vu à ${Math.round(progressPercent(lead))} %`}><i style={{ width: `${progressPercent(lead)}%` }} /></span>}
-                <ActionButton variant='primary' onClick={() => play(lead)} icon='play'>Reprendre</ActionButton><ActionLink to={`/client?id=${lead.SeriesId || lead.Id}`}>{LABELS.openDetail}</ActionLink></div></section>
-            {resume.length > 1 && <section className='client-personal-resume' aria-labelledby='client-personal-resume-title'>
-                <h2 id='client-personal-resume-title'>Continuer à regarder</h2>
-                <ol>{resume.slice(1, 5).map(entry => <li key={entry.Id}>
-                    <button type='button' onClick={() => play(entry)} aria-label={`Reprendre ${[entry.SeriesName, entry.Name].filter(Boolean).join(' · ')}`}>
-                        <span className='client-personal-resume-art'><Artwork source={image(entry, true)} className={protect(entry) ? 'client-spoiler-art' : undefined} />
-                            {progressPercent(entry) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(entry)}%` }} /></span>}</span>
-                        <span className='client-personal-resume-copy'><strong>{entry.SeriesName || entry.Name}</strong>
-                            <small>{entry.Type === 'Episode' ? `${episodeLabel(entry)} · ${entry.Name}` : entry.ProductionYear}</small></span>
-                    </button>
-                </li>)}</ol>
-            </section>}
-        </div>}
-        {/* eslint-disable-next-line jsx-a11y/interactive-supports-focus -- Each tab is a button; the list only moves focus. */}
-        <div className='client-personal-tabs' role='tablist' aria-label='Sections de Mon espace' onKeyDown={onTabKey}>
-            {tabs.map(([key, label, count]) => <button key={key} type='button' role='tab' id={`client-personal-tab-${key}`} aria-selected={tab === key}
-                aria-controls='client-personal-panel' tabIndex={tab === key ? 0 : -1} onClick={() => open(key)}>
-                {label}{!!count && <span>{count}</span>}
-            </button>)}
-        </div>
-        <div id='client-personal-panel' className='client-personal-panel-area' role='tabpanel' aria-labelledby={`client-personal-tab-${tab}`}>
-            {tab === 'list' && <div className='client-personal-favorites' id='client-favorites'>
-                {!!media.data?.total && <div className='client-queue-actions'><QueueActions source='favorites' playQueue={playQueue} pending={queueBusy} /></div>}
-                <LibraryView model={model} embedded />
-            </div>}
-            {tab === 'folders' && <Suspense fallback={<ClientSkeleton layout='row' label='Chargement des dossiers…' />}><FolderPanel image={image} /></Suspense>}
-            {tab === 'upcoming' && (row('Épisodes à venir', upcoming.data, false, 'upcoming-episodes') || (upcoming.isPending ? <ClientSkeleton layout='row' label='Chargement des épisodes à venir…' /> : empty('Aucun épisode annoncé pour vos séries.')))}
-            {tab === 'history' && (row('Vus récemment', history.data) || (history.isPending ? <ClientSkeleton layout='row' label='Chargement de l’historique…' /> : empty('Rien de vu récemment.')))}
-            {tab === 'taste' && <div className='client-personal-columns'>{!!stats.data?.genres.length && <GenreTaste stats={stats.data} />}<RatingsOverview /></div>}
-            {tab === 'requests' && <PersonalRequests connected={seerr.connected} />}
-        </div>
+        {section === 'folders' && <Suspense fallback={<ClientSkeleton layout='row' label='Chargement des dossiers…' />}><FolderPanel image={image} /></Suspense>}
+        {section === 'history' && (row('Vus récemment', history.data) || <ClientSkeleton layout='row' label='Chargement de l’historique…' />)}
+        {section === 'taste' && <><RatingsOverview /><GenreTaste stats={stats} /></>}
+        {section === 'bilan' && <JourneyRecap stats={stats} entries={entries} image={image} name={user?.Name} />}
     </div>;
 }
 
-function PersonalRequests({ connected }: Readonly<{ connected: boolean }>) {
-    const query = useRequestProgress();
-    if (!query.data && !connected) return null;
-    const active = query.data?.filter(entry => entry.active).length || 0;
-    return <div id='client-requests' className='client-personal-requests'>
-        {query.data ? <section className='client-request-overview'>
-            <div><h2>Mes demandes</h2><p>{active ? `${active} en cours` : 'Aucune demande en cours'}</p></div>
-            <ActionLink to='/client?view=requests' icon='bell'>Voir le suivi</ActionLink>
-        </section> : <RequestTracking />}
+/** Mon espace: everything I mean to watch on one timeline, from what I watched to what is on its way. */
+function PersonalView({ model }: ViewProps) {
+    const { image, play, params, setParams, setPageAmbient } = model;
+    const home = useClientMedia('home', '', 0);
+    const stats = usePersonalStats();
+    const history = useViewingHistory();
+    const requests = useRequestProgress(true, true);
+    const picker = useFolderPicker();
+    const filed = useTonightOptions();
+    const saved = useSavedTitles(filed.data?.filed);
+    const watched = stats.isPending ? undefined : stats.data?.watchedSeriesIds || [];
+    const catalog = model.shared.isPending ? undefined : model.shared.data || [];
+    const upcoming = usePersonalUpcoming(watched, catalog);
+    const entries = useMemo(() => buildJourney({
+        resume: home.data?.resume || [], next: home.data?.next || [], requests: requests.data || [],
+        upcoming: upcoming.data || [], saved: saved.data || [], filed: filed.data?.filed, history: history.data || []
+    }), [home.data, requests.data, upcoming.data, saved.data, filed.data, history.data]);
+    const lead = entries.find(entry => entry.stage === 'ready' && entry.item)?.item;
+    const leadBackdrop = lead ? image(lead, true) : '';
+    useEffect(() => setPageAmbient(leadBackdrop), [leadBackdrop, setPageAmbient]);
+    const section = (Object.keys(PERSONAL_SECTIONS) as PersonalSection[]).find(key => key === params.get('section'));
+    if (section) return <PersonalSectionPage model={model} section={section} stats={stats.data} entries={entries} />;
+    const openRecap = () => setParams(previous => {
+        const changed = new URLSearchParams(previous);
+        changed.set('section', 'bilan');
+        return changed;
+    });
+    return <div className='client-personal client-journey is-temps'>
+        <header className='client-journey-heading'>
+            <div><h1>Mon espace</h1><MonthLine stats={stats.data} open={openRecap} /></div>
+            <FavoritesMigration enabled={!!picker?.folders} />
+        </header>
+        {home.isPending ? <ClientSkeleton layout='row' label='Chargement de votre espace…' /> : <JourneyTimeline entries={entries} image={image} play={play} folders={picker?.folders} />}
     </div>;
 }
 

@@ -27,11 +27,11 @@ function RatedLibrary() {
         refetchOnWindowFocus: true
     });
     const items = (ratings.data || []).filter(item => !type || item.Type === type);
-    return <section className='client-rated-section' id='client-ratings' aria-label='Mes notes'>
-        <header><h2>Mes notes</h2><ChoiceSelect label='Filtrer mes notes' value={type} options={[['', 'Films et séries'], ['Movie', 'Films'], ['Series', 'Séries']]} onChange={value => {
+    return <section className='client-personal-section client-rated-section' id='client-ratings' aria-labelledby='client-ratings-heading'>
+        <header><h2 id='client-ratings-heading'>Mes notes</h2><div className='client-filter-options'><ChoiceSelect label='Filtrer mes notes' value={type} options={[['', 'Films et séries'], ['Movie', 'Films'], ['Series', 'Séries']]} onChange={value => {
             setType(value);
             setLimit(24);
-        }} /></header>
+        }} /></div></header>
         {ratings.isPending && <ClientSkeleton layout='grid' contained label='Chargement de vos notes…' />}
         {ratings.isFetching && !ratings.isPending && <p role='status'>Actualisation de vos notes…</p>}
         {ratings.isError && <p role='alert'>Impossible de charger vos notes. <button onClick={() => { void ratings.refetch(); }}>{LABELS.retry}</button></p>}

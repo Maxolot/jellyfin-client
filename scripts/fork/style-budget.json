@@ -1,11 +1,11 @@
 {
     "note": "Plafonds des valeurs en dur hors de design/. Ne jamais les relever : node scripts/fork/style-metrics.mjs --update après une baisse.",
     "hardcoded": {
-        "colors": 591,
+        "colors": 570,
         "coolGreys": 14,
         "fontSizes": 30,
         "fontWeights": 0,
-        "radii": 11,
+        "radii": 10,
         "durations": 20
     }
 }

@@ -1,130 +1,6 @@
-/* "Mon espace": statistics, taste panels and compact request tracking. */
+/* Mon espace : pages de section (dossiers, goûts) et barres des genres préférés. */
 
 @use 'design' as ds;
-
-.client-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 12px;
-    margin: 0 var(--client-margin) 32px;
-}
-
-.client-stat {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    padding: 16px 18px;
-    border: 1px solid #ffffff1a;
-    border-radius: var(--client-radius-card);
-    background: linear-gradient(160deg, #ffffff0d, #ffffff04);
-    color: var(--client-ink-subtle);
-    font: inherit;
-    font-size: var(--client-text-12);
-    text-align: left;
-
-    strong {
-        display: flex;
-        min-height: 34px;
-        align-items: center;
-        color: var(--client-ink);
-        font-size: var(--client-text-30);
-        font-variant-numeric: tabular-nums;
-        font-weight: 600;
-        line-height: 1.2;
-    }
-
-    small {
-        overflow: hidden;
-        max-width: 100%;
-        color: #8b8b8b;
-        font-size: var(--client-text-11);
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-}
-
-/* Global client button typography must not change the tile labels. */
-.client-stats > .client-stat {
-    font-size: var(--client-text-12);
-    font-weight: 400;
-}
-
-button.client-stat {
-    cursor: pointer;
-    transition: border-color var(--client-duration-state), background-color var(--client-duration-state);
-
-    &:hover,
-    &:focus-visible {
-        border-color: #ffffff3d;
-        background-color: var(--client-surface-layer);
-    }
-}
-
-.client-stat-placeholder {
-    display: block;
-    width: 56px;
-    height: 24px;
-    border-radius: var(--client-radius-small);
-    background: var(--client-surface-highlight);
-}
-
-/* The preview video is positioned: keep a readable shade and the actions above it. */
-.client-personal-spotlight::after {
-    position: absolute;
-    z-index: 0;
-    inset: 0;
-    background: linear-gradient(90deg, #0d0d0de6 0%, #0d0d0da6 40%, #0d0d0d00 75%);
-    content: '';
-    pointer-events: none;
-}
-
-.client-personal-spotlight > div {
-    position: relative;
-    z-index: 1;
-}
-
-.client-spotlight-progress {
-    display: block;
-    width: min(260px, 100%);
-    height: 3px;
-    margin: -12px 0 22px;
-    overflow: hidden;
-    border-radius: 3px;
-    background: #ffffff2e;
-
-    i {
-        display: block;
-        height: 100%;
-        background: #e50914;
-    }
-}
-
-.client-personal-columns {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 18px;
-    margin: 12px var(--client-margin) 32px;
-
-    > :only-child {
-        grid-column: 1 / -1;
-    }
-
-    .client-personal-panel h2 {
-        margin: 0 0 16px;
-        font-size: var(--client-text-18);
-        font-weight: 500;
-    }
-}
-
-.client-personal-panel {
-    min-width: 0;
-    padding: 20px 22px;
-    border: 1px solid #ffffff1a;
-    border-radius: var(--client-radius-panel);
-    background: var(--client-surface-layer);
-}
 
 .client-genre-taste ol {
     display: grid;
@@ -158,166 +34,37 @@ button.client-stat {
         display: block;
         height: 100%;
         border-radius: inherit;
-        background: linear-gradient(90deg, #c6323b, #e5505a);
+        background: var(--client-progress);
     }
 
     small {
-        color: #8b8b8b;
+        color: var(--client-ink-subtle);
         font-size: var(--client-text-11);
         text-align: right;
     }
 }
 
-.client-personal .client-rated-section {
-    margin: 38px var(--client-margin);
-}
+.client-personal-section {
+    margin: 0 var(--client-margin) var(--client-space-32);
 
-/* Requests: a single horizontal shelf of posters instead of a two-column list. */
-.client-personal-requests {
-    scroll-margin-top: 120px;
-
-    .client-request-tracking {
-        margin: 32px var(--client-margin) 50px;
-        padding: 0;
-        border: 0;
-        background: none;
-        backdrop-filter: none;
-    }
-
-    .client-request-tracking header {
-        flex-direction: row;
+    > header {
+        display: flex;
         flex-wrap: wrap;
         align-items: center;
-        margin-bottom: 14px;
-    }
+        justify-content: space-between;
+        gap: var(--client-space-12) var(--client-space-16);
+        margin-bottom: var(--client-space-16);
 
-    .client-request-tracking h2 {
-        margin: 0;
-        font-size: var(--client-text-24);
-        font-weight: 500;
-    }
-
-    .client-request-list {
-        display: grid;
-        grid-auto-columns: 128px;
-        grid-auto-flow: column;
-        grid-template-columns: none;
-        gap: 14px;
-        padding-bottom: 8px;
-        overflow-x: auto;
-        overscroll-behavior-x: contain;
-        scroll-snap-type: x proximity;
-        scrollbar-width: thin;
-    }
-
-    .client-tracked-request {
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-        padding: 0;
-        background: none;
-        scroll-snap-align: start;
-
-        img {
-            width: 100%;
-            height: auto;
-            aspect-ratio: 2 / 3;
-            border-radius: var(--client-radius-small);
-            object-fit: cover;
-            background: var(--client-surface-layer);
+        h2 {
+            margin: 0;
+            font-size: var(--client-text-24);
+            font-weight: 700;
         }
 
-        .client-tracked-art {
-            position: relative;
-            display: block;
-            width: 100%;
-            flex: initial;
-            overflow: hidden;
-            border-radius: var(--client-radius-small);
-        }
-
-        .client-tracked-title {
-            position: absolute;
-            right: 0;
-            bottom: 0;
-            left: 0;
-            padding: 24px 8px 9px;
-            background: linear-gradient(transparent, #0e0e0e 72%);
-            color: var(--client-ink);
-            font-size: var(--client-text-12);
-            line-height: 1.3;
-            opacity: 0;
-        }
-
-        &:where(:hover, :focus-visible) .client-tracked-title { opacity: 1; }
-
-        small {
-            color: var(--client-ink-subtle);
-            font-size: var(--client-text-11);
-        }
-
-        > .client-icon {
-            display: none;
-        }
-    }
-
-    .client-request-tracking label {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: var(--client-ink-subtle);
-        font-size: var(--client-text-12);
-    }
-
-    .client-request-tracking select {
-        padding: 9px 12px;
-        border: 1px solid #ffffff40;
-        border-radius: var(--client-radius-small);
-        background: #191919;
-        color: var(--client-ink);
-    }
-
-    .client-pagination {
-        justify-content: flex-start;
-        gap: 12px;
-        margin: 10px 0 0;
-    }
-
-    .client-pagination button {
-        padding: 7px 14px;
-        border: 1px solid var(--client-line);
-        border-radius: var(--client-radius-pill);
-        background: var(--client-surface-layer);
-        color: var(--client-ink);
-        font: inherit;
-        cursor: pointer;
+        .client-filter-options { margin: 0; }
     }
 }
 
 @include ds.phone {
-    .client-stats {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-    }
-
-    .client-stat {
-        padding: 13px 14px;
-
-        strong {
-            font-size: var(--client-text-24);
-        }
-    }
-
-    .client-personal-columns {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
-    .client-personal-panel {
-        padding: 18px;
-    }
-
-    .client-personal-requests .client-request-list {
-        grid-auto-columns: 108px;
-    }
+    .client-personal-section > header h2 { font-size: var(--client-text-18); }
 }
