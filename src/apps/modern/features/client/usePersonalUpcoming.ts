@@ -8,6 +8,7 @@ import { useApi } from 'hooks/useApi';
 
 import { calendarDay, episodesForSeries, followedSeries, seriesKey } from './personalUpcoming';
 import { useLocalIdentities } from './seerr/queries';
+import { useTonightOptions } from './tonight/queries';
 import { clientRequest } from './session';
 import { sharedCatalogItems, type SharedCatalogEntry } from './sharedCatalog';
 
@@ -21,6 +22,9 @@ export default function usePersonalUpcoming(watchedSeries: string[] | undefined,
     const subscribed = userId ? (catalog || []).filter(entry => entry.type === 'tv' && seriesKey(entry.addedBy) === seriesKey(userId)) : [];
     const identities = useLocalIdentities(subscribed.length > 0);
     const catalogSeries = sharedCatalogItems(subscribed, identities.data || []).filter(entry => !entry.Id?.startsWith('seerr-'));
+    // Series filed in my folders are followed; favorites no longer mean « to watch ».
+    const filed = useTonightOptions();
+    const filedSeries = Object.keys(filed.data?.filed || {}).filter(key => !key.startsWith('seerr-'));
     const interests = useQuery({
         queryKey: [...account, 'FollowedSeries'],
         enabled: !!api && !!userId,
@@ -28,18 +32,15 @@ export default function usePersonalUpcoming(watchedSeries: string[] | undefined,
         queryFn: ({ signal }) => clientRequest(async () => {
             const library = getLibraryApi(api!);
             const options = { userId, enableImages: false, enableTotalRecordCount: false };
-            const [favorites, resumes] = await Promise.all([
-                library.getItems({ ...options, recursive: true, isFavorite: true, includeItemTypes: [BaseItemKind.Series, BaseItemKind.Episode] }, { signal }),
-                library.getResumeItems({ ...options, includeItemTypes: [BaseItemKind.Episode] }, { signal })
-            ]);
-            return followedSeries(favorites.data.Items || [], resumes.data.Items || []);
+            const resumes = await library.getResumeItems({ ...options, includeItemTypes: [BaseItemKind.Episode] }, { signal });
+            return followedSeries([], resumes.data.Items || []);
         })
     });
-    const ids = [...new Set([...(watchedSeries || []), ...(interests.data || []), ...catalogSeries.map(item => item.Id)].map(seriesKey).filter(Boolean))].sort((left, right) => left.localeCompare(right));
+    const ids = [...new Set([...(watchedSeries || []), ...(interests.data || []), ...filedSeries, ...catalogSeries.map(item => item.Id)].map(seriesKey).filter(Boolean))].sort((left, right) => left.localeCompare(right));
     const today = calendarDay(new Date());
     return useQuery({
         queryKey: [...account, 'PersonalUpcoming', today, ids],
-        enabled: !!api && !!userId && !!ids.length && !!watchedSeries && !!catalog && !interests.isPending && (!subscribed.length || !identities.isPending),
+        enabled: !!api && !!userId && !!ids.length && !!watchedSeries && !!catalog && !interests.isPending && !filed.isPending && (!subscribed.length || !identities.isPending),
         staleTime: 300000,
         retry: false,
         queryFn: ({ signal }) => clientRequest(async () => {

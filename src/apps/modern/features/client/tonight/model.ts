@@ -106,7 +106,8 @@ type Taste = { total: number; count: number; source?: BaseItemDto; peak: number 
 function tasteWeight(item: BaseItemDto) {
     const stars = personalStars(item);
     const played = item.UserData?.Played ? 0.24 : 0;
-    const favorite = item.UserData?.IsFavorite ? 0.9 : 0;
+    // A personal score of 4.5 or 5 is a « coup de cœur »: favorites now only meant « to watch ».
+    const favorite = stars != null && stars >= 4.5 ? 0.9 : 0;
     const like = stars != null && stars >= 4 ? stars - 2.2 : 0;
     const dislike = stars != null && stars <= 2 ? 2.6 : 0;
     return played + favorite + like - dislike;

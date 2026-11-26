@@ -17,10 +17,10 @@ describe('pickHeroes', () => {
         expect(picked[0].Id).toBe('Zodiac');
     });
 
-    it('favours fresh additions, « Ma liste » and the genres watched most', () => {
+    it('favours fresh additions, titles in my folders and the genres watched most', () => {
         const history = Array.from({ length: 5 }, (_, index) => film(`h${index}`, { Genres: ['Thriller'] }));
-        const picked = pickHeroes(pool([film('Old'), film('Fresh', { DateCreated: '2026-11-18T00:00:00Z' }), film('Liked', { UserData: { Played: false, IsFavorite: true, Key: '' } }),
-            film('Thriller', { Genres: ['Thriller'] })], history), 'films', now, 3);
+        const picked = pickHeroes(pool([film('Old'), film('Fresh', { DateCreated: '2026-11-18T00:00:00Z' }), film('Liked'),
+            film('Thriller', { Genres: ['Thriller'] })], history), 'films', now, 3, new Set(), new Set(['liked']));
         expect(picked.map(item => item.Id)).toEqual(expect.arrayContaining(['Fresh', 'Liked', 'Thriller']));
     });
 

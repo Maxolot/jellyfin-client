@@ -103,6 +103,7 @@ import { sharedCatalogItems, useSharedCatalog } from '../features/client/sharedC
 import NotificationCenter from '../features/client/requests/NotificationCenter';
 import { CompactRequest } from '../features/client/requests/RequestInline';
 import { useRequestProgress } from '../features/client/requests/queries';
+import { useTonightOptions } from '../features/client/tonight/queries';
 import { canRequest, externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
 import { ActionButton, ActionLink, Chip } from '../features/client/ui';
 import { LABELS } from '../features/client/labels';
@@ -492,12 +493,13 @@ function useClientController() {
         return <MediaRow key={`${title}:${items.map(entry => entry.Id).join('|')}`} title={title} items={items} kind={kind} continuation={horizontal} showDescription={preferences.hoverDescriptions} showWatched={preferences.watchedMarkers} image={image} logo={logo} onPrepare={prepareDetail} onRelease={releaseDetail} />;
     }
     const heroPool = useHeroPool(view === 'home' || discovery ? view : 'disabled', genre);
+    const filed = useTonightOptions().data?.filed;
     const heroItems = useMemo(() => {
         // Titles already in « Continuer à regarder » are not repeated in the home banner.
         const continuing = new Set([...(media.data?.resume || []), ...(media.data?.next || [])].flatMap(entry => [entry.Id || '', entry.SeriesId || '']));
-        const picked = view === 'home' || discovery ? pickHeroes(heroPool.data, view as HeroMix, Date.now(), 5, continuing) : [];
+        const picked = view === 'home' || discovery ? pickHeroes(heroPool.data, view as HeroMix, Date.now(), 5, continuing, new Set(Object.keys(filed || {}))) : [];
         return picked.length ? picked : heroCandidates(discovery, media.data);
-    }, [heroPool.data, media.data, view, discovery]);
+    }, [heroPool.data, media.data, view, discovery, filed]);
     const lead = heroItems[heroIndex % Math.max(1, heroItems.length)];
     const nextHero = heroItems[(heroIndex + 1) % Math.max(1, heroItems.length)];
     const nextArtwork = nextHero && !id ? image(nextHero, true, true) : '';

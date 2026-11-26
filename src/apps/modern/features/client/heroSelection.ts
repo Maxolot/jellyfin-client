@@ -37,23 +37,26 @@ export function familyKey(item: BaseItemDto) {
     return words.join(' ').replace(/^l'/, '');
 }
 
-export function heroScore(item: BaseItemDto, taste: Map<string, number>, now: number, day: string) {
+export function heroScore(item: BaseItemDto, taste: Map<string, number>, now: number, day: string, saved: ReadonlySet<string> = new Set()) {
     const rating = Math.min(10, Math.max(0, item.CommunityRating || 0)) / 10;
     const age = (now - Date.parse(item.DateCreated || '')) / DAY;
     const recency = age >= 0 && age < 30 ? 1 - age / 30 : 0;
     const genres = item.Genres || [];
     const affinity = genres.length ? Math.max(...genres.map(genre => taste.get(genre) || 0)) : 0;
-    return rating * 2 + recency * 1.5 + (item.UserData?.IsFavorite ? 1 : 0) + (item.ImageTags?.Logo ? 0.5 : 0)
+    return rating * 2 + recency * 1.5 + (saved.has(savedKey(item.Id)) ? 1 : 0) + (item.ImageTags?.Logo ? 0.5 : 0)
         + affinity * 1.5 + dailyJitter(item.Id || '', day) * 1.2;
 }
+
+/** Folder keys are item ids without dashes, in lower case. */
+const savedKey = (id: string | null | undefined) => (id || '').replace(/-/g, '').toLowerCase();
 
 const eligible = (item: BaseItemDto) => !!item.Id && !item.UserData?.Played && !!item.BackdropImageTags?.length;
 
 /**
- * Five unwatched titles with artwork, ranked by public rating, freshness, « Ma liste » and the account's genres,
+ * Five unwatched titles with artwork, ranked by public rating, freshness, my folders and the account's genres,
  * varied in genre and saga. The home banner mixes films and series.
  */
-function rank(pool: HeroPool, mix: HeroMix, now: number, exclude: ReadonlySet<string>) {
+function rank(pool: HeroPool, mix: HeroMix, now: number, exclude: ReadonlySet<string>, saved: ReadonlySet<string>) {
     const day = new Date(now).toDateString();
     const taste = tasteProfile(pool.history);
     const seen = new Set<string>();
@@ -61,16 +64,16 @@ function rank(pool: HeroPool, mix: HeroMix, now: number, exclude: ReadonlySet<st
         if (!eligible(item) || exclude.has(item.Id!) || seen.has(item.Id!)) return false;
         seen.add(item.Id!);
         return mix === 'home' || (mix === 'films' ? item.Type === 'Movie' : item.Type === 'Series');
-    }).map(item => ({ item, score: heroScore(item, taste, now, day) })).sort((a, b) => b.score - a.score).map(entry => entry.item);
+    }).map(item => ({ item, score: heroScore(item, taste, now, day, saved) })).sort((a, b) => b.score - a.score).map(entry => entry.item);
 }
 
 /**
- * Five unwatched titles with artwork, ranked by public rating, freshness, « Ma liste » and the account's genres,
+ * Five unwatched titles with artwork, ranked by public rating, freshness, my folders and the account's genres,
  * varied in genre and saga. The home banner mixes films and series.
  */
-export function pickHeroes(pool: HeroPool | undefined, mix: HeroMix, now = Date.now(), max = 5, exclude: ReadonlySet<string> = new Set()) {
+export function pickHeroes(pool: HeroPool | undefined, mix: HeroMix, now = Date.now(), max = 5, exclude: ReadonlySet<string> = new Set(), saved: ReadonlySet<string> = new Set()) {
     if (!pool) return [];
-    const ranked = rank(pool, mix, now, exclude);
+    const ranked = rank(pool, mix, now, exclude, saved);
     const chosen: BaseItemDto[] = [];
     const genres = new Set<string>();
     const families = new Set<string>();
