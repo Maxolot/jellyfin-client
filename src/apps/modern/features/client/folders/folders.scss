@@ -1,27 +1,12 @@
 .client-folders {
     display: grid;
     gap: 14px;
-    margin: 0 var(--client-margin) 18px;
 
-    h3,
     h4,
     p {
         margin: 0;
         overflow-wrap: anywhere;
     }
-
-    h3 {
-        font-size: var(--client-text-18);
-        font-weight: 600;
-    }
-}
-
-.client-folders-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
 }
 
 .client-folder-choices,
@@ -95,8 +80,6 @@
     }
 }
 
-.client-folders > .client-folder-favorites-heading { margin-top: 8px; }
-
 .client-folder-choice {
     width: 100%;
     justify-content: flex-start;
@@ -119,4 +102,44 @@
     strong { overflow-wrap: anywhere; }
 
     .client-select { min-width: 150px; }
+}
+
+/* Ajout en un geste : confirmation discrète, avec le choix d'un autre dossier. */
+.client-folder-toast {
+    position: fixed;
+    z-index: 1000;
+    bottom: var(--client-space-24);
+    left: 50%;
+    display: flex;
+    align-items: center;
+    gap: var(--client-space-12);
+    max-width: calc(100vw - 2 * var(--client-space-16));
+    padding: var(--client-space-12) var(--client-space-16);
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-pill);
+    background: var(--client-surface-raised);
+    box-shadow: var(--client-shadow-surface);
+    color: var(--client-ink);
+    font-size: var(--client-text-14);
+    transform: translateX(-50%);
+    backdrop-filter: var(--client-blur-surface);
+
+    .client-icon {
+        width: 16px;
+        height: 16px;
+        flex: none;
+    }
+
+    button {
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--client-ink);
+        font: inherit;
+        font-weight: 700;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        white-space: nowrap;
+        cursor: pointer;
+    }
 }

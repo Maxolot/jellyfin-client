@@ -1,8 +1,6 @@
 /* eslint-disable react/jsx-no-bind -- Callbacks belong to the visible picker and its controls. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
-import { getUserDataApi } from '@jellyfin/sdk/lib/utils/api/user-data-api';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import React, { createContext, type MouseEvent, type ReactNode, useContext, useRef, useState } from 'react';
+import React, { createContext, type MouseEvent, type ReactNode, useContext, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useApi } from 'hooks/useApi';
@@ -14,13 +12,30 @@ import { useFollowedMemberships } from '../collections/followed';
 import { useClientCollections, useCollectionChanges } from '../collections/queries';
 import { isExternal, type SeerrIdentity } from '../seerr/model';
 import { useSharedCatalog } from '../sharedCatalog';
-import { clientRequest } from '../session';
-import { canEditFolder, canFile, followedMember, followedPath, type Folder } from './model';
+import { useTonightAction, useTonightOptions } from '../tonight/queries';
+import { canEditFolder, canFile, folderItemId, followedMember, followedPath, type Folder } from './model';
 import { useFolderChange, useFolders } from './queries';
 import './folders.scss';
 import { ActionButton } from '../ui';
 
-type Picker = { folders: Folder[] | null; openPicker: (item: BaseItemDto, returnFocus?: HTMLElement | null) => void };
+type Picker = {
+    folders: Folder[] | null;
+    openPicker: (item: BaseItemDto, returnFocus?: HTMLElement | null) => void;
+    quickSave: (item: BaseItemDto, returnFocus?: HTMLElement | null) => void;
+    saving: boolean;
+};
+
+/** The default folder of the one-tap « + »; the plugin creates it on first use. */
+export const DEFAULT_FOLDER = 'À voir plus tard';
+
+/** Titles in my own folders, keyed as the plugin keys them, with the date they were filed. */
+export function useFiled() {
+    return useTonightOptions().data?.filed;
+}
+
+export function filedKey(item: BaseItemDto, member?: { type: string; id: number }) {
+    return member ? `seerr-${member.type}-${member.id}` : folderItemId(item.Id || '');
+}
 const FolderPickerContext = createContext<Picker | null>(null);
 
 export function useFolderPicker() {
@@ -34,41 +49,51 @@ export function FolderPickerProvider({ children }: Readonly<{ children: ReactNod
     const focus = useRef<HTMLElement | null>(null);
     const scope = JSON.stringify([api?.basePath, user?.Id]);
     const selected = selection?.scope === scope && folders.data ? selection.item : null;
+    const save = useTonightAction();
+    const catalog = useSharedCatalog(true);
+    const [notice, setNotice] = useState<{ item: BaseItemDto; text: string; failed?: boolean } | null>(null);
+    useEffect(() => {
+        if (!notice) return;
+        const timer = setTimeout(() => setNotice(null), 6000);
+        return () => clearTimeout(timer);
+    }, [notice]);
+    const quickSave = (item: BaseItemDto, returnFocus?: HTMLElement | null) => {
+        const member = followedMember(item, catalog.data);
+        focus.current = returnFocus || null;
+        const identity = member ? [member.type, member.id].join('/') : item.Id;
+        save.mutate({ route: `/Later/${identity}`, data: {} }, {
+            onSuccess: () => setNotice({ item, text: `Ajouté à « ${DEFAULT_FOLDER} »` }),
+            onError: () => setNotice({ item, text: 'Le titre n’a pas pu être ajouté.', failed: true })
+        });
+    };
     const close = () => {
         setSelection(null);
         focus.current?.focus({ preventScroll: true });
         focus.current = null;
     };
-    return <FolderPickerContext.Provider value={{ folders: folders.data ?? null, openPicker: (item, returnFocus) => {
-        focus.current = returnFocus || null;
+    const openPicker = (item: BaseItemDto, returnFocus?: HTMLElement | null) => {
+        focus.current = returnFocus || focus.current;
+        setNotice(null);
         setSelection({ item, scope });
-    } }}>
+    };
+    return <FolderPickerContext.Provider value={{ folders: folders.data ?? null, openPicker, quickSave, saving: save.isPending }}>
         {children}
-        <ClientDialog className='client-folder-modal' label='Ma liste' title='Ma liste' subtitle={selected?.Name || undefined} controlled={{ open: !!selected, onClose: close }}>
+        {notice && <div className='client-folder-toast' role={notice.failed ? 'alert' : 'status'}>
+            <ClientIcon name={notice.failed ? 'close' : 'check'} /><span>{notice.text}</span>
+            {!notice.failed && <button type='button' onClick={() => openPicker(notice.item)}>Choisir un autre dossier</button>}
+        </div>}
+        <ClientDialog className='client-folder-modal' label='Ranger dans un dossier' title='Ranger dans un dossier' subtitle={selected?.Name || undefined} controlled={{ open: !!selected, onClose: close }}>
             {selected && folders.data && <PickerChoices key={selected.Id} item={selected} folders={folders.data.filter(canEditFolder)} close={close} />}
         </ClientDialog>
     </FolderPickerContext.Provider>;
 }
 
 function PickerChoices({ item, folders, close }: Readonly<{ item: BaseItemDto; folders: Folder[]; close: () => void }>) {
-    const { api, user } = useApi();
-    const cache = useQueryClient();
+    const { user } = useApi();
     const change = useFolderChange();
     const catalog = useSharedCatalog(isExternal(item));
     const member = followedMember(item, catalog.data);
     const [added, setAdded] = useState<string[]>([]);
-    const [savedFavorite, setSavedFavorite] = useState(!!item.UserData?.IsFavorite);
-    const favorite = useMutation({
-        networkMode: 'always',
-        mutationFn: async () => {
-            if (!api || !user?.Id || !item.Id) return;
-            const data = getUserDataApi(api);
-            const params = { userId: user.Id, itemId: item.Id };
-            const result = await clientRequest(() => savedFavorite ? data.unmarkFavoriteItem(params) : data.markFavoriteItem(params));
-            setSavedFavorite(result.data.IsFavorite ?? !savedFavorite);
-            await cache.invalidateQueries({ queryKey: ['Client', api.basePath, user.Id] });
-        }
-    });
     function addTo(folder: Folder) {
         const path = member ? followedPath(member.type, member.id) : `/Items/${item.Id}`;
         change.mutate({ method: 'PUT', path: `/${folder.id}${path}` }, {
@@ -76,9 +101,6 @@ function PickerChoices({ item, folders, close }: Readonly<{ item: BaseItemDto; f
         });
     }
     return <div className='client-folder-dialog'>
-        {!isExternal(item) && <ActionButton className='client-folder-choice' aria-pressed={savedFavorite} disabled={favorite.isPending} onClick={() => favorite.mutate()} icon={savedFavorite ? 'check' : 'plus'}>
-            Favoris
-        </ActionButton>}
         <h3>Dossiers</h3>
         {folders.length ? <ul className='client-folder-choices'>{folders.map(folder => <li key={folder.id}>
             <ActionButton className='client-folder-choice' aria-label={added.includes(folder.id) ? `Ajouté à ${folder.name}` : `Ajouter à ${folder.name}`}
@@ -86,9 +108,9 @@ function PickerChoices({ item, folders, close }: Readonly<{ item: BaseItemDto; f
                 <span>{folder.name}{folder.access === 'editor' && <small>Partagé avec moi</small>}</span>
                 <ClientIcon name={added.includes(folder.id) ? 'check' : 'plus'} />
             </ActionButton>
-        </li>)}</ul> : <p>Aucun dossier modifiable. <Link to='/client?view=mine' onClick={close}>Gérer mes dossiers</Link></p>}
+        </li>)}</ul> : <p>Aucun dossier modifiable. <Link to='/client?view=mine&section=folders' onClick={close}>Gérer mes dossiers</Link></p>}
         {member && canManageCollections(user?.Policy) && <CollectionChoices member={member} />}
-        {(change.isError || favorite.isError) && <p role='alert'>Le changement n’a pas été enregistré. Réessayez.</p>}
+        {change.isError && <p role='alert'>Le changement n’a pas été enregistré. Réessayez.</p>}
         {!!added.length && <p role='status'>Ajouté à {folders.find(folder => folder.id === added.at(-1))?.name || 'un dossier'}.</p>}
     </div>;
 }
@@ -124,25 +146,33 @@ function CollectionChoices({ member }: Readonly<{ member: SeerrIdentity }>) {
 }
 
 type ButtonProps = { item: BaseItemDto; fallback?: () => void; disabled?: boolean; tabIndex?: number; favorite?: boolean };
+
+function listActionLook(item: BaseItemDto, available: boolean, filed: boolean, favorite: boolean): { label: string; icon: 'check' | 'plus' } {
+    const name = item.Name || 'ce titre';
+    if (available) return filed ? { label: `${name} est dans tes dossiers : choisir un dossier`, icon: 'check' } : { label: `Ajouter ${name} à « ${DEFAULT_FOLDER} »`, icon: 'plus' };
+    return favorite ? { label: 'Retirer de ma liste', icon: 'check' } : { label: 'Ajouter à ma liste', icon: 'plus' };
+}
+
+/** « + »: one tap files the title in the default folder; once filed, the same button opens the folder choice. */
 export function ListAction({ item, fallback, disabled, tabIndex, favorite = !!item.UserData?.IsFavorite }: Readonly<ButtonProps>) {
     const picker = useFolderPicker();
     const external = isExternal(item);
     const catalog = useSharedCatalog(external);
     const member = followedMember(item, catalog.data);
     const memberships = useFollowedMemberships(!!member);
+    const filed = useFiled();
     const available = !!picker?.folders && (canFile(item) || (!!member && memberships.data === true));
     if (!available && !fallback) return null;
-    const favoriteLabel = favorite ? 'Retirer de ma liste' : 'Ajouter à ma liste';
-    const label = available ? `Choisir où ajouter ${item.Name || 'ce titre'}` : favoriteLabel;
+    const isFiled = available && !!filed && filedKey(item, member) in filed;
+    const { label, icon } = listActionLook(item, available, isFiled, favorite && !!fallback);
     function activate(event: MouseEvent<HTMLButtonElement>) {
         event.stopPropagation();
-        if (available) picker.openPicker(item, event.currentTarget);
-        else fallback?.();
+        if (!available) fallback?.();
+        else if (isFiled) picker.openPicker(item, event.currentTarget);
+        else picker.quickSave(item, event.currentTarget);
     }
-    return <ActionButton round aria-label={label} title={label} aria-haspopup={available ? 'dialog' : undefined}
-        data-folder-action={available ? '' : undefined} aria-pressed={available ? undefined : favorite} disabled={disabled} tabIndex={tabIndex} onClick={activate} icon={favorite && !!fallback ? 'check' : 'plus'}>
-
-    </ActionButton>;
+    return <ActionButton round aria-label={label} title={label} aria-haspopup={isFiled ? 'dialog' : undefined}
+        data-folder-action={available ? '' : undefined} aria-pressed={available ? undefined : favorite} disabled={disabled || (available && picker.saving)} tabIndex={tabIndex} onClick={activate} icon={icon} />;
 }
 
 /* eslint-enable react/jsx-no-bind */
