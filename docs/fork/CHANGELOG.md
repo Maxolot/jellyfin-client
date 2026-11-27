@@ -14,7 +14,9 @@ request features need the Shared Catalog plugin, now in the bundled catalogue.
   centre, person filmographies across the library and Seerr.
 - Library: public Jellyfin collections, shared catalog of followed titles kept without their files, advanced
   filters, watched marks, video edition choice, trailers, season covers with an episode drawer, spoiler protection,
-  « Ce soir » suggestions with an optional duo mode, Spotlight search including natural-language descriptions.
+  Spotlight search including natural-language descriptions.
+- « Ce soir » (suggestions for the evening, optional duo mode) is not finished: hidden by default, it can be turned
+  on in Settings → Apparence.
 - Player: floating bar with a choice of layouts, buffered progress, title logo while loading, resume after reload,
   season and shuffled queues.
 - Settings: an Administration section in the client's style, an interface size setting.

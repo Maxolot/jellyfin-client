@@ -37,8 +37,8 @@ export const SETTINGS_GROUPS: SettingsGroup[] = [
 const FORMER: Record<string, SectionKey> = { interface: 'apparence', lecture: 'lecteur' };
 
 /** The section to show for an address; server pages fall back to the preferences for everyone else. */
-export function resolveSection(requested: string | null, administrator: boolean): SettingsSection {
+export function resolveSection(requested: string | null, administrator: boolean, hidden: readonly SectionKey[] = []): SettingsSection {
     const key = (requested && FORMER[requested]) || requested;
     const groups = SETTINGS_GROUPS.filter(group => administrator || !group.admin);
-    return groups.flatMap(group => group.sections).find(section => section.key === key) || SETTINGS_GROUPS[0].sections[0];
+    return groups.flatMap(group => group.sections).find(section => section.key === key && !hidden.includes(section.key)) || SETTINGS_GROUPS[0].sections[0];
 }

@@ -10,7 +10,7 @@ import useClientMediaQuery from '../features/client/useClientMediaQuery';
 import { useQueryClient } from '@tanstack/react-query';
 import { APP_NAME } from 'constants/branding';
 import React, { type CSSProperties, lazy, memo, Suspense, type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation, useNavigationType, useSearchParams, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigationType, useSearchParams, useNavigate, useParams } from 'react-router-dom';
 
 import Page from 'components/Page';
 import { playbackManager } from 'components/playback/playbackmanager';
@@ -558,15 +558,15 @@ function ClientSurface() {
     return <ClientView model={model} />;
 }
 
-type NavProps = { view: string; detail: boolean; prepare: (view: string) => void };
+type NavProps = { view: string; detail: boolean; tonight: boolean; prepare: (view: string) => void };
 
 /** On its own so that a click lights up the tab first: the page changes right after that frame has been painted. */
-const NavLinks = memo(function ClientNavLinks({ view, detail, prepare }: NavProps) {
+const NavLinks = memo(function ClientNavLinks({ view, detail, tonight, prepare }: NavProps) {
     const navigate = useNavigate();
     const [opening, setOpening] = useState<string>();
     useEffect(() => setOpening(undefined), [view, detail]);
     const current = opening ?? (detail ? undefined : view);
-    return <div className='client-nav-links'>{links.filter(([key]) => key !== 'search').map(([key, label]) => <Link key={key} to={`/client?view=${key}`} aria-current={current === key ? 'page' : undefined}
+    return <div className='client-nav-links'>{links.filter(([key]) => key !== 'search' && (tonight || key !== 'tonight')).map(([key, label]) => <Link key={key} to={`/client?view=${key}`} aria-current={current === key ? 'page' : undefined}
         onPointerEnter={() => prepare(key)} onFocus={() => prepare(key)} onClick={event => {
             // Opening in a new tab or window stays the browser's business.
             if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -585,7 +585,7 @@ function ClientView({ model }: ViewProps) {
                 {preferences.ambient && !id && <AmbientBackdrop source={model.backdrop} />}
                 <nav className='client-nav' data-alignment={preferences.headerAlignment} aria-label='Navigation principale'>
                     <button ref={profileButton} className='client-profile' aria-label='Menu du profil' aria-expanded={profileOpen} onClick={() => setProfileOpen(!profileOpen)}>{user?.PrimaryImageTag ? <img src={`${model.api?.basePath}/Users/${user.Id}/Images/Primary?tag=${user.PrimaryImageTag}&width=96&quality=90`} alt='' /> : user?.Name?.slice(0, 1) || '•'}</button>
-                    <NavLinks view={model.folderId ? 'mine' : view} detail={!!id} prepare={model.prepareTab} />
+                    <NavLinks view={model.folderId ? 'mine' : view} detail={!!id} tonight={preferences.tonight} prepare={model.prepareTab} />
                     {/* À gauche de la loupe : envoyer la lecture vers un autre appareil, regarder à plusieurs. */}
                     <button type='button' className='client-nav-tool' aria-label='Lire sur un autre appareil' title='Lire sur un autre appareil' onClick={() => openConnectivity('targets')}><RemoteIcon name='cast' /></button>
                     <button type='button' className='client-nav-tool' aria-label='Regarder ensemble' title='Regarder ensemble' onClick={() => openConnectivity('together')}><RemoteIcon name='people' /></button>
@@ -745,7 +745,7 @@ function HomeContent({ model }: ViewProps) {
     const trends = take(model.catalogue.items, 20);
     const folderRow = (title: string, items: BaseItemDto[], link: string) => row(title, items, false, undefined, { to: link, label: LABELS.openFolder });
     return <>
-        <TonightInvite prepare={model.prepareTab} />
+        {model.preferences.tonight && <TonightInvite prepare={model.prepareTab} />}
         {row('Continuer à regarder', continuing, true)}
         {row('À découvrir', picks)}
         <FolderRows row={folderRow} />
@@ -760,7 +760,7 @@ function HomeContent({ model }: ViewProps) {
 }
 
 const accountViews = new Map<string, (props: ViewProps) => ReactNode>([
-    ['requests', RequestsView], ['settings', SettingsView]
+    ['requests', RequestsView], ['settings', SettingsView], ['tonight', TonightView]
 ]);
 
 function ContentView({ model }: ViewProps) {
@@ -784,12 +784,18 @@ function ContentView({ model }: ViewProps) {
             playQueue={model.playQueue} queueBusy={model.queueBusy} prepare={model.prepareDetail} release={model.releaseDetail} />;
     }
     if (view === 'recent') return <RecentPage items={media.data?.items || []} row={row} />;
-    if (view === 'tonight') return <TonightPage play={(item, start) => item.Type === 'Series' ? model.playQueue([item], false) : model.play(item, start)} image={(item, backdrop) => backdrop ? image(item, true) : artworkUrl(model.api?.basePath || '', item, 'draw')} onPrepare={model.prepareDetail} onRelease={model.releaseDetail} onFeature={entry => model.setPageAmbient(entry ? image(entry, true) : '')} />;
     if (model.discovery) return <DiscoveryView model={model} />;
     if (view === 'mine') return <PersonalView model={model} />;
     if (model.standaloneSearch) return <SearchView model={model} />;
     return <LibraryView model={model} />;
 }
+/** « Ce soir » is not finished: its address leads home unless the person turned it on in Apparence. */
+function TonightView({ model }: ViewProps) {
+    const { image } = model;
+    if (!model.preferences.tonight) return <Navigate to='/client' replace />;
+    return <TonightPage play={(item, start) => item.Type === 'Series' ? model.playQueue([item], false) : model.play(item, start)} image={(item, backdrop) => backdrop ? image(item, true) : artworkUrl(model.api?.basePath || '', item, 'draw')} onPrepare={model.prepareDetail} onRelease={model.releaseDetail} onFeature={entry => model.setPageAmbient(entry ? image(entry, true) : '')} />;
+}
+
 function RequestsView({ model }: ViewProps) {
     return <Suspense fallback={<ClientSkeleton layout='list' count={3} contained label='Chargement des demandes…' />}>
         <RequestPage play={model.play} />

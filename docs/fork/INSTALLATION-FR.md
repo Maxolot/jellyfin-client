@@ -59,7 +59,7 @@ Ces URL sont des exemples à remplacer. Les manifestes doivent proposer les bons
 
 Shared Catalog est dans le même catalogue que Native Previews et Movie Sources. Ajoutez-le dans **Tableau de bord Jellyfin → Extensions → Catalogues** avec l’adresse `https://raw.githubusercontent.com/Maxolot/jellyfin-client/main/plugins/catalog/manifest.json`, installez **Shared Catalog**, puis redémarrez Jellyfin.
 
-Sans configuration, il apporte les dossiers personnels et partagés, le bouton « + » qui range un titre dans « À voir plus tard », les rangées de dossiers sur l’accueil, la ligne de temps de **Mon espace**, le catalogue des titres suivis et les suggestions **Ce soir**. Le suivi détaillé des demandes (étapes, délai estimé, notifications) demande en plus un fichier privé `requests.json` qui indique Seerr, Radarr et Sonarr : voir `plugins/shared-catalog/README.md`. Sans ce fichier, les demandes restent visibles par Seerr, sans la progression.
+Sans configuration, il apporte les dossiers personnels et partagés, le bouton « + » qui range un titre dans « À voir plus tard », les rangées de dossiers sur l’accueil, la ligne de temps de **Mon espace** et le catalogue des titres suivis. Les suggestions **Ce soir**, encore en préparation, sont masquées par défaut ; chacun peut les activer dans **Paramètres → Apparence**. Le suivi détaillé des demandes (étapes, délai estimé, notifications) demande en plus un fichier privé `requests.json` qui indique Seerr, Radarr et Sonarr : voir `plugins/shared-catalog/README.md`. Sans ce fichier, les demandes restent visibles par Seerr, sans la progression.
 
 Les favoris existants ne sont pas déplacés automatiquement : **Mon espace** propose à chacun de ranger ses favoris non vus dans « À voir plus tard ».
 

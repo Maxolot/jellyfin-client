@@ -21,4 +21,9 @@ describe('settings sections', () => {
         expect(resolveSection(null, true).key).toBe('apparence');
         expect(resolveSection('inconnue', true).key).toBe('apparence');
     });
+
+    it('falls back when a section is hidden', () => {
+        expect(resolveSection('confidentialite', false, ['confidentialite']).key).toBe('apparence');
+        expect(resolveSection('confidentialite', false).key).toBe('confidentialite');
+    });
 });
