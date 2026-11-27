@@ -1,0 +1,170 @@
+/* stylelint-disable no-descending-specificity -- Search form and results have separate button scopes. */
+
+@use 'design' as ds;
+
+.client-library.client-search-page {
+    .client-search-heading {
+        margin-block: 0 clamp(20px, 3vw, 32px);
+    }
+
+    .client-search-heading h1 {
+        margin: 0;
+        font-size: var(--client-heading-size);
+        font-weight: 700;
+        line-height: 1.08;
+        letter-spacing: -0.035em;
+    }
+
+    .client-search-form {
+        box-sizing: border-box;
+        width: min(100%, 820px);
+        height: auto;
+        min-height: 68px;
+        gap: clamp(6px, 1.3vw, 16px);
+        padding: 6px 7px 6px clamp(12px, 2vw, 23px);
+        margin: 0 0 24px;
+        border: 1px solid #f5f5f533;
+        border-radius: var(--client-radius-pill);
+        background: #202020;
+        box-shadow: 0 9px 28px #0004;
+        transition: border-color var(--client-duration-state) ease, background-color var(--client-duration-state) ease;
+
+        &:focus-within {
+            border-color: #eaeaeaad;
+            background: #292929;
+        }
+
+        input {
+            height: 52px;
+            color: var(--client-ink);
+            font-size: clamp(16px, 2vw, 19px);
+            outline: none;
+
+            &::placeholder {
+                color: var(--client-ink-muted);
+                opacity: 1;
+            }
+
+            &::-webkit-search-cancel-button {
+                appearance: none;
+            }
+        }
+
+        > button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            min-width: 44px;
+            border-radius: var(--client-radius-pill);
+            font: inherit;
+        }
+
+        > button:focus-visible {
+            outline: var(--client-size-focus-ring) solid var(--client-focus);
+            outline-offset: 2px;
+        }
+
+        .client-search-magnifier {
+            display: grid;
+            place-items: center;
+            color: var(--client-ink-muted);
+        }
+
+        .client-search-clear {
+            padding: 0;
+            color: var(--client-ink);
+            background: transparent;
+
+            &:hover {
+                background: #f2f2f217;
+            }
+        }
+
+        .client-search-submit {
+            min-height: 48px;
+            padding-inline: 22px;
+            background: #f4f4f4;
+            color: #1f1f1f;
+            font-size: var(--client-text-14);
+            font-weight: 700;
+
+            &:hover {
+                background: #e8e8e8;
+            }
+
+            svg {
+                display: none;
+            }
+        }
+    }
+
+    .client-search-controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px 16px;
+        margin: 0 0 28px;
+    }
+
+    .client-search-feedback {
+        color: var(--client-ink-muted);
+        max-width: 62ch;
+    }
+
+    .client-search-group {
+        margin-block: clamp(26px, 4vw, 52px);
+        scroll-margin-block-start: 100px;
+
+        & + .client-search-group {
+            border-top: 1px solid #eeeeee25;
+            padding-block-start: clamp(22px, 3vw, 36px);
+        }
+
+        > h2 {
+            margin: 0 0 14px;
+            font-size: clamp(21px, 2.6vw, 32px);
+            line-height: 1.2;
+            letter-spacing: -0.025em;
+        }
+
+        > button {
+            margin-block-start: 16px;
+        }
+    }
+
+    @include ds.phone {
+        .client-search-form {
+            min-height: 58px;
+            padding-block: 4px;
+
+            input {
+                height: 48px;
+            }
+
+            .client-search-submit {
+                min-width: 46px;
+                min-height: 46px;
+                padding: 0;
+
+                span {
+                    display: none;
+                }
+
+                svg {
+                    display: block;
+                }
+            }
+
+            .client-search-magnifier {
+                display: none;
+            }
+        }
+    }
+
+    @include ds.reduced-motion {
+        .client-search-form {
+            transition: none;
+        }
+    }
+}

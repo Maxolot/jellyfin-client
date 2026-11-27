@@ -7,8 +7,14 @@ import { DeviceSettings, LanguageSettings, LibrarySettings, ProfileSettings, Sub
 import type { Preferences } from '../interfacePreferences';
 import PlayerSettings from '../player/PlayerSettings';
 import { SeerrSettings } from '../seerr/SeerrViews';
+import TonightPrivacy from '../tonight/TonightPrivacy';
 import AppearanceSettings from './AppearanceSettings';
 import { resolveSection, SETTINGS_GROUPS, type SectionKey } from './sections';
+import AdminLibraries from '../admin/AdminLibraries';
+import AdminLog from '../admin/AdminLog';
+import AdminOverview from '../admin/AdminOverview';
+import AdminTasks from '../admin/AdminTasks';
+import AdminUsers from '../admin/AdminUsers';
 import PreviewsServer from './server/PreviewsServer';
 import SeerrServer from './server/SeerrServer';
 import ServerOverview from './server/ServerOverview';
@@ -25,7 +31,13 @@ function Content({ section, preferences, savePreference, hasPreviews }: Readonly
         case 'qualite': return <DeviceSettings />;
         case 'bibliotheque': return <LibrarySettings />;
         case 'demandes': return <SeerrSettings />;
+        case 'confidentialite': return <TonightPrivacy />;
         case 'compte': return <ProfileSettings />;
+        case 'admin': return <AdminOverview />;
+        case 'admin-comptes': return <AdminUsers />;
+        case 'admin-bibliotheques': return <AdminLibraries />;
+        case 'admin-taches': return <AdminTasks />;
+        case 'admin-journal': return <AdminLog />;
         case 'serveur': return <ServerOverview />;
         case 'serveur-extraits': return <PreviewsServer />;
         case 'serveur-demandes': return <SeerrServer />;
@@ -38,7 +50,9 @@ function Content({ section, preferences, savePreference, hasPreviews }: Readonly
 export default function SettingsPage({ section: requested, ...props }: Readonly<Props>) {
     const { user } = useApi();
     const administrator = !!user?.Policy?.IsAdministrator;
-    const section = resolveSection(requested, administrator);
+    // « Ce soir à deux » is the only privacy setting: hidden with « Ce soir ».
+    const hidden: SectionKey[] = props.preferences.tonight ? [] : ['confidentialite'];
+    const section = resolveSection(requested, administrator, hidden);
     const nav = useRef<HTMLElement>(null);
     const server = section.key.startsWith('serveur');
     useEffect(() => {
@@ -51,7 +65,7 @@ export default function SettingsPage({ section: requested, ...props }: Readonly<
             <nav ref={nav} className='client-preferences-nav' aria-label='Sections des paramètres'>
                 {SETTINGS_GROUPS.filter(group => administrator || !group.admin).map(group => <div key={group.title} className='client-preferences-group'>
                     <h2>{group.admin && <SettingsIcon name='lock' />}{group.title}</h2>
-                    <ul>{group.sections.map(entry => <li key={entry.key}>
+                    <ul>{group.sections.filter(entry => !hidden.includes(entry.key)).map(entry => <li key={entry.key}>
                         <Link to={`/client?view=settings&section=${entry.key}`} replace aria-current={entry.key === section.key ? 'page' : undefined}>
                             <SettingsIcon name={entry.icon} /><span>{entry.title}</span>
                         </Link>

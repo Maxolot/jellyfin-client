@@ -1,3 +1,4 @@
+import { episodeCode } from '../labels';
 /** Rules of the offline mode that do not depend on the browser: qualities, sizes, queue, storage and resume synchronisation. */
 export type Quality = 'original' | 'high' | 'standard' | 'light';
 export type EntryState = 'queued' | 'downloading' | 'paused' | 'done' | 'error';
@@ -147,5 +148,5 @@ export function stoppedAt(positionTicks: number, runTimeTicks: number, now: numb
 }
 
 export function episodeLabel(entry: Pick<OfflineEntry, 'seasonNumber' | 'episodeNumber'>) {
-    return entry.seasonNumber != null && entry.episodeNumber != null ? `S${entry.seasonNumber}:E${entry.episodeNumber}` : '';
+    return entry.seasonNumber != null && entry.episodeNumber != null ? episodeCode(entry.seasonNumber, entry.episodeNumber) : '';
 }

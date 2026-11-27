@@ -1,5 +1,28 @@
 # Fork changelog
 
+## client-v1.1.0
+
+Folders, a personal timeline and live request tracking. Works without new plugins; the folder, timeline and
+request features need the Shared Catalog plugin, now in the bundled catalogue.
+
+- Mon espace is a timeline of what you mean to watch: ready now, coming soon (requests, new episodes), set aside
+  and seen, with your month in numbers and a recap.
+- Personal and shared folders replace « Ma liste ». « + » files a title in « À voir plus tard » in one tap; each
+  folder becomes a row on the home page, Films and Séries, with « Voir le dossier ». A 4.5-star rating marks a
+  « coup de cœur ». Unwatched favorites can be moved into folders on request.
+- Requests: live progress with stages and ETA, missing seasons requestable from the series page, a notification
+  centre, person filmographies across the library and Seerr.
+- Library: public Jellyfin collections, shared catalog of followed titles kept without their files, advanced
+  filters, watched marks, video edition choice, trailers, season covers with an episode drawer, spoiler protection,
+  Spotlight search including natural-language descriptions.
+- « Ce soir » (suggestions for the evening, optional duo mode) is not finished: hidden by default, it can be turned
+  on in Settings → Apparence.
+- Player: floating bar with a choice of layouts, buffered progress, title logo while loading, resume after reload,
+  season and shuffled queues.
+- Settings: an Administration section in the client's style, an interface size setting.
+- Design system: tokens from one source (`tokens.json`), shared components and labels, a CI budget for hard-coded
+  styles.
+
 ## client-v1.0.0
 
 First complete version: every screen is the client's own, the Jellyfin engine, SDK and authentication are reused.

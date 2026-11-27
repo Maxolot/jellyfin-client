@@ -1,0 +1,83 @@
+// Person page: the hero of a shelf page beside a portrait, then the filmography as poster grids.
+// Headings, captions and cards follow the charte; this sheet only lays them out.
+@use '../design' as ds;
+
+.client-person-page {
+    margin: 0 var(--client-margin) var(--client-space-48);
+}
+
+.client-person-hero {
+    padding: var(--client-space-16) 0 var(--client-space-48);
+
+    > .client-shelf-back { margin-bottom: var(--client-space-16); }
+}
+
+.client-person-intro {
+    display: grid;
+    grid-template-columns: clamp(120px, 18vw, 240px) minmax(0, 1fr);
+    align-items: end;
+    gap: var(--client-space-32);
+}
+
+.client-person-copy {
+    min-width: 0;
+    max-width: 720px;
+
+    h1 {
+        @include ds.type('hero-title');
+
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .client-meta { margin: var(--client-space-12) 0 0; }
+
+    .client-overview {
+        margin: var(--client-space-16) 0 0;
+        -webkit-line-clamp: 3;
+    }
+    .client-overview.expanded { display: block; }
+}
+
+.client-person-new-portrait {
+    position: relative;
+    display: grid;
+    isolation: isolate;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    place-items: center;
+    overflow: hidden;
+    border-radius: var(--client-radius-card);
+    background: var(--client-art-placeholder);
+    color: var(--client-ink-muted);
+
+    @include ds.type('hero-title');
+
+    > .client-artwork {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+// Each status is a row of the page, as on the home page: a row title, then the cards.
+.client-credit-section {
+    margin-top: var(--client-space-row-gap);
+
+    h3 {
+        @include ds.type('row-title');
+
+        margin: 0 0 var(--client-space-row-heading);
+    }
+}
+
+@include ds.phone {
+    .client-person-hero { padding-top: var(--client-space-8); }
+
+    .client-person-intro {
+        align-items: start;
+        gap: var(--client-space-16);
+    }
+}

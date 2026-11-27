@@ -8,7 +8,7 @@ import { useInfiniteQuery, useQuery, type QueryClient } from '@tanstack/react-qu
 import { useApi } from 'hooks/useApi';
 
 import { genreIds, matchesCatalogueGenre, type Genre } from './genres';
-import { catalogueItem, type ExternalMedia, type MediaType, type Results } from './model';
+import { catalogueItem, externalIdentity, requestableSeasons, withLocalAvailability, type ExternalMedia, type MediaType, type Results } from './model';
 import { useSeerr } from './SeerrContext';
 
 export function useLocalIdentities(enabled: boolean) {
@@ -37,6 +37,13 @@ function useGenreList(type: MediaType, enabled: boolean) {
             const results = await Promise.all(['en', 'fr'].map(language => seerr.call<Genre[]>(`Api/genres/${type}?language=${language}`, signal)));
             return results.flat();
         } });
+}
+// TMDB genres left out of discovery rows: TV movies, news, reality, soaps and talk shows.
+const UNWANTED_GENRES = new Set([10770, 10763, 10764, 10766, 10767]);
+/** Discovery rows skip daily TV programmes, TV movies and titles almost nobody rated. Search keeps everything. */
+export function isRecommendable(entry: ExternalMedia) {
+    if ((entry.genreIds || entry.genres?.map(genre => genre.id) || []).some(id => UNWANTED_GENRES.has(id))) return false;
+    return entry.voteCount === undefined || entry.voteCount >= 30;
 }
 function catalogueEndpoint(view: string, search: string, ids: number[]) {
     let category = 'trending';
@@ -71,13 +78,16 @@ export function useSeerrCatalogue(view: string, search: string, enabled: boolean
         queryFn: ({ signal, pageParam }) => seerr.call<Results<ExternalMedia>>(`Api/${endpoint}&page=${pageParam}`, signal),
         getNextPageParam: last => (last.page || 1) < (last.totalPages || 1) ? (last.page || 1) + 1 : undefined });
     const pages = ready ? query.data?.pages : undefined;
-    const mapped = (pages?.flatMap(page => page.results) || []).filter(entry => entry.mediaType !== 'person').map(entry => {
+    const results = pages?.flatMap(page => page.results) || [];
+    const people = results.filter(entry => entry.mediaType === 'person' && entry.id > 0 && entry.name)
+        .map(entry => ({ Id: `tmdb-${entry.id}`, Name: entry.name, profilePath: entry.profilePath }));
+    const mapped = results.filter(entry => entry.mediaType !== 'person' && (view === 'search' || isRecommendable(entry))).map(entry => {
         const type: MediaType = entry.mediaType === 'tv' || view === 'series' ? 'tv' : 'movie';
         return catalogueItem(entry, type, local.data || []);
     });
     const items = mapped.filter(item => !genre || matchesCatalogueGenre(item, genre, lists));
     const loading = enabled && seerr.connected && [local, movieGenres, tvGenres, query].some(observer => observer.isFetching);
-    return { ...query, hasNextPage: ready && query.hasNextPage, isError: ready && query.isError, items, local, loading, matchesGenre: (item: BaseItemDto, name: string) => matchesCatalogueGenre(item, name, lists) };
+    return { ...query, hasNextPage: ready && query.hasNextPage, isError: ready && query.isError, items, people, local, loading, matchesGenre: (item: BaseItemDto, name: string) => matchesCatalogueGenre(item, name, lists) };
 }
 export function useSeerrDetail(type: MediaType | undefined, id: number | undefined, poll = true) {
     const seerr = useSeerr();
@@ -92,6 +102,19 @@ export function useLocalSeasons(item?: BaseItemDto) {
         enabled: !!api && !!user?.Id && item?.Type === 'Series', staleTime: 30000,
         queryFn: async ({ signal }) => (await getShowApi(api!).getSeasons({ seriesId: item!.Id!, userId: user!.Id,
             fields: [ItemFields.ChildCount] }, { signal })).data.Items || [] });
+}
+
+export function canRequestSeasons(item: BaseItemDto, connected: boolean) {
+    return connected && item.Type === 'Series' && !!externalIdentity(item);
+}
+
+/** Number of seasons still requestable for a local series. */
+export function useMissingSeasons(item: BaseItemDto, enabled: boolean) {
+    const identity = enabled ? externalIdentity(item) : undefined;
+    const detail = useSeerrDetail(identity?.type, identity?.id, false);
+    const local = useLocalSeasons(enabled ? item : undefined);
+    if (!identity || !detail.data || local.isPending || local.isError) return 0;
+    return requestableSeasons(withLocalAvailability(detail.data, item, local.data)).length;
 }
 
 // « Bientôt à découvrir » : films et séries annoncés dans les 60 prochains jours, du plus proche au plus lointain.

@@ -32,10 +32,10 @@ function Redirect({ path }: Readonly<{ path: string }>) {
 export const USER_REDIRECTS: RouteObject[] = ['details', 'search', 'movies', 'tv', ...WHOLE_LIBRARY, ...PREFERENCES]
     .map(path => ({ path, element: <Redirect path={path} /> }));
 
-/** Administration and first-time setup stay with the server's own interface: this application only points to it. */
+/**
+ * First-time setup stays with the server's own interface. Administration (`dashboard`, `metadata`, `configurationpage`)
+ * is mounted from `apps/dashboard` by the root router, behind the client's own Administration section.
+ */
 export const SERVER_INTERFACE_ROUTES: RouteObject[] = [
-    { path: 'dashboard/*', element: <ServerInterfacePage kind='admin' /> },
-    { path: 'metadata/*', element: <ServerInterfacePage kind='admin' /> },
-    { path: 'configurationpage', element: <ServerInterfacePage kind='admin' /> },
     { path: 'wizard/*', element: <ServerInterfacePage kind='setup' /> }
 ];

@@ -1,6 +1,8 @@
 /* eslint-disable react/jsx-no-bind -- Small controls own their event handlers. */
 import React, { type ReactNode, useEffect, useId, useRef, useState } from 'react';
 
+import ClientIcon from '../ClientIcon';
+import './choices.scss';
 import './controls.scss';
 
 /** Where a setting lives: it tells the person whether it follows them elsewhere. */
@@ -41,13 +43,13 @@ type ToggleProps = { label: string; hint?: ReactNode; checked: boolean; disabled
 export function Toggle({ label, hint, checked, disabled, onChange }: Readonly<ToggleProps>) {
     const id = useId();
     return <SettingRow label={label} hint={hint} htmlFor={id}>
-        <button id={id} type='button' role='switch' aria-checked={checked} disabled={disabled} className='client-switch' onClick={() => onChange(!checked)}>
+        <button id={id} type='button' role='switch' aria-label={label} aria-checked={checked} disabled={disabled} className='client-switch' onClick={() => onChange(!checked)}>
             <span aria-hidden='true' />
         </button>
     </SettingRow>;
 }
 
-export type Option<T> = readonly [T, string];
+export type Option<T> = readonly [T, string, string?];
 
 /** A few choices side by side, as one radio group. */
 export function Segmented<T extends string | number | boolean>({ label, hint, value, options, disabled, onChange, stacked = false }: Readonly<{ label: string; hint?: ReactNode; value: T; options: readonly Option<T>[]; disabled?: boolean; onChange: (value: T) => void; stacked?: boolean }>) {
@@ -73,8 +75,12 @@ export function Segmented<T extends string | number | boolean>({ label, hint, va
 }
 
 /** A list of choices that opens in place: same look on every browser, keyboard included. */
-export function Select<T extends string | number>({ label, hint, value, options, disabled, onChange }: Readonly<{ label: string; hint?: ReactNode; value: T; options: readonly Option<T>[]; disabled?: boolean; onChange: (value: T) => void }>) {
-    const id = useId();
+type ChoiceProps<T> = { label: string; value: T; options: readonly Option<T>[]; disabled?: boolean; onChange: (value: T) => void };
+
+/** `placeholder` names the button while its first, empty option ("all") is chosen. */
+export function ChoiceSelect<T extends string | number>({ label, id: providedId, value, options, disabled, onChange, placeholder }: Readonly<ChoiceProps<T> & { id?: string; placeholder?: string }>) {
+    const generatedId = useId();
+    const id = providedId || generatedId;
     const [open, setOpen] = useState(false);
     const [active, setActive] = useState(0);
     const root = useRef<HTMLDivElement>(null);
@@ -91,7 +97,12 @@ export function Select<T extends string | number>({ label, hint, value, options,
         return () => document.removeEventListener('pointerdown', away);
     }, [open, index]);
     useEffect(() => {
-        if (open) list.current?.children[active]?.scrollIntoView?.({ block: 'nearest' });
+        const menu = list.current;
+        const option = menu?.children[active] as HTMLElement | undefined;
+        if (!open || !menu || !option) return;
+        if (option.offsetTop < menu.scrollTop) menu.scrollTop = option.offsetTop;
+        const bottom = option.offsetTop + option.offsetHeight;
+        if (bottom > menu.scrollTop + menu.clientHeight) menu.scrollTop = bottom - menu.clientHeight;
     }, [open, active]);
     const pick = (position: number) => {
         const option = options[position];
@@ -134,19 +145,26 @@ export function Select<T extends string | number>({ label, hint, value, options,
         }
         event.preventDefault();
     };
-    return <SettingRow label={label} hint={hint} htmlFor={id}>
-        <div ref={root} className={`client-select${open ? ' is-open' : ''}`} onBlur={event => {
-            if (!event.currentTarget.contains(event.relatedTarget as Node)) setOpen(false);
-        }}>
-            <button id={id} type='button' role='combobox' aria-haspopup='listbox' aria-expanded={open} aria-controls={`${id}-list`} aria-activedescendant={open ? `${id}-option-${active}` : undefined} disabled={disabled}
-                onClick={() => setOpen(!open)} onKeyDown={keys}>
-                <span>{current}</span><svg aria-hidden='true' viewBox='0 0 24 24'><path d='m6 9 6 6 6-6' /></svg>
-            </button>
-            {open && <ul ref={list} id={`${id}-list`} role='listbox' aria-label={label} aria-activedescendant={`${id}-option-${active}`} tabIndex={-1}>
-                {options.map(([key, name], position) => <li key={String(key)} id={`${id}-option-${position}`} role='option' aria-selected={key === value}
-                    className={position === active ? 'is-active' : undefined} onPointerEnter={() => setActive(position)} onClick={() => pick(position)} onKeyDown={keys}>{name}</li>)}
-            </ul>}
-        </div>
+    return <div ref={root} className={`client-select${open ? ' is-open' : ''}`} onBlur={event => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node)) setOpen(false);
+    }}>
+        <button id={id} type='button' role='combobox' aria-label={label} aria-describedby={`${id}-value`} aria-haspopup='listbox' aria-expanded={open} aria-controls={open ? `${id}-list` : undefined} aria-activedescendant={open ? `${id}-option-${active}` : undefined} disabled={disabled || !options.length}
+            onClick={() => setOpen(!open)} onKeyDown={keys}>
+            <span id={`${id}-value`}>{placeholder && index === 0 && options[0]?.[0] === '' ? placeholder : current}</span><ClientIcon name='down' />
+        </button>
+        {open && <ul ref={list} id={`${id}-list`} role='listbox' aria-label={label} aria-activedescendant={`${id}-option-${active}`} tabIndex={-1} onMouseDown={event => event.preventDefault()}>
+            {options.map(([key, name, detail], position) => <li key={String(key)} id={`${id}-option-${position}`} role='option' aria-selected={key === value}
+                className={position === active ? 'is-active' : undefined} onPointerEnter={() => setActive(position)} onClick={() => pick(position)} onKeyDown={keys}>
+                <span className='client-choice-copy'>{name}{detail && <small>{detail}</small>}</span>{key === value && <ClientIcon name='check' />}
+            </li>)}
+        </ul>}
+    </div>;
+}
+
+export function Select<T extends string | number>({ hint, ...choice }: Readonly<ChoiceProps<T> & { hint?: ReactNode }>) {
+    const id = useId();
+    return <SettingRow label={choice.label} hint={hint} htmlFor={id}>
+        <ChoiceSelect id={id} {...choice} />
     </SettingRow>;
 }
 

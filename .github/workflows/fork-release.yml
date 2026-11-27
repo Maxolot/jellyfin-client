@@ -1,0 +1,57 @@
+name: Client release
+
+# Each client-v* tag published on GitHub becomes a release with the compiled client attached, so that a server
+# owner downloads one archive instead of building. The quality checks run beforehand on the Forgejo reference.
+on:
+  push:
+    tags: ['client-v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing client-v* tag to (re)publish
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.TAG }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+      - name: Locked dependency installation
+        run: npm ci --no-audit
+      - name: Production build
+        env:
+          NODE_ENV: production
+          NODE_OPTIONS: --max-old-space-size=4096
+          JELLYFIN_VERSION: ${{ github.sha }}
+        run: node node_modules/webpack/bin/webpack.js --config packaging/fork/webpack.ci.cjs
+      - name: Legacy JavaScript target
+        run: npm run escheck
+      - name: Archives
+        run: scripts/fork/package.sh
+      - name: Release notes from the changelog
+        run: |
+          awk -v tag="## $TAG" '$0 == tag { keep = 1; next } /^## / && keep { exit } keep' docs/fork/CHANGELOG.md > notes.md
+          printf '\n## Installer\n\nVoir [Installer le paquet compilé](https://github.com/%s/blob/main/docs/fork/INSTALLATION-FR.md). Plugins : catalogue `https://raw.githubusercontent.com/%s/main/plugins/catalog/manifest.json`.\n' "$GITHUB_REPOSITORY" "$GITHUB_REPOSITORY" >> notes.md
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd artifacts
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" jellyfin-client-web.tar.gz jellyfin-client-source.tar.gz fork-build.json SHA256SUMS --clobber
+          else
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" jellyfin-client-web.tar.gz jellyfin-client-source.tar.gz fork-build.json SHA256SUMS \
+              --title "$TAG" --notes-file ../notes.md --verify-tag
+          fi

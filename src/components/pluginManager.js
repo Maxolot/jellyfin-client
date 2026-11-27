@@ -14,8 +14,37 @@ import * as dashboard from '../utils/dashboard';
 // TODO: replace with each plugin version
 const cacheParam = new Date().getTime();
 
+const localPlayers = new Set([
+    'htmlVideoPlayer/plugin', 'htmlAudioPlayer/plugin', 'photoPlayer/plugin', 'comicsPlayer/plugin', 'bookPlayer/plugin'
+]);
+
 class PluginManager {
     pluginsList = [];
+    #deferredPlayers = new Set();
+    #loadingPlayers;
+
+    deferLocalPlayers(plugins) {
+        this.#deferredPlayers = new Set(plugins.filter(plugin => localPlayers.has(plugin)));
+        return this.#deferredPlayers;
+    }
+
+    loadLocalPlayers() {
+        if (!this.#loadingPlayers && this.#deferredPlayers.size) {
+            const load = async plugin => {
+                await this.loadPlugin(plugin);
+                this.#deferredPlayers.delete(plugin);
+            };
+            this.#loadingPlayers = Promise.allSettled(Array.from(this.#deferredPlayers, load))
+                .then(results => {
+                    const problem = results.find(result => result.status === 'rejected');
+                    if (problem) console.warn('Could not load a configured local player', problem.reason);
+                })
+                .finally(() => {
+                    this.#loadingPlayers = undefined;
+                });
+        }
+        return this.#loadingPlayers;
+    }
 
     get plugins() {
         return this.pluginsList;

@@ -1,0 +1,51 @@
+.client-shared-art {
+    position: absolute;
+    inset: 0;
+    display: block;
+    overflow: hidden;
+    border-radius: inherit;
+
+    > img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.client-shared-art-fallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 6px;
+    padding: clamp(9px, 1.4vw, 20px);
+    background:
+        radial-gradient(ellipse at 85% 15%, hsl(var(--shared-art-hue) 52% 35%), transparent 75%),
+        linear-gradient(145deg, hsl(var(--shared-art-hue) 38% 22%), #131313);
+    color: var(--client-ink);
+    text-align: start;
+
+    strong {
+        display: -webkit-box;
+        overflow: hidden;
+        font-size: clamp(12px, 1.55vw, 25px);
+        font-weight: 700;
+        line-height: 1.1;
+        overflow-wrap: anywhere;
+        text-wrap: balance;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 4;
+    }
+
+    small {
+        color: var(--client-ink);
+        font-size: var(--client-text-11);
+    }
+}
+
+.client-grid .client-shared-art-fallback {
+    padding-bottom: 44px;
+}

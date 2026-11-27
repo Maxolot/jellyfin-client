@@ -1,0 +1,144 @@
+/* Liquid Glass for the player controls, after the Apple TV player: a dark, very thick blur that still lets
+   the colour of the image through, a fine rim lit at the top and bottom, bent at the edge in Chromium. */
+.client-liquid-glass-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+@mixin liquid-glass-surface {
+    position: relative;
+    isolation: isolate;
+    overflow: visible;
+    border: 0;
+    background:
+        radial-gradient(120% 90% at 50% 0%, rgb(255 255 255 / 7%), transparent 55%),
+        rgb(22 20 20 / 50%);
+    box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 30%),
+        inset 0 -1px 0 rgb(255 255 255 / 14%),
+        inset 0 0 0 1px rgb(255 255 255 / 6%),
+        inset 0 12px 24px -16px rgb(255 255 255 / 12%),
+        0 10px 30px rgb(0 0 0 / 25%);
+    // Strong saturation keeps the hue of the image under the glass, as the yellow under Apple's buttons.
+    backdrop-filter: blur(28px) saturate(1.8) brightness(0.85);
+    transition: transform var(--client-duration-move) var(--client-ease-move), background-color var(--client-duration-state) ease, box-shadow var(--client-duration-state) ease;
+
+    // Specular rim: lit at the top, softer at the bottom, almost gone on the sides.
+    &::before {
+        position: absolute;
+        z-index: -1;
+        inset: 0;
+        padding: 1px;
+        border-radius: inherit;
+        background: conic-gradient(rgb(255 255 255 / 45%), rgb(255 255 255 / 5%) 25%, rgb(255 255 255 / 25%) 50%, rgb(255 255 255 / 5%) 75%, rgb(255 255 255 / 45%));
+        content: '';
+        mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+        pointer-events: none;
+    }
+}
+
+.client-player:not(.style-minimal) .client-player-center > .client-liquid-glass {
+    @include liquid-glass-surface;
+
+    &:hover:not(:disabled) {
+        background:
+            radial-gradient(120% 90% at 50% 0%, rgb(255 255 255 / 11%), transparent 55%),
+            rgb(44 40 40 / 55%);
+        transform: scale(1.06);
+    }
+
+    &:active:not(:disabled) { transform: scale(0.94); }
+}
+
+// The glass bar carries its own contrast: a lighter scrim lets the video show through it.
+.client-player.style-glass .client-player-bottom { background: linear-gradient(transparent, rgb(0 0 0 / 45%) 70%); }
+
+// The bottom toolbar of the Glass style shares the same material, without the press bounce.
+.client-player.style-glass:not(.bar-float) .client-player-toolbar.client-liquid-glass {
+    @include liquid-glass-surface;
+
+    border-radius: var(--client-radius-panel);
+}
+
+// Two islands layout: the progress bar gets a pill of the same material.
+.client-player.style-glass.bar-stacked .client-player-timeline {
+    @include liquid-glass-surface;
+
+    border-radius: var(--client-radius-pill);
+}
+
+// Floating layout: no island, each group of controls is a glass pill of its own, after the Apple TV player.
+.client-player.style-glass.bar-float {
+    .client-player-toolbar > button,
+    .client-player-volume,
+    .client-player-tools {
+        @include liquid-glass-surface;
+
+        border-radius: var(--client-radius-pill);
+    }
+
+    .client-player-track {
+        box-shadow: inset 0 0 0 1px var(--client-line);
+        backdrop-filter: blur(18px) saturate(1.15);
+    }
+}
+
+// The filter is only rendered in Chromium, the one engine that refracts the backdrop through it.
+// stylelint-disable-next-line no-descending-specificity -- Only backdrop-filter is overridden, hover states are unaffected.
+.client-player:not(.style-minimal) .client-player-center:has(.client-liquid-glass-defs.is-backdrop) > .client-liquid-glass {
+    backdrop-filter: blur(24px) url('#client-liquid-glass') saturate(1.8) brightness(0.85);
+}
+
+// A long bar would stretch the lens: it only gets the swirl.
+.client-player.style-glass:not(.bar-float):has(.client-liquid-glass-defs.is-backdrop) .client-player-toolbar.client-liquid-glass,
+.client-player.style-glass.bar-stacked:has(.client-liquid-glass-defs.is-backdrop) .client-player-timeline {
+    backdrop-filter: blur(24px) url('#client-liquid-glass-bar') saturate(1.8) brightness(0.85);
+}
+
+.client-player-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.client-player-center .client-player-jump .client-player-jump-icon {
+    display: grid;
+    place-items: center;
+}
+
+// The amount springs out beside the button, away from the play button, then drifts and fades.
+.client-player-jump-burst {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 0.5em);
+    display: flex;
+    align-items: baseline;
+    color: var(--client-ink);
+    font-size: 1.15em;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    white-space: nowrap;
+    text-shadow: 0 2px 12px rgb(0 0 0 / 55%);
+    opacity: 0;
+    transform: translateY(-50%);
+    pointer-events: none;
+
+    small {
+        margin-left: 0.12em;
+        font-size: 0.7em;
+        font-weight: 600;
+    }
+}
+
+.client-player-center .client-player-jump.is-back .client-player-jump-burst {
+    right: calc(100% + 0.5em);
+    left: auto;
+}
+
+// Nothing is playing yet (start or reload): a black stage rather than the page behind.
+.client-player.is-empty { background: #000; }

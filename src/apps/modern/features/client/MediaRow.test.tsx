@@ -7,7 +7,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import MediaRow from './MediaRow';
 
 vi.mock('./PreviewClip', () => ({ default: () => null }));
+vi.mock('./SharedCatalogArtwork', () => ({
+    default: ({ className }: { className?: string }) => <span className={className} data-shared-art='' />
+}));
 const noLogo = () => undefined;
+const noImage = () => '';
 const prepare = () => undefined;
 const items = ['a', 'b', 'c'].map(Id => ({ Id, Name: Id, Type: 'Movie' as const }));
 const image = (item: BaseItemDto, wide = false) => `https://media.example.test/${item.Id}-${wide ? 'wide' : 'poster'}.jpg`;
@@ -70,6 +74,14 @@ describe('prepared landscape handoff', () => {
         expect(card(0).classList.contains('active')).toBe(true);
         expect(card(0).classList.contains('has-backdrop')).toBe(true);
     });
+    it('keeps the name on the expanded card and out of the copy below the row', async () => {
+        await decode(0);
+        await focus(0);
+        expect(card(0).querySelector('a')?.getAttribute('aria-label')).toBe(items[0].Name);
+        expect(card(0).querySelector('.client-expanded-title')?.textContent).toBe(items[0].Name);
+        expect(container.querySelector('.client-row-info h3')).toBeNull();
+    });
+
     it('closes the previous focus and only opens the latest requested image', async () => {
         await decode(0);
         await focus(0);
@@ -92,6 +104,43 @@ describe('prepared landscape handoff', () => {
         await decode(0);
         expect(container.querySelector('.active')).toBeNull();
     });
+    it('waits for hover intent, folds on leave and ignores a sweep across cards', async () => {
+        await decode(0);
+        await decode(1);
+        vi.useFakeTimers();
+        const point = (index: number, type: string) => {
+            const event = new MouseEvent(type, { bubbles: true, clientX: index * 100 + 20, clientY: 25 });
+            Object.defineProperty(event, 'pointerType', { value: 'mouse' });
+            card(index).dispatchEvent(event);
+        };
+        try {
+            await act(async () => {
+                point(0, 'pointermove');
+                await vi.advanceTimersByTimeAsync(40);
+                point(0, 'pointerout');
+                point(1, 'pointermove');
+                await vi.advanceTimersByTimeAsync(40);
+                point(1, 'pointerout');
+                await vi.advanceTimersByTimeAsync(120);
+            });
+            expect(container.querySelector('.active')).toBeNull();
+            await act(async () => {
+                point(0, 'pointermove');
+                await vi.advanceTimersByTimeAsync(120);
+            });
+            expect(card(0).classList.contains('active')).toBe(true);
+            await act(async () => {
+                point(0, 'pointerout');
+                point(1, 'pointermove');
+            });
+            expect(container.querySelector('.active')).toBeNull();
+            await act(async () => vi.advanceTimersByTimeAsync(120));
+            expect(card(1).classList.contains('active')).toBe(true);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
     it('closes this row when another row claims selection', async () => {
         await decode(0);
         await focus(0);
@@ -147,5 +196,26 @@ describe('endless row', () => {
         expect(prepared.slice(-3)).toEqual(['a', 'b', 'c']);
         // Only the original copy can restore keyboard focus after visiting a page.
         expect(container.querySelectorAll('[data-client-focus="a"]')).toHaveLength(1);
+    });
+});
+
+describe('catalogue and upcoming rows', () => {
+    it('uses the shared artwork fallback for a tracked title with no poster', async () => {
+        const shared: BaseItemDto[] = [{ Id: 'seerr-movie-1', Name: 'Suivi', Type: 'Movie' }];
+        await act(async () => root.render(<MemoryRouter><MediaRow title='Récemment suivis' kind='shared-catalog'
+            items={shared} image={noImage} logo={noLogo} onPrepare={prepare} /></MemoryRouter>));
+        expect(card(0).querySelector('.client-card-poster[data-shared-art]')).not.toBeNull();
+        expect(card(0).querySelector('.client-availability')?.getAttribute('aria-label')).toBe('À télécharger');
+    });
+
+    it('shows the release date and links to the series without marking an unaired episode available', async () => {
+        const upcoming: BaseItemDto[] = [{ Id: 'episode', Name: 'Retour', Type: 'Episode', SeriesId: 'series', SeriesName: 'Série',
+            PremiereDate: '2099-11-19T00:00:00Z', ParentIndexNumber: 2, IndexNumber: 3 }];
+        await act(async () => root.render(<MemoryRouter><MediaRow title='Épisodes à venir' kind='upcoming-episodes'
+            items={upcoming} image={image} logo={noLogo} onPrepare={prepare} /></MemoryRouter>));
+        expect(card(0).querySelector('time')?.getAttribute('datetime')).toBe('2099-11-19');
+        expect(card(0).querySelector('.client-upcoming-episode-caption')?.textContent).toContain('S2 · É3');
+        expect(card(0).querySelector('a.client-card')?.getAttribute('href')).toContain('?id=series');
+        expect(card(0).querySelector('.client-availability')).toBeNull();
     });
 });

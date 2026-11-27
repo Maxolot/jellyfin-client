@@ -1,0 +1,38 @@
+.client-spoiler-art {
+    filter: blur(15px) saturate(0.78);
+    transform: scale(1.07);
+}
+
+.client-series-episode-wrap {
+    min-width: 0;
+
+    > .client-series-episode-card { width: 100%; }
+}
+
+.client-spoiler-summary {
+    max-width: 65ch;
+    margin: 6px 0;
+    color: inherit;
+
+    summary {
+        width: fit-content;
+        padding: 8px 0;
+        color: var(--client-ink);
+        font-size: var(--client-text-13);
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    p { margin: 6px 0; }
+}
+
+.client-player-episodes .client-player-episode > .client-player-episode-art {
+    flex: 0 0 36%;
+    overflow: hidden;
+    border-radius: var(--client-radius-small);
+
+    > img {
+        display: block;
+        width: 100%;
+    }
+}

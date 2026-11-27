@@ -1,52 +1,93 @@
 /* eslint-disable react/jsx-no-bind -- Row interactions are local to this component. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
-import React, { type CSSProperties, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import React, { type CSSProperties, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ResizeObserver from 'resize-observer-polyfill';
 
 import ClientIcon from './ClientIcon';
+import { ActionLink } from './ui';
 import Artwork from './Artwork';
+import { EpisodeSummary, useEpisodeSpoilers } from './spoilers';
+import { rowPosterSizes } from './artwork';
 import PreviewClip from './PreviewClip';
+import SharedCatalogArtwork from './SharedCatalogArtwork';
+import { episodeDateLabel } from './personalUpcoming';
+import './personalUpcoming.scss';
 import useArtworkColor from './useArtworkColor';
 
 import { isExternal, mediaLabel, type CatalogueItem } from './seerr/model';
 
-import { episodeLabel, progressPercent } from './model';
+import { episodeLabel, isWatchedCard, progressPercent } from './model';
+import WatchedMarker, { watchedLabel } from './WatchedMarker';
+import { captureCardLayout, animateCardLayout, stopCardLayout, CARD_HOVER_DELAY, type CardLayout } from './cardMotion';
+
+export type MediaRowKind = 'shared-catalog' | 'upcoming-episodes';
 
 type Props = {
     title: string;
+    /** The full list behind the row (a folder page, for instance), reached from its title and a labelled action. */
+    link?: { to: string; label: string };
     items: BaseItemDto[];
+    kind?: MediaRowKind;
     continuation?: boolean;
     showDescription?: boolean;
+    showWatched?: boolean;
     image: (item: BaseItemDto, backdrop?: boolean) => string;
     logo: (item: BaseItemDto) => string | undefined;
     onPrepare: (item: BaseItemDto) => void;
     onRelease?: () => void;
 };
 
-export default function MediaRow({ title, items, continuation, showDescription = true, image, logo, onPrepare, onRelease }: Readonly<Props>) {
+export default function MediaRow({ title, link, items, kind, continuation, showDescription = true, showWatched = true, image, logo, onPrepare, onRelease }: Readonly<Props>) {
+    const protect = useEpisodeSpoilers();
     const [readyBackdrops, setReadyBackdrops] = useState<Partial<Record<string, boolean>>>({});
     const preparedSources = useRef<Partial<Record<string, boolean>>>({});
     const [active, setActive] = useState(-1);
     const [pending, setPending] = useState(-1);
     const intent = useRef(-1);
+    const hover = useRef<{ index: number; timer: number }>();
+    const previousLayout = useRef<CardLayout>();
+    const motion = useRef<Animation[]>([]);
     // Last card the row showed, kept after it folds back so the arrows continue from there.
     const cursor = useRef(-1);
     const owner = useId();
     const releaseCallback = useRef(onRelease);
     releaseCallback.current = onRelease;
+    const cancelHover = useCallback(() => {
+        if (!hover.current) return;
+        window.clearTimeout(hover.current.timer);
+        hover.current = undefined;
+    }, []);
+    const stopMotion = useCallback(() => {
+        stopCardLayout(motion.current);
+        motion.current = [];
+    }, []);
+    const release = useCallback(() => {
+        cancelHover();
+        if (intent.current < 0) return;
+        stopMotion();
+        intent.current = -1;
+        setPending(-1);
+        setActive(-1);
+        releaseCallback.current?.();
+    }, [cancelHover, stopMotion]);
     useEffect(() => {
         const dismissOther = (event: Event) => {
-            if ((event as CustomEvent<string>).detail !== owner && intent.current >= 0) release();
+            if ((event as CustomEvent<string>).detail !== owner && (intent.current >= 0 || hover.current)) release();
         };
         window.addEventListener('client-card-select', dismissOther);
-        return () => window.removeEventListener('client-card-select', dismissOther);
-    }, [owner]);
+        return () => {
+            window.removeEventListener('client-card-select', dismissOther);
+            cancelHover();
+            stopMotion();
+        };
+    }, [cancelHover, owner, release, stopMotion]);
     const strip = useRef<HTMLDivElement>(null);
     const touchOpens = useRef(false);
     const pointer = useRef<{ x: number; y: number }>();
     const location = useLocation();
     const count = items.length;
+    const upcoming = kind === 'upcoming-episodes';
     // Netflix-style endless row: once an arrow is used, the titles are repeated before and after the original ones.
     // The original cards keep their keys, so the card on screen stays the same element (no image or clip reloaded).
     const loopable = count >= 6;
@@ -58,25 +99,38 @@ export default function MediaRow({ title, items, continuation, showDescription =
     const glow = useRef<HTMLDivElement>(null);
     useLayoutEffect(() => {
         const list = strip.current;
+        const previous = previousLayout.current;
+        previousLayout.current = undefined;
+        if (list && previous && active >= 0) motion.current = animateCardLayout(list, previous, list.children[active]);
+
         const card = list?.children[active];
         if (!(card instanceof HTMLElement) || !glow.current || !list) return;
+        let frame = 0;
         const update = () => {
-            const rect = card.getBoundingClientRect();
             const parent = list.parentElement!.getBoundingClientRect();
-            if (glow.current) {
-                glow.current.style.left = `${rect.left - parent.left}px`;
-                glow.current.style.top = `${rect.top - parent.top}px`;
-                glow.current.style.width = `${rect.width}px`;
-                glow.current.style.height = `${rect.height}px`;
-            }
+            const viewport = list.getBoundingClientRect();
+            const offset = card.offsetLeft - (list.children[0] as HTMLElement).offsetLeft;
+            const start = viewport.left - parent.left + (Number.parseFloat(getComputedStyle(list).paddingLeft) || 0);
+            const width = card.offsetWidth;
+            const outside = Math.max(0, start - list.scrollLeft + offset);
+            glow.current?.style.setProperty('width', `${width}px`);
+            glow.current?.style.setProperty('transform', `translateX(${outside}px) scale(1.04)`);
+        };
+        const schedule = () => {
+            if (frame) return;
+            frame = requestAnimationFrame(() => {
+                frame = 0;
+                update();
+            });
         };
         update();
-        const resize = new ResizeObserver(update);
-        resize.observe(card);
-        list.addEventListener('scroll', update, { passive: true });
+        const resize = new ResizeObserver(schedule);
+        resize.observe(list);
+        list.addEventListener('scroll', schedule, { passive: true });
         return () => {
             resize.disconnect();
-            list.removeEventListener('scroll', update);
+            list.removeEventListener('scroll', schedule);
+            cancelAnimationFrame(frame);
         };
     }, [active]);
     useLayoutEffect(() => {
@@ -95,29 +149,33 @@ export default function MediaRow({ title, items, continuation, showDescription =
         const original = list.children[count];
         return first instanceof HTMLElement && original instanceof HTMLElement ? original.offsetLeft - first.offsetLeft : 0;
     }
-    function release() {
-        intent.current = -1;
-        pointer.current = undefined;
-        setPending(-1);
-        setActive(-1);
-        releaseCallback.current?.();
+    function unfold(index: number) {
+        previousLayout.current = strip.current ? captureCardLayout(strip.current) : undefined;
+        stopMotion();
+        setActive(index);
     }
     function select(index: number) {
+        cancelHover();
         if (intent.current === index) return;
         window.dispatchEvent(new CustomEvent('client-card-select', { detail: owner }));
         intent.current = index;
         cursor.current = index;
         setPending(index);
-        // Index in the repeated row: the title is the same in every copy.
         const media = items[index % count];
         const source = image(media, true);
-        if (!source || preparedSources.current[source] !== undefined) setActive(index);
+        if (!source || preparedSources.current[source] !== undefined) unfold(index);
+        else setActive(-1);
         onPrepare(media);
+    }
+    function hoverCard(index: number) {
+        if (intent.current === index || hover.current?.index === index) return;
+        release();
+        hover.current = { index, timer: window.setTimeout(() => select(index), CARD_HOVER_DELAY) };
     }
     function prepared(index: number, source: string, success: boolean) {
         preparedSources.current = { ...preparedSources.current, [source]: success };
         setReadyBackdrops(preparedSources.current);
-        if (intent.current === index) setActive(index);
+        if (intent.current === index && active !== index) unfold(index);
     }
     function move(index: number) {
         const next = Math.max(0, Math.min(count * copies - 1, index));
@@ -176,7 +234,7 @@ export default function MediaRow({ title, items, continuation, showDescription =
         list.scrollTo({ left: Math.max(0, left), behavior: reduce ? 'instant' : 'smooth' });
     }
     return <section className={`client-row client-expanding-row${item ? ' has-active-card' : ''}`} aria-label={title} style={{ '--client-media-color': color } as CSSProperties}>
-        <header className='client-row-heading'><h2>{title}</h2><div><button aria-label={`Précédent : ${title}`} onClick={() => step(-1)}><ClientIcon name='back' /></button><button aria-label={`Suivant : ${title}`} onClick={() => step(1)}><ClientIcon name='next' /></button></div></header>
+        <header className='client-row-heading'><h2>{link ? <Link to={link.to} className='client-row-link' tabIndex={-1}>{title}<ClientIcon name='next' /></Link> : title}</h2><div>{link && <ActionLink size='small' to={link.to} className='client-row-more' aria-label={`${link.label} : ${title}`}>{link.label}</ActionLink>}<button aria-label={`Précédent : ${title}`} onClick={() => step(-1)}><ClientIcon name='back' /></button><button aria-label={`Suivant : ${title}`} onClick={() => step(1)}><ClientIcon name='next' /></button></div></header>
         <div className='client-section-glow' ref={glow} aria-hidden='true' />
         <div className='client-strip' role='toolbar' aria-label={title} ref={strip} onKeyDown={event => {
             if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
@@ -190,8 +248,14 @@ export default function MediaRow({ title, items, continuation, showDescription =
                 const media = items[index % count];
                 const copy = looping ? Math.floor(index / count) : 1;
                 const backdrop = image(media, true);
+                const spoiler = protect(media) ? ' client-spoiler-art' : '';
+                const watched = isWatchedCard(media, showWatched);
+                const tracked = kind === 'shared-catalog' && isExternal(media);
+                const poster = image(media);
+                const date = upcoming ? episodeDateLabel(media.PremiereDate) : '';
+                const availability = tracked ? 'À télécharger' : rowAvailability(media);
                 return <article className={`client-media-card${active === index ? ' active' : ''}${readyBackdrops[backdrop] ? ' has-backdrop' : ''}`} key={copy === 1 ? media.Id : `${media.Id}:${copy}`} onPointerLeave={event => {
-                    if (event.pointerType !== 'touch' && intent.current === index) release();
+                    if (event.pointerType !== 'touch' && (intent.current === index || hover.current?.index === index)) release();
                 }} onBlur={event => {
                     // Pressing the row's arrows must not fold the card first, the arrow picks the next one itself.
                     const heading = event.currentTarget.closest('.client-row')?.querySelector('.client-row-heading');
@@ -202,36 +266,50 @@ export default function MediaRow({ title, items, continuation, showDescription =
                     if (event.pointerType === 'touch') return;
                     if (pointer.current?.x === event.clientX && pointer.current?.y === event.clientY) return;
                     pointer.current = { x: event.clientX, y: event.clientY };
-                    select(index);
+                    hoverCard(index);
                 }} onFocus={() => {
                     if (!touchOpens.current) {
                         select(index);
                     }
                 }}>
-                    <Link className='client-card' data-client-focus={copy === 1 ? media.Id : undefined} aria-label={[media.SeriesName, media.Name].filter(Boolean).join(' · ')} to={`/client?id=${media.Type === 'Episode' ? media.SeriesId || media.Id : media.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }} onPointerDown={event => { touchOpens.current = event.pointerType === 'touch' && intent.current !== index; }} onClick={event => {
+                    <Link className='client-card' data-client-focus={copy === 1 ? media.Id : undefined} aria-label={[media.SeriesName, media.Name, date, watched && watchedLabel].filter(Boolean).join(' · ')} to={`/client?id=${media.Type === 'Episode' ? media.SeriesId || media.Id : media.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state }} onPointerDown={event => { touchOpens.current = event.pointerType === 'touch' && intent.current !== index; }} onClick={event => {
                         if (touchOpens.current) {
                             event.preventDefault();
                             select(index);
                         }
                         touchOpens.current = false;
                     }}>
-                        <Artwork className='client-card-poster' source={image(media)} />
-                        <Artwork className='client-card-backdrop' source={backdrop} eager={pending === index} rootMargin='180px 180px' onReady={() => prepared(index, backdrop, true)} onFailure={() => prepared(index, backdrop, false)} />
+                        {tracked ? <SharedCatalogArtwork item={media} backdrop={false} className='client-card-poster' /> :
+                            <Artwork className={`client-card-poster${spoiler}`} source={poster} sizes={rowPosterSizes} />}
+                        <Artwork className={`client-card-backdrop${spoiler}`} source={backdrop} eager={pending === index} rootMargin='180px 180px' onReady={() => prepared(index, backdrop, true)} onFailure={() => prepared(index, backdrop, false)} />
                         <span className='client-card-fallback'>{media.SeriesName || media.Name}</span>
                     </Link>
-                    <PreviewClip item={media} surface='card' enabled={active === index} />
+                    {!upcoming && <PreviewClip item={media} surface='card' enabled={active === index} />}
                     {/* Above the clip, so that the title stays on the card while it plays. */}
-                    <span className='client-card-overlay' aria-hidden='true'>
+                    {upcoming ? <EpisodeCaption item={media} date={date} /> : <span className='client-card-overlay' aria-hidden='true'>
                         <span className='client-card-shade' />
                         <span className='client-expanded-title'>{logo(media) && <Artwork source={logo(media)!} enabled={active === index} eager />}<strong>{media.SeriesName || media.Name}</strong></span>
                         {continuation && media.Type === 'Episode' && <span className='client-episode-pill'><b>S{media.ParentIndexNumber ?? 1}</b><i aria-hidden='true' />É{media.IndexNumber ?? 1}</span>}
                         {progressPercent(media) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(media)}%` }} /></span>}
-                    </span>
-                    <span className='client-availability' role='img' aria-label={isExternal(media) ? mediaLabel((media as CatalogueItem).Seerr?.mediaInfo) : 'Disponible dans votre bibliothèque'} title={isExternal(media) ? mediaLabel((media as CatalogueItem).Seerr?.mediaInfo) : 'Disponible dans votre bibliothèque'}><ClientIcon name={isExternal(media) ? 'plus' : 'check'} /></span>
+                    </span>}
+                    {watched && <WatchedMarker />}
+                    {!upcoming && <span className='client-availability' role='img' aria-label={availability} title={availability}><ClientIcon name={isExternal(media) ? 'plus' : 'check'} /></span>}
                 </article>;
             })}</div>
-        {showDescription && <div className='client-row-info' aria-live='polite'>{item && <><h3>{item.SeriesName || item.Name}</h3><span>{[item.Type === 'Episode' ? episodeLabel(item) : item.ProductionYear, ...(item.Genres || []).slice(0, 2)].filter(Boolean).join(' · ')}</span><p>{item.Overview}</p></>}</div>}
+        {showDescription && <div className='client-row-info' aria-live='polite'>{item && <><span>{[item.Type === 'Episode' ? episodeLabel(item) : item.ProductionYear, ...(item.Genres || []).slice(0, 2)].filter(Boolean).join(' · ')}</span><EpisodeSummary key={item.Id} item={item} protectedContent={protect(item)} /></>}</div>}
     </section>;
+}
+
+function rowAvailability(item: BaseItemDto) {
+    return isExternal(item) ? mediaLabel((item as CatalogueItem).Seerr?.mediaInfo) : 'Disponible dans votre bibliothèque';
+}
+
+function EpisodeCaption({ item, date }: Readonly<{ item: BaseItemDto; date: string }>) {
+    return <span className='client-upcoming-episode-caption' aria-hidden='true'>
+        <strong>{item.SeriesName || item.Name}</strong>
+        <small>{episodeLabel(item)}</small>
+        <time dateTime={item.PremiereDate?.slice(0, 10)}>{date}</time>
+    </span>;
 }
 
 /* eslint-enable react/jsx-no-bind */

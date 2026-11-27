@@ -1,0 +1,102 @@
+@use '../design' as ds;
+
+.client-notification-count {
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    right: 0;
+    display: grid;
+    min-width: 17px;
+    min-height: 17px;
+    place-items: center;
+    padding: 1px 3px;
+    border: 1px solid #441e2a;
+    border-radius: var(--client-radius-control);
+    background: #ffb1bc;
+    color: #321622;
+    font-size: var(--client-text-11);
+    font-weight: 700;
+}
+
+.client-detail-dialog.client-notifications-panel {
+    position: fixed;
+    inset: 72px var(--client-margin, 18px) auto auto;
+    width: min(490px, calc(100vw - 30px));
+    max-height: min(690px, calc(100dvh - 90px));
+    margin: 0;
+
+    .client-detail-dialog-body { padding: 14px 17px 17px; }
+}
+
+.client-notifications-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 13px;
+
+    --client-action-padding: var(--client-space-12);
+}
+
+.client-notifications-list {
+    display: grid;
+    gap: 7px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.client-notification {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-control);
+    background: var(--client-surface-layer);
+
+    &.is-unread {
+        border-color: var(--client-line-strong);
+        background: var(--client-surface-highlight);
+        box-shadow: var(--client-reflection);
+    }
+
+    > a {
+        display: grid;
+        flex: 1 1 165px;
+        gap: 4px;
+        color: inherit;
+        text-decoration: none;
+        overflow-wrap: anywhere;
+    }
+
+    time {
+        color: var(--client-ink-subtle);
+        font-size: var(--client-text-11);
+    }
+}
+
+.client-notification-event,
+.client-notification-detail {
+    color: var(--client-ink-muted);
+    font-size: var(--client-text-12);
+}
+
+.client-notification-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+
+    --client-action-height: var(--client-size-action-small);
+    --client-action-padding: var(--client-space-8);
+    --client-action-font: var(--client-text-12);
+}
+
+@include ds.phone {
+    .client-detail-dialog.client-notifications-panel {
+        inset: 61px 9px auto;
+        width: calc(100vw - 18px);
+        max-height: calc(100dvh - 73px);
+    }
+}

@@ -1,9 +1,10 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
+import { episodeCode, LABELS } from './labels';
 
 export function episodeLabel(item: BaseItemDto): string {
     return item.Type === 'Episode' ?
-        `S${item.ParentIndexNumber ?? 1}:E${item.IndexNumber ?? 1}` :
-        'Lecture';
+        episodeCode(item.ParentIndexNumber ?? 1, item.IndexNumber ?? 1) :
+        LABELS.play;
 }
 
 export function uniqueItems(items: BaseItemDto[], excluded: BaseItemDto[] = []): BaseItemDto[] {
@@ -22,9 +23,17 @@ export function progressPercent(item: BaseItemDto): number {
         0;
 }
 
+/** Films and completed series use Jellyfin's per-account state. A resumed title keeps its progress bar. */
+export function isWatchedCard(item: BaseItemDto, enabled = true): boolean {
+    const data = item.UserData;
+    if (!enabled || data?.Played !== true || (data.PlaybackPositionTicks || 0) > 0) return false;
+    return item.Type === 'Movie' || (item.Type === 'Series' && (data.UnplayedItemCount || 0) === 0);
+}
+
 export function runtimeLabel(ticks?: number | null): string {
     if (!ticks) return '';
     const minutes = Math.round(ticks / 6e8);
+    if (minutes <= 0) return '';
     const hours = Math.floor(minutes / 60);
     return hours ? `${hours} h ${String(minutes % 60).padStart(2, '0')}` : `${minutes} min`;
 }

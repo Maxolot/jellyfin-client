@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-no-bind -- Player controls dispatch their own typed actions. */
-import React, { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import React, { useCallback, useEffect, useRef, useState, type CSSProperties, type FocusEvent as ReactFocusEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { BaseItemDto, MediaSegmentDto, MediaStream } from '@jellyfin/sdk/lib/generated-client';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
@@ -13,6 +13,7 @@ import shell from 'scripts/shell';
 import { useApi } from 'hooks/useApi';
 import Events, { type Event as PlaybackEvent } from 'utils/events';
 import type { PlaybackStopInfo } from 'types/playbackStopInfo';
+import ActionLabel from '../ActionLabel';
 import ClientIcon from '../ClientIcon';
 import RemoteIcon from '../remote/RemoteIcon';
 import { TogetherBadge, openConnectivity } from '../remote/ConnectivityLayer';
@@ -21,16 +22,23 @@ import { playerPreferenceKey, usePlayerPreferences } from './preferences';
 import { activeSegment, clampSeek, formatTime, SECOND } from './model';
 import { usePlaybackSnapshot } from './usePlaybackSnapshot';
 import { TimelinePreview } from './TimelinePreview';
-import { PlayerEpisodes, PlayerTechnical, PlayerHelp, SubtitleOffset, sleepLabel } from './PlayerExtras';
-import { Select } from '../settings/controls';
+import { PlayerEpisodes, PlayerTechnical, SubtitleOffset } from './PlayerExtras';
+import { Select } from '../ui/controls';
 import './player.scss';
 import './polish.scss';
+import './liquidGlass.scss';
+import './timeline.scss';
+import './bar.scss';
+import LiquidGlassFilter from './LiquidGlassFilter';
+import { forgetPlayback, useReloadResume } from './reloadResume';
 import { isPlayingOffline } from '../offline/playback';
+import LoadingTitle from './LoadingTitle';
+import { episodeCode, LABELS } from '../labels';
 
-type Panel = 'audio' | 'subtitles' | 'chapters' | 'settings' | 'appearance' | 'episodes' | 'technical' | 'tools' | 'sleep' | 'help';
+type Panel = 'audio' | 'subtitles' | 'chapters' | 'settings' | 'appearance' | 'episodes' | 'technical';
 const SEEK_BURST_MS = 1100;
 const segmentLabels: Record<string, string> = { Intro: 'Passer l’intro', Recap: 'Passer le récapitulatif', Outro: 'Passer le générique' };
-const panelNames = { audio: 'Pistes audio', subtitles: 'Sous-titres', chapters: 'Chapitres', settings: 'Lecture', appearance: 'Personnaliser le lecteur', episodes: 'Épisodes', technical: 'Informations techniques', tools: 'Outils du lecteur', sleep: 'Minuterie', help: 'Raccourcis clavier' };
+const panelNames = { audio: 'Pistes audio', subtitles: 'Sous-titres', chapters: 'Chapitres', settings: 'Lecture', appearance: 'Personnaliser le lecteur', episodes: 'Épisodes', technical: 'Informations techniques' };
 function TrackName({ track }: Readonly<{ track: MediaStream }>) {
     return <span>{track.DisplayTitle || track.Title || track.Language || `Piste ${(track.Index || 0) + 1}`}</span>;
 }
@@ -38,10 +46,19 @@ function PlayerGlyph({ name }: Readonly<{ name: string }>) {
     const paths: Record<string, string> = {
         play: 'M8 5v14l11-7Z', pause: 'M8 5v14M16 5v14', rewind: 'M4 10a8 8 0 1 1 1 8M4 4v6h6', forward: 'M20 10a8 8 0 1 0-1 8M20 4v6h-6',
         subtitles: 'M3 5h18v14H3ZM10 10H7v4h3M17 10h-3v4h3', audio: 'M9 18V5l12-2v13M9 18a3 3 0 1 1-3-3h3M21 16a3 3 0 1 1-3-3h3',
-        fullscreen: 'M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5', pip: 'M3 4h18v16H3ZM12 12h7v6h-7Z',
-        episodes: 'M3 4h18v12H3ZM7 20h10M10 8l5 2-5 3Z', more: 'M5 12h.01M12 12h.01M19 12h.01', chapters: 'M4 5h16M4 12h16M4 19h16', settings: 'M4 6h16M4 12h16M4 18h16M8 3v6M16 9v6M10 15v6'
+        fullscreen: 'M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5', fullscreenExit: 'M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5', pip: 'M3 4h18v16H3ZM12 12h7v6h-7Z',
+        episodes: 'M3 4h18v12H3ZM7 20h10M10 8l5 2-5 3Z', info: 'M12 11v6M12 7v1M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0', chapters: 'M4 5h16M4 12h16M4 19h16', settings: 'M4 6h16M4 12h16M4 18h16M8 3v6M16 9v6M10 15v6'
     };
     return <svg viewBox='0 0 24 24' aria-hidden='true' fill='none' stroke='currentColor' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'><path d={paths[name] || paths.settings} /></svg>;
+}
+/** The central controls after Apple's player: solid shapes, and the skip amount written inside its arrow. */
+function CenterGlyph({ name, amount }: Readonly<{ name: 'play' | 'pause' | 'back' | 'forward'; amount?: number }>) {
+    if (name === 'play') return <svg viewBox='0 0 24 24' aria-hidden='true' fill='currentColor' stroke='currentColor' strokeWidth='2.4' strokeLinejoin='round'><path d='M8.5 5.8v12.4l9.8-6.2Z' /></svg>;
+    if (name === 'pause') return <svg viewBox='0 0 24 24' aria-hidden='true' fill='currentColor'><rect x='6' y='4.5' width='4.3' height='15' rx='1.5' /><rect x='13.7' y='4.5' width='4.3' height='15' rx='1.5' /></svg>;
+    return <svg viewBox='0 0 24 24' aria-hidden='true' fill='none' stroke='currentColor' strokeWidth='1.7' strokeLinecap='round' strokeLinejoin='round'>
+        <path d={name === 'back' ? 'M12 4.5A8.5 8.5 0 1 1 4.64 8.75M14 2.3l-2.4 2.2 2.4 2.2' : 'M12 4.5A8.5 8.5 0 1 0 19.36 8.75M10 2.3l2.4 2.2-2.4 2.2'} />
+        <text x='12' y='15.8' textAnchor='middle' fill='currentColor' stroke='none' fontSize='7.5' fontWeight='650'>{amount}</text>
+    </svg>;
 }
 // eslint-disable-next-line sonarjs/cognitive-complexity -- Capability-gated controls share one playback snapshot.
 export default function CustomVideoPlayer() {
@@ -52,16 +69,33 @@ export default function CustomVideoPlayer() {
     const [preferences, savePreferences] = usePlayerPreferences(playerPreferenceKey(api?.basePath || '', user?.Id || ''));
     const [visible, setVisible] = useState(true);
     const [panel, setPanel] = useState<Panel>();
+    const controlsShown = visible || panel !== undefined;
     const [details, setDetails] = useState<{ id: string; item: BaseItemDto; segments: MediaSegmentDto[] }>();
     const [error, setError] = useState('');
     const [cancelledFor, setCancelledFor] = useState('');
     const [hover, setHover] = useState<number>();
     const [scrub, setScrub] = useState<number>();
     const [jumpFeedback, setJumpFeedback] = useState({ offset: 0, serial: 0, at: 0 });
+    const jumpParts = useRef<Record<string, HTMLElement | null>>({});
+    useEffect(() => {
+        if (!jumpFeedback.serial) return;
+        const direction = jumpFeedback.offset < 0 ? -1 : 1;
+        const part = direction < 0 ? 'back' : 'forward';
+        const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        if (!still) {
+            jumpParts.current[`${part}-icon`]?.animate?.([{ transform: `rotate(${direction * -120}deg) scale(0.8)` }, { transform: 'none' }],
+                { duration: 500, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
+        }
+        jumpParts.current[`${part}-burst`]?.animate?.(still ?
+            [{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.6 }, { opacity: 0 }] :
+            [
+                { opacity: 0, transform: `translate(${direction * -0.8}em, -50%) scale(0.6)` },
+                { opacity: 1, transform: 'translate(0, -50%) scale(1.12)', offset: 0.25 },
+                { opacity: 1, transform: 'translate(0, -50%) scale(1)', offset: 0.45 },
+                { opacity: 0, transform: `translate(${direction * 0.6}em, -50%) scale(0.96)` }
+            ], { duration: 900, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' });
+    }, [jumpFeedback.serial, jumpFeedback.offset]);
     const jumpTarget = useRef<{ position: number; at: number }>();
-    const [sleepAt, setSleepAt] = useState<number>();
-    const [sleepEnd, setSleepEnd] = useState(false);
-    const stopAfterItem = useRef('');
     const [ended, setEnded] = useState(false);
     const root = useRef<HTMLDivElement>(null);
     const dialog = useRef<HTMLDialogElement>(null);
@@ -72,6 +106,21 @@ export default function CustomVideoPlayer() {
     const ownedPlayer = useRef<ReturnType<typeof playbackManager.getCurrentPlayer>>();
     const skipped = useRef(new Set<string>());
     const lastTouch = useRef({ time: 0, side: 0 });
+    const pointerKind = useRef('mouse');
+    const [fullscreen, setFullscreen] = useState(false);
+    useEffect(() => {
+        const sync = () => {
+            try {
+                setFullscreen(!!playbackManager.isFullscreen());
+            } catch { setFullscreen(false); /* No player yet. */ }
+        };
+        sync();
+        document.addEventListener('fullscreenchange', sync);
+        return () => document.removeEventListener('fullscreenchange', sync);
+    }, []);
+    const lastJump = useRef(0);
+    const shownAt = useRef(0);
+    const visibleNow = useRef(true);
     const latest = useRef({ preferences, snapshot, panel, cache, server: api?.basePath, userId: user?.Id });
     latest.current = { preferences, snapshot, panel, cache, server: api?.basePath, userId: user?.Id };
     const itemId = snapshot?.item?.Id || '';
@@ -81,18 +130,51 @@ export default function CustomVideoPlayer() {
     const position = (playState?.PositionTicks || 0) / SECOND;
     const duration = snapshot?.duration || 0;
     const paused = playState?.IsPaused !== false;
+    useEffect(() => {
+        if (visible && !visibleNow.current) shownAt.current = Date.now();
+        visibleNow.current = visible;
+    }, [visible]);
+    // Pausing brings the controls back; a tap can still hide them while paused.
+    useEffect(() => {
+        if (paused) setVisible(true);
+    }, [paused]);
     const hasPlayer = !!snapshot && !ended;
+    useReloadResume({ hasPlayer, ended, entry: itemId && snapshot?.item?.ServerId ? {
+        itemId, serverId: snapshot.item.ServerId, positionTicks: playState?.PositionTicks || 0, runtimeTicks: snapshot.item.RunTimeTicks || undefined, mediaSourceId: playState?.MediaSourceId || undefined,
+        audioStreamIndex: playState?.AudioStreamIndex ?? undefined, subtitleStreamIndex: playState?.SubtitleStreamIndex ?? undefined
+    } : undefined });
     const canSeek = hasPlayer && playState?.CanSeek === true && duration > 0;
     const next = snapshot?.next;
-    const nextCancelled = cancelledFor === itemId || sleepEnd;
+    const nextLabel = next?.Type === 'Episode' ? 'Épisode suivant' : 'Titre suivant';
+    const nextCancelled = cancelledFor === itemId;
     const secondsLeft = Math.max(0, duration - position);
-    const showNext = hasPlayer && item?.Type === 'Episode' && !!next && !nextCancelled && secondsLeft <= Math.max(30, preferences.next) && duration > 0;
+    const showNext = hasPlayer && next?.MediaType === 'Video' && !nextCancelled && secondsLeft <= Math.max(30, preferences.next) && duration > 0;
     const segment = activeSegment(segments, position);
     const commands: string[] = hasPlayer ? playbackManager.getSupportedCommands() : [];
     const wake = useCallback(() => {
         activity.current = Date.now();
+        // Noted at once: a click right behind the mouse move that revealed the controls must not hide them.
+        if (!visibleNow.current) shownAt.current = Date.now();
+        visibleNow.current = true;
         setVisible(true);
     }, []);
+    // A tap or click outside the buttons shows the controls, the next one hides them, on every device.
+    const toggleControls = useCallback(() => {
+        activity.current = Date.now();
+        // Controls that just appeared (the mouse moved to click, a double tap jumped) stay up.
+        const fresh = Date.now() - Math.max(lastJump.current, shownAt.current) < 400;
+        const show = fresh || !visibleNow.current;
+        if (show && !visibleNow.current) shownAt.current = Date.now();
+        visibleNow.current = show;
+        setVisible(show);
+    }, []);
+    const wakeFromPointer = useCallback((event: ReactPointerEvent) => {
+        if (event.pointerType !== 'touch') wake();
+    }, [wake]);
+    const wakeFromFocus = useCallback((event: ReactFocusEvent) => {
+        // Tapping the video focuses its surface: that must not reopen what the same tap closes.
+        if (!(event.target as HTMLElement).classList.contains('client-player-surface')) wake();
+    }, [wake]);
     const action = useCallback((run: () => unknown) => {
         setError('');
         try {
@@ -119,6 +201,7 @@ export default function CustomVideoPlayer() {
     }, []);
     const leave = useCallback(() => {
         leaving.current = true;
+        forgetPlayback();
         const offline = isPlayingOffline();
         stopOwnedPlayer();
         if (window.history.state?.idx > 0) navigate(-1);
@@ -174,8 +257,8 @@ export default function CustomVideoPlayer() {
         };
     }, [stopOwnedPlayer]);
     useEffect(() => {
-        customVideoPresentation.autoNext = preferences.next > 0 && !nextCancelled && !sleepEnd;
-    }, [preferences.next, nextCancelled, sleepEnd]);
+        customVideoPresentation.autoNext = preferences.next > 0 && !nextCancelled;
+    }, [preferences.next, nextCancelled]);
     useEffect(() => {
         setEnded(false);
         skipped.current.clear();
@@ -207,20 +290,6 @@ export default function CustomVideoPlayer() {
         const timer = window.setTimeout(() => setJumpFeedback(previous => ({ ...previous, offset: 0 })), SEEK_BURST_MS);
         return () => window.clearTimeout(timer);
     }, [jumpFeedback.serial, jumpFeedback.offset]);
-    useEffect(() => {
-        if (!sleepAt) return;
-        const timer = window.setInterval(() => {
-            if (Date.now() < sleepAt) return;
-            setSleepAt(undefined);
-            action(() => playbackManager.pause());
-            setVisible(true);
-        }, 500);
-        return () => window.clearInterval(timer);
-    }, [sleepAt, action]);
-    useEffect(() => {
-        if (stopAfterItem.current && stopAfterItem.current !== itemId) setSleepEnd(false);
-        stopAfterItem.current = itemId;
-    }, [itemId]);
     useEffect(() => {
         const timer = window.setInterval(() => {
             const focusInside = keyboardFocus.current && root.current?.contains(document.activeElement) && document.activeElement !== root.current;
@@ -285,30 +354,61 @@ export default function CustomVideoPlayer() {
     useEffect(() => {
         const video = document.querySelector<HTMLVideoElement>('.videoPlayerContainer video');
         if (!video) return;
-        const positions = new Map<VTTCue, { line: VTTCue['line']; snap: boolean }>();
+        const positions = new Map<VTTCue, { line: VTTCue['line']; snap: boolean; align: LineAlignSetting }>();
+        // While the controls show, subtitles rise above them (as on YouTube) instead of running under the island.
+        const controlsTop = () => {
+            const bottom = root.current?.querySelector('.client-player-bottom');
+            if (!controlsShown || !bottom) return undefined;
+            const tops = Array.from(bottom.querySelectorAll('.client-player-timeline, .client-player-toolbar'), element => element.getBoundingClientRect().top);
+            return tops.length ? Math.min(...tops) : undefined;
+        };
+        const distance = (top: number | undefined) => {
+            const box = video.getBoundingClientRect();
+            if (top === undefined || !box.height) return preferences.subtitlePosition;
+            const covered = (box.bottom - top) / box.height * 100 + 2;
+            return Math.min(60, Math.max(preferences.subtitlePosition, covered));
+        };
+        // Firefox and Safari draw text subtitles in Jellyfin's own element rather than as cues: it is lifted instead.
+        const page = document.documentElement;
+        const liftElement = (top: number | undefined) => {
+            const text = document.querySelector('.videoSubtitles .videoSubtitlesInner');
+            const current = parseFloat(page.style.getPropertyValue('--client-subtitle-lift')) || 0;
+            const resting = text ? text.getBoundingClientRect().bottom + current : 0;
+            const lift = text && top !== undefined ? Math.max(0, Math.round(resting - top + 12)) : 0;
+            if (lift !== current) page.style.setProperty('--client-subtitle-lift', `${lift}px`);
+        };
         const apply = () => {
+            const top = controlsTop();
+            liftElement(top);
+            const line = 100 - distance(top);
             for (const track of Array.from(video.textTracks)) {
                 for (const cue of Array.from(track.cues || [])) {
                     if (!('line' in cue)) continue;
                     const textCue = cue as VTTCue;
-                    if (!positions.has(textCue)) positions.set(textCue, { line: textCue.line, snap: textCue.snapToLines });
+                    if (!positions.has(textCue)) positions.set(textCue, { line: textCue.line, snap: textCue.snapToLines, align: textCue.lineAlign });
                     textCue.snapToLines = false;
-                    textCue.line = 100 - preferences.subtitlePosition;
+                    // The setting is the distance from the bottom of the image to the bottom of the text.
+                    textCue.lineAlign = 'end';
+                    if (textCue.line !== line) textCue.line = line;
                 }
             }
         };
         apply();
         video.textTracks.addEventListener('change', apply);
         video.addEventListener('timeupdate', apply);
+        window.addEventListener('resize', apply);
         return () => {
             video.textTracks.removeEventListener('change', apply);
             video.removeEventListener('timeupdate', apply);
+            window.removeEventListener('resize', apply);
+            page.style.removeProperty('--client-subtitle-lift');
             positions.forEach((original, cue) => {
                 cue.line = original.line;
                 cue.snapToLines = original.snap;
+                cue.lineAlign = original.align;
             });
         };
-    }, [preferences.subtitlePosition, itemId, playState?.SubtitleStreamIndex, playState?.MediaSourceId]);
+    }, [preferences.subtitlePosition, preferences.bar, preferences.size, controlsShown, itemId, playState?.SubtitleStreamIndex, playState?.MediaSourceId]);
     const openPanel = (name: Panel) => {
         setPanel(name);
         wake();
@@ -318,12 +418,18 @@ export default function CustomVideoPlayer() {
         const active = Math.sign(jumpFeedback.offset) === side;
         const sign = side < 0 ? '−' : '+';
         const label = side < 0 ? 'Reculer' : 'Avancer';
-        const value = active ? `${sign}${Math.abs(jumpFeedback.offset)}` : preferences.skip;
-        return <button type='button' className={`client-player-jump ${active ? 'is-jumping' : ''}`} aria-label={`${label} de ${preferences.skip} secondes`} disabled={!canSeek} onClick={() => jump(side * preferences.skip)}><span key={active ? jumpFeedback.serial : 0}><PlayerGlyph name={side < 0 ? 'rewind' : 'forward'} /></span><strong aria-live='polite'>{value}<small>s</small></strong></button>;
+        const part = side < 0 ? 'back' : 'forward';
+        // Same elements every time: the effect on jumpFeedback replays their animations.
+        return <button type='button' className={`client-player-jump client-liquid-glass${side < 0 ? ' is-back' : ''}`} aria-label={`${label} de ${preferences.skip} secondes`} disabled={!canSeek} onClick={() => jump(side * preferences.skip)}>
+            <span ref={element => { jumpParts.current[`${part}-icon`] = element; }} className='client-player-jump-icon'><CenterGlyph name={side < 0 ? 'back' : 'forward'} amount={preferences.skip} /></span>
+            <strong ref={element => { jumpParts.current[`${part}-burst`] = element; }} className='client-player-jump-burst' aria-hidden='true'>{active ? <>{sign}{Math.abs(jumpFeedback.offset)}<small>s</small></> : null}</strong>
+            <span className='client-player-sr' aria-live='polite'>{active ? `${sign}${Math.abs(jumpFeedback.offset)} secondes` : ''}</span>
+        </button>;
     };
-    const timerStatus = sleepEnd ? '· fin de cet épisode' : '';
-    const audio: MediaStream[] = hasPlayer ? playbackManager.audioTracks() : [];
-    const subtitles: MediaStream[] = hasPlayer ? playbackManager.subtitleTracks() : [];
+    // The snapshot can outlive the player for a moment (stop, reload resume): tracks need a live player.
+    const liveTracks = hasPlayer && !!playbackManager.getCurrentPlayer();
+    const audio: MediaStream[] = liveTracks ? playbackManager.audioTracks() : [];
+    const subtitles: MediaStream[] = liveTracks ? playbackManager.subtitleTracks() : [];
     const chapters = item?.Chapters || [];
     const displayPosition = scrub ?? position;
     const endTime = new Date(Date.now() + secondsLeft / (playState?.PlaybackRate || 1) * 1000).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -335,24 +441,66 @@ export default function CustomVideoPlayer() {
         setEnded(false);
         await playbackManager.play({ items: [snapshot.item], startPositionTicks: 0 });
     });
+    let loadingLabel = '';
+    if (!hasPlayer && !ended) loadingLabel = 'Préparation de la lecture…';
+    else if (snapshot?.buffering && hasPlayer && !paused) loadingLabel = 'Chargement de la vidéo…';
+    const percent = (seconds: number) => `${duration ? Math.min(100, Math.max(0, seconds / duration * 100)) : 0}%`;
+    const timeline = <div className='client-player-timeline' style={{ '--progress': percent(displayPosition) } as CSSProperties}>
+        {hover !== undefined && <TimelinePreview seconds={hover} duration={duration} chapters={chapters} trickplay={trickplay} itemId={itemId} mediaSourceId={playState?.MediaSourceId} enabled={preferences.previews} />}
+        {/* What the browser has already loaded shows ahead of the playhead, as on YouTube. */}
+        <div className='client-player-track' aria-hidden='true'>
+            {duration > 0 && playState?.BufferedRanges?.map(range => <i key={range.start} className='is-buffered' style={{ left: percent((range.start || 0) / SECOND), width: percent(((range.end || 0) - (range.start || 0)) / SECOND) }} />)}
+            <i className='is-played' />
+        </div>
+        <div className='client-player-chapter-markers' aria-hidden='true'>{chapters.slice(1).map(chapter => <i key={chapter.StartPositionTicks} style={{ left: `${duration ? (chapter.StartPositionTicks || 0) / SECOND / duration * 100 : 0}%` }} />)}</div>
+        <input type='range' aria-label='Progression de la lecture' min={0} max={duration || 1} step={0.1} value={Math.min(displayPosition, duration || 1)} disabled={!canSeek} aria-valuetext={`${formatTime(displayPosition)} sur ${formatTime(duration)}`} onChange={event => {
+            setScrub(Number(event.target.value));
+            setHover(Number(event.target.value));
+        }} onPointerUp={event => {
+            seek(Number(event.currentTarget.value));
+            setScrub(undefined);
+            if (event.pointerType !== 'mouse') setHover(undefined);
+        }} onPointerCancel={() => {
+            setScrub(undefined);
+            setHover(undefined);
+        }} onKeyUp={event => {
+            if (['ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'].includes(event.key)) {
+                seek(Number(event.currentTarget.value));
+                setScrub(undefined);
+            }
+        }} onBlur={() => setScrub(undefined)} onPointerMove={event => {
+            const rect = event.currentTarget.getBoundingClientRect();
+            setHover(Math.max(0, Math.min(duration, (event.clientX - rect.left) / rect.width * duration)));
+        }} onPointerLeave={() => setHover(undefined)} />
+    </div>;
+    // The bar layouts that put the progress bar inside the island of controls.
+    const barInside = preferences.bar === 'island' || preferences.bar === 'inline' || preferences.bar === 'compact';
     return <Page id='customVideoPage' className='client-video-page' isNowPlayingBarEnabled={false} isThemeMediaSupported>
         <style>{`html.client-video-active video::cue { font-size: ${preferences.subtitleSize}%; background-color: ${preferences.subtitleBackground ? 'rgba(0,0,0,.7)' : 'transparent'}; }`}</style>
-        <div ref={root} className={`client-player style-${preferences.style} accent-${preferences.accent} ${visible || paused || panel || ended ? 'controls-visible' : 'controls-hidden'}`} style={{ '--player-scale': preferences.size / 100 } as CSSProperties} onPointerMove={wake} onPointerDown={() => { keyboardFocus.current = false; }} onFocusCapture={wake}>
-            <button className='client-player-surface' tabIndex={-1} aria-label='Afficher les commandes' onClick={wake} onDoubleClick={event => {
-                if (event.detail > 0) action(() => playbackManager.playPause());
-            }} onTouchEnd={event => {
-                const x = event.changedTouches[0]?.clientX || 0;
-                const rightSide = x > window.innerWidth * 0.65 ? 1 : 0;
-                const side = x < window.innerWidth * 0.35 ? -1 : rightSide;
-                if (side && lastTouch.current.side === side && Date.now() - lastTouch.current.time < 350) {
-                    event.preventDefault();
-                    jump(side * preferences.skip);
-                    lastTouch.current.time = 0;
-                } else {
-                    lastTouch.current = { time: Date.now(), side };
-                }
-                wake();
-            }} />
+        <div ref={root} className={`client-player style-${preferences.style} accent-${preferences.accent} bar-${preferences.bar}${hasPlayer ? '' : ' is-empty'} ${visible || panel || ended ? 'controls-visible' : 'controls-hidden'}${loadingLabel ? ' is-loading' : ''}`} style={{ '--player-scale': preferences.size / 100 } as CSSProperties} onPointerMove={wakeFromPointer} onPointerDown={() => { keyboardFocus.current = false; }} onFocusCapture={wakeFromFocus}>
+            <button className='client-player-surface' tabIndex={-1} aria-label={visible ? 'Masquer les commandes' : 'Afficher les commandes'}
+                onPointerDown={event => { pointerKind.current = event.pointerType; }}
+                onClick={event => {
+                    // A mouse click anywhere on the picture plays or pauses; a tap shows or hides the controls.
+                    if (event.detail > 0 && pointerKind.current !== 'touch') {
+                        wake();
+                        action(() => playbackManager.playPause());
+                    } else { toggleControls(); }
+                }} onDoubleClick={event => {
+                    if (event.detail > 0 && pointerKind.current !== 'touch' && commands.includes('ToggleFullscreen')) action(() => playbackManager.toggleFullscreen());
+                }} onTouchEnd={event => {
+                    const x = event.changedTouches[0]?.clientX || 0;
+                    const rightSide = x > window.innerWidth * 0.65 ? 1 : 0;
+                    const side = x < window.innerWidth * 0.35 ? -1 : rightSide;
+                    if (side && lastTouch.current.side === side && Date.now() - lastTouch.current.time < 350) {
+                        event.preventDefault();
+                        jump(side * preferences.skip);
+                        lastJump.current = Date.now();
+                        lastTouch.current.time = 0;
+                    } else {
+                        lastTouch.current = { time: Date.now(), side };
+                    }
+                }} />
             <header className='client-player-top'>
                 <button type='button' onClick={leave} aria-label='Quitter le lecteur' title='Retour'><ClientIcon name='back' /></button>
                 <div><small>{item?.Type === 'Episode' ? `${item.SeriesName || ''} · Saison ${item.ParentIndexNumber || 1}, épisode ${item.IndexNumber || 1}` : 'EN LECTURE'}</small><h1>{item?.Name || 'Préparation de la lecture…'}</h1></div>
@@ -360,56 +508,49 @@ export default function CustomVideoPlayer() {
                 <button type='button' aria-label='Lire sur un autre appareil' title='Lire sur…' onClick={() => openConnectivity('targets')}><RemoteIcon name='cast' /></button>
                 {button('Personnaliser le lecteur', 'settings', () => openPanel('appearance'))}
             </header>
-            {!hasPlayer && !ended && <p className='client-player-loading' role='status'>Préparation de la lecture…</p>}
-            {snapshot?.buffering && hasPlayer && !paused && <p className='client-player-loading' role='status'>Chargement de la vidéo…</p>}
+            {loadingLabel && <LoadingTitle item={item} basePath={api?.basePath || ''} label={loadingLabel} />}
             {ended ? <div className='client-player-ended'><h2>{error ? 'Lecture interrompue' : 'Lecture terminée'}</h2><button type='button' onClick={replay}>{error ? 'Réessayer' : 'Revoir'}</button>{next && <button type='button' onClick={() => action(() => {
                 setEnded(false);
-                return playbackManager.play({ items: [next] });
-            })}>Épisode suivant · {next.Name}</button>}<button type='button' onClick={leave}>Retour à la fiche</button></div> : <div className='client-player-center'>
+                return playbackManager.nextTrack();
+            })}>{nextLabel} · {next.Name}</button>}<button type='button' onClick={leave}>Retour à la fiche</button></div> : <div className='client-player-center'><LiquidGlassFilter />
                 {jumpButton(-1)}
-                <button type='button' className='client-player-main-play' aria-label={paused ? 'Reprendre la lecture' : 'Mettre en pause'} disabled={!hasPlayer} onClick={() => action(() => playbackManager.playPause())}>{paused ? <ClientIcon name='play' /> : <PlayerGlyph name='pause' />}</button>
+                <button type='button' className='client-player-main-play client-liquid-glass' aria-label={paused ? 'Reprendre la lecture' : 'Mettre en pause'} disabled={!hasPlayer} onClick={() => action(() => playbackManager.playPause())}><CenterGlyph name={paused ? 'play' : 'pause'} /></button>
                 {jumpButton(1)}
             </div>}
             {segment && canSeek && !(showNext && segment.Type === 'Outro') && (segment.Type !== 'Intro' || preferences.intro === 'button') && <button className='client-player-skip' type='button' onClick={() => seek((segment.EndTicks || 0) / SECOND)}>{segmentLabels[segment.Type || 'Outro']} <ClientIcon name='next' /></button>}
-            {showNext && <aside className='client-player-next'><small>À SUIVRE</small><strong>{next.SeriesName || item?.SeriesName}</strong><span>{next.Name}</span>{preferences.next > 0 && secondsLeft <= preferences.next && <span role='status'>{paused ? 'Compte à rebours en pause' : `Dans ${Math.ceil(secondsLeft)} s`}</span>}<div><button type='button' onClick={() => action(() => playbackManager.nextTrack())}>Épisode suivant <ClientIcon name='next' /></button><button type='button' onClick={() => setCancelledFor(itemId)}>Annuler</button></div></aside>}
+            {showNext && <aside className='client-player-next'>
+                {next.ImageTags?.Primary && <img className='client-player-next-art' alt='' src={`${api?.basePath || ''}/Items/${next.Id}/Images/Primary?fillWidth=480&quality=85&tag=${next.ImageTags.Primary}`} />}
+                <div className='client-player-next-copy'>
+                    <small>À suivre{preferences.next > 0 && secondsLeft <= preferences.next && <span role='status'>{paused ? ' · en pause' : ` · dans ${Math.ceil(secondsLeft)} s`}</span>}</small>
+                    <strong>{next.SeriesName || next.Name}</strong>
+                    {next.SeriesName && <span>{next.Type === 'Episode' ? `${episodeCode(next.ParentIndexNumber || 1, next.IndexNumber || 1)} · ` : ''}{next.Name}</span>}
+                    <div className='client-player-next-actions'>
+                        <button type='button' className='is-primary' onClick={() => action(() => playbackManager.nextTrack())}
+                            style={preferences.next > 0 && secondsLeft <= preferences.next ? { '--next-progress': `${Math.max(0, Math.min(1, 1 - secondsLeft / preferences.next)) * 100}%` } as CSSProperties : undefined}>
+                            <PlayerGlyph name='play' />{nextLabel}
+                        </button>
+                        <button type='button' onClick={() => setCancelledFor(itemId)}>{LABELS.cancel}</button>
+                    </div>
+                </div>
+            </aside>}
             <footer className='client-player-bottom'>
                 {error && <p role='alert' className='client-player-error'>{error}</p>}
-                <div className='client-player-timeline'>
-                    {hover !== undefined && <TimelinePreview seconds={hover} duration={duration} chapters={chapters} trickplay={trickplay} itemId={itemId} mediaSourceId={playState?.MediaSourceId} enabled={preferences.previews} />}
-                    <div className='client-player-chapter-markers' aria-hidden='true'>{chapters.slice(1).map(chapter => <i key={chapter.StartPositionTicks} style={{ left: `${duration ? (chapter.StartPositionTicks || 0) / SECOND / duration * 100 : 0}%` }} />)}</div>
-                    <input type='range' aria-label='Progression de la lecture' min={0} max={duration || 1} step={0.1} value={Math.min(displayPosition, duration || 1)} disabled={!canSeek} aria-valuetext={`${formatTime(displayPosition)} sur ${formatTime(duration)}`} style={{ '--progress': `${duration ? displayPosition / duration * 100 : 0}%` } as CSSProperties} onChange={event => {
-                        setScrub(Number(event.target.value));
-                        setHover(Number(event.target.value));
-                    }} onPointerUp={event => {
-                        seek(Number(event.currentTarget.value));
-                        setScrub(undefined);
-                        if (event.pointerType !== 'mouse') setHover(undefined);
-                    }} onPointerCancel={() => {
-                        setScrub(undefined);
-                        setHover(undefined);
-                    }} onKeyUp={event => {
-                        if (['ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'].includes(event.key)) {
-                            seek(Number(event.currentTarget.value));
-                            setScrub(undefined);
-                        }
-                    }} onBlur={() => setScrub(undefined)} onPointerMove={event => {
-                        const rect = event.currentTarget.getBoundingClientRect();
-                        setHover(Math.max(0, Math.min(duration, (event.clientX - rect.left) / rect.width * duration)));
-                    }} onPointerLeave={() => setHover(undefined)} />
-                </div>
-                <div className='client-player-toolbar'>
+                {!barInside && timeline}
+                {preferences.bar === 'float' && <div className='client-player-times'><span>{formatTime(displayPosition)}</span><span>{timeLabel}</span></div>}
+                <div className='client-player-toolbar client-liquid-glass'>
+                    {barInside && timeline}
                     {button(paused ? 'Lecture' : 'Pause', paused ? 'play' : 'pause', () => playbackManager.playPause(), !hasPlayer)}
                     <div className='client-player-volume'><button type='button' aria-label={playState?.IsMuted ? 'Activer le son' : 'Couper le son'} onClick={() => action(() => playbackManager.toggleMute())}><ClientIcon name={playState?.IsMuted ? 'muted' : 'volume'} /></button><input type='range' aria-label='Volume' min={0} max={100} value={playState?.IsMuted ? 0 : playState?.VolumeLevel || 0} disabled={!commands.includes('SetVolume')} onChange={event => action(() => playbackManager.setVolume(Number(event.target.value)))} /></div>
-                    <span className='client-player-time'>{formatTime(displayPosition)} <span>/ {timeLabel}</span></span>
+                    <span className='client-player-time'>{formatTime(displayPosition)} <span>/ {timeLabel}</span>{preferences.time !== 'end' && duration > 0 && <span className='client-player-end'> · Fin à {endTime}</span>}</span>
                     <div className='client-player-tools'>
                         {item?.SeriesId && button('Épisodes et saisons', 'episodes', () => openPanel('episodes'))}
-                        {button('Outils du lecteur', 'more', () => openPanel('tools'))}
+                        {button('Informations techniques', 'info', () => openPanel('technical'))}
                         {audio.length > 0 && button('Pistes audio', 'audio', () => openPanel('audio'))}
                         {subtitles.length > 0 && button('Sous-titres', 'subtitles', () => openPanel('subtitles'))}
                         {chapters.length > 0 && button('Chapitres', 'chapters', () => openPanel('chapters'))}
                         {button('Réglages de lecture', 'settings', () => openPanel('settings'), !hasPlayer)}
                         {commands.includes('PictureInPicture') && button('Image dans l’image', 'pip', () => playbackManager.togglePictureInPicture())}
-                        {commands.includes('ToggleFullscreen') && button('Plein écran', 'fullscreen', () => playbackManager.toggleFullscreen())}
+                        {commands.includes('ToggleFullscreen') && button(fullscreen ? 'Quitter le plein écran' : 'Plein écran', fullscreen ? 'fullscreenExit' : 'fullscreen', () => playbackManager.toggleFullscreen())}
                     </div>
                 </div>
             </footer>
@@ -418,12 +559,12 @@ export default function CustomVideoPlayer() {
                 wake();
             }}>
                 <header><h2 id='client-player-panel-title'>{panel ? panelNames[panel] : ''}</h2><button type='button' aria-label='Fermer le panneau' onClick={() => dialog.current?.close()}><ClientIcon name='close' /></button></header>
-                {panel === 'audio' && <div className='client-player-choices'>{audio.map(track => <button type='button' key={track.Index} aria-pressed={playState?.AudioStreamIndex === track.Index} onClick={() => action(() => playbackManager.setAudioStreamIndex(track.Index))}><TrackName track={track} />{playState?.AudioStreamIndex === track.Index && <ClientIcon name='check' />}</button>)}</div>}
-                {panel === 'subtitles' && <div className='client-player-choices'>{playbackManager.supportSubtitleOffset() && playbackManager.canHandleOffsetOnCurrentSubtitle() && <SubtitleOffset key={`${itemId}-${playState?.SubtitleStreamIndex}`} run={action} />}<button type='button' aria-pressed={(playState?.SubtitleStreamIndex ?? -1) < 0} onClick={() => action(() => playbackManager.setSubtitleStreamIndex(-1))}>Désactivés</button>{subtitles.map(track => <button type='button' key={track.Index} aria-pressed={playState?.SubtitleStreamIndex === track.Index} onClick={() => action(() => playbackManager.setSubtitleStreamIndex(track.Index))}><TrackName track={track} />{playState?.SubtitleStreamIndex === track.Index && <ClientIcon name='check' />}</button>)}</div>}
+                {panel === 'audio' && <div className='client-player-choices'>{audio.map(track => <button type='button' key={track.Index} aria-pressed={playState?.AudioStreamIndex === track.Index} onClick={() => action(() => playbackManager.setAudioStreamIndex(track.Index))}><ActionLabel icon='volume'><TrackName track={track} /></ActionLabel>{playState?.AudioStreamIndex === track.Index && <ClientIcon name='check' />}</button>)}</div>}
+                {panel === 'subtitles' && <div className='client-player-choices'>{playbackManager.supportSubtitleOffset() && playbackManager.canHandleOffsetOnCurrentSubtitle() && <SubtitleOffset key={`${itemId}-${playState?.SubtitleStreamIndex}`} run={action} />}<button type='button' aria-pressed={(playState?.SubtitleStreamIndex ?? -1) < 0} onClick={() => action(() => playbackManager.setSubtitleStreamIndex(-1))}><ActionLabel icon='close'>Désactivés</ActionLabel></button>{subtitles.map(track => <button type='button' key={track.Index} aria-pressed={playState?.SubtitleStreamIndex === track.Index} onClick={() => action(() => playbackManager.setSubtitleStreamIndex(track.Index))}><ActionLabel icon='subtitles'><TrackName track={track} /></ActionLabel>{playState?.SubtitleStreamIndex === track.Index && <ClientIcon name='check' />}</button>)}</div>}
                 {panel === 'chapters' && <div className='client-player-choices'>{chapters.map((chapter, index) => <button type='button' key={chapter.StartPositionTicks} disabled={!canSeek} onClick={() => {
                     seek((chapter.StartPositionTicks || 0) / SECOND);
                     dialog.current?.close();
-                }}><span>{chapter.Name || `Chapitre ${index + 1}`}</span><small>{formatTime((chapter.StartPositionTicks || 0) / SECOND)}</small></button>)}</div>}
+                }}><ActionLabel icon='chapter'>{chapter.Name || `Chapitre ${index + 1}`}</ActionLabel><small>{formatTime((chapter.StartPositionTicks || 0) / SECOND)}</small></button>)}</div>}
                 {panel === 'settings' && <div className='client-player-fields'>
                     <div className='client-controls client-player-preferences is-panel'>
                         <Select label='Vitesse' value={playState?.PlaybackRate || 1} options={[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(rate => [rate, rate === 1 ? 'Normale' : `${rate} ×`] as const)}
@@ -434,28 +575,16 @@ export default function CustomVideoPlayer() {
                         <Select label='Format de l’image' value={String(playbackManager.getAspectRatio())} options={playbackManager.getSupportedAspectRatios().map((ratio: { id: string; name: string }) => [ratio.id, ratio.name] as const)}
                             onChange={ratio => action(() => playbackManager.setAspectRatio(ratio))} />
                     </div>
-                    <button type='button' onClick={() => setPanel('technical')}>Informations techniques</button>
+                    <button type='button' onClick={() => setPanel('technical')}><ActionLabel icon='info'>Informations techniques</ActionLabel></button>
                     <p className='client-player-hint'>Le serveur adapte le flux aux capacités du navigateur. Une limite de débit peut déclencher un transcodage.</p>
-                    <button type='button' onClick={() => setPanel('appearance')}>Personnaliser le lecteur</button>
+                    <button type='button' onClick={() => setPanel('appearance')}><ActionLabel icon='settings'>Personnaliser le lecteur</ActionLabel></button>
                 </div>}
-                {panel === 'episodes' && <PlayerEpisodes key={item?.SeriesId} item={item} play={(items, start) => action(async () => {
+                {panel === 'episodes' && <PlayerEpisodes key={item?.SeriesId} item={item} nextId={next?.Id} play={(items, start) => action(async () => {
                     await playbackManager.play({ items: [items[start]], startPositionTicks: items[start]?.UserData?.PlaybackPositionTicks || 0 });
                     setEnded(false);
                     dialog.current?.close();
                 })} />}
                 {panel === 'technical' && <PlayerTechnical key={itemId} itemId={itemId} state={snapshot?.state} />}
-                {panel === 'help' && <PlayerHelp />}
-                {panel === 'tools' && <div className='client-player-choices'><button type='button' onClick={() => setPanel('technical')}>Informations techniques</button><button type='button' onClick={() => setPanel('sleep')}>Minuterie {sleepAt ? '· activée' : timerStatus}</button><button type='button' onClick={() => setPanel('help')}>Raccourcis clavier</button></div>}
-                {panel === 'sleep' && <div className='client-player-choices'><p>{sleepEnd ? 'Arrêt à la fin de cet épisode' : sleepLabel(sleepAt)}</p>{[15, 30, 45, 60, 90].map(minutes => <button type='button' key={minutes} onClick={() => {
-                    setSleepEnd(false);
-                    setSleepAt(Date.now() + minutes * 60000);
-                }}>Dans {minutes} minutes</button>)}<button type='button' aria-pressed={sleepEnd} onClick={() => {
-                    setSleepAt(undefined);
-                    setSleepEnd(true);
-                }}>À la fin de cet épisode ou film</button><button type='button' onClick={() => {
-                    setSleepAt(undefined);
-                    setSleepEnd(false);
-                }}>Désactiver la minuterie</button><p className='client-player-hint'>La minuterie met la lecture en pause. Elle reste propre à cette session du lecteur.</p></div>}
                 {panel === 'appearance' && <PlayerPreferenceFields value={preferences} save={savePreferences} />}
             </dialog>
         </div>

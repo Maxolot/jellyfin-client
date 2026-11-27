@@ -1,4 +1,7 @@
 /* Motion only animates opacity and transforms, except the intentional card expansion. */
+
+@use 'design' as ds;
+
 .client-ambient {
     position: fixed;
     z-index: -1;
@@ -35,7 +38,7 @@
     z-index: -1;
     inset: 0;
     border: 1px solid #ffffff40;
-    border-radius: 28px;
+    border-radius: var(--client-radius-panel);
     background:
         radial-gradient(ellipse 360px 170px at var(--glass-x, 30%) var(--glass-y, 0%), #ffffff24, transparent 75%),
         linear-gradient(140deg, #ffffff1f, #ffffff04 40%, #ffffff0c),
@@ -51,7 +54,7 @@
 .client-glass:not(.client-floating) .client-nav {
     isolation: isolate;
     border-color: #ffffff40;
-    border-radius: 28px;
+    border-radius: var(--client-radius-panel);
     background: linear-gradient(140deg, #ffffff1f, #ffffff04 40%, #ffffff0c), rgb(18 20 25 / 0.4);
     box-shadow: 0 18px 60px #0005, inset 0 1px 0 #fff6, inset 0 -1px 0 #ffffff0d;
     backdrop-filter: blur(28px) saturate(155%);
@@ -102,17 +105,17 @@
 }
 
 .client-glass :is(.client-media-card, .client-saga-card):focus-visible {
-    outline: 1px solid #ffffff80;
+    outline: 1px solid var(--client-line-hover);
     outline-offset: 3px;
 }
 
 /* Liquid Glass hover: a diffuse reflection around the surface. It never moves it nor changes its fill, so light buttons stay readable. */
 .client-glass :is(button, a.client-button, .client-nav a):not(:disabled, .client-liquid-dots button, .client-profile) {
-    transition: background-color 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease, color 0.22s ease, transform 0.2s ease;
+    transition: background-color var(--client-duration-state) ease, border-color var(--client-duration-state) ease, box-shadow var(--client-duration-state) ease, color var(--client-duration-state) ease, transform var(--client-duration-state) var(--client-ease-move);
 }
 
 .client-glass :is(button, a.client-button, .client-nav a):not(:disabled, .client-liquid-dots button, .client-profile):is(:hover, :focus-visible) {
-    border-color: #ffffff59;
+    border-color: var(--client-line-strong);
     box-shadow: inset 0 1px 0 #fff6, inset 0 0 16px #ffffff2e, 0 0 20px #ffffff26, 0 6px 22px #0004;
 }
 
@@ -138,7 +141,7 @@
         height: 32px;
         padding: 0;
         border: 0;
-        border-radius: 10px;
+        border-radius: var(--client-radius-small);
         background: transparent;
         box-shadow: none;
     }
@@ -153,7 +156,7 @@
         background: #ffffff45;
         box-shadow: inset 0 1px 1px #fff3;
         content: '';
-        transition: background 0.2s ease;
+        transition: background var(--client-duration-state) ease;
     }
 
     button:hover::after {
@@ -161,13 +164,13 @@
     }
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     .client-liquid-dots {
         margin-left: 0;
     }
 }
 
-// The fluid drop replaces the active dot; the gooey filter merges head, neck and tail as in the mockup.
+/* The fluid drop replaces the active dot; the gooey filter merges head, neck and tail as in the mockup. */
 .client-liquid-marker {
     position: absolute;
     z-index: 1;
@@ -179,18 +182,18 @@
     pointer-events: none;
 
     .marker-fluid {
-        fill: #f2f4f6;
+        fill: var(--client-ink);
     }
 
     .marker-glint {
-        fill: #fff;
+        fill: var(--client-ink);
         opacity: 0.65;
     }
 }
 
 .client-artwork {
     opacity: 0;
-    transition: opacity 0.32s ease;
+    transition: opacity var(--client-duration-move) ease;
 }
 
 .client-artwork:not(.artwork-ready) {
@@ -206,7 +209,7 @@
 }
 
 .client-section-glow {
-    transition: opacity 0.3s ease, background-color 0.5s ease;
+    transition: opacity var(--client-duration-move) ease;
 }
 
 .client-media-card.active:not(.has-backdrop) .client-card-poster.artwork-ready {
@@ -247,10 +250,10 @@
     animation-play-state: paused;
 }
 
-// Copy and buttons enter per slide; the carousel dots stay put so the drop can flow between slides.
+/* Copy and buttons enter per slide; the carousel dots stay put so the drop can flow between slides. */
 .client-hero-copy > :not(.client-actions),
 .client-hero-copy > .client-actions > :not(.client-hero-dots) {
-    animation: client-copy-enter 0.5s var(--client-ease) both;
+    animation: client-copy-enter var(--client-duration-fade) var(--client-ease-move) both;
 }
 
 .client-reveal-pending {
@@ -259,32 +262,25 @@
 }
 
 .client-reveal-enter {
-    animation: client-section-enter 0.48s var(--client-ease) both;
+    animation: client-section-enter var(--client-duration-fade) var(--client-ease-move) both;
 }
 
-.client-profile-menu,
-.client-cast-dialog[open] {
-    animation: client-copy-enter 0.22s var(--client-ease) both;
+.client-profile-menu {
+    animation: client-copy-enter var(--client-duration-state) var(--client-ease-move) both;
 }
 
 .client-interface button,
-.client-interface .client-button,
 .client-interface .client-person,
 .client-interface .client-nav a {
-    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    transition: background-color var(--client-duration-state) ease, border-color var(--client-duration-state) ease, box-shadow var(--client-duration-state) ease, transform var(--client-duration-state) var(--client-ease-move);
 }
 
-.client-interface button:active,
-.client-interface .client-button:active {
+.client-interface button:active {
     transform: scale(0.97);
 }
 
 .client-person:hover {
     transform: translateY(-4px);
-}
-
-.client-episodes header button[aria-pressed='true'] {
-    box-shadow: inset 0 0 0 1px #ffffff65;
 }
 
 @keyframes client-artwork-drift {
@@ -316,7 +312,7 @@
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-glass:not(.client-floating) .client-nav::before {
         background: linear-gradient(140deg, #ffffff0e, transparent);
     }
@@ -335,20 +331,20 @@
     }
 }
 
-// Changer d'onglet doit répondre vite : les longues transitions restent réservées au carrousel.
+/* Changer d'onglet doit répondre vite : les longues transitions restent réservées au carrousel. */
 .client-interface[data-tab-switch] {
     .client-hero .client-background {
-        transition-duration: 0.3s;
+        transition-duration: var(--client-duration-move);
     }
 
     .client-hero-copy > :not(.client-actions),
     .client-hero-copy > .client-actions > :not(.client-hero-dots),
     .client-reveal-enter {
-        animation-duration: 0.18s;
+        animation-duration: var(--client-duration-state);
     }
 }
 
-// « Bientôt à découvrir » : grandes affiches 2:3 de la maquette, hauteur bornée selon l'écran.
+/* « Bientôt à découvrir » : grandes affiches 2:3 de la maquette, hauteur bornée selon l'écran. */
 .client-upcoming {
     --release-height: clamp(420px, 34vw, 560px);
 }
@@ -369,9 +365,9 @@
     flex: 0 0 calc(var(--release-height) * 2 / 3);
     height: var(--release-height);
     overflow: hidden;
-    border-radius: 12px;
-    background: #1a1d22;
-    color: #fff;
+    border-radius: var(--client-radius-control);
+    background: #1d1d1d;
+    color: var(--client-ink);
     scroll-snap-align: start;
 
     .client-artwork {
@@ -393,7 +389,7 @@
     }
 
     &:focus-visible {
-        outline: 2px solid #fff;
+        outline: var(--client-size-focus-ring) solid var(--client-focus);
         outline-offset: 3px;
     }
 }
@@ -409,9 +405,9 @@
     top: 17px;
     left: 18px;
     padding: 7px 10px;
-    border-radius: 999px;
+    border-radius: var(--client-radius-pill);
     background: #111b;
-    font-size: 11px;
+    font-size: var(--client-text-11);
     font-weight: 600;
     backdrop-filter: blur(8px);
 }
@@ -421,17 +417,17 @@
     right: 20px;
     bottom: 18px;
     left: 20px;
-    color: #e1e4e9;
-    font-size: 12px;
+    color: var(--client-ink);
+    font-size: var(--client-text-12);
 }
 
-@media (max-width: 1100px) {
+@include ds.tablet {
     .client-upcoming {
         --release-height: 450px;
     }
 }
 
-@media (max-width: 600px) {
+@include ds.phone {
     .client-upcoming {
         --release-height: 390px;
     }
@@ -441,6 +437,6 @@
     }
 
     .client-upcoming-card {
-        border-radius: 9px;
+        border-radius: var(--client-radius-small);
     }
 }

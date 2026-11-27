@@ -160,12 +160,14 @@ const config = {
                     test(module) {
                         return NODE_MODULES_REGEX.test(module.context);
                     },
-                    name(module) {
+                    name(module, chunks) {
                         // get the name. E.g. node_modules/packageName/not/this/part.js
                         // or node_modules/packageName
                         const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
                         // if "packageName" is a namespace (i.e. @jellyfin) get the namespace + packageName
                         if (packageName.startsWith('@')) {
+                            // Keep Material UI widgets used by lazy dashboard routes out of the initial shell.
+                            if (packageName === '@mui' && chunks.every(chunk => !chunk.canBeInitial())) return undefined;
                             const parts = module.context
                                 .substring(module.context.lastIndexOf(packageName))
                                 .split(/[\\/]/);

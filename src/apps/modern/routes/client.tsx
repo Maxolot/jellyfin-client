@@ -1,15 +1,16 @@
 import { usePreviewCapabilities } from '../features/client/previews/provider';
-import { QuickConnectMenuItem } from '../features/client/account/AccountSettings';
-import SettingsPage from '../features/client/settings/SettingsPage';
 /* eslint-disable react/jsx-no-bind -- View-local closures do not cross memoized component boundaries. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
+import { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-item-kind';
+import { ItemSortBy } from '@jellyfin/sdk/lib/generated-client/models/item-sort-by';
+import { getShowApi } from '@jellyfin/sdk/lib/utils/api/show-api';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
 import { getUserDataApi } from '@jellyfin/sdk/lib/utils/api/user-data-api';
-import useMediaQuery from '@mui/material/useMediaQuery';
+import useClientMediaQuery from '../features/client/useClientMediaQuery';
 import { useQueryClient } from '@tanstack/react-query';
 import { APP_NAME } from 'constants/branding';
-import React, { type CSSProperties, memo, type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigationType, useSearchParams, useNavigate } from 'react-router-dom';
+import React, { type CSSProperties, lazy, memo, Suspense, type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Link, Navigate, useLocation, useNavigationType, useSearchParams, useNavigate, useParams } from 'react-router-dom';
 
 import Page from 'components/Page';
 import { playbackManager } from 'components/playback/playbackmanager';
@@ -18,39 +19,63 @@ import { useWebConfig } from 'hooks/useWebConfig';
 import type { ItemDto } from 'types/base/models/item-dto';
 import Events from 'utils/events';
 
+import ActionLabel from '../features/client/ActionLabel';
+import SpoilerProvider from '../features/client/SpoilerProvider';
+import DetailSynopsis from '../features/client/DetailSynopsis';
+import SeriesEpisodesPanel, { SeasonRail } from '../features/client/SeriesEpisodes';
+import { remoteSeasonChoices, type RemoteSeason } from '../features/client/seriesEpisodesModel';
 import HeroArtwork from '../features/client/HeroArtwork';
 import ClientSkeleton from '../features/client/ClientSkeleton';
 import PreviewProvider, { usePreviews } from '../features/client/PreviewProvider';
 import PreviewClip from '../features/client/PreviewClip';
-import { type Preferences, useInterfacePreferences } from '../features/client/interfacePreferences';
+import { interfacePreferenceKey, type Preferences, useInterfacePreferences } from '../features/client/interfacePreferences';
 import HeroPagination, { type MarkerPosition } from '../features/client/HeroPagination';
 import useLoadedHero from '../features/client/useLoadedHero';
 import useTabPreparation from '../features/client/useTabPreparation';
 import Artwork from '../features/client/Artwork';
 import useClientMotion from '../features/client/useClientMotion';
 import useHeroBackground from '../features/client/useHeroBackground';
-import { artworkUrl, preloadArtwork } from '../features/client/artwork';
+import { artworkUrl, heroArtworkSizes, preloadArtwork } from '../features/client/artwork';
 import ClientIcon from '../features/client/ClientIcon';
 import useArtworkColor from '../features/client/useArtworkColor';
 import PersonalRating from '../features/client/PersonalRating';
 import RatingsOverview from '../features/client/RatingsOverview';
-import { GenreTaste, PersonalStatsBand } from '../features/client/PersonalOverview';
+import TitleLogo from '../features/client/TitleLogo';
+import { GenreTaste } from '../features/client/PersonalOverview';
+import { buildJourney, type JourneyEntry } from '../features/client/journey/journey';
+import { JourneyRecap, JourneyTimeline, MonthLine } from '../features/client/journey/JourneyViews';
+import { FavoritesMigration, useSavedTitles } from '../features/client/journey/savedTitles';
+import usePersonalUpcoming from '../features/client/usePersonalUpcoming';
 import { usePersonalStats, useViewingHistory } from '../features/client/usePersonalStats';
+import type { PersonalStats } from '../features/client/personalStats';
 import HeroMetadata from '../features/client/HeroMetadata';
 import DetailExtras from '../features/client/DetailExtras';
 import DetailMenu from '../features/client/DetailMenu';
 import { openConnectivity } from '../features/client/remote/ConnectivityLayer';
 import RemoteIcon from '../features/client/remote/RemoteIcon';
 import ProfileEntrance from '../features/client/profiles/ProfileEntrance';
-import ProfilePage from '../features/client/profiles/ProfilePage';
 import { signOut } from '../features/client/profiles/profileSession';
 import { useProfileGate } from '../features/client/profiles/useProfileGate';
+import { mediaVersions } from '../features/client/mediaVersions';
+import TrailerAction from '../features/client/trailers/TrailerAction';
+import { useTitleTrackChoice } from '../features/client/useTitleTrackChoice';
 import { chosenTracks } from '../features/client/languageTags';
 import { RecentPage } from '../features/client/LocalDiscoveryPages';
-import MediaRow from '../features/client/MediaRow';
-import { episodeLabel, progressPercent, uniqueItems } from '../features/client/model';
+import MediaRow, { type MediaRowKind } from '../features/client/MediaRow';
+import { ChoiceSelect, type Option } from '../features/client/ui/controls';
+import AdvancedLibraryFilters from '../features/client/AdvancedLibraryFilters';
+import { countLibraryFilters, isFullLibrary, readLibraryFilters } from '../features/client/libraryFilters';
+import { buildMediaQueue, type PlayQueue } from '../features/client/mediaQueue';
+import GridLoadMore from '../features/client/GridLoadMore';
+import { FolderPickerProvider, ListAction, useFolderPicker } from '../features/client/folders/FolderPicker';
+import FolderRows from '../features/client/folders/FolderRows';
+import { canFile } from '../features/client/folders/model';
+import WatchedMarker, { watchedLabel } from '../features/client/WatchedMarker';
+import { episodeLabel, isWatchedCard, progressPercent, uniqueItems } from '../features/client/model';
 import { clientRequest } from '../features/client/session';
-import { useClientCollections, useClientDetails, useClientFilters, useClientMedia, useMoreBrowse } from '../features/client/useClientMedia';
+import { pickHeroes, type HeroMix } from '../features/client/heroSelection';
+import { useClientDetails, useClientFilters, useClientMedia, useHeroPool, useMoreBrowse } from '../features/client/useClientMedia';
+import '../features/client/design/theme.scss';
 import '../features/client/client.scss';
 import '../features/client/prototype.scss';
 import '../features/client/motion.scss';
@@ -61,16 +86,44 @@ import '../features/client/heroBackground.scss';
 import '../features/client/headerAlignment.scss';
 import '../features/client/readableBackdrops.scss';
 import '../features/client/themeConsistency.scss';
+import '../features/client/search.scss';
+import '../features/client/mediaVersions.scss';
+import '../features/client/detailInfoPosition.scss';
 
-type ClientNavigationState = { returnTo?: string, returnState?: ClientNavigationState | null, restoreFocus?: boolean };
-import TonightPage from '../features/client/TonightPage';
-import CollectionCard from '../features/client/CollectionCard';
+type ClientNavigationState = { returnTo?: string, returnState?: ClientNavigationState | null, restoreFocus?: boolean, episodeDrawer?: boolean };
 import AmbientBackdrop from '../features/client/AmbientBackdrop';
 import { SeerrProvider, useSeerr } from '../features/client/seerr/SeerrContext';
-import { useSeerrCatalogue, useSeerrDetail, useSeerrUpcoming } from '../features/client/seerr/queries';
+import { useLocalIdentities, useSeerrCatalogue, useSeerrDetail, useSeerrUpcoming } from '../features/client/seerr/queries';
 import UpcomingRow from '../features/client/UpcomingRow';
-import { ExternalDetail, RequestTracking } from '../features/client/seerr/SeerrViews';
-import { externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
+import SearchBar from '../features/client/SearchBar';
+import Spotlight, { type SpotlightHandle } from '../features/client/spotlight/Spotlight';
+import PlaybackStarting from '../features/client/player/PlaybackStarting';
+import '../features/client/player/player.scss';
+import { exactSearchFirst, groupSearchResults, matchesSearchTitle, searchMode } from '../features/client/searchResults';
+import SharedCatalogArtwork from '../features/client/SharedCatalogArtwork';
+import { latestFollowed } from '../features/client/spotlight/sharedRecent';
+import { sharedCatalogItems, useSharedCatalog } from '../features/client/sharedCatalog';
+import NotificationCenter from '../features/client/requests/NotificationCenter';
+import { CompactRequest } from '../features/client/requests/RequestInline';
+import { useRequestProgress } from '../features/client/requests/queries';
+import { useTonightOptions } from '../features/client/tonight/queries';
+import { canRequest, externalIdentity, imageUrl, isExternal, mediaLabel, mixCatalogue, type CatalogueItem } from '../features/client/seerr/model';
+import { ActionButton, ActionLink, Chip } from '../features/client/ui';
+import { LABELS } from '../features/client/labels';
+
+const SettingsPage = lazy(() => import(/* webpackChunkName: "client-settings" */ '../features/client/settings/SettingsPage'));
+const ProfilePage = lazy(() => import(/* webpackChunkName: "client-profiles" */ '../features/client/profiles/ProfilePage'));
+const FolderPage = lazy(() => import(/* webpackChunkName: "client-folder" */ '../features/client/folders/FolderPage'));
+const FolderPanel = lazy(() => import(/* webpackChunkName: "client-folder-panel" */ '../features/client/folders/FolderPanel'));
+const PublicCollections = lazy(() => import(/* webpackChunkName: "client-collections" */ '../features/client/collections/PublicCollections'));
+const TonightPage = lazy(() => import(/* webpackChunkName: "client-tonight" */ '../features/client/TonightPage'));
+const QuickConnectMenuItem = lazy(() => import(/* webpackChunkName: "client-account" */ '../features/client/account/AccountSettings')
+    .then(module => ({ default: module.QuickConnectMenuItem })));
+const seerrViews = () => import(/* webpackChunkName: "client-seerr" */ '../features/client/seerr/SeerrViews');
+const ExternalDetail = lazy(() => seerrViews().then(module => ({ default: module.ExternalDetail })));
+const RequestDialog = lazy(() => seerrViews().then(module => ({ default: module.RequestDialog })));
+const RequestPage = lazy(() => import(/* webpackChunkName: "client-requests" */ '../features/client/requests/RequestPage'));
+const PersonPage = lazy(() => import(/* webpackChunkName: "client-person" */ '../features/client/person/PersonPage'));
 
 const links = [['home', 'Accueil'], ['series', 'Séries'], ['films', 'Films'], ['recent', 'Nouveautés'], ['tonight', 'Ce soir'], ['search', 'Rechercher'], ['mine', 'Mon espace']];
 
@@ -102,8 +155,8 @@ function clientLogo(basePath: string, i: BaseItemDto) {
 function localDetailId(id: string) {
     return isExternal({ Id: id }) ? '' : id;
 }
-function allowExternalCatalogue(view: string, selectors: string[], mode: string | null) {
-    return !selectors.some(Boolean) && ['home', 'films', 'series', 'search'].includes(view)
+function allowExternalCatalogue(view: string, selectors: string[], mode: string | null, blankSearch: boolean) {
+    return !blankSearch && !selectors.some(Boolean) && ['home', 'films', 'series', 'search'].includes(view)
         && !(mode === 'library' && ['films', 'series'].includes(view));
 }
 
@@ -124,8 +177,16 @@ function restoreClientNavigation(key: string, restoreFocus: boolean, id: string)
     } catch { /* Navigation remains usable when storage is unavailable. */ }
 }
 
+function clientScrollKey(prefKey: string | undefined, location: ReturnType<typeof useLocation>, view: string, params: URLSearchParams) {
+    const stable = new URLSearchParams(params);
+    stable.delete('season');
+    stable.delete('episodes');
+    const scope = ['folder', 'collections'].includes(view) ? params.get('collection') || '' : stable.toString();
+    return `${prefKey}-scroll-${location.pathname}?${scope}`;
+}
+
 function clientPageReady(id: string, view: string, item: BaseItemDto | undefined, mediaReady: boolean, externalReady: boolean) {
-    return externalReady || (id ? !!item : view === 'settings' || mediaReady);
+    return externalReady || (id ? !!item : ['settings', 'collections', 'folder', 'person', 'requests', 'tonight'].includes(view) || mediaReady);
 }
 
 /** What the blurred page background shows when no card is hovered. */
@@ -144,6 +205,26 @@ function clientBrowseInput(view: string, search: string, filters: Parameters<typ
     return ['mine', 'tonight'].includes(view) ? { search: '', filters: {} } : { search, filters };
 }
 
+function routedView(params: URLSearchParams, folderId?: string, personId?: string) {
+    if (folderId) return 'folder';
+    if (personId) return 'person';
+    return params.get('view') || 'home';
+}
+
+function clientBrowseView(view: string, id: string, emptySearch: boolean) {
+    return id || ['settings', 'collections', 'folder', 'person', 'requests', 'tonight'].includes(view) || emptySearch ? 'disabled' : view;
+}
+
+function useSharedBrowse(view: string, id: string, search: string) {
+    const shared = useSharedCatalog();
+    const entries = shared.data || [];
+    const matching = view === 'search' ? entries.filter(entry => matchesSearchTitle(entry.title, search)) : entries;
+    const sharedLocal = useLocalIdentities(matching.length > 0 && ['home', 'films', 'series', 'search'].includes(view) && !id);
+    const selected = view === 'home' ? latestFollowed(entries).slice(0, 12) : matching;
+    const sharedItems = sharedCatalogItems(sharedLocal.isSuccess || (view === 'home' && sharedLocal.isError) ? selected : [], sharedLocal.data || []);
+    return { shared, sharedItems, sharedLocal };
+}
+
 function useClientController() {
     const { api, user } = useApi();
     const seerr = useSeerr();
@@ -151,9 +232,12 @@ function useClientController() {
     const hasStaticPreviews = Object.keys(clientPreviews?.[user?.ServerId || ''] || {}).length > 0;
     const [params, setParams] = useSearchParams();
     const location = useLocation();
-    const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+    const reducedMotion = useClientMediaQuery('(prefers-reduced-motion: reduce)');
     const restoreFocus = useNavigationType() === 'POP' || (location.state as ClientNavigationState | null)?.restoreFocus === true;
-    const view = params.get('view') || 'home';
+    const restoration = useRef(restoreFocus);
+    restoration.current = restoreFocus;
+    const { folderId, personId } = useParams();
+    const view = routedView(params, folderId, personId);
     const discovery = (view === 'films' || view === 'series') && params.get('mode') !== 'library';
     const id = params.get('id') || '';
     const search = params.get('q') || '';
@@ -163,22 +247,26 @@ function useClientController() {
     const audio = params.get('audio') || '';
     const collection = params.get('collection') || '';
     const sort = params.get('sort') === 'recent' ? 'recent' : 'name';
-    const filters = useClientFilters(['mine', 'tonight'].includes(view) ? 'disabled' : view);
+    const filters = useClientFilters(['mine', 'tonight', 'collections', 'folder', 'person'].includes(view) ? 'disabled' : view);
     const genres = { ...filters, data: filters.data?.Genres };
     const cache = useQueryClient();
-    const prefKey = `client-interface-${api?.basePath}-${user?.Id}`;
+    const prefKey = interfacePreferenceKey(api?.basePath, user?.Id);
     const [preferences, storePreference] = useInterfacePreferences(prefKey);
     const previewProvider = usePreviewCapabilities(preferences.previews && !reducedMotion);
     const previewProviderAvailable = previewProvider.data === true;
     const hasPreviews = hasStaticPreviews || previewProviderAvailable;
     const [actionError, setActionError] = useState('');
     const [busy, setBusy] = useState(false);
+    const [queueBusy, setQueueBusy] = useState(false);
+    const queuePending = useRef(false);
+    // What is starting to play, shown by name until the player opens.
+    const [starting, setStarting] = useState<BaseItemDto | null>(null);
     const [searchInput, setSearchInput] = useState(search);
     const [heroIndex, setHeroIndex] = useState(0);
     const [ambient, setAmbient] = useState('');
     // The page's own blurred background when nothing is hovered: set by Ce soir and Mon espace, derived elsewhere.
     const [ownAmbient, setOwnAmbient] = useState({ page: '', source: '' });
-    const pageKey = [id, view, genre, audio].join('|');
+    const pageKey = [id, view, folderId, genre, audio].join('|');
     // Tied to the page that set it: a page set by a child before the parent's effects run is never wiped.
     const pageAmbient = ownAmbient.page === pageKey ? ownAmbient.source : '';
     const setPageAmbient = useCallback((source: string) => setOwnAmbient({ page: pageKey, source }), [pageKey]);
@@ -191,13 +279,15 @@ function useClientController() {
     const profileButton = useRef<HTMLButtonElement>(null);
     const surface = useRef<HTMLDivElement>(null);
     const profileMenu = useRef<HTMLDivElement>(null);
-    const browseInput = clientBrowseInput(view, search, { genre, sort, person, audio, collection });
-    const media = useClientMedia(id || view === 'settings' ? 'disabled' : view, browseInput.search, 0, browseInput.filters);
+    const browseInput = clientBrowseInput(view, search, { genre, sort, person, audio, collection, advanced: readLibraryFilters(view, params) });
+    const { standaloneSearch, blankSearch } = searchMode(view, [collection, person, audio], search);
+    const media = useClientMedia(clientBrowseView(view, id, blankSearch), browseInput.search, 0, browseInput.filters);
     const remote = isExternal({ Id: id });
     const remoteIdentity = externalIdentity({ Id: id });
     const remoteDetails = useSeerrDetail(remoteIdentity?.type, remoteIdentity?.id, false);
-    const allowCatalogue = allowExternalCatalogue(view, [id, collection, person, audio], params.get('mode'));
+    const allowCatalogue = allowExternalCatalogue(view, [id, collection, person, audio], params.get('mode'), blankSearch);
     const catalogue = useSeerrCatalogue(view, search, allowCatalogue, genre);
+    const { shared, sharedItems, sharedLocal } = useSharedBrowse(view, id, search);
     const upcoming = useSeerrUpcoming(plainHome(view, [id, genre, audio]));
     const details = useClientDetails(localDetailId(id), season);
     const item = details.item.data;
@@ -209,6 +299,17 @@ function useClientController() {
         Events.on(playbackManager, 'playbackstop', refresh);
         return () => Events.off(playbackManager, 'playbackstop', refresh);
     }, [cache, api?.basePath, user?.Id]);
+    useEffect(() => {
+        if (!starting) return;
+        const started = () => setStarting(null);
+        Events.on(playbackManager, 'playbackstart', started);
+        // Never left on screen if the start is abandoned without any event.
+        const timer = window.setTimeout(started, 45000);
+        return () => {
+            Events.off(playbackManager, 'playbackstart', started);
+            window.clearTimeout(timer);
+        };
+    }, [starting]);
     useEffect(() => setAmbient(''), [id, view, genre, audio]);
 
     useEffect(() => {
@@ -240,15 +341,16 @@ function useClientController() {
         setActionError('');
     }, [params]);
     const pageReady = clientPageReady(id, view, item, !!media.data, remoteDetails.isFetched);
+    const scrollKey = clientScrollKey(prefKey, location, view, params);
     const prepareTab = useTabPreparation(pageReady);
     useLayoutEffect(() => {
-        const key = `${prefKey}-scroll-${params.toString()}`;
+        const key = scrollKey;
         if (!pageReady) {
             // The page shrinks while loading: that forced position must not be saved as this page's own.
-            if (!restoreFocus) window.scrollTo(0, 0);
+            if (!restoration.current) window.scrollTo(0, 0);
             return;
         }
-        restoreClientNavigation(key, restoreFocus, id);
+        restoreClientNavigation(key, restoration.current, id);
         const saveFocus = (event: FocusEvent) => {
             const target = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-client-focus]') : null;
             if (target?.dataset.clientFocus) {
@@ -269,7 +371,7 @@ function useClientController() {
             window.removeEventListener('scroll', saveScroll);
             page?.removeEventListener('focusin', saveFocus);
         };
-    }, [params, pageReady, prefKey, id, restoreFocus]);
+    }, [scrollKey, pageReady, id]);
 
     useEffect(() => {
         document.body.dataset.clientPlayerTheme = preferences.glass ? 'glass' : 'classic';
@@ -293,7 +395,7 @@ function useClientController() {
         }, 160);
     }
     function warmDetail(i: BaseItemDto) {
-        void preloadArtwork(image(i, true, true)).catch(() => undefined);
+        void preloadArtwork(image(i, true, true), heroArtworkSizes).catch(() => undefined);
         const targetId = i.Type === 'Episode' ? i.SeriesId || i.Id : i.Id;
         if (!targetId || !api || !user?.Id || isExternal(i)) return;
         void cache.prefetchQuery({
@@ -302,20 +404,59 @@ function useClientController() {
             queryFn: ({ signal }) => clientRequest(async () => (await getLibraryApi(api!).getItem({ itemId: targetId, userId: user!.Id! }, { signal })).data)
         });
     }
-    async function play(i: BaseItemDto, startTicks?: number) {
-        if (isExternal(i)) {
-            setParams({ id: i.Id! }, { state: { returnTo: location.pathname + location.search, returnState: location.state } });
-            return;
-        }
+    async function startPlayback(items: BaseItemDto[], startPositionTicks: number, version?: string, explicitQueue = false) {
+        const first = items[0];
         setActionError('');
         setPreviewSuspended(true);
+        setStarting(first);
         try {
-            await playbackManager.play({ items: [i as ItemDto], startPositionTicks: startTicks ?? (i.UserData?.PlaybackPositionTicks || 0), ...await chosenTracks(api, user?.Id, i) });
+            await playbackManager.play({
+                items: items as ItemDto[], startPositionTicks, explicitQueue,
+                ...await chosenTracks(api, user?.Id, first, version)
+            });
         } catch {
+            setStarting(null);
             setPreviewSuspended(false);
             setActionError('La lecture n’a pas pu démarrer. Réessayez dans un instant.');
         }
     }
+    async function play(i: BaseItemDto, startTicks?: number, version?: string) {
+        if (queuePending.current) return;
+        if (isExternal(i)) {
+            setParams({ id: i.Id! }, { state: { returnTo: location.pathname + location.search, returnState: location.state } });
+            return;
+        }
+        await startPlayback([i], startTicks ?? (i.UserData?.PlaybackPositionTicks || 0), version);
+    }
+    const playQueue: PlayQueue = async (source, shuffled) => {
+        if (!api || !user?.Id || queuePending.current) return;
+        queuePending.current = true;
+        setQueueBusy(true);
+        setActionError('');
+        try {
+            const userId = user.Id;
+            const queue = await clientRequest(async () => {
+                const titles = source === 'favorites' ? (await getLibraryApi(api).getItems({ userId, recursive: true,
+                    isFavorite: true, includeItemTypes: [BaseItemKind.Movie, BaseItemKind.Series], sortBy: [ItemSortBy.SortName],
+                    enableImages: true, imageTypeLimit: 1 })).data.Items || [] : source;
+                const episodes = async (seriesId: string) => (await getShowApi(api).getEpisodes({
+                    seriesId, userId, isMissing: false
+                })).data.Items || [];
+                return buildMediaQueue(titles, episodes, shuffled);
+            });
+            if (!queue.length) {
+                setActionError('Aucun titre disponible pour cette lecture.');
+                return;
+            }
+            // The player annotates its queue; keep query data immutable.
+            await startPlayback(queue.map(entry => ({ ...entry, ServerId: entry.ServerId || user.ServerId, MediaType: 'Video' })), 0, undefined, true);
+        } catch {
+            setActionError('Impossible de préparer la lecture. Réessayez.');
+        } finally {
+            queuePending.current = false;
+            setQueueBusy(false);
+        }
+    };
     async function updateState(kind: 'favorite' | 'played', target = item) {
         if (!api || !user?.Id || !target?.Id || busy) return;
         setBusy(true);
@@ -331,29 +472,43 @@ function useClientController() {
             setBusy(false);
         }
     }
-    function cards(items: BaseItemDto[], horizontal = false) {
-        return items.map(i => <Link className={`client-card${horizontal ? ' client-card-wide' : ''}`} key={i.Id} data-client-focus={i.Id}
-            to={`/client?id=${i.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }} aria-label={[i.SeriesName, i.Name].filter(Boolean).join(' · ')} onPointerEnter={() => prepareDetail(i)} onFocus={() => prepareDetail(i)}>
-            <Artwork source={image(i, horizontal)} />
-            {horizontal && <span className='client-card-caption'><strong>{i.SeriesName || i.Name}</strong>
-                <small>{i.Type === 'Episode' ? `${episodeLabel(i)} · ${i.Name}` : i.ProductionYear}</small></span>}
-            {progressPercent(i) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(i)}%` }} /></span>}
-            <span className='client-card-fallback'>{i.Name}</span>
-            {isExternal(i) && <span className='client-external-badge'>{mediaLabel((i as CatalogueItem).Seerr?.mediaInfo)}</span>}
-        </Link>);
+    function cards(items: BaseItemDto[], horizontal = false, withFolders = false) {
+        return items.map(i => {
+            const tracked = isExternal(i) && sharedItems.some(entry => entry.Id === i.Id);
+            const source = image(i, horizontal);
+            const watched = isWatchedCard(i, preferences.watchedMarkers);
+            const card = <Link className={`client-card${horizontal ? ' client-card-wide' : ''}`} key={i.Id} data-client-focus={i.Id}
+                to={`/client?id=${i.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }} aria-label={[i.SeriesName, i.Name, watched && watchedLabel].filter(Boolean).join(' · ')} onPointerEnter={() => prepareDetail(i)} onFocus={() => prepareDetail(i)}>
+                {tracked ? <SharedCatalogArtwork item={i} backdrop={horizontal} /> : <Artwork source={source} />}
+                {horizontal && <span className='client-card-caption'><strong>{i.SeriesName || i.Name}</strong>
+                    <small>{i.Type === 'Episode' ? `${episodeLabel(i)} · ${i.Name}` : i.ProductionYear}</small></span>}
+                {progressPercent(i) > 0 && <span className='client-progress'><i style={{ width: `${progressPercent(i)}%` }} /></span>}
+                <span className='client-card-fallback'>{i.Name}</span>
+                {watched && <WatchedMarker />}
+                {isExternal(i) && <span className='client-external-badge'>{tracked ? 'À télécharger' : mediaLabel((i as CatalogueItem).Seerr?.mediaInfo)}</span>}
+            </Link>;
+            return withFolders && (tracked || canFile(i)) ? <div className='client-folder-search-card' key={i.Id}>{card}<ListAction item={i} /></div> : card;
+        });
     }
-    function row(title: string, items: BaseItemDto[] | undefined, horizontal = false) {
+    function row(title: string, items: BaseItemDto[] | undefined, horizontal = false, kind?: MediaRowKind, link?: { to: string; label: string }) {
         if (!items?.length) return null;
-        return <MediaRow key={`${title}:${items.map(entry => entry.Id).join('|')}`} title={title} items={items} continuation={horizontal} showDescription={preferences.hoverDescriptions} image={image} logo={logo} onPrepare={prepareDetail} onRelease={releaseDetail} />;
+        return <MediaRow key={`${title}:${items.map(entry => entry.Id).join('|')}`} title={title} link={link} items={items} kind={kind} continuation={horizontal} showDescription={preferences.hoverDescriptions} showWatched={preferences.watchedMarkers} image={image} logo={logo} onPrepare={prepareDetail} onRelease={releaseDetail} />;
     }
-    const heroItems = heroCandidates(discovery, media.data);
+    const heroPool = useHeroPool(view === 'home' || discovery ? view : 'disabled', genre);
+    const filed = useTonightOptions().data?.filed;
+    const heroItems = useMemo(() => {
+        // Titles already in « Continuer à regarder » are not repeated in the home banner.
+        const continuing = new Set([...(media.data?.resume || []), ...(media.data?.next || [])].flatMap(entry => [entry.Id || '', entry.SeriesId || '']));
+        const picked = view === 'home' || discovery ? pickHeroes(heroPool.data, view as HeroMix, Date.now(), 5, continuing, new Set(Object.keys(filed || {}))) : [];
+        return picked.length ? picked : heroCandidates(discovery, media.data);
+    }, [heroPool.data, media.data, view, discovery, filed]);
     const lead = heroItems[heroIndex % Math.max(1, heroItems.length)];
     const nextHero = heroItems[(heroIndex + 1) % Math.max(1, heroItems.length)];
     const nextArtwork = nextHero && !id ? image(nextHero, true, true) : '';
     useEffect(() => {
         if (!nextArtwork) return;
         const timer = window.setTimeout(() => {
-            void preloadArtwork(nextArtwork).catch(() => undefined);
+            void preloadArtwork(nextArtwork, heroArtworkSizes).catch(() => undefined);
         }, 1200);
         return () => window.clearTimeout(timer);
     }, [nextArtwork]);
@@ -372,9 +527,9 @@ function useClientController() {
     const accent = useArtworkColor(preferences.chromatic && hero ? image(hero, true) : undefined);
     const error = id ? details.item.isError : media.isError;
     const backdrop = ambient || pageBackdrop(id, view, hero, pageAmbient, media.data?.items || [], entry => image(entry, true));
-    return { api, user, params, location, setParams, view, id, search, browseInput, media, details, item, preferences, actionError, busy,
-        searchInput, setSearchInput, genres, genre, sort, savePreference, image, play, updateState, cards, row, playItem, hero, error,
-        prepareDetail, releaseDetail, prepareTab, seerr, catalogue, upcoming, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, previewProviderAvailable, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent, backdrop, setPageAmbient };
+    return { api, user, params, location, setParams, view, id, folderId, personId, search, browseInput, media, details, item, preferences, actionError, busy,
+        searchInput, setSearchInput, starting, genres, genre, sort, savePreference, image, play, playQueue, queueBusy, updateState, cards, row, playItem, hero, error,
+        standaloneSearch, prepareDetail, releaseDetail, prepareTab, seerr, catalogue, shared, sharedItems, sharedLocal, upcoming, remote, heroItems, heroIndex, setHeroIndex, setHeroPaused, ambient, hasPreviews, previewProviderAvailable, setPreviewPlaying, previewSuspended, profileOpen, setProfileOpen, profileButton, profileMenu, surface, discovery, filters, audio, accent, backdrop, setPageAmbient };
 }
 
 type ClientModel = ReturnType<typeof useClientController>;
@@ -382,7 +537,11 @@ type ViewProps = { readonly model: ClientModel };
 
 export default function Client() {
     const { showing, revision } = useProfileGate();
-    if (showing) return <ProfilePage revision={revision} />;
+    if (showing) {
+        return <Suspense fallback={<ClientSkeleton layout='settings' contained count={3} label='Chargement des profils…' />}>
+            <ProfilePage revision={revision} />
+        </Suspense>;
+    }
     return <SeerrProvider><ClientSurface /></SeerrProvider>;
 }
 
@@ -399,15 +558,15 @@ function ClientSurface() {
     return <ClientView model={model} />;
 }
 
-type NavProps = { view: string; detail: boolean; prepare: (view: string) => void };
+type NavProps = { view: string; detail: boolean; tonight: boolean; prepare: (view: string) => void };
 
 /** On its own so that a click lights up the tab first: the page changes right after that frame has been painted. */
-const NavLinks = memo(function ClientNavLinks({ view, detail, prepare }: NavProps) {
+const NavLinks = memo(function ClientNavLinks({ view, detail, tonight, prepare }: NavProps) {
     const navigate = useNavigate();
     const [opening, setOpening] = useState<string>();
     useEffect(() => setOpening(undefined), [view, detail]);
     const current = opening ?? (detail ? undefined : view);
-    return <div className='client-nav-links'>{links.filter(([key]) => key !== 'search').map(([key, label]) => <Link key={key} to={`/client?view=${key}`} aria-current={current === key ? 'page' : undefined}
+    return <div className='client-nav-links'>{links.filter(([key]) => key !== 'search' && (tonight || key !== 'tonight')).map(([key, label]) => <Link key={key} to={`/client?view=${key}`} aria-current={current === key ? 'page' : undefined}
         onPointerEnter={() => prepare(key)} onFocus={() => prepare(key)} onClick={event => {
             // Opening in a new tab or window stays the browser's business.
             if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -419,32 +578,40 @@ const NavLinks = memo(function ClientNavLinks({ view, detail, prepare }: NavProp
 
 function ClientView({ model }: ViewProps) {
     const { preferences, id, view, user, actionError, error, media, details, profileOpen, setProfileOpen, profileButton, profileMenu, accent } = model;
-    return <PreviewProvider serverAvailable={model.previewProviderAvailable} surface={model.surface} enabled={preferences.previews} muted={preferences.previewMuted} suspended={model.previewSuspended} toggleMuted={() => model.savePreference({ ...preferences, previewMuted: !preferences.previewMuted })} onPlayingChange={model.setPreviewPlaying}><Page id='clientPage' title={APP_NAME} className='client-page' isBackButtonEnabled={false}>
-        <div ref={model.surface} className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} ${preferences.chromatic ? 'client-chromatic' : ''} ${preferences.hero === 'background' ? 'client-hero-background' : ''} client-treatment-${preferences.detailTreatment} client-layout-${preferences.detail} ${id ? 'client-detail-page' : ''}`} style={{ '--client-accent': accent, '--detail-blur': `${preferences.detailBlur}px`, '--detail-shade': preferences.detailShade / 100, '--detail-width': `${preferences.detailWidth}%` } as CSSProperties}>
-            <ProfileEntrance />
-            {preferences.ambient && !id && <AmbientBackdrop source={model.backdrop} />}
-            <nav className='client-nav' data-alignment={preferences.headerAlignment} aria-label='Navigation principale'>
-                <button ref={profileButton} className='client-profile' aria-label='Menu du profil' aria-expanded={profileOpen} onClick={() => setProfileOpen(!profileOpen)}>{user?.PrimaryImageTag ? <img src={`${model.api?.basePath}/Users/${user.Id}/Images/Primary?tag=${user.PrimaryImageTag}&width=96&quality=90`} alt='' /> : user?.Name?.slice(0, 1) || '•'}</button>
-                <NavLinks view={view} detail={!!id} prepare={model.prepareTab} />
-                {/* À gauche de la loupe : envoyer la lecture vers un autre appareil, regarder à plusieurs. */}
-                <button type='button' className='client-nav-tool' aria-label='Lire sur un autre appareil' title='Lire sur un autre appareil' onClick={() => openConnectivity('targets')}><RemoteIcon name='cast' /></button>
-                <button type='button' className='client-nav-tool' aria-label='Regarder ensemble' title='Regarder ensemble' onClick={() => openConnectivity('together')}><RemoteIcon name='people' /></button>
-                <Link to='/client?view=search' className='client-brand client-search-shortcut' aria-label='Rechercher' aria-current={!id && view === 'search' ? 'page' : undefined}><ClientIcon name='search' /></Link>
-                {profileOpen && <div ref={profileMenu} className='client-profile-menu' role='dialog' aria-label='Menu du profil'>
-                    <strong>{user?.Name}</strong><Link to='/client?view=profiles' onClick={() => setProfileOpen(false)}>Changer de profil</Link><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}>Mon espace</Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}>Paramètres</Link><Link to='/offline' onClick={() => setProfileOpen(false)}>Hors ligne</Link><QuickConnectMenuItem /><button onClick={() => {
-                        void signOut(model.api?.basePath, user?.Id);
-                    }}>Se déconnecter</button>
-                </div>}
-            </nav>
-            {actionError && <p role='alert' className='client-message'>{actionError}</p>}
-            {error && <div className='client-message' role='alert'><p>Impossible de charger les médias.</p><button onClick={() => (id ? details.item.refetch() : media.refetch())}>Réessayer</button></div>}
-            {id && !model.remote && details.item.isPending && <ClientSkeleton layout='detail' label='Chargement de la fiche…' />}
-            <BrowseControls model={model} />
-            {!id && media.isPending && (view === 'home' || model.discovery) && <ClientSkeleton layout='hero' label='Chargement de la sélection…' />}
-            <HeroView model={model} />
-            <ContentView model={model} />
+    const spotlight = useRef<SpotlightHandle>(null);
+    return <SpoilerProvider enabled={preferences.hideSpoilers} nextId={details.next.data?.Id} home={view === 'home'} continuing={media.data}><PreviewProvider serverAvailable={model.previewProviderAvailable} surface={model.surface} enabled={preferences.previews} muted={preferences.previewMuted} suspended={model.previewSuspended} toggleMuted={() => model.savePreference({ ...preferences, previewMuted: !preferences.previewMuted })} onPlayingChange={model.setPreviewPlaying}><Page id='clientPage' title={APP_NAME} className='client-page' isBackButtonEnabled={false}>
+        <div ref={model.surface} className={`client-interface ${preferences.glass ? 'client-glass' : 'client-classic'} ${preferences.floating ? 'client-floating' : ''} ${preferences.chromatic ? 'client-chromatic' : ''} ${preferences.hero === 'background' ? 'client-hero-background' : ''} client-treatment-${preferences.detailTreatment} client-layout-${preferences.detail} client-detail-info-${preferences.detailInfo} ${id ? 'client-detail-page' : ''}`} style={{ '--client-accent': accent, '--detail-blur': `${preferences.detailBlur}px`, '--detail-shade': preferences.detailShade / 100, '--detail-width': `${preferences.detailWidth}%` } as CSSProperties}>
+            <FolderPickerProvider>
+                {preferences.ambient && !id && <AmbientBackdrop source={model.backdrop} />}
+                <nav className='client-nav' data-alignment={preferences.headerAlignment} aria-label='Navigation principale'>
+                    <button ref={profileButton} className='client-profile' aria-label='Menu du profil' aria-expanded={profileOpen} onClick={() => setProfileOpen(!profileOpen)}>{user?.PrimaryImageTag ? <img src={`${model.api?.basePath}/Users/${user.Id}/Images/Primary?tag=${user.PrimaryImageTag}&width=96&quality=90`} alt='' /> : user?.Name?.slice(0, 1) || '•'}</button>
+                    <NavLinks view={model.folderId ? 'mine' : view} detail={!!id} tonight={preferences.tonight} prepare={model.prepareTab} />
+                    {/* À gauche de la loupe : envoyer la lecture vers un autre appareil, regarder à plusieurs. */}
+                    <button type='button' className='client-nav-tool' aria-label='Lire sur un autre appareil' title='Lire sur un autre appareil' onClick={() => openConnectivity('targets')}><RemoteIcon name='cast' /></button>
+                    <button type='button' className='client-nav-tool' aria-label='Regarder ensemble' title='Regarder ensemble' onClick={() => openConnectivity('together')}><RemoteIcon name='people' /></button>
+                    <NotificationCenter play={model.play} />
+                    <button type='button' className='client-brand client-search-shortcut' aria-label='Rechercher' title='Rechercher (⌘K ou Ctrl+K)' aria-haspopup='dialog' aria-current={!id && view === 'search' ? 'page' : undefined} onClick={event => spotlight.current?.open(event.currentTarget)}><ClientIcon name='search' /></button>
+                    {profileOpen && <div ref={profileMenu} className='client-profile-menu' role='dialog' aria-label='Menu du profil'>
+                        <strong>{user?.Name}</strong><Link to='/client?view=profiles' onClick={() => setProfileOpen(false)}><ActionLabel icon='people'>Changer de profil</ActionLabel></Link><Link to='/client?view=mine' onClick={() => setProfileOpen(false)}><ActionLabel icon='profile'>Mon espace</ActionLabel></Link><Link to='/client?view=settings' aria-label='Paramètres' onClick={() => setProfileOpen(false)}><ActionLabel icon='settings'>Paramètres</ActionLabel></Link>{user?.Policy?.IsAdministrator && <Link to='/client?view=settings&section=admin' onClick={() => setProfileOpen(false)}><ActionLabel icon='server'>Administration</ActionLabel></Link>}<Link to='/offline' onClick={() => setProfileOpen(false)}><ActionLabel icon='download'>Hors ligne</ActionLabel></Link><Suspense fallback={null}><QuickConnectMenuItem /></Suspense><button onClick={() => {
+                            void signOut(model.api?.basePath, user?.Id);
+                        }}><ActionLabel icon='signOut'>Se déconnecter</ActionLabel></button>
+                    </div>}
+                </nav>
+                <ProfileEntrance profile={profileButton} />
+                {actionError && <p role='alert' className='client-message'>{actionError}</p>}
+                {error && <div className='client-message' role='alert'><p>Impossible de charger les médias.</p><ActionButton onClick={() => (id ? details.item.refetch() : media.refetch())}>{LABELS.retry}</ActionButton></div>}
+                {id && !model.remote && details.item.isPending && <ClientSkeleton layout='detail' label='Chargement de la fiche…' />}
+                <BrowseControls model={model} />
+                {!id && media.isPending && (view === 'home' || model.discovery) && <ClientSkeleton layout='hero' label='Chargement de la sélection…' />}
+                <HeroView model={model} />
+                <Suspense fallback={<ClientSkeleton layout='grid' contained count={6} label='Chargement de la page…' />}>
+                    <ContentView model={model} />
+                </Suspense>
+                <Spotlight ref={spotlight} glass={preferences.glass} showWatched={preferences.watchedMarkers} image={model.image} play={model.play} />
+                <PlaybackStarting item={model.starting} basePath={model.api?.basePath || ''} />
+            </FolderPickerProvider>
         </div>
-    </Page></PreviewProvider>;
+    </Page></PreviewProvider></SpoilerProvider>;
 }
 
 function HeroView({ model }: ViewProps) {
@@ -452,6 +619,18 @@ function HeroView({ model }: ViewProps) {
     const region = useRef<HTMLElement>(null);
     const marker = useRef<MarkerPosition | null>(null);
     const previews = usePreviews();
+    const series = !!id && hero?.Type === 'Series';
+    const identity = series ? externalIdentity(hero) : undefined;
+    const seasonsQuery = model.details.seasons;
+    const { connected, permissions } = model.seerr;
+    const remote = useSeerrDetail(identity?.type, identity?.id);
+    const [requested, setRequested] = useState<{ id: string; number: number; quality: 'standard' | '4k' }>();
+    const seasons = seasonsQuery.data || [];
+    const detail = connected && seasonsQuery.isSuccess ? remote.data : undefined;
+    const missing = remoteSeasonChoices(seasons, detail, canRequest(permissions, 'tv'), canRequest(permissions, 'tv', true));
+    const requestSeason = (season: RemoteSeason) => {
+        if (season.quality) setRequested({ id, number: season.number, quality: season.quality });
+    };
     useHeroBackground(region, !id && preferences.hero === 'background', !!hero);
     if (!hero) return null;
     function selectHero(index: number) {
@@ -462,7 +641,8 @@ function HeroView({ model }: ViewProps) {
         previews?.playback.stop();
         setHeroIndex(index => (index + heroItems.length + delta) % heroItems.length);
     }
-    return <section ref={region} className={`client-hero${id ? ' client-detail' : ' client-home-hero'}${hero.Type === 'Series' && id ? ' client-series-detail' : ''}`} onPointerEnter={() => setHeroPaused(true)} onPointerLeave={() => setHeroPaused(false)} onFocus={() => setHeroPaused(true)} onBlur={event => {
+    const layout = seasons.length + missing.length > 1 ? ' client-series-seasons' : ' client-series-single';
+    return <><section ref={region} className={`client-hero${id ? ' client-detail' : ' client-home-hero'}${series ? ' client-series-detail client-series-side' + layout : ''}`} onPointerEnter={() => setHeroPaused(true)} onPointerLeave={() => setHeroPaused(false)} onFocus={() => setHeroPaused(true)} onBlur={event => {
         if (!event.currentTarget.contains(event.relatedTarget)) setHeroPaused(false);
     }}>
         <HeroArtwork source={image(hero, true, true)} fullBackground={!id && preferences.hero === 'background'} />
@@ -471,62 +651,78 @@ function HeroView({ model }: ViewProps) {
         {id && <Link className='client-back' to={(location.state as ClientNavigationState | null)?.returnTo || '/client'} state={{ ...(location.state as ClientNavigationState | null)?.returnState, restoreFocus: true }}><ClientIcon name='back' />Retour</Link>}
         <HeroCopyView key={hero.Id} model={model} dots={!id && heroItems.length > 1 ? <HeroPagination items={heroItems} index={Math.max(0, heroItems.findIndex(entry => entry.Id === hero.Id))} select={selectHero} position={marker} /> : null} />
         {!id && heroItems.length > 1 && <div className='client-hero-arrows'><button aria-label='Média précédent' onClick={() => advanceHero(-1)}><ClientIcon name='back' /></button><button aria-label='Média suivant' onClick={() => advanceHero(1)}><ClientIcon name='next' /></button></div>}
-        <EpisodesView model={model} />
-    </section>;
+        {series && <SeasonRail series={hero} seasons={seasons} selected={model.details.selected} episodes={model.details.episodes.data}
+            basePath={model.api?.basePath || ''} missing={missing} detail={detail} requestSeason={requestSeason}
+            select={season => model.setParams({ id, season }, { state: location.state })} />}
+        {/* Inside the hero: on wide screens the episodes sit in a column beside the seasons. */}
+        {series && <EpisodesView model={model} missing={missing} requestSeason={requestSeason} />}
+    </section>
+    {!!requested && requested.id === id && <Suspense fallback={null}><RequestDialog key={`${id}-${requested.number}`} item={hero} open initialSeason={requested}
+        onClose={() => setRequested(undefined)} /></Suspense>}</>;
 }
 
 function HeroCopyView({ model, dots }: ViewProps & { dots: ReactNode }) {
     const { hero, id, api } = model;
-    const [synopsisExpanded, setSynopsisExpanded] = useState(false);
-    useEffect(() => setSynopsisExpanded(false), [hero?.Id]);
     if (!hero) return null;
     return <div className='client-hero-copy'>{!id && <span className='client-eyebrow'>À LA UNE</span>}
-        {hero.ImageTags?.Logo && <Artwork className='client-title-logo' source={artworkUrl(api?.basePath || '', hero, 'logo')} eager />}
+        {hero.ImageTags?.Logo && <TitleLogo source={artworkUrl(api?.basePath || '', hero, 'logo')} />}
         <h1 className={hero.ImageTags?.Logo ? 'client-title-fallback' : undefined}>{hero.Name}</h1>
         <HeroMetadata item={hero} detailed={!!id} />
-        {id && <><p className={`client-overview${synopsisExpanded ? ' expanded' : ''}`}>{hero.Overview}</p>{hero.Type === 'Series' && (hero.Overview?.length || 0) > 220 && <button className='client-synopsis-toggle' aria-expanded={synopsisExpanded} onClick={() => setSynopsisExpanded(!synopsisExpanded)}>{synopsisExpanded ? 'Réduire' : 'Lire la suite'}</button>}</>}
+        {id && <DetailSynopsis key={hero.Id} overview={hero.Overview} />}
         <HeroActions model={model} dots={dots} />
         {id && <PersonalRating item={hero} />}
+        {id && <CompactRequest identity={externalIdentity(hero)} inLibrary />}
     </div>;
 }
 
 function HeroActions({ model, dots }: ViewProps & { dots: ReactNode }) {
-    const { hero, id, item, api, location, playItem, busy, play, updateState } = model;
+    const { hero, id, item, api, user, location, playItem, busy, play, image, updateState } = model;
+    const { choice, chooseTracks } = useTitleTrackChoice(api?.basePath, user?.Id, id ? hero?.Id : undefined);
     if (!hero) return null;
     const homePlayable = hero.Type === 'Movie' ? hero : undefined;
     const playable = id ? playItem : homePlayable;
+    const versions = id && playable?.Id === hero.Id ? mediaVersions(playable?.MediaSources) : [];
+    const showVersions = versions.length > 1;
+    const version = versions.find(entry => entry.id === choice.version)?.id || '';
+    const options: Option<string>[] = [['', 'Version auto'], ...versions.map((entry): Option<string> => [entry.id, entry.label, entry.detail])];
     let playLabel = 'Lecture';
     if (playable?.UserData?.PlaybackPositionTicks) playLabel = 'Reprendre';
     if (playable?.Type === 'Episode') playLabel = episodeLabel(playable);
-    return <div className='client-actions'>
-        {playable && <button className='client-play' onClick={() => play(playable)}><ClientIcon name='play' />{playLabel}</button>}
-        {!id && <Link className='client-button' data-client-focus={`info-${hero.Id}`} to={`/client?id=${hero.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }}><ClientIcon name='info' />Plus d’infos</Link>}
-        {id && <><button className='client-button client-action-circle' aria-label={item?.UserData?.IsFavorite ? 'Retirer de ma liste' : 'Ajouter à ma liste'} title={item?.UserData?.IsFavorite ? 'Retirer de ma liste' : 'Ajouter à ma liste'} disabled={busy} aria-pressed={!!item?.UserData?.IsFavorite} onClick={() => updateState('favorite')}><ClientIcon name={item?.UserData?.IsFavorite ? 'check' : 'plus'} /></button>
-            <button className='client-button client-action-circle' aria-label={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} title={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} disabled={busy} aria-pressed={!!item?.UserData?.Played} onClick={() => updateState('played')}><ClientIcon name={item?.UserData?.Played ? 'check' : 'eye'} /></button>
-            <DetailMenu key={hero.Id} item={hero} basePath={api?.basePath || ''} play={play} /></>}
+    return <div className={`client-actions${showVersions ? ' has-versions' : ''}`}>
+        {playable && <ActionButton variant='primary' onClick={() => play(playable, undefined, showVersions ? version : undefined)} icon='play'>{playLabel}</ActionButton>}
+        {showVersions && <div className='client-version-select'>
+            <ChoiceSelect label='Version à lire' value={version} options={options} onChange={entry => chooseTracks({ ...choice, version: entry || undefined })} />
+        </div>}
+        {!id && <ActionLink data-client-focus={`info-${hero.Id}`} to={`/client?id=${hero.Id}`} state={{ returnTo: location.pathname + location.search, returnState: location.state as ClientNavigationState | null }} icon='info'>Plus d’infos</ActionLink>}
+        {id && <><TrailerAction key={hero.Id} item={hero} backdrop={image(hero, true, true)} play={play} /><ListAction item={hero} disabled={busy} fallback={() => updateState('favorite')} />
+            <ActionButton round aria-label={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} title={item?.UserData?.Played ? 'Marquer non vu' : 'Marquer vu'} disabled={busy} aria-pressed={!!item?.UserData?.Played} onClick={() => updateState('played')} icon={item?.UserData?.Played ? 'check' : 'eye'}></ActionButton>
+            <DetailMenu key={hero.Id} item={hero} basePath={api?.basePath || ''} play={play} choice={choice} chooseTracks={chooseTracks} /></>}
         {dots}
     </div>;
 }
 
-function EpisodesView({ model }: ViewProps) {
-    const { id, item, details, setParams, location, api, play } = model;
-    const [activeEpisode, setActiveEpisode] = useState('');
-    if (!id || item?.Type !== 'Series') return null;
-    return <section className='client-episodes'><header><h2>Épisodes</h2><div role='group' aria-label='Saison'>{details.seasons.data?.map(s => <button key={s.Id} aria-pressed={details.selected === s.Id} onClick={() => setParams({ id, season: s.Id! }, { state: location.state })}><strong>{s.IndexNumber === 0 ? 'Spéciaux' : `Saison ${s.IndexNumber}`}</strong><small>{s.ChildCount ? `${s.ChildCount} épisodes` : 'Voir les épisodes'}</small></button>)}</div></header>
-        {(details.seasons.isPending || (details.episodes.isPending && !!details.selected)) && <ClientSkeleton layout='episodes' count={4} contained label='Chargement des épisodes…' />}
-        {details.episodes.isError && <button onClick={() => details.episodes.refetch()}>Réessayer le chargement des épisodes</button>}
-        <div className='client-strip'>{details.episodes.data?.map(e => <button className='client-episode' key={e.Id} onPointerEnter={() => setActiveEpisode(e.Id || '')} onPointerLeave={event => {
-            if (!event.currentTarget.contains(document.activeElement)) setActiveEpisode('');
-        }} onFocus={() => setActiveEpisode(e.Id || '')} onBlur={event => {
-            if (!event.currentTarget.contains(event.relatedTarget)) setActiveEpisode('');
-        }} onClick={() => play(e)} aria-label={`Lire ${episodeLabel(e)} ${e.Name}`}>
-            <Artwork source={artworkUrl(api?.basePath || '', e, 'episode')} /><PreviewClip item={e} surface='episode' enabled={activeEpisode === e.Id} soundControl={false} /><span className='client-episode-play' aria-hidden='true'><ClientIcon name='play' /></span><span className='client-episode-caption'><strong>{e.Name}</strong><small>{episodeLabel(e)} · {Math.round((e.RunTimeTicks || 0) / 6e8)} min</small></span>
-            <i className='client-progress'><i style={{ width: `${progressPercent(e)}%` }} /></i></button>)}</div>
-        {(details.episodes.data?.length === 0 || details.seasons.data?.length === 0) && <p>Aucun épisode disponible dans cette saison.</p>}
-    </section>;
+function EpisodesView({ model, missing, requestSeason }: ViewProps & { missing: RemoteSeason[]; requestSeason: (season: RemoteSeason) => void }) {
+    const { id, details, params, setParams, location, api, play, playQueue, queueBusy } = model;
+    const navigate = useNavigate();
+    const state = location.state as ClientNavigationState | null;
+    const drawer = params.get('episodes') === 'all';
+    const seasons = details.seasons.data || [];
+    const show = () => setParams({ id, season: details.selected, episodes: 'all' }, { state: { ...state, episodeDrawer: true } });
+    const hide = () => {
+        if (!drawer) return;
+        if (state?.episodeDrawer) navigate(-1);
+        else setParams({ id, season: details.selected }, { replace: true, state });
+    };
+    const choose = (season: string) => setParams({ id, season, episodes: 'all' }, { replace: true, state });
+    return <SeriesEpisodesPanel seasons={seasons} missing={missing} requestSeason={requestSeason} selected={details.selected} select={choose} items={details.episodes.data}
+        loading={details.seasons.isPending || (!!details.selected && details.episodes.isPending)}
+        failed={details.seasons.isError || details.episodes.isError} retry={() => {
+            if (details.seasons.isError) void details.seasons.refetch();
+            else void details.episodes.refetch();
+        }} basePath={api?.basePath || ''} nextId={details.next.data?.Id} play={play} playQueue={playQueue} queueBusy={queueBusy}
+        drawer={drawer} openDrawer={show} closeDrawer={hide} />;
 }
 
-/** A thin line under the home hero, as on the mockup: the way into « Ce soir ». */
 function TonightInvite({ prepare }: Readonly<{ prepare: (view: string) => void }>) {
     const ready = useCallback(() => prepare('tonight'), [prepare]);
     return <Link className='client-tonight-invite' to='/client?view=tonight' onPointerEnter={ready} onFocus={ready}>
@@ -535,60 +731,109 @@ function TonightInvite({ prepare }: Readonly<{ prepare: (view: string) => void }
     </Link>;
 }
 
+function HomeContent({ model }: ViewProps) {
+    const { media, row } = model;
+    // Keep the shared catalogue in its own order and avoid repeating its titles in the discovery rows.
+    const continuing = uniqueItems([...(media.data?.resume || []), ...(media.data?.next || [])]).filter((entry, index, all) => !entry.SeriesId || all.findIndex(other => other.SeriesId === entry.SeriesId) === index);
+    const used = new Set([...model.heroItems, ...continuing, ...model.sharedItems].map(entry => entry.SeriesId || entry.Id || ''));
+    const take = (items: BaseItemDto[], limit: number) => items.filter(entry => !used.has(entry.Id || '')).slice(0, limit).map(entry => {
+        used.add(entry.Id || '');
+        return entry;
+    });
+    const picks = take(media.data?.picks || [], 12);
+    const recent = take([...(media.data?.movies || []), ...(media.data?.series || [])].sort((a, b) => String(b.DateCreated || '').localeCompare(String(a.DateCreated || ''))), 16);
+    const trends = take(model.catalogue.items, 20);
+    const folderRow = (title: string, items: BaseItemDto[], link: string) => row(title, items, false, undefined, { to: link, label: LABELS.openFolder });
+    return <>
+        {model.preferences.tonight && <TonightInvite prepare={model.prepareTab} />}
+        {row('Continuer à regarder', continuing, true)}
+        {row('À découvrir', picks)}
+        <FolderRows row={folderRow} />
+        {row('Ajouts récents', recent)}
+        {row('Récemment suivis', model.sharedItems, false, 'shared-catalog')}
+        {row('Tendances', trends)}
+        {model.catalogue.loading && !trends.length && <ClientSkeleton layout='row' label='Chargement des tendances…' />}
+        {model.catalogue.isError && <p className='client-message'>Les tendances sont temporairement indisponibles. Votre bibliothèque reste accessible.</p>}
+        <UpcomingRow items={model.upcoming.items.filter(({ item }) => !used.has(item.Id || ''))} />
+        {media.data && !media.data.movies.length && !media.data.series.length && !media.data.resume.length && <p className='client-message'>Votre bibliothèque est vide pour le moment.</p>}
+    </>;
+}
+
+const accountViews = new Map<string, (props: ViewProps) => ReactNode>([
+    ['requests', RequestsView], ['settings', SettingsView], ['tonight', TonightView]
+]);
+
 function ContentView({ model }: ViewProps) {
     const { id, view, details, media, row, api, image } = model;
     if (model.remote) return <ExternalDetail key={id} id={id} row={row} image={image} />;
     if (id) return details.item.data && api ? <DetailExtras item={details.item.data} similar={details.similar.data || []} image={image} /> : null;
-    if (view === 'home') {
-        // Ordre de la maquette : reprise, sélection, ajouts récents, tendances, puis sorties à venir ; chaque titre n'apparaît qu'une fois.
-        const continuing = uniqueItems([...(media.data?.resume || []), ...(media.data?.next || [])]).filter((entry, index, all) => !entry.SeriesId || all.findIndex(other => other.SeriesId === entry.SeriesId) === index);
-        const used = new Set([...model.heroItems, ...continuing].map(entry => entry.SeriesId || entry.Id || ''));
-        const take = (items: BaseItemDto[], limit: number) => items.filter(entry => !used.has(entry.Id || '')).slice(0, limit).map(entry => {
-            used.add(entry.Id || '');
-            return entry;
-        });
-        const picks = take(media.data?.picks || [], 12);
-        const recent = take([...(media.data?.movies || []), ...(media.data?.series || [])].sort((a, b) => String(b.DateCreated || '').localeCompare(String(a.DateCreated || ''))), 16);
-        const trends = take(model.catalogue.items, 20);
-        return <>
-            <TonightInvite prepare={model.prepareTab} />
-            {row('Continuer à regarder', continuing, true)}
-            {row('À découvrir', picks)}
-            {row('Ajouts récents', recent)}
-            {row('Tendances', trends)}
-            {model.catalogue.loading && !trends.length && <ClientSkeleton layout='row' label='Chargement des tendances…' />}
-            {model.catalogue.isError && <p className='client-message'>Les tendances sont temporairement indisponibles. Votre bibliothèque reste accessible.</p>}
-            <UpcomingRow items={model.upcoming.items.filter(({ item }) => !used.has(item.Id || ''))} />
-            {media.data && !media.data.movies.length && !media.data.series.length && !media.data.resume.length && <p className='client-message'>Votre bibliothèque est vide pour le moment.</p>}
-        </>;
+    if (view === 'home') return <HomeContent model={model} />;
+    if (model.personId) {
+        return <Suspense fallback={<ClientSkeleton layout='grid' count={6} contained label='Chargement de la personne…' />}>
+            <PersonPage key={model.personId} id={model.personId} basePath={api?.basePath || ''} image={image} play={model.play} />
+        </Suspense>;
     }
-    if (view === 'settings') return <SettingsView model={model} />;
+    if (model.folderId) {
+        return <FolderPage key={model.folderId} id={model.folderId} image={image} full={model.preferences.hero === 'background'} showWatched={model.preferences.watchedMarkers}
+            playQueue={model.playQueue} queueBusy={model.queueBusy} prepare={model.prepareDetail} release={model.releaseDetail} />;
+    }
+    const AccountView = accountViews.get(view);
+    if (AccountView) return <AccountView model={model} />;
+    if (view === 'collections') {
+        return <PublicCollections image={image} full={model.preferences.hero === 'background'} showWatched={model.preferences.watchedMarkers}
+            playQueue={model.playQueue} queueBusy={model.queueBusy} prepare={model.prepareDetail} release={model.releaseDetail} />;
+    }
     if (view === 'recent') return <RecentPage items={media.data?.items || []} row={row} />;
-    if (view === 'tonight') return <TonightPage items={media.data?.items || []} loading={media.isPending} image={item => artworkUrl(model.api?.basePath || '', item, 'draw')} onPrepare={model.prepareDetail} onRelease={model.releaseDetail} onFeature={entry => model.setPageAmbient(entry ? image(entry, true) : '')} />;
     if (model.discovery) return <DiscoveryView model={model} />;
     if (view === 'mine') return <PersonalView model={model} />;
+    if (model.standaloneSearch) return <SearchView model={model} />;
     return <LibraryView model={model} />;
 }
+/** « Ce soir » is not finished: its address leads home unless the person turned it on in Apparence. */
+function TonightView({ model }: ViewProps) {
+    const { image } = model;
+    if (!model.preferences.tonight) return <Navigate to='/client' replace />;
+    return <TonightPage play={(item, start) => item.Type === 'Series' ? model.playQueue([item], false) : model.play(item, start)} image={(item, backdrop) => backdrop ? image(item, true) : artworkUrl(model.api?.basePath || '', item, 'draw')} onPrepare={model.prepareDetail} onRelease={model.releaseDetail} onFeature={entry => model.setPageAmbient(entry ? image(entry, true) : '')} />;
+}
+
+function RequestsView({ model }: ViewProps) {
+    return <Suspense fallback={<ClientSkeleton layout='list' count={3} contained label='Chargement des demandes…' />}>
+        <RequestPage play={model.play} />
+    </Suspense>;
+}
+
 function SettingsView({ model }: ViewProps) {
     const { preferences, savePreference, user, params } = model;
     if (!model.api || !user?.Id) return <section className='client-settings'><h1>Paramètres</h1><ClientSkeleton layout='settings' contained count={3} label='Chargement des préférences…' /></section>;
     return <SettingsPage section={params.get('section')} preferences={preferences} savePreference={savePreference} hasPreviews={model.hasPreviews} />;
 }
+function changeBrowseParams(params: URLSearchParams, changes: Record<string, string>) {
+    const next = new URLSearchParams(params);
+    Object.entries(changes).forEach(([key, value]) => {
+        if (value) next.set(key, value);
+        else next.delete(key);
+    });
+    return next;
+}
+
+function genreChoices(entries: readonly { Name?: string | null }[] | null | undefined, value: string) {
+    const names = [...new Set([...(entries || []).map(entry => entry.Name || ''), value])].filter(Boolean);
+    return [['', 'Tous les genres'], ...names.map((name): Option<string> => [name, name])] as const;
+}
+
+const titleOrder = [['name', 'Par titre'], ['recent', 'Ajouts récents']] as const;
+const availabilityChoices = [['all', 'Tout'], ['available', 'Disponible'], ['missing', 'À télécharger']] as const;
+
 function BrowseControls({ model }: ViewProps) {
     const { id, view, discovery, params, setParams, genres, genre, filters, audio } = model;
     if (id || !['home', 'films', 'series'].includes(view)) return null;
+    const languages = filters.data?.AudioLanguages?.flatMap((entry): Option<string>[] => entry.Value ? [[entry.Value, entry.Name || entry.Value]] : []) || [];
+    if (audio && !languages.some(([key]) => key === audio)) languages.push([audio, audio]);
     return <div className='client-browse-controls'>
-        {view !== 'home' && <div className='client-catalogue-switch' aria-label='Présentation du catalogue'><button aria-pressed={discovery} onClick={() => setParams({ view })}>Découvrir</button><button aria-pressed={!discovery} onClick={() => setParams({ view, mode: 'library' })}>Toute la bibliothèque</button></div>}
-        <label className='client-genre-control'>{genre || 'Genres'}<ClientIcon name='down' /><select aria-label='Genres' value={genre} onChange={event => {
-            const next = new URLSearchParams(params);
-            next.set('genre', event.target.value);
-            setParams(next);
-        }}><option value=''>Tous les genres</option>{genres.data?.map(entry => <option key={entry.Id || entry.Name} value={entry.Name || ''}>{entry.Name}</option>)}</select></label>
-        <label className='client-genre-control'>{audio || 'Langues'}<ClientIcon name='down' /><select aria-label='Langues audio' value={audio} onChange={event => {
-            const next = new URLSearchParams(params);
-            next.set('audio', event.target.value);
-            setParams(next);
-        }}><option value=''>Toutes les langues</option>{filters.data?.AudioLanguages?.map(entry => <option key={entry.Value} value={entry.Value || ''}>{entry.Name || entry.Value}</option>)}</select></label>
+        {view !== 'home' && <div className='client-catalogue-switch' aria-label='Présentation du catalogue'><Chip pressed={discovery} onClick={() => setParams({ view })}>Découvrir</Chip><Chip pressed={!discovery} onClick={() => setParams({ view, mode: 'library' })}>Toute la bibliothèque</Chip></div>}
+        {view !== 'home' && <ActionLink className='client-collections-entry' to='/client?view=collections' icon='collection'>Collections publiques</ActionLink>}
+        {(view === 'home' || discovery) && <ChoiceSelect label='Genres' placeholder='Genres' value={genre} options={genreChoices(genres.data, genre)} onChange={value => setParams(changeBrowseParams(params, { genre: value }))} />}
+        <ChoiceSelect label='Langues audio' placeholder='Langues' value={audio} options={[['', 'Toutes les langues'], ...languages]} onChange={value => setParams(changeBrowseParams(params, { audio: value }))} />
     </div>;
 }
 
@@ -604,41 +849,66 @@ function DiscoveryView({ model }: ViewProps) {
         });
         return row(genre, selected);
     }).filter(Boolean).slice(0, 4);
-    return <div className='client-discovery'>{row(view === 'films' ? 'À découvrir dans vos films' : 'À découvrir dans vos séries', items.slice(0, 12))}{row('À découvrir aussi', model.catalogue.items.filter(entry => !used.has(entry.Id || '')))}{groups}
+    const folderRow = (title: string, entries: BaseItemDto[], link: string) => row(title, entries, false, undefined, { to: link, label: LABELS.openFolder });
+    return <div className='client-discovery'>{row(view === 'films' ? 'À découvrir dans vos films' : 'À découvrir dans vos séries', items.slice(0, 12))}<FolderRows row={folderRow} kind={view === 'films' ? 'Movie' : 'Series'} />{row('À découvrir aussi', model.catalogue.items.filter(entry => !used.has(entry.Id || '')))}{row('Catalogue partagé', model.sharedItems.filter(entry => entry.Type === (view === 'films' ? 'Movie' : 'Series') && !used.has(entry.Id || '')))}{groups}
         {model.catalogue.loading && !model.catalogue.items.length && <ClientSkeleton layout='row' label='Chargement des découvertes…' />}
         {media.isSuccess && items.length === 0 && model.catalogue.items.length === 0 && !model.catalogue.loading && <p className='client-message'>Aucun titre pour cette sélection.</p>}
         <button className='client-explore-library' onClick={() => setParams({ view, mode: 'library' })}>Explorer toute la bibliothèque ›</button>
     </div>;
 }
 
+type PersonalSection = 'folders' | 'history' | 'taste' | 'bilan';
+const PERSONAL_SECTIONS: Record<PersonalSection, string> = { folders: 'Mes dossiers', history: 'Vus récemment', taste: 'Mes goûts', bilan: 'Mon bilan' };
+
+/** One section of Mon espace on its own page. */
+function PersonalSectionPage({ model, section, stats, entries }: ViewProps & { readonly section: PersonalSection; readonly stats?: PersonalStats; readonly entries: JourneyEntry[] }) {
+    const { row, image, user } = model;
+    const history = useViewingHistory();
+    return <div className='client-personal client-journey'>
+        <header className='client-page-heading'>
+            <Link to='/client?view=mine' className='client-shelf-back'><ClientIcon name='back' />Mon espace</Link>
+            <h1>{PERSONAL_SECTIONS[section]}</h1>
+        </header>
+        {section === 'folders' && <Suspense fallback={<ClientSkeleton layout='row' label='Chargement des dossiers…' />}><FolderPanel image={image} /></Suspense>}
+        {section === 'history' && (row('Vus récemment', history.data) || <ClientSkeleton layout='row' label='Chargement de l’historique…' />)}
+        {section === 'taste' && <><RatingsOverview /><GenreTaste stats={stats} /></>}
+        {section === 'bilan' && <JourneyRecap stats={stats} entries={entries} image={image} name={user?.Name} />}
+    </div>;
+}
+
+/** Mon espace: everything I mean to watch on one timeline, from what I watched to what is on its way. */
 function PersonalView({ model }: ViewProps) {
-    const { user, media, row, image, play, seerr } = model;
+    const { image, play, params, setParams, setPageAmbient } = model;
     const home = useClientMedia('home', '', 0);
-    const collections = useClientCollections(true);
     const stats = usePersonalStats();
     const history = useViewingHistory();
-    const resume = home.data?.resume || [];
-    const lead = resume[0];
+    const requests = useRequestProgress(true, true);
+    const picker = useFolderPicker();
+    const filed = useTonightOptions();
+    const saved = useSavedTitles(filed.data?.filed);
+    const watched = stats.isPending ? undefined : stats.data?.watchedSeriesIds || [];
+    const catalog = model.shared.isPending ? undefined : model.shared.data || [];
+    const upcoming = usePersonalUpcoming(watched, catalog);
+    const entries = useMemo(() => buildJourney({
+        resume: home.data?.resume || [], next: home.data?.next || [], requests: requests.data || [],
+        upcoming: upcoming.data || [], saved: saved.data || [], filed: filed.data?.filed, history: history.data || []
+    }), [home.data, requests.data, upcoming.data, saved.data, filed.data, history.data]);
+    const lead = entries.find(entry => entry.stage === 'ready' && entry.item)?.item;
     const leadBackdrop = lead ? image(lead, true) : '';
-    const { setPageAmbient } = model;
     useEffect(() => setPageAmbient(leadBackdrop), [leadBackdrop, setPageAmbient]);
-    return <div className='client-personal'>
-        <header className='client-personal-identity'><span aria-hidden='true'>{user?.PrimaryImageTag ? <img src={`${model.api?.basePath}/Users/${user.Id}/Images/Primary?tag=${user.PrimaryImageTag}&width=160&quality=90`} alt='' /> : user?.Name?.slice(0, 1)}</span><div><h1>Mon espace</h1>
-            <p>{user?.Name}</p></div></header>
-        <PersonalStatsBand stats={stats.data} pending={stats.isPending} favorites={media.data?.total || 0} favoritesPending={media.isPending} />
-        {home.isPending && <ClientSkeleton layout='episodes' contained count={3} label='Chargement des reprises…' />}
-        {lead && <section className='client-personal-spotlight'><Artwork source={image(lead, true, true)} eager /><PreviewClip item={lead} surface='spotlight' /><div><small>ON CONTINUE ?</small><h2>{lead.SeriesName || lead.Name}</h2><p>{lead.Type === 'Episode' ? `${episodeLabel(lead)} · ${lead.Name}` : 'Votre film vous attend'}</p>
-            {progressPercent(lead) > 0 && <span className='client-spotlight-progress' aria-label={`Vu à ${Math.round(progressPercent(lead))} %`}><i style={{ width: `${progressPercent(lead)}%` }} /></span>}
-            <button className='client-play' onClick={() => play(lead)}><ClientIcon name='play' />Reprendre</button><Link className='client-button' to={`/client?id=${lead.SeriesId || lead.Id}`}>Voir la fiche</Link></div></section>}
-        <div id='client-resume'>{row('Continuer à regarder', resume.slice(1), true)}</div>
-        <div className='client-personal-favorites' id='client-favorites'><header><h2>Ma liste</h2></header><LibraryView model={model} embedded /></div>
-        {row('Vus récemment', history.data)}
-        {(!!stats.data?.genres.length || !!collections.data?.length) && <div className='client-personal-columns'>
-            <GenreTaste stats={stats.data} />
-            {!!collections.data?.length && <section className='client-personal-panel client-personal-collections'><h2>Mes collections</h2><div>{collections.data.map(collection => <CollectionCard key={collection.Id} collection={collection} image={image} />)}</div></section>}
-        </div>}
-        <RatingsOverview />
-        {seerr.connected && <div id='client-requests' className='client-personal-requests'><RequestTracking /></div>}
+    const section = (Object.keys(PERSONAL_SECTIONS) as PersonalSection[]).find(key => key === params.get('section'));
+    if (section) return <PersonalSectionPage model={model} section={section} stats={stats.data} entries={entries} />;
+    const openRecap = () => setParams(previous => {
+        const changed = new URLSearchParams(previous);
+        changed.set('section', 'bilan');
+        return changed;
+    });
+    return <div className='client-personal client-journey is-temps'>
+        <header className='client-journey-heading'>
+            <div><h1>Mon espace</h1><MonthLine stats={stats.data} open={openRecap} /></div>
+            <FavoritesMigration enabled={!!picker?.folders} />
+        </header>
+        {home.isPending ? <ClientSkeleton layout='row' label='Chargement de votre espace…' /> : <JourneyTimeline entries={entries} image={image} play={play} folders={picker?.folders} />}
     </div>;
 }
 
@@ -653,64 +923,103 @@ const GridChunk = memo(function ClientGridChunk({ items, render }: Readonly<{ it
     return <>{render(items)}</>;
 }, (previous, next) => previous.items === next.items);
 
-/** Asks for the next titles well before the end of the page is reached. */
-function LoadMore({ loading, failed, pages, load }: Readonly<{ loading: boolean; failed: boolean; pages: number; load: () => void }>) {
-    const marker = useRef<HTMLDivElement>(null);
-    const supported = 'IntersectionObserver' in window;
-    useEffect(() => {
-        const element = marker.current;
-        if (!element || !supported || loading || failed) return;
-        // A new observer per page also covers a tall screen, where the end is still in view after loading.
-        const observer = new IntersectionObserver(entries => {
-            if (entries.some(entry => entry.isIntersecting)) load();
-        }, { rootMargin: '1600px 0px' });
-        observer.observe(element);
-        return () => observer.disconnect();
-    }, [loading, failed, pages, load, supported]);
-    return <div ref={marker} className='client-load-more'>
-        {loading && <ClientSkeleton layout='grid' count={6} contained label='Chargement des titres suivants…' />}
-        {failed && <p role='alert'>Impossible de charger la suite. <button type='button' onClick={load}>Réessayer</button></p>}
-        {!supported && !loading && !failed && <button type='button' className='client-button' onClick={load}>Afficher plus</button>}
-    </div>;
+function LibraryResultCount({ model, embedded, loaded, extra, onlyMissing }: ViewProps & Readonly<{
+    embedded: boolean; loaded: number; extra: number; onlyMissing: boolean;
+}>) {
+    if (onlyMissing && model.sharedLocal.isFetching) return <span className='client-result-count' aria-busy='true'>Vérification…</span>;
+    if (onlyMissing || (['films', 'series'].includes(model.view) && extra > 0)) {
+        const count = (onlyMissing ? 0 : (model.media.data?.total || 0)) + extra;
+        return <span className='client-result-count' aria-live='polite'>{count} titre{count === 1 ? '' : 's'}</span>;
+    }
+    return <SearchResultCount model={model} embedded={embedded} count={loaded + extra} />;
+}
+
+function SearchView({ model }: ViewProps) {
+    const { search, searchInput, setSearchInput, setParams, params, cards, media, catalogue, genre, sort, genres } = model;
+    const query = search.trim();
+    const hasFolders = !!useFolderPicker()?.folders;
+    const more = useMoreBrowse('search', search, model.browseInput.filters || {}, media.data);
+    const tracked = genre ? model.sharedItems.filter(item => item.Genres?.includes(genre)) : model.sharedItems;
+    const results = groupSearchResults(more.pages.flat(), tracked, catalogue.items);
+    const shown = sort === 'name' ? exactSearchFirst(results.own, query) : results.own;
+    const count = results.own.length + results.saved.length + results.suggestion.length;
+    const waiting = !!query && (media.isPending || model.shared.isPending || model.sharedLocal.isFetching || catalogue.loading
+        || (model.seerr.enabled && (model.seerr.status.isPending || model.seerr.me.isFetching)));
+
+    const noun = count === 1 ? 'résultat affiché' : 'résultats affichés';
+    const setFilter = (key: string, value: string) => setParams(changeBrowseParams(params, { [key]: value }));
+
+    return <section className='client-library client-search-page'>
+        <header className='client-search-heading'><h1>Rechercher</h1></header>
+        <SearchBar value={searchInput} onChange={setSearchInput} onSubmit={value => setFilter('q', value)} />
+        {query ? <>
+            <div className='client-filter-options client-search-controls'>
+                <ChoiceSelect label='Genre' placeholder='Genres' value={genre} options={genreChoices(genres.data, genre)} onChange={value => setFilter('genre', value)} />
+                <ChoiceSelect label='Trier les titres de la bibliothèque' value={sort} options={titleOrder} onChange={value => setFilter('sort', value)} />
+                <span className='client-result-count' role='status'>
+                    {waiting ? 'Recherche en cours…' : `${count} ${noun}`}
+                </span>
+            </div>
+            <SearchGroup title='Dans ta bibliothèque' count={results.own.length}>
+                <div className='client-grid'>{cards(shown, false, hasFolders)}</div>
+                {more.hasMore && <GridLoadMore loading={more.isFetching} failed={more.isError} pages={more.pages.length} load={() => { void more.fetchMore(); }} />}
+            </SearchGroup>
+            <SearchGroup title='Catalogue partagé' count={results.saved.length}><div className='client-grid'>{cards(results.saved, false, hasFolders)}</div></SearchGroup>
+            <SearchGroup title='À demander' count={results.suggestion.length || Number(catalogue.hasNextPage)}>
+                <div className='client-grid'>{cards(results.suggestion)}</div>
+                {catalogue.hasNextPage && <ActionButton disabled={catalogue.isFetchingNextPage} onClick={() => { void catalogue.fetchNextPage(); }}>Plus de titres à demander</ActionButton>}
+            </SearchGroup>
+            {waiting && !count && <ClientSkeleton layout='grid' contained count={8} label='Recherche en cours…' />}
+            {media.isError && <p className='client-search-feedback' role='status'>Impossible de rechercher dans la bibliothèque. <button type='button' onClick={() => { void media.refetch(); }}>{LABELS.retry}</button></p>}
+            {catalogue.isError && <p className='client-search-feedback' role='status'>Les titres à demander sont temporairement indisponibles. <button type='button' onClick={() => { void catalogue.refetch(); }}>{LABELS.retry}</button></p>}
+            {!waiting && !count && !media.isError && !catalogue.isError && <p className='client-search-feedback'>Aucun résultat pour « {query} ». Essaie un autre titre ou retire un filtre.</p>}
+        </> : <p className='client-search-feedback'>Cherche un film ou une série dans ta bibliothèque et parmi les titres à demander.</p>}
+    </section>;
+}
+
+function SearchGroup({ title, count, children }: Readonly<{ title: string; count: number; children: ReactNode }>) {
+    return count > 0 ? <section className='client-search-group' aria-label={title}><h2>{title}</h2>{children}</section> : null;
 }
 
 function LibraryView({ model, embedded = false }: ViewProps & { readonly embedded?: boolean }) {
-    const { view, searchInput, setSearchInput, setParams, cards, media, genres, genre, sort, params } = model;
+    const { view, setParams, cards, media, genres, genre, sort, params } = model;
     const more = useMoreBrowse(view, model.browseInput.search, model.browseInput.filters || {}, media.data);
     const { fetchMore } = more;
     const loadMore = useCallback(() => {
         void fetchMore();
     }, [fetchMore]);
     const local = more.pages.flat();
-    const external = mixCatalogue(local, !embedded && view === 'search' ? model.catalogue.items : []).slice(local.length);
-    const externalPending = !embedded && view === 'search' && model.seerr.enabled && (model.catalogue.loading || model.seerr.status.isPending || model.seerr.me.isFetching);
-    function browse(changes: Record<string, string>) {
-        const next = new URLSearchParams(params);
-        Object.entries(changes).forEach(([key, value]) => {
-            next.set(key, value);
-        });
-        setParams(next);
-    }
-    return <section className={`client-library${view === 'search' ? ' client-search-page' : ''}${embedded ? ' embedded' : ''}`}>
-        {!embedded && <header className='client-library-heading'><h1>{params.get('collectionName') || params.get('personName') || links.find(([key]) => key === view)?.[1] || 'Bibliothèque'}</h1>{view === 'search' && <p>Un titre, une envie de cinéma : trouvez votre prochaine séance.</p>}</header>}
-        {!embedded && <>{view === 'search' && <form onSubmit={event => {
-            event.preventDefault();
-            browse({ q: searchInput });
-        }}><ClientIcon name='search' /><input type='search' aria-label='Rechercher un film ou une série' placeholder='Titre d’un film ou d’une série' value={searchInput} onChange={event => setSearchInput(event.target.value)} />{searchInput && <button type='button' aria-label='Effacer la recherche' onClick={() => {
-                setSearchInput('');
-                browse({ q: '' });
-            }}>×</button>}<button>Rechercher</button></form>}
-        <div className='client-filter-options'><label>Genre <select value={genre} onChange={event => browse({ genre: event.target.value })}><option value=''>Tous les genres</option>{genres.data?.filter(entry => entry.Name).map(entry => <option key={entry.Id || entry.Name} value={entry.Name!}>{entry.Name}</option>)}</select></label><label>Trier <select value={sort} onChange={event => browse({ sort: event.target.value })}><option value='name'>Titre</option><option value='recent'>Ajouts récents</option></select></label><SearchResultCount model={model} embedded={embedded} count={local.length + external.length} /></div></>}
-        {media.isPending && <ClientSkeleton layout='grid' count={12} contained label='Chargement des titres…' />}
+    const sharedView = ['films', 'series'].includes(view) && model.shared.data != null;
+    const availability = sharedView ? params.get('availability') : null;
+    const withoutFiles = availability === 'missing';
+    const advanced = model.browseInput.filters?.advanced || {};
+    const hasAdvanced = countLibraryFilters(advanced) > 0;
+    const saved = sharedView && !hasAdvanced && availability !== 'available' && (!genre || withoutFiles) && !params.get('audio') && !params.get('person') && !params.get('collection') ?
+        model.sharedItems.filter(entry => isExternal(entry) && entry.Type === (view === 'films' ? 'Movie' : 'Series')) : [];
+    const external = mixCatalogue(local, saved).slice(local.length);
+    const browse = (changes: Record<string, string>) => setParams(changeBrowseParams(params, changes));
+    return <section className={`client-library${embedded ? ' embedded' : ''}`}>
+        {!embedded && <header className='client-library-heading'><h1>{params.get('collectionName') || params.get('personName') || links.find(([key]) => key === view)?.[1] || 'Bibliothèque'}</h1></header>}
+        {!embedded
+        && <div className='client-filter-options'>
+            {!withoutFiles && <>
+                <ChoiceSelect label='Genre' placeholder='Genres' value={genre} options={genreChoices(genres.data, genre)} onChange={value => browse({ genre: value })} />
+                <ChoiceSelect label='Trier' value={sort} options={titleOrder} onChange={value => browse({ sort: value })} />
+            </>}
+            {sharedView && <ChoiceSelect label='Disponibilité' value={availability || 'all'} options={availabilityChoices} onChange={value => browse(value === 'missing' ?
+                { availability: value, genre: '', audio: '', person: '', collection: '' } : { availability: value })} />}
+            {!withoutFiles && isFullLibrary(view, params.get('mode')) && <AdvancedLibraryFilters key={view} view={view} filters={advanced} onChange={browse} />}
+            <LibraryResultCount model={model} embedded={embedded} loaded={local.length} extra={external.length} onlyMissing={withoutFiles} />
+        </div>}
+        {model.sharedLocal.isError && sharedView && <p role='status'>Impossible de vérifier quels titres du catalogue sont disponibles.</p>}
+        {withoutFiles && !external.length && !model.sharedLocal.isFetching && !model.sharedLocal.isError && <p>Aucun titre suivi à télécharger.</p>}
+        {!withoutFiles && media.isPending && <ClientSkeleton layout='grid' count={12} contained label='Chargement des titres…' />}
         <div className='client-grid'>
-            {more.pages.filter(page => page.length).map(page => <GridChunk key={page[0].Id} items={page} render={cards} />)}
+            {!withoutFiles && more.pages.filter(page => page.length).map(page => <GridChunk key={`${page[0].Id}:${model.preferences.watchedMarkers}`} items={page} render={cards} />)}
             {cards(external)}
         </div>
-        {more.hasMore && <LoadMore loading={more.isFetching} failed={more.isError} pages={more.pages.length} load={loadMore} />}
-        {externalPending && <ClientSkeleton layout='row' contained label='Recherche dans les découvertes…' />}
-        {!embedded && view === 'search' && model.catalogue.hasNextPage && <button className='client-button' disabled={model.catalogue.isFetchingNextPage} onClick={() => { void model.catalogue.fetchNextPage(); }}>Plus de découvertes</button>}
-        {!embedded && view === 'search' && model.catalogue.isError && <p>Les résultats externes sont temporairement indisponibles. <button onClick={() => { void model.catalogue.refetch(); }}>Réessayer</button></p>}
-        {media.data?.items.length === 0 && !model.catalogue.items.length && !externalPending && <p>{view === 'mine' ? 'Ajoutez des films et des séries à votre liste depuis leurs fiches.' : 'Aucun résultat.'}</p>}
+        {!withoutFiles && more.hasMore && <GridLoadMore loading={more.isFetching} failed={more.isError} pages={more.pages.length} load={loadMore} />}
+        {!withoutFiles && !external.length && media.data?.items.length === 0 && <p>{view === 'mine' ? 'Ajoutez des films et des séries à votre liste depuis leurs fiches.' : 'Aucun résultat.'}</p>}
     </section>;
 }
 

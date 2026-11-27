@@ -1,18 +1,20 @@
 /* eslint-disable react/jsx-no-bind -- Settings use local, typed input handlers. */
 import type { UserConfiguration } from '@jellyfin/sdk/lib/generated-client';
 import React, { type ReactNode, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import appSettings from 'scripts/settings/appSettings';
 import * as userSettings from 'scripts/settings/userSettings';
 import { signOut } from '../profiles/profileSession';
-import { serverInterfaceUrl } from '../session/ServerInterfacePage';
-import { Collapsible, SaveNote, Select, SettingCard, type SettingScope, TextField, Toggle } from '../settings/controls';
+
+import { Collapsible, SaveNote, Select, SettingCard, type SettingScope, TextField, Toggle } from '../ui/controls';
 import SettingsIcon from '../settings/SettingsIcon';
 
 import { AUDIO_CHANNELS, BITRATES, formatBitrate, languageOptions, NEXT_UP_DAYS, normalizeQuickConnectCode, passwordProblem, avatarProblem, STILL_WATCHING,
     SUBTITLE_MODES, TRANSCODE_AUDIO_CODECS, TRANSCODE_VIDEO_CODECS, VIDEO_WIDTHS } from './accountModel';
 import { useAccount } from './useAccount';
 import ClientDialog from '../ClientDialog';
+import { LABELS } from '../labels';
 import './account.scss';
 
 type Account = ReturnType<typeof useAccount>;
@@ -45,7 +47,7 @@ function Loading({ account }: Readonly<{ account: Account }>) {
             <p className='client-setting-note is-error' role='alert'>Les réglages du compte ne peuvent pas être chargés.</p>
             <button type='button' className='client-settings-button' onClick={() => {
                 void account.account.refetch();
-            }}>Réessayer</button>
+            }}>{LABELS.retry}</button>
         </div>;
     }
     return <p className='client-setting-note' role='status'>Chargement des réglages du compte…</p>;
@@ -238,7 +240,7 @@ function QuickConnectSettings({ account }: Readonly<{ account: Account }>) {
 export function QuickConnectMenuItem() {
     const account = useAccount();
     if (account.quickConnect.data === false) return null;
-    return <ClientDialog label='Quick Connect' title='Connecter un autre appareil' buttonClassName='client-profile-action'><QuickConnectSettings account={account} /></ClientDialog>;
+    return <ClientDialog label='Quick Connect' title='Connecter un autre appareil' buttonClassName='client-profile-action' buttonIcon='connect'><QuickConnectSettings account={account} /></ClientDialog>;
 }
 
 export function ProfileSettings() {
@@ -254,7 +256,7 @@ export function ProfileSettings() {
                 <button type='button' className='client-settings-button client-settings-button-danger' onClick={() => {
                     void signOut(account.api?.basePath, account.account.data?.Id);
                 }}>Se déconnecter</button>
-                {admin && account.api && <a className='client-settings-button' href={serverInterfaceUrl(account.api.basePath, 'dashboard')} target='_blank' rel='noopener noreferrer'><SettingsIcon name='external' />Administration du serveur</a>}
+                {admin && <Link className='client-settings-button' to='/client?view=settings&section=admin'><SettingsIcon name='server' />Administration du serveur</Link>}
             </div>
         </Section>
     </>;

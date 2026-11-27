@@ -1,6 +1,7 @@
 import type { Api } from '@jellyfin/sdk';
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/base-item-kind';
+import { ImageType } from '@jellyfin/sdk/lib/generated-client/models/image-type';
 import { ItemFields } from '@jellyfin/sdk/lib/generated-client/models/item-fields';
 import { ItemSortBy } from '@jellyfin/sdk/lib/generated-client/models/item-sort-by';
 import { SortOrder } from '@jellyfin/sdk/lib/generated-client/models/sort-order';
@@ -13,8 +14,11 @@ import { useMemo } from 'react';
 import { useApi } from 'hooks/useApi';
 import * as userSettings from 'scripts/settings/userSettings';
 
+import type { HeroPool } from './heroSelection';
+import { libraryFilterQuery, type LibraryFilters } from './libraryFilters';
 import { uniqueItems } from './model';
 import { clientRequest } from './session';
+import { orderSeasons } from './seriesEpisodesModel';
 
 function browseOrder(view: string, sort: string) {
     if (view === 'tonight') return { sortBy: [ItemSortBy.Random], sortOrder: [SortOrder.Ascending] };
@@ -29,14 +33,14 @@ function nextUpOptions() {
         nextUpDateCutoff: days > 0 ? new Date(Date.now() - days * 864e5).toISOString() : undefined };
 }
 
-export type BrowseFilters = { genre?: string; sort?: string; person?: string; audio?: string; collection?: string };
+export type BrowseFilters = { genre?: string; sort?: string; person?: string; audio?: string; collection?: string; advanced?: LibraryFilters };
 
 type Connection = { api?: Api; user?: { Id?: string | null; Configuration?: { HidePlayedInLatest?: boolean } | null } };
 
 /** One description of a page's data, shared by the page itself and by whatever prepares it in advance. */
-export function browseQuery({ api, user }: Connection, view: string, search: string, offset: number, { genre = '', sort = 'name', person = '', audio = '', collection = '' }: BrowseFilters = {}) {
+export function browseQuery({ api, user }: Connection, view: string, search: string, offset: number, { genre = '', sort = 'name', person = '', audio = '', collection = '', advanced = {} }: BrowseFilters = {}) {
     return {
-        queryKey: ['Client', api?.basePath, user?.Id, 'Browse', view, search, offset, genre, sort, person, audio, collection],
+        queryKey: ['Client', api?.basePath, user?.Id, 'Browse', view, search, offset, genre, sort, person, audio, collection, libraryFilterQuery(advanced)],
         staleTime: 30000,
         queryFn: ({ signal }: { signal: AbortSignal }) => clientRequest(async () => {
             const library = getLibraryApi(api!);
@@ -49,7 +53,7 @@ export function browseQuery({ api, user }: Connection, view: string, search: str
             if (view !== 'home') {
                 const result = await library.getItems({ ...common, limit: view === 'tonight' ? 192 : 48, startIndex: offset,
                     personIds: person ? [person] : undefined, searchTerm: search || undefined, genres: genre ? [genre] : undefined, isFavorite: view === 'mine' ? true : undefined,
-                    ...browseOrder(view, sort) }, request);
+                    ...libraryFilterQuery(advanced), ...browseOrder(view, sort) }, request);
                 return { items: result.data.Items || [], total: result.data.TotalRecordCount || 0,
                     resume: [], next: [], movies: [], series: [], picks: [] };
             }
@@ -81,6 +85,36 @@ export function useClientMedia(view: string, search: string, offset: number, fil
         ...browseQuery({ api, user }, view, search, offset, filters),
         refetchOnMount: view === 'home' ? 'always' : true,
         enabled: !!api && !!user?.Id && view !== 'disabled'
+    });
+}
+
+/**
+ * Candidates for a page banner, taken from the whole library: recent and best rated unwatched titles that
+ * have a backdrop, and what the account watched lately to weigh its favourite genres.
+ */
+export function useHeroPool(view: string, genre = '') {
+    const { api, user } = useApi();
+    const active = view === 'home' || view === 'films' || view === 'series';
+    return useQuery<HeroPool>({
+        queryKey: ['Client', api?.basePath, user?.Id, 'HeroPool', view, genre],
+        enabled: !!api && !!user?.Id && active,
+        staleTime: 10 * 60_000,
+        queryFn: ({ signal }) => clientRequest(async () => {
+            const library = getLibraryApi(api!);
+            let types = [BaseItemKind.Movie, BaseItemKind.Series];
+            if (view === 'films') types = [BaseItemKind.Movie];
+            if (view === 'series') types = [BaseItemKind.Series];
+            const common = { userId: user!.Id!, recursive: true, includeItemTypes: types, genres: genre ? [genre] : undefined,
+                fields: [ItemFields.Overview, ItemFields.Genres, ItemFields.DateCreated, ItemFields.ProviderIds], imageTypeLimit: 1, enableUserData: true };
+            const unwatched = { ...common, isPlayed: false, imageTypes: [ImageType.Backdrop] };
+            const [recent, rated, history] = await Promise.all([
+                library.getItems({ ...unwatched, limit: 40, sortBy: [ItemSortBy.DateCreated], sortOrder: [SortOrder.Descending] }, { signal }),
+                library.getItems({ ...unwatched, limit: 80, sortBy: [ItemSortBy.CommunityRating], sortOrder: [SortOrder.Descending] }, { signal }),
+                library.getItems({ userId: user!.Id!, recursive: true, includeItemTypes: [BaseItemKind.Movie, BaseItemKind.Episode, BaseItemKind.Series],
+                    isPlayed: true, limit: 100, fields: [ItemFields.Genres], sortBy: [ItemSortBy.DatePlayed], sortOrder: [SortOrder.Descending] }, { signal })
+            ]);
+            return { recent: recent.data.Items || [], rated: rated.data.Items || [], history: history.data.Items || [] };
+        })
     });
 }
 
@@ -135,14 +169,16 @@ export function useClientDetails(id: string, season: string) {
     const seasons = useQuery({
         queryKey: ['Client', api?.basePath, user?.Id, 'Seasons', id],
         enabled: !!api && !!user?.Id && item.data?.Type === BaseItemKind.Series,
-        queryFn: ({ signal }) => clientRequest(async () => (await getShowApi(api!).getSeasons({ seriesId: id, userId: user!.Id, fields: [ItemFields.ChildCount] }, { signal })).data.Items || [])
+        queryFn: ({ signal }) => clientRequest(async () => orderSeasons((await getShowApi(api!).getSeasons({
+            seriesId: id, userId: user!.Id, fields: [ItemFields.ChildCount], enableUserData: true
+        }, { signal })).data.Items?.filter(entry => entry.LocationType !== 'Virtual' && !entry.IsPlaceHolder) || []))
     });
-    const selected = season || seasons.data?.[0]?.Id || '';
+    const selected = seasons.data?.find(entry => entry.Id === season)?.Id || seasons.data?.[0]?.Id || '';
     const episodes = useQuery({
         queryKey: ['Client', api?.basePath, user?.Id, 'Episodes', id, selected],
         enabled: !!api && !!user?.Id && !!selected && item.data?.Type === BaseItemKind.Series,
         queryFn: ({ signal }) => clientRequest(async () => (await getShowApi(api!).getEpisodes({ seriesId: id, seasonId: selected,
-            userId: user!.Id, fields: [ItemFields.Overview] }, { signal })).data.Items || [])
+            userId: user!.Id, isMissing: false, enableUserData: true, fields: [ItemFields.Overview] }, { signal })).data.Items || [])
     });
     const next = useQuery({
         queryKey: ['Client', api?.basePath, user?.Id, 'Next', id],
@@ -172,14 +208,5 @@ export function useClientFilters(view: string) {
             return (await getFilterApi(api!).getQueryFilters({ userId: user!.Id,
                 includeItemTypes: types, recursive: true }, { signal })).data;
         })
-    });
-}
-
-export function useClientCollections(enabled: boolean) {
-    const { api, user } = useApi();
-    return useQuery({
-        queryKey: ['Client', api?.basePath, user?.Id, 'Collections'],
-        enabled: enabled && !!api && !!user?.Id,
-        queryFn: ({ signal }) => clientRequest(async () => (await getLibraryApi(api!).getItems({ userId: user!.Id, includeItemTypes: [BaseItemKind.BoxSet], recursive: true, limit: 30, imageTypeLimit: 1 }, { signal })).data.Items || [])
     });
 }

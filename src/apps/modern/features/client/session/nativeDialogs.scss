@@ -1,10 +1,10 @@
 // Les messages venus du moteur de lecture gardent leur logique, mais pas l'apparence d'origine.
 .dialog.formDialog,
 .dialog.actionSheet {
-    color: #f2f4f7;
+    color: var(--client-ink);
     background: #14161a;
     border: 1px solid rgb(255 255 255 / 16%);
-    border-radius: 14px;
+    border-radius: var(--client-radius-card);
     box-shadow: 0 18px 40px rgb(0 0 0 / 60%);
     font-family: Arial, Helvetica, sans-serif;
 
@@ -19,14 +19,14 @@
     .button-submit,
     .button-cancel {
         min-height: 44px;
-        color: #fff;
+        color: var(--client-ink);
         background: transparent;
         border: 1px solid rgb(255 255 255 / 34%);
-        border-radius: 99px;
+        border-radius: var(--client-radius-pill);
     }
 
     .button-submit {
-        color: #0a0b0e;
+        color: var(--client-page);
         background: #fff;
         border-color: #fff;
     }
@@ -38,9 +38,9 @@
 }
 
 .toast {
-    color: #f2f4f7;
+    color: var(--client-ink);
     background: #14161a;
     border: 1px solid rgb(255 255 255 / 16%);
-    border-radius: 10px;
+    border-radius: var(--client-radius-small);
     font-family: Arial, Helvetica, sans-serif;
 }

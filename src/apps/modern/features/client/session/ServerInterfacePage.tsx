@@ -6,12 +6,16 @@ import { ServerConnections } from 'lib/jellyfin-apiclient';
 import SessionPage, { SessionNotice } from './SessionPage';
 
 const TEXTS = {
-    admin: { title: 'Administration du serveur', message: 'L’administration se fait dans l’interface propre au serveur. Elle s’ouvre dans un nouvel onglet.', path: 'dashboard' },
     setup: { title: 'Serveur à configurer', message: 'Ce serveur n’a pas encore été installé. Terminez sa configuration dans son interface, puis revenez ici.', path: 'wizard/start' }
 };
 
 export function serverInterfaceUrl(server: string, path: string) {
     return `${server.replace(/\/$/, '')}/web/#/${path}`;
+}
+
+/** The server's own administration screens, mounted in this application for administrators (`apps/dashboard`). */
+export function serverAdminUrl(path = 'dashboard') {
+    return `#/${path.replace(/^\//, '')}`;
 }
 
 export default function ServerInterfacePage({ kind }: Readonly<{ kind: keyof typeof TEXTS }>) {

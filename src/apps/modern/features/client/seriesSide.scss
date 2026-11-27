@@ -1,0 +1,190 @@
+/* Wide screens: the selected season's episodes stand in a column on the right of the series hero,
+   beside the title, with every season on one row underneath both. */
+
+/* Narrower screens keep the panel under the seasons, inside the hero's own margins. */
+.client-series-side .client-series-episodes-panel { margin: 22px 0 0; }
+
+// Shown only beside the thumbnail in the column layout.
+.client-series-episode-overview { display: none; }
+
+@media (min-width: 1100px) {
+    .client-series-side {
+        --client-episodes-side: clamp(380px, 32vw, 500px);
+        --client-episode-thumb: 47%;
+
+        // Title and episodes side by side, the seasons on a full-width row beneath both.
+        display: grid;
+        grid-template:
+            'back episodes' auto
+            'copy episodes' minmax(0, 1fr)
+            'rail rail' auto / minmax(0, 1fr) var(--client-episodes-side);
+        gap: 14px 32px;
+
+        > .client-back {
+            // In the flow of the grid, so a short window cannot slide the title under it.
+            position: relative;
+            inset: auto;
+            margin: 0;
+            grid-area: back;
+            align-self: start;
+            justify-self: start;
+        }
+
+        > .client-hero-copy {
+            grid-area: copy;
+            align-self: end;
+        }
+
+        > .client-season-rail { grid-area: rail; }
+
+        .client-season-poster.is-active::after { display: none; }
+
+        .client-series-episodes-panel {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            // Fills its rows without making them taller: the list scrolls inside.
+            height: 0;
+            min-height: 100%;
+            grid-area: episodes;
+            box-sizing: border-box;
+            flex-direction: column;
+            margin: 0;
+            padding: 18px;
+        }
+
+        .client-series-episodes-heading {
+            flex: none;
+            margin-bottom: 12px;
+
+            h2 { font-size: var(--client-text-24); }
+        }
+
+        .client-series-episode-grid {
+            display: flex;
+            min-height: 0;
+            flex: 1;
+            flex-direction: column;
+            gap: 6px;
+            margin-inline: -6px;
+            padding-inline: 6px;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
+        }
+
+        .client-series-episode-card {
+            display: grid;
+            flex: none;
+            grid-template-columns: var(--client-episode-thumb) minmax(0, 1fr);
+            grid-template-rows: auto auto;
+            align-content: center;
+            align-items: center;
+            gap: 4px 14px;
+            padding: 6px 12px 6px 6px;
+            border-color: transparent;
+            border-radius: var(--client-radius-card);
+            background: transparent;
+            aspect-ratio: auto;
+            transition: background-color var(--client-duration-state) ease, border-color var(--client-duration-state) ease;
+
+            // Thumbnail height, also when an episode has no image.
+            min-height: calc((var(--client-episodes-side) - 54px) * 0.47 * 9 / 16 + 12px);
+
+            &::after { display: none; }
+
+            // Reserves the thumbnail even when an episode has no image.
+            &::before {
+                position: absolute;
+                z-index: -1;
+                top: 50%;
+                left: 6px;
+                width: calc((100% - 18px) * 0.47);
+                border-radius: var(--client-radius-small);
+                background: var(--client-art-placeholder);
+                aspect-ratio: 16 / 9;
+                content: '';
+                transform: translateY(-50%);
+            }
+
+            &:hover,
+            &:focus-visible {
+                border-color: var(--client-line);
+                background: var(--client-surface-highlight);
+            }
+
+            &.is-next {
+                border-color: #f6edc7a6;
+                box-shadow: none;
+            }
+
+            .client-artwork {
+                position: relative;
+                grid-row: 1 / span 2;
+                width: 100%;
+                height: auto;
+                border-radius: var(--client-radius-small);
+                aspect-ratio: 16 / 9;
+            }
+
+            .client-preview-media {
+                inset: 6px auto 6px 6px;
+                width: calc((100% - 18px) * 0.47);
+                overflow: hidden;
+                border-radius: var(--client-radius-small);
+            }
+        }
+
+        .client-series-episode-number {
+            inset: 9px auto auto 13px;
+            font-size: var(--client-text-24);
+        }
+
+        .client-series-episode-title {
+            position: static;
+            grid-column: 2;
+            align-self: end;
+            display: -webkit-box;
+            overflow: hidden;
+            font-size: var(--client-text-14);
+            line-height: 1.3;
+            white-space: normal;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+        }
+
+        .client-series-episode-next,
+        .client-series-episode-seen {
+            top: 12px;
+            right: auto;
+            left: calc((100% - 18px) * 0.47 - 30px);
+        }
+
+        .client-series-episode-next { left: calc((100% - 18px) * 0.47 - 66px); }
+
+        .client-series-episode-overview {
+            display: -webkit-box;
+            overflow: hidden;
+            align-self: start;
+            grid-column: 2;
+            color: var(--client-ink-muted);
+            font-size: var(--client-text-12);
+            line-height: 1.35;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+        }
+
+        .client-series-episode-progress {
+            inset: auto auto 10px 12px;
+            width: calc((100% - 18px) * 0.47 - 12px);
+        }
+
+        // The column already lists every episode of the season.
+        .client-series-controls .client-button.client-series-all-episodes { display: none; }
+
+        .client-series-more-episodes {
+            flex: none;
+            margin-top: 10px;
+        }
+    }
+}

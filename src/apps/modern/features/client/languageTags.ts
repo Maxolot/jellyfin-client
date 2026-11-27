@@ -8,7 +8,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useApi } from 'hooks/useApi';
 
 import { clientRequest } from './session';
-import { readTrackChoice, resolveTracks, trackOptions, type TrackOption } from './trackChoice';
+import { filePlaybackOptions } from './mediaVersions';
+import { readTrackChoice, trackOptions, type TrackOption } from './trackChoice';
 
 /** What the files of a title offer: French dub, original audio, several audio languages, French subtitles. */
 export type FileLanguage = 'multi' | 'vf' | 'vo' | 'vostfr';
@@ -77,17 +78,16 @@ export function useLocalLanguages(item: BaseItemDto): FileLanguage[] {
 }
 
 /** The track numbers to start this very file with, from the languages chosen on its film or series. */
-export async function chosenTracks(api: Api | undefined, userId: string | undefined, item: BaseItemDto) {
-    const choice = readTrackChoice(api?.basePath, userId, item.SeriesId || item.Id);
-    if (!api || !userId || !item.Id || (!choice.audio && !choice.subtitle && !choice.version)) return {};
+export async function chosenTracks(api: Api | undefined, userId: string | undefined, item: BaseItemDto, version?: string) {
+    if (!api || !userId || !item.Id) return {};
+    const saved = readTrackChoice(api.basePath, userId, item.Id);
+    const tracks = item.SeriesId ? readTrackChoice(api.basePath, userId, item.SeriesId) : saved;
+    const choice = { ...tracks, version: version ?? saved.version };
+    if (!choice.audio && !choice.subtitle && !choice.version) return {};
     try {
         const full = (await getLibraryApi(api).getItems({ userId, ids: [item.Id], fields: streamFields })).data.Items?.[0];
-        if (!full) return {};
-        // A version only exists on the film it was chosen for; episodes keep their own.
-        const source = full.MediaSources?.find(entry => entry.Id === choice.version);
-        return { ...(source?.Id ? { mediaSourceId: source.Id } : {}), ...resolveTracks(source?.MediaStreams || streamsOf(full), choice) };
+        return filePlaybackOptions(full || item, choice);
     } catch {
-        // Playing with the account's preferences beats not playing.
-        return {};
+        return filePlaybackOptions(item, choice);
     }
 }

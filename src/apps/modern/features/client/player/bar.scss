@@ -1,0 +1,119 @@
+/* Layouts of the bottom bar, chosen in Personnaliser le lecteur. "split" is the default of player.scss:
+   the progress bar above an island of controls. The glass of the "stacked" pill is in liquidGlass.scss. */
+@use '../design' as ds;
+
+// The progress bar inside the island, on a row of its own above the controls.
+@mixin timeline-on-top {
+    flex-wrap: wrap;
+    row-gap: 0;
+
+    .client-player-timeline {
+        flex: 1 0 100%;
+        order: -1;
+        height: 26px;
+    }
+}
+
+.client-player.bar-island,
+.client-player.bar-compact {
+    .client-player-toolbar {
+        @include timeline-on-top;
+
+        padding: 0.35em 0.9em 0.25em;
+    }
+}
+
+// The island narrows to the controls and centres itself, leaving the image free on both sides.
+.client-player.bar-compact .client-player-toolbar {
+    max-width: 56em;
+    margin-inline: auto;
+}
+
+// One row: play and volume, the progress bar taking the remaining width, then time and tools.
+.client-player.bar-inline {
+    .client-player-toolbar { gap: 0.5em; }
+
+    .client-player-timeline {
+        flex: 1 1 12em;
+        order: 1;
+        min-width: 8em;
+    }
+
+    .client-player-time {
+        order: 2;
+        margin: 0;
+    }
+    .client-player-end { display: none; }
+
+    .client-player-tools {
+        order: 3;
+        margin-left: 0;
+    }
+}
+
+// Two islands: the progress bar in a pill of its own, the controls below.
+.client-player.bar-stacked {
+    .client-player-timeline {
+        height: 34px;
+        margin-bottom: 0.6em;
+        padding-inline: 1.1em;
+    }
+
+    .client-player-track,
+    .client-player-chapter-markers { inset-inline: 1.1em; }
+}
+
+@include ds.phone {
+    .client-player.bar-inline .client-player-toolbar {
+        @include timeline-on-top;
+    }
+    .client-player.bar-inline .client-player-tools { margin-left: auto; }
+}
+
+// Floating: a thick capsule on its own with the times under its ends, the controls as separate pills.
+.client-player.bar-float {
+    .client-player-timeline {
+        --track-height: 10px;
+
+        height: 34px;
+
+        &:hover,
+        &:focus-within { --track-height: 14px; }
+
+        // The thumb only shows while aiming, the capsule alone reads as the playhead otherwise.
+        > input::-webkit-slider-thumb {
+            opacity: 0;
+            transition: opacity var(--client-duration-hover) ease;
+        }
+
+        > input::-moz-range-thumb {
+            opacity: 0;
+            transition: opacity var(--client-duration-hover) ease;
+        }
+
+        // One selector per engine: a pseudo-element unknown to the browser drops the whole rule.
+        &:hover > input::-webkit-slider-thumb { opacity: 1; }
+        &:focus-within > input::-webkit-slider-thumb { opacity: 1; }
+        &:hover > input::-moz-range-thumb { opacity: 1; }
+        &:focus-within > input::-moz-range-thumb { opacity: 1; }
+    }
+
+    .client-player-times {
+        display: flex;
+        justify-content: space-between;
+        margin: 0 0 0.9em;
+        color: var(--client-ink-muted);
+        white-space: normal;
+    }
+
+    .client-player-time { display: none; }
+
+    .client-player-toolbar {
+        gap: 0.6em;
+        padding: 0;
+    }
+
+    .client-player-toolbar > button,
+    .client-player-volume { padding-inline: 0.2em; }
+    .client-player-tools { padding-inline: 0.3em; }
+}

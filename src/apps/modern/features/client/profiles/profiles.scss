@@ -6,8 +6,8 @@
     align-items: center;
     justify-content: center;
     padding: 32px 16px;
-    color: #fff;
-    background: #0a0b0e;
+    color: var(--client-ink);
+    background: var(--client-page);
     font-family: Arial, Helvetica, sans-serif;
 
     h1 {
@@ -40,10 +40,10 @@
     aspect-ratio: 1;
     align-items: center;
     justify-content: center;
-    color: #fff;
-    border-radius: 10px;
+    color: var(--client-ink);
+    border-radius: var(--client-radius-small);
     font-size: clamp(44px, 5vw, 68px);
-    transition: box-shadow 0.15s ease;
+    transition: box-shadow var(--client-duration-state) ease;
 
     img {
         display: block;
@@ -59,7 +59,7 @@
 }
 
 .client-profile-add {
-    color: #a4afc0;
+    color: var(--client-ink-subtle);
     background: rgb(255 255 255 / 8%);
 }
 
@@ -71,7 +71,7 @@
     align-items: center;
     gap: 12px;
     padding: 0;
-    color: #a4afc0;
+    color: var(--client-ink-subtle);
     background: none;
     border: 0;
     cursor: pointer;
@@ -79,14 +79,14 @@
     strong {
         overflow: hidden;
         max-width: 100%;
-        font-size: 16px;
+        font-size: var(--client-text-16);
         font-weight: 400;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
 
     small {
-        font-size: 12px;
+        font-size: var(--client-text-12);
     }
 
     &:disabled {
@@ -95,7 +95,7 @@
 
     &:focus-visible,
     &:hover:not(:disabled) {
-        color: #fff;
+        color: var(--client-ink);
         outline: none;
 
         .client-profile-avatar {
@@ -116,7 +116,7 @@
     height: 32px;
     align-items: center;
     justify-content: center;
-    color: #fff;
+    color: var(--client-ink);
     background: rgb(0 0 0 / 72%);
     border-radius: 50%;
 
@@ -143,15 +143,15 @@
     min-height: 44px;
     margin-top: 48px;
     padding: 0 24px;
-    color: #a4afc0;
+    color: var(--client-ink-subtle);
     background: none;
     border: 1px solid rgb(255 255 255 / 34%);
-    border-radius: 99px;
+    border-radius: var(--client-radius-pill);
     cursor: pointer;
 
     &:hover,
     &:focus-visible {
-        color: #fff;
+        color: var(--client-ink);
         border-color: #fff;
     }
 }
@@ -167,26 +167,26 @@
 
     p {
         margin: 0;
-        color: #a4afc0;
+        color: var(--client-ink-subtle);
         text-align: center;
     }
 
     label {
         display: grid;
         gap: 6px;
-        color: #a4afc0;
-        font-size: 14px;
+        color: var(--client-ink-subtle);
+        font-size: var(--client-text-14);
     }
 
     input {
         min-height: 44px;
         padding: 0 12px;
-        color: #fff;
+        color: var(--client-ink);
         background: rgb(255 255 255 / 8%);
         border: 1px solid rgb(255 255 255 / 24%);
-        border-radius: 10px;
+        border-radius: var(--client-radius-small);
         font: inherit;
-        font-size: 16px;
+        font-size: var(--client-text-16);
     }
 
     div {
@@ -197,21 +197,21 @@
     button {
         min-height: 44px;
         flex: 1;
-        color: #fff;
+        color: var(--client-ink);
         background: none;
         border: 1px solid rgb(255 255 255 / 34%);
-        border-radius: 99px;
+        border-radius: var(--client-radius-pill);
         cursor: pointer;
     }
 }
 
 .client-profile-form .client-profile-primary {
-    color: #0a0b0e;
+    color: var(--client-page);
     background: #fff;
     border-color: #fff;
 
     &:disabled {
-        opacity: 0.5;
+        opacity: var(--client-opacity-disabled);
         cursor: default;
     }
 }
@@ -227,14 +227,14 @@
 }
 
 .client-profile-form .client-profile-quick {
-    color: #a4afc0;
+    color: var(--client-ink-subtle);
     border: 0;
-    text-decoration: underline;
+    text-decoration: none;
 }
 
 .client-quick-code {
     display: block;
-    color: #fff;
+    color: var(--client-ink);
     font-size: 40px;
     font-weight: 700;
     letter-spacing: 0.12em;
@@ -263,10 +263,10 @@
     header button {
         min-height: 44px;
         padding: 0 20px;
-        color: #fff;
+        color: var(--client-ink);
         background: none;
         border: 1px solid rgb(255 255 255 / 34%);
-        border-radius: 99px;
+        border-radius: var(--client-radius-pill);
         cursor: pointer;
     }
 
@@ -275,18 +275,18 @@
         min-height: 44px;
         margin: 20px 0 8px;
         padding: 0 14px;
-        color: #fff;
+        color: var(--client-ink);
         background: rgb(255 255 255 / 8%);
         border: 1px solid rgb(255 255 255 / 24%);
-        border-radius: 99px;
+        border-radius: var(--client-radius-pill);
         font: inherit;
-        font-size: 16px;
+        font-size: var(--client-text-16);
     }
 
     h2 {
         margin: 24px 0 10px;
-        color: #a4afc0;
-        font-size: 14px;
+        color: var(--client-ink-subtle);
+        font-size: var(--client-text-14);
         font-weight: 400;
     }
 
@@ -304,13 +304,13 @@
         padding: 0;
         background: rgb(255 255 255 / 8%);
         border: 0;
-        border-radius: 8px;
+        border-radius: var(--client-radius-small);
         cursor: pointer;
     }
 
     li button:focus-visible,
     li button:hover:not(:disabled) {
-        outline: 3px solid #fff;
+        outline: var(--client-size-focus-ring) solid var(--client-focus);
         outline-offset: -3px;
     }
 

@@ -1,0 +1,222 @@
+@use '../design' as ds;
+
+.client-tonight-questions {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 540px) minmax(0, 1fr);
+    align-items: end;
+    gap: 16px 20px;
+}
+
+.client-tonight-quick-choices {
+    display: grid;
+    grid-template-columns: 1fr 1.65fr 1fr;
+    grid-column: 1 / -1;
+    gap: 16px;
+
+    fieldset {
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        margin: 0;
+    }
+
+    legend {
+        padding: 0;
+        margin-bottom: 8px;
+        font-size: var(--client-text-14);
+        font-weight: 600;
+    }
+}
+
+.client-tonight-partner,
+.client-tonight-include {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.client-tonight-partner {
+    flex-wrap: wrap;
+    font-size: var(--client-text-13);
+
+    select {
+        max-width: 100%;
+        min-height: 40px;
+        padding: 0 12px;
+        border: 1px solid var(--client-line);
+        border-radius: var(--client-radius-control);
+        background: var(--client-surface-control);
+        color-scheme: dark;
+        color: inherit;
+    }
+}
+
+.client-tonight-table .client-draw-keywords {
+    display: grid;
+    max-width: 540px;
+    gap: 7px;
+}
+
+.client-tonight-include {
+    width: fit-content;
+    min-height: 35px;
+    font-size: var(--client-text-14);
+
+    input {
+        width: 18px;
+        height: 18px;
+        margin: 0;
+    }
+}
+
+.client-tonight-notice,
+.client-tonight-constraint {
+    margin: 12px 0;
+    font-size: var(--client-text-14);
+}
+
+.client-tonight-notice:empty {
+    margin: 0;
+}
+
+.client-tonight-table .client-draw-fan {
+    max-width: 1210px;
+    gap: 12px;
+    padding: 26px 34px 44px;
+}
+
+.client-tonight-table .client-draw-card {
+    flex: 0 1 292px;
+    min-height: 422px;
+    margin: 0;
+}
+
+.client-tonight-table .client-draw-shell {
+    border-radius: var(--client-radius-card);
+    box-shadow: var(--client-shadow-card);
+}
+
+.client-tonight-table .client-draw-poster {
+    border-radius: inherit;
+}
+
+.client-tonight-result.is-requestable .client-draw-poster {
+    filter: saturate(0.55);
+}
+
+.client-tonight-card-info {
+    position: absolute;
+    inset: auto 0 0;
+    padding: 54px 15px 14px;
+    background: linear-gradient(0deg, #111 13%, var(--client-art-scrim) 46%, var(--client-art-scrim) 70%, transparent);
+    color: var(--client-ink);
+
+    .client-draw-open {
+        width: fit-content;
+        max-width: 100%;
+        height: auto;
+        outline-offset: 3px;
+        text-decoration: none;
+    }
+
+    h2 {
+        display: -webkit-box;
+        overflow: hidden;
+        margin: 3px 0 6px;
+        font-size: clamp(17px, 2.15vw, 26px);
+        font-weight: 700;
+        line-height: 1.12;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+
+    ul {
+        display: grid;
+        gap: 4px;
+        padding-left: 16px;
+        margin: 9px 0 12px;
+        color: #ffffffe0;
+        font-size: var(--client-text-13);
+        line-height: 1.35;
+    }
+}
+
+.client-tonight-meta {
+    margin: 0;
+    color: var(--client-ink);
+    font-size: var(--client-text-13);
+}
+
+.client-tonight-request-state {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-pill);
+    background: var(--client-surface-raised);
+    font-size: var(--client-text-12);
+    font-weight: 600;
+}
+
+.client-tonight-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    &.secondary {
+        margin-top: 8px;
+    }
+
+    button {
+        min-height: 38px;
+        padding: 7px 10px;
+        font-size: var(--client-text-13);
+        white-space: nowrap;
+    }
+}
+
+@include ds.tablet {
+    .client-tonight-quick-choices {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@include ds.phone {
+    .client-tonight-table .client-draw-fan {
+        justify-content: start;
+        padding: 16px 3px 26px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+    }
+
+    .client-tonight-table .client-draw-card {
+        flex: 0 0 min(85%, 325px);
+        min-height: 420px;
+        scroll-snap-align: start;
+        transform: none;
+    }
+}
+
+@include ds.phone {
+    .client-tonight-questions {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .client-tonight-quick-choices {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .client-tonight-table .client-tonight-table-head {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .client-tonight-table .client-draw-reroll {
+        min-width: 0;
+        padding-inline: 12px;
+    }
+}

@@ -2,6 +2,30 @@
 
 Cette application est un client web indépendant pour les films et séries de Jellyfin 12. Elle se connecte à votre serveur existant ; elle n’héberge ni les médias ni les demandes. Aucun abonnement ni clé administrateur à distribuer aux utilisateurs.
 
+## Installer le paquet compilé
+
+Chaque version est publiée dans les [releases GitHub](https://github.com/Maxolot/jellyfin-client/releases) avec `jellyfin-client-web.tar.gz` (le client compilé), `SHA256SUMS` et l’archive des sources. Le client demande Jellyfin 12.0. Pour récupérer la dernière version :
+
+```sh
+mkdir -p /srv/jellyfin-client
+curl -fL https://github.com/Maxolot/jellyfin-client/releases/latest/download/jellyfin-client-web.tar.gz | tar -xz -C /srv/jellyfin-client
+```
+
+Pour mettre à jour, videz le dossier et relancez ces commandes, puis rechargez la page.
+
+**Le plus simple : remplacer l’interface web de Jellyfin.** Indiquez ce dossier à Jellyfin comme dossier web. Avec l’image Docker officielle, montez-le à la place de l’interface d’origine et recréez le conteneur :
+
+```yaml
+services:
+  jellyfin:
+    volumes:
+      - /srv/jellyfin-client:/jellyfin/jellyfin-web:ro
+```
+
+Hors Docker, lancez Jellyfin avec `--webdir /srv/jellyfin-client` (ou la variable `JELLYFIN_WEB_DIR`). Le client s’ouvre alors à l’adresse habituelle `/web/` et trouve le serveur tout seul. Pour revenir à l’interface d’origine, retirez le montage ou l’option, puis redémarrez Jellyfin. Les autres applications Jellyfin (TV, téléphone) ne changent pas.
+
+**À côté de Jellyfin.** L’image `packaging/fork/Dockerfile.runtime` sert le même dossier par nginx, sans toucher Jellyfin (voir DEVELOPMENT.md). L’utilisateur saisit alors l’adresse de son Jellyfin à la première connexion.
+
 ## Première connexion
 
 1. Hébergez le paquet web compilé sur votre serveur HTTP, avec le fichier `config.json` du paquet (voir DEVELOPMENT.md). Utilisez HTTPS pour les accès distants. N’embarquez aucune session ou donnée de votre serveur dans le paquet.
@@ -37,6 +61,14 @@ Pour proposer d’autres catalogues (par exemple une copie hébergée chez vous)
 ```
 
 Ces URL sont des exemples à remplacer. Les manifestes doivent proposer les bons GUID, versions compatibles et sommes de contrôle ; les fichiers DLL ne sont jamais envoyés par le navigateur.
+
+## Dossiers, Mon espace et suivi des demandes : Shared Catalog
+
+Shared Catalog est dans le même catalogue que Native Previews et Movie Sources. Ajoutez-le dans **Tableau de bord Jellyfin → Extensions → Catalogues** avec l’adresse `https://raw.githubusercontent.com/Maxolot/jellyfin-client/main/plugins/catalog/manifest.json`, installez **Shared Catalog**, puis redémarrez Jellyfin.
+
+Sans configuration, il apporte les dossiers personnels et partagés, le bouton « + » qui range un titre dans « À voir plus tard », les rangées de dossiers sur l’accueil, la ligne de temps de **Mon espace** et le catalogue des titres suivis. Les suggestions **Ce soir**, encore en préparation, sont masquées par défaut ; chacun peut les activer dans **Paramètres → Apparence**. Le suivi détaillé des demandes (étapes, délai estimé, notifications) demande en plus un fichier privé `requests.json` qui indique Seerr, Radarr et Sonarr : voir `plugins/shared-catalog/README.md`. Sans ce fichier, les demandes restent visibles par Seerr, sans la progression.
+
+Les favoris existants ne sont pas déplacés automatiquement : **Mon espace** propose à chacun de ranger ses favoris non vus dans « À voir plus tard ».
 
 ## Extraits vidéo : Native Previews
 

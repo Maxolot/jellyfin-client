@@ -1,8 +1,13 @@
 import { useCallback, useMemo, useState } from 'react';
 
+export const playerBarLayouts = ['split', 'island', 'inline', 'stacked', 'compact', 'float'] as const;
+export type PlayerBarLayout = typeof playerBarLayouts[number];
+
 export type PlayerPreferences = {
     style: 'glass' | 'classic' | 'minimal';
     accent: 'white' | 'red' | 'blue' | 'gold';
+    /** Where the progress bar sits against the bottom island of controls. */
+    bar: PlayerBarLayout;
     size: number;
     hideAfter: number;
     skip: number;
@@ -15,7 +20,7 @@ export type PlayerPreferences = {
     subtitlePosition: number;
 };
 export const playerDefaults: PlayerPreferences = {
-    style: 'glass', accent: 'white', size: 100, hideAfter: 4, skip: 15,
+    style: 'glass', accent: 'white', bar: 'split', size: 100, hideAfter: 4, skip: 15,
     time: 'remaining', previews: true, intro: 'button', next: 10,
     subtitleSize: 100, subtitleBackground: true, subtitlePosition: 8
 };
@@ -28,6 +33,7 @@ export function readPlayerPreferences(key: string): PlayerPreferences {
         return {
             style: choice(saved.style, ['glass', 'classic', 'minimal'], 'glass'),
             accent: choice(saved.accent, ['white', 'red', 'blue', 'gold'], 'white'),
+            bar: choice(saved.bar, playerBarLayouts, 'split'),
             size: bounded(saved.size, 100, 80, 130), hideAfter: bounded(saved.hideAfter, 4, 2, 12),
             skip: choice(saved.skip, [5, 10, 15, 30], 15),
             time: choice(saved.time, ['remaining', 'total', 'end'], 'remaining'),

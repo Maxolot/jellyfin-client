@@ -1,0 +1,27 @@
+.client-menu-label {
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+    gap: 12px;
+    text-align: start;
+
+    > .client-icon {
+        width: 18px;
+        height: 18px;
+        flex: none;
+    }
+
+    > .client-more-text {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+}
+
+.client-interface .client-nav .client-profile-menu > :is(a, button) {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    padding: 0 12px;
+    border-radius: var(--client-radius-small);
+    text-align: start;
+}

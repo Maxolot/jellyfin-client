@@ -1,0 +1,78 @@
+@use 'design' as ds;
+
+.client-detail-info-bottom .client-detail .client-hero-copy {
+    align-content: end;
+}
+
+.client-interface.client-detail-info-bottom .client-detail .client-overview:not(.expanded) {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+}
+
+.preview-info-bottom .preview-content {
+    inset-block: auto 10%;
+}
+
+.preview-info-center .preview-content {
+    inset-block: 43% auto;
+}
+
+@include ds.above-phone {
+    .client-hero.client-detail .client-actions {
+        width: max-content;
+        max-width: calc(100vw - var(--client-margin) * 2);
+        flex-wrap: nowrap;
+    }
+
+    .client-detail .client-hero-copy .client-overview { max-width: 560px; }
+
+    .client-detail-info-bottom .client-detail {
+        padding-bottom: clamp(18px, 2.2svh, 36px);
+
+        &::before {
+            background:
+                linear-gradient(0deg, #090a0df2, #090a0d8c 36%, transparent 75%),
+                linear-gradient(90deg, #090a0d78, transparent 58%);
+        }
+    }
+
+    .client-detail-info-bottom .client-series-detail .client-hero-copy { padding-bottom: 12px; }
+}
+
+@media (max-height: 820px), (max-width: 700px) {
+    .client-interface.client-detail-info-bottom .client-detail .client-overview:not(.expanded) { -webkit-line-clamp: 3; }
+}
+
+@media (min-width: 701px) and (max-height: 820px) {
+    .client-detail-info-bottom .client-detail {
+        padding-top: 82px;
+
+        .client-hero-copy { padding-top: 8px; }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: clamp(29px, 3vw, 42px);
+        }
+
+        .client-title-logo {
+            --logo-h: 68px;
+
+            height: var(--logo-h);
+            margin-top: 0;
+        }
+
+        :is(.client-meta, .client-overview, .client-personal-rating) { margin-top: 9px; }
+        .client-actions { margin-top: 13px; }
+    }
+}
+
+.client-director-credits {
+    color: var(--client-ink-muted);
+    font-size: var(--client-text-12);
+
+    a {
+        text-decoration: none;
+    }
+}

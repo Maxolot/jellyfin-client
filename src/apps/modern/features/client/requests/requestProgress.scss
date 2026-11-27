@@ -1,0 +1,118 @@
+.client-request-ring {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 34px;
+    height: 34px;
+    fill: none;
+    stroke: var(--client-progress);
+    stroke-linecap: round;
+    stroke-width: 1.6;
+    transform: translate(-50%, -50%) rotate(-90deg);
+
+    .client-request-ring-track { stroke: var(--client-track); }
+}
+
+.client-request-progress-note {
+    color: var(--client-ink-muted);
+    font-size: var(--client-text-13);
+
+    &:empty { display: none; }
+
+    p {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 4px 0;
+    }
+
+    .client-icon {
+        width: 15px;
+        height: 15px;
+        flex: none;
+    }
+}
+
+.client-compact-request {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 3px 12px;
+    max-width: 600px;
+    margin-top: 9px;
+    color: var(--client-ink);
+
+    // One discreet status line under the actions, not another row of buttons.
+    a {
+        display: inline-flex;
+        min-height: 28px;
+        align-items: center;
+        gap: 6px;
+        color: var(--client-ink);
+        font-size: var(--client-text-13);
+        font-weight: 600;
+        text-decoration: none;
+
+        &:hover { opacity: 0.75; }
+    }
+
+    .client-request-progress-note {
+        color: var(--client-ink-muted);
+        font-size: var(--client-text-13);
+
+        p { margin: 0; }
+    }
+
+    a > .client-icon {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.client-request-overview {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 16px;
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-panel);
+    background: var(--client-surface-panel);
+    box-shadow: var(--client-reflection);
+    backdrop-filter: var(--client-blur-surface);
+}
+
+.client-nav .client-request-bell {
+    position: relative;
+    min-width: 32px;
+    text-decoration: none;
+
+    > .client-icon {
+        position: relative;
+        width: 18px;
+        height: 18px;
+    }
+}
+
+@media (max-width: 410px) {
+    .client-interface .client-nav:has(.client-request-bell) {
+        column-gap: 3px;
+
+        > :is(.client-nav-tool, .client-brand.client-search-shortcut) { width: 33px; }
+
+        .client-nav-links {
+            column-gap: 3px;
+
+            > a { padding-inline: 7px; }
+        }
+    }
+
+    .client-nav .client-request-bell {
+        min-width: 30px;
+
+        .client-request-ring {
+            width: 30px;
+            height: 30px;
+        }
+    }
+}

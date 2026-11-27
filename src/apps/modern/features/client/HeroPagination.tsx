@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-no-bind -- Each marker selects its own slide. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
-import useMediaQuery from '@mui/material/useMediaQuery';
+import useClientMediaQuery from './useClientMediaQuery';
 import React, { type CSSProperties, type MutableRefObject, useEffect, useId, useRef } from 'react';
 
 export type MarkerPosition = { head: number; tail: number };
@@ -27,7 +27,7 @@ function paintMarker(svg: SVGSVGElement, head: number, tail: number) {
 export default function HeroPagination({ items, index, select, position }: Readonly<{ items: BaseItemDto[]; index: number; select: (index: number) => void; position: MutableRefObject<MarkerPosition | null> }>) {
     const svg = useRef<SVGSVGElement>(null);
     const filter = `client-liquid-${useId().replace(/:/g, '')}`;
-    const reduced = useMediaQuery('(prefers-reduced-motion: reduce)');
+    const reduced = useClientMediaQuery('(prefers-reduced-motion: reduce)');
     useEffect(() => {
         if (!svg.current) return;
         const element = svg.current;

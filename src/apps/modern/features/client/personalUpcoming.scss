@@ -1,0 +1,34 @@
+.client-upcoming-episode-caption {
+    position: absolute;
+    z-index: 2;
+    inset: auto 0 0;
+    display: grid;
+    gap: 3px;
+    padding: 34px 10px 12px;
+    border-radius: inherit;
+    background: linear-gradient(transparent, #0e0e0eea 45%, #0e0e0e);
+    color: var(--client-ink);
+    pointer-events: none;
+
+    strong {
+        display: none;
+        overflow: hidden;
+        font-size: clamp(12px, 1.15vw, 16px);
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    small {
+        color: var(--client-ink-muted);
+        font-size: var(--client-text-11);
+    }
+
+    time {
+        margin-top: 3px;
+        color: var(--client-ink);
+        font-size: var(--client-text-12);
+        font-weight: 700;
+    }
+}
+
+.client-media-card.active .client-upcoming-episode-caption strong { display: block; }

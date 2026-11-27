@@ -1,8 +1,21 @@
 /* stylelint-disable no-descending-specificity -- Components and their responsive variants have independent scoped selectors. */
+
+@use '../design' as ds;
+
 .client-offline-page {
+    --offline-panel: #181e29;
+    --offline-muted: #b4bdd0;
+
     min-height: 100vh;
-    color: #f5f5f5;
-    background: #0b0b0d;
+    color: var(--client-ink);
+    background: #111;
+
+    &.client-offline-classic {
+        --offline-panel: #191a1e;
+        --offline-muted: #bbc0cb;
+
+        background: #0d0f13;
+    }
     font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -23,8 +36,8 @@
 
 .client-offline-header {
     justify-content: space-between;
-    margin-bottom: 60px;
-    color: #aaa;
+    margin-bottom: clamp(30px, 5vw, 50px);
+    color: var(--offline-muted, var(--client-ink-muted));
 }
 
 .client-offline-heading {
@@ -38,12 +51,14 @@
 
     h1 {
         margin: 0 0 10px;
-        font-size: clamp(30px, 5vw, 48px);
+        font-size: clamp(28px, 3.25vw, 43px);
+        line-height: 1.1;
+        letter-spacing: -0.025em;
     }
 
     p {
         margin: 0;
-        color: #aaa;
+        color: var(--offline-muted, var(--client-ink-muted));
         line-height: 1.5;
     }
 }
@@ -58,14 +73,14 @@
     gap: 10px;
     padding: 11px 20px;
     border: 1px solid rgb(255 255 255 / 18%);
-    border-radius: 30px;
-    color: #f5f5f5;
+    border-radius: var(--client-radius-panel);
+    color: var(--client-ink);
     background: rgb(255 255 255 / 7%);
     font: inherit;
     text-align: center;
     text-decoration: none;
     cursor: pointer;
-    transition: background 180ms ease, border-color 180ms ease;
+    transition: background var(--client-duration-state) ease, border-color var(--client-duration-state) ease;
 
     .client-icon {
         width: 19px;
@@ -78,25 +93,25 @@
     }
 
     &:focus-visible {
-        outline: 2px solid #fff;
+        outline: var(--client-size-focus-ring) solid var(--client-focus);
         outline-offset: 4px;
     }
 
     &:disabled {
-        opacity: 0.45;
+        opacity: var(--client-opacity-disabled);
         cursor: default;
     }
 
     &.is-primary,
     &[aria-pressed="true"] {
         border-color: #eee;
-        color: #111;
+        color: var(--client-ink-inverse);
         background: #eee;
     }
 
     &.is-quiet {
         border-color: transparent;
-        color: #bbb;
+        color: var(--client-ink-subtle);
         background: transparent;
     }
 }
@@ -106,16 +121,16 @@
     gap: 14px;
     padding: 24px;
     border: 1px solid rgb(255 255 255 / 10%);
-    border-radius: 18px;
-    background: rgb(255 255 255 / 3%);
+    border-radius: var(--client-radius-panel);
+    background: var(--offline-panel, #1e1e1e);
 
     strong {
-        font-size: 24px;
+        font-size: var(--client-text-24);
     }
 
     small,
     span {
-        color: #aaa;
+        color: var(--offline-muted, var(--client-ink-muted));
         line-height: 1.5;
     }
 
@@ -131,8 +146,8 @@
     height: 4px;
     overflow: hidden;
     border: 0;
-    border-radius: 10px;
-    color: #eee;
+    border-radius: var(--client-radius-small);
+    color: var(--client-ink);
     background: #333;
     appearance: none;
 
@@ -141,12 +156,12 @@
     }
 
     &::-webkit-progress-value {
-        border-radius: 10px;
+        border-radius: var(--client-radius-small);
         background: #eee;
     }
 
     &::-moz-progress-bar {
-        border-radius: 10px;
+        border-radius: var(--client-radius-small);
         background: #eee;
     }
 }
@@ -156,12 +171,12 @@
     align-items: center;
     gap: 14px;
     margin: 42px 0 20px;
-    font-size: 23px;
+    font-size: var(--client-text-24);
 
     small {
-        color: #888;
-        font-size: 16px;
-        font-weight: normal;
+        color: var(--client-ink-subtle);
+        font-size: var(--client-text-16);
+        font-weight: 400;
     }
 }
 
@@ -177,7 +192,7 @@
     min-width: 100px;
     height: 150px;
     overflow: hidden;
-    border-radius: 10px;
+    border-radius: var(--client-radius-small);
     background: #222;
 
     img {
@@ -205,13 +220,13 @@
 
     h2 {
         margin: 8px 0;
-        font-size: 22px;
+        font-size: var(--client-text-24);
         overflow-wrap: anywhere;
     }
 
     small,
     p {
-        color: #aaa;
+        color: var(--offline-muted, var(--client-ink-muted));
     }
 
     p {
@@ -231,24 +246,25 @@
 
 .client-offline-empty {
     padding: 50px 24px;
-    border: 1px dashed #333;
-    border-radius: 18px;
+    border: 1px solid #ffffff20;
+    border-radius: var(--client-radius-panel);
+    background: var(--offline-panel, #1e1e1e);
     text-align: center;
 
     > .client-icon {
         width: 38px;
         height: 38px;
-        color: #999;
+        color: var(--client-ink-subtle);
     }
 
     h2 {
-        font-size: 22px;
+        font-size: var(--client-text-24);
     }
 
     p {
         max-width: 480px;
         margin: 16px auto 24px;
-        color: #aaa;
+        color: var(--offline-muted, var(--client-ink-muted));
         line-height: 1.6;
     }
 }
@@ -258,7 +274,7 @@
 
     h3 {
         margin: 24px 0 14px;
-        font-size: 18px;
+        font-size: var(--client-text-18);
     }
 
     p {
@@ -272,7 +288,7 @@
     .client-offline-choices button {
         flex-direction: column;
         gap: 4px;
-        border-radius: 14px;
+        border-radius: var(--client-radius-card);
     }
 
     .client-offline-choices small {
@@ -286,8 +302,8 @@
 }
 
 .client-offline-note {
-    color: #999;
-    font-size: 14px;
+    color: var(--client-ink-subtle);
+    font-size: var(--client-text-14);
     line-height: 1.7;
 }
 
@@ -297,12 +313,12 @@
 
 .client-offline-error {
     padding: 16px 20px;
-    border-radius: 12px;
+    border-radius: var(--client-radius-control);
     color: #ffc9c9;
     background: rgb(180 40 40 / 15%);
 }
 
-@media (max-width: 600px) {
+@include ds.phone {
     .client-offline-shell {
         padding: 22px 5vw 50px;
     }
@@ -322,7 +338,7 @@
     }
 
     .client-offline-entry-copy h2 {
-        font-size: 18px;
+        font-size: var(--client-text-18);
     }
 
     .client-offline-heading {
@@ -341,11 +357,11 @@
 
     .client-offline-button {
         padding: 10px 16px;
-        font-size: 14px;
+        font-size: var(--client-text-14);
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-offline-button,
     .client-offline-choices button {
         transition: none;

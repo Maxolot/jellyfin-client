@@ -1,0 +1,221 @@
+@use '../design' as ds;
+
+.client-live-requests {
+    max-width: 1120px;
+    margin: 0 var(--client-margin) 64px;
+
+    h1 {
+        margin: 6px 0 20px;
+    }
+}
+
+.client-request-cards {
+    display: grid;
+    gap: 15px;
+    margin-top: 18px;
+}
+
+.client-request-card {
+    display: grid;
+    grid-template-columns: clamp(104px, 15vw, 158px) minmax(0, 1fr);
+    gap: clamp(13px, 2vw, 25px);
+    padding: clamp(13px, 2vw, 23px);
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-panel);
+    background: var(--client-surface-panel);
+    box-shadow: var(--client-shadow-card);
+    backdrop-filter: var(--client-blur-surface);
+}
+
+.client-request-card-poster {
+    position: relative;
+    isolation: isolate;
+    aspect-ratio: 2 / 3;
+    align-self: start;
+    overflow: hidden;
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-control);
+    background: var(--client-art-placeholder);
+
+    .client-artwork {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    strong {
+        position: absolute;
+        inset: auto 0 0;
+        padding: 22px 8px 8px;
+        background: linear-gradient(transparent, var(--client-art-scrim) 48%);
+        font-size: clamp(12px, 1.35vw, 17px);
+        overflow-wrap: anywhere;
+    }
+}
+
+.client-request-card-content {
+    display: grid;
+    min-width: 0;
+    align-content: start;
+    justify-items: start;
+    gap: 12px;
+
+    > header {
+        display: flex;
+        gap: 6px;
+    }
+
+    > button {
+        min-height: 40px;
+        padding: 0 13px;
+    }
+}
+
+.client-request-stage,
+.client-request-quality-badge {
+    align-self: start;
+    padding: 5px 10px;
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-pill);
+    background: var(--client-surface-highlight);
+    color: var(--client-ink);
+    font-size: var(--client-text-13);
+}
+
+.is-blocked .client-request-stage {
+    border-color: var(--client-warning-line);
+    background: var(--client-warning-surface);
+    color: var(--client-warning-ink);
+}
+
+.client-request-steps {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        color: var(--client-ink-muted);
+        text-align: center;
+    }
+
+    span {
+        display: grid;
+        width: 25px;
+        height: 25px;
+        place-items: center;
+        border: 1px solid var(--client-track);
+        border-radius: 50%;
+        font-size: var(--client-text-12);
+    }
+
+    .client-icon {
+        width: 14px;
+        height: 14px;
+    }
+
+    [aria-current] span {
+        border-color: var(--client-progress);
+        background: var(--client-progress);
+        color: var(--client-ink-inverse);
+        animation: client-request-step-in var(--client-duration-move) ease both;
+    }
+
+    .is-complete span { background: var(--client-surface-highlight); }
+}
+
+.client-request-meter {
+    width: 100%;
+
+    progress {
+        display: block;
+        width: 100%;
+        height: 8px;
+        overflow: hidden;
+        border: 0;
+        border-radius: var(--client-radius-small);
+        // The legacy dashboard gives every progress element an important background.
+        background: var(--client-track) !important;
+        color: var(--client-progress);
+        appearance: none;
+
+        &::-webkit-progress-bar { background: transparent; }
+
+        &::-webkit-progress-value {
+            border-radius: var(--client-radius-small);
+            background: var(--client-progress);
+            transition: width var(--client-duration-move) var(--client-ease-move);
+        }
+
+        &::-moz-progress-bar { background: var(--client-progress); }
+    }
+
+    p {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 9px;
+        margin: 6px 0 0;
+        color: var(--client-ink-muted);
+        font-size: var(--client-text-13);
+    }
+}
+
+.client-request-seasons-status {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+        display: grid;
+        gap: 4px;
+        padding: 6px 9px;
+        border: 1px solid var(--client-line);
+        border-radius: var(--client-radius-small);
+        color: var(--client-ink);
+        font-size: var(--client-text-12);
+    }
+}
+
+@include ds.phone {
+    .client-request-steps {
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+
+        [aria-current] small {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip-path: inset(50%);
+        }
+
+        li:not([aria-current]) small { display: none; }
+
+        span {
+            width: 21px;
+            height: 21px;
+            font-size: var(--client-text-11);
+        }
+    }
+}
+
+@keyframes client-request-step-in {
+    from { transform: scale(0.82); }
+    to { transform: scale(1); }
+}
+
+@include ds.reduced-motion {
+    .client-request-steps [aria-current] span { animation: none; }
+    .client-request-meter progress::-webkit-progress-value { transition: none; }
+}

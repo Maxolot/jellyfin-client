@@ -1,14 +1,17 @@
 /* stylelint-disable no-descending-specificity -- Each component has its own class root; generic button, span and link leaves belong to separate components. */
 // Page des paramètres : menu groupé à gauche, cartes à droite ; menu défilant en haut sur petit écran.
+
+@use '../design' as ds;
+
 .client-preferences {
     box-sizing: border-box;
     padding: 25px var(--client-margin, 4vw) 80px;
-    color: #f2f3f5;
+    color: var(--client-ink);
     font-family: Arial, Helvetica, sans-serif;
 
     > h1 {
         margin: 0 0 28px;
-        font-size: 32px;
+        font-size: var(--client-text-30);
         font-weight: 500;
     }
 
@@ -32,8 +35,8 @@
             align-items: center;
             gap: 6px;
             margin: 0 0 8px 14px;
-            color: #8d919a;
-            font-size: 11px;
+            color: var(--client-ink-subtle);
+            font-size: var(--client-text-11);
             font-weight: 700;
             letter-spacing: 0.08em;
             text-transform: uppercase;
@@ -60,11 +63,11 @@
             align-items: center;
             gap: 12px;
             padding: 0 14px;
-            color: #b9bdc6;
-            border-radius: 99px;
-            font-size: 14px;
+            color: var(--client-ink-subtle);
+            border-radius: var(--client-radius-pill);
+            font-size: var(--client-text-14);
             text-decoration: none;
-            transition: background-color 0.15s ease, color 0.15s ease;
+            transition: background-color var(--client-duration-state) ease, color var(--client-duration-state) ease;
 
             svg {
                 width: 20px;
@@ -73,18 +76,20 @@
             }
 
             &:hover {
-                color: #fff;
+                color: var(--client-ink);
                 background: #ffffff0f;
             }
 
+            // Signal « Ici » de la charte : pilule translucide bordée, jamais l'aplat d'un choix.
             &[aria-current='page'] {
-                color: #0d0e11;
-                background: #f2f3f5;
+                color: var(--client-ink);
+                background: var(--client-surface-highlight);
+                box-shadow: inset 0 0 0 1px var(--client-line);
                 font-weight: 600;
             }
 
             &:focus-visible {
-                outline: 2px solid #fff;
+                outline: var(--client-size-focus-ring) solid var(--client-focus);
                 outline-offset: 2px;
             }
         }
@@ -100,14 +105,14 @@
 
         h2 {
             margin: 0;
-            font-size: 24px;
+            font-size: var(--client-text-24);
             font-weight: 500;
         }
 
         p {
             margin: 6px 0 0;
-            color: #a3a7b0;
-            font-size: 14px;
+            color: var(--client-ink-subtle);
+            font-size: var(--client-text-14);
             line-height: 1.5;
         }
     }
@@ -120,12 +125,12 @@
 .client-controls {
     .client-setting-note {
         margin: 10px 0;
-        color: #a3a7b0;
-        font-size: 13px;
+        color: var(--client-ink-subtle);
+        font-size: var(--client-text-13);
         line-height: 1.5;
 
         a {
-            color: #fff;
+            color: var(--client-ink);
         }
 
         &.is-error {
@@ -141,7 +146,7 @@
         }
 
         &.is-busy {
-            color: #c9ccd3;
+            color: var(--client-ink-muted);
         }
 
         &:empty {
@@ -163,14 +168,14 @@
 
         h2 {
             margin: 0;
-            font-size: 24px;
+            font-size: var(--client-text-24);
             font-weight: 500;
         }
 
         p {
             margin: 6px 0 0;
-            color: #a3a7b0;
-            font-size: 14px;
+            color: var(--client-ink-subtle);
+            font-size: var(--client-text-14);
             line-height: 1.5;
         }
     }
@@ -181,8 +186,8 @@
         align-items: center;
         gap: 10px;
         margin-top: 12px;
-        color: #8d919a;
-        font-size: 12px;
+        color: var(--client-ink-subtle);
+        font-size: var(--client-text-12);
     }
 
     .client-extension-logo {
@@ -191,10 +196,10 @@
         height: 64px;
         flex: none;
         place-items: center;
-        color: #fff;
-        background: linear-gradient(145deg, #2a2d34, #15171b);
+        color: var(--client-ink);
+        background: var(--client-surface-raised);
         border: 1px solid #ffffff1a;
-        border-radius: 18px;
+        border-radius: var(--client-radius-panel);
 
         svg {
             width: 32px;
@@ -229,19 +234,20 @@
         flex-direction: column;
         gap: 10px;
         padding: 20px;
-        color: #c9ccd3;
-        background: #15171b;
-        border: 1px solid #ffffff14;
-        border-radius: 16px;
-        font-size: 13px;
+        color: var(--client-ink-muted);
+        background: var(--client-surface-raised);
+        border: 1px solid var(--client-line);
+        border-radius: var(--client-radius-card);
+        box-shadow: var(--client-shadow-card);
+        font-size: var(--client-text-13);
         line-height: 1.45;
         text-decoration: none;
-        transition: border-color 0.15s ease;
+        transition: border-color var(--client-duration-state) ease;
 
         .client-extension-logo {
             width: 48px;
             height: 48px;
-            border-radius: 14px;
+            border-radius: var(--client-radius-card);
 
             svg {
                 width: 24px;
@@ -255,8 +261,8 @@
         }
 
         strong {
-            color: #fff;
-            font-size: 16px;
+            color: var(--client-ink);
+            font-size: var(--client-text-16);
             font-weight: 600;
         }
 
@@ -265,7 +271,7 @@
         }
 
         &:focus-visible {
-            outline: 2px solid #fff;
+            outline: var(--client-size-focus-ring) solid var(--client-focus);
             outline-offset: 3px;
         }
     }
@@ -283,7 +289,7 @@
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            color: #fff;
+            color: var(--client-ink);
             font-style: normal;
             font-weight: 600;
         }
@@ -303,19 +309,19 @@
 
         div {
             padding: 12px 14px;
-            background: #0d0e11;
-            border-radius: 12px;
+            background: var(--client-surface-control);
+            border-radius: var(--client-radius-control);
         }
 
         dt {
-            color: #8d919a;
-            font-size: 12px;
+            color: var(--client-ink-subtle);
+            font-size: var(--client-text-12);
         }
 
         dd {
             margin: 4px 0 0;
-            color: #fff;
-            font-size: 22px;
+            color: var(--client-ink);
+            font-size: var(--client-text-24);
             font-variant-numeric: tabular-nums;
         }
     }
@@ -340,7 +346,7 @@
                 width: 20px;
                 height: 20px;
                 flex: none;
-                color: #8d919a;
+                color: var(--client-ink-subtle);
             }
 
             > span {
@@ -349,13 +355,13 @@
                 flex: 1;
                 flex-direction: column;
                 gap: 2px;
-                font-size: 14px;
+                font-size: var(--client-text-14);
             }
 
             small {
                 overflow-wrap: anywhere;
-                color: #8d919a;
-                font-size: 12px;
+                color: var(--client-ink-subtle);
+                font-size: var(--client-text-12);
             }
         }
     }
@@ -373,10 +379,10 @@
             justify-content: space-between;
             gap: 12px;
             padding: 12px 16px;
-            color: #fff;
-            background: #0d0e11;
+            color: var(--client-ink);
+            background: var(--client-surface-control);
             border: 1px solid #ffffff14;
-            border-radius: 14px;
+            border-radius: var(--client-radius-card);
             text-decoration: none;
 
             span {
@@ -387,20 +393,20 @@
             }
 
             strong {
-                font-size: 14px;
+                font-size: var(--client-text-14);
                 font-weight: 600;
             }
 
             small {
-                color: #8d919a;
-                font-size: 12px;
+                color: var(--client-ink-subtle);
+                font-size: var(--client-text-12);
             }
 
             svg {
                 width: 18px;
                 height: 18px;
                 flex: none;
-                color: #8d919a;
+                color: var(--client-ink-subtle);
             }
 
             &:hover,
@@ -423,8 +429,8 @@
         small {
             display: block;
             margin: -6px 0 6px;
-            color: #8d919a;
-            font-size: 12px;
+            color: var(--client-ink-subtle);
+            font-size: var(--client-text-12);
         }
 
         .client-settings-actions {
@@ -444,8 +450,8 @@
 
         h3 {
             margin: 0 0 2px;
-            color: #8d919a;
-            font-size: 12px;
+            color: var(--client-ink-subtle);
+            font-size: var(--client-text-12);
             font-weight: 700;
             letter-spacing: 0.06em;
             text-transform: uppercase;
@@ -462,11 +468,11 @@
     }
 }
 
-@media (max-width: 900px) {
+@include ds.tablet {
     .client-preferences {
         > h1 {
             margin-bottom: 16px;
-            font-size: 26px;
+            font-size: var(--client-text-24);
         }
 
         .client-preferences-layout {
@@ -507,7 +513,7 @@
 
             a {
                 padding: 0 14px;
-                background: #ffffff0d;
+                background: var(--client-surface-layer);
                 white-space: nowrap;
 
                 svg {
@@ -531,7 +537,7 @@
     }
 }
 
-@media (max-width: 560px) {
+@include ds.phone {
     .client-controls .client-extension-header {
         flex-direction: column;
         gap: 14px;
@@ -549,5 +555,5 @@
     margin: 20px 0;
     padding: 16px;
     border: 1px solid #ffffff1a;
-    border-radius: 16px;
+    border-radius: var(--client-radius-card);
 }

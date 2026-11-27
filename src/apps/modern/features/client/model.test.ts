@@ -4,8 +4,8 @@ import { episodeLabel, progressPercent, releaseDateLabel, uniqueItems } from './
 
 describe('Client media composition', () => {
     it('keeps the episode identity in the playback label', () => {
-        expect(episodeLabel({ Type: 'Episode', ParentIndexNumber: 3, IndexNumber: 1 })).toBe('S3:E1');
-        expect(episodeLabel({ Type: 'Episode', ParentIndexNumber: 0, IndexNumber: 2 })).toBe('S0:E2');
+        expect(episodeLabel({ Type: 'Episode', ParentIndexNumber: 3, IndexNumber: 1 })).toBe('S3 · É1');
+        expect(episodeLabel({ Type: 'Episode', ParentIndexNumber: 0, IndexNumber: 2 })).toBe('S0 · É2');
         expect(episodeLabel({ Type: 'Movie' })).toBe('Lecture');
     });
     it('excludes repeated and already displayed media without discarding order', () => {

@@ -1,7 +1,7 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import { describe, expect, it } from 'vitest';
 
-import { withLocalAvailability, canRequest, catalogueItem, externalIdentity, imageUrl, mixCatalogue, releaseLabel, requestableSeasons } from './model';
+import { withLocalAvailability, canRequest, catalogueItem, externalIdentity, imageUrl, mixCatalogue, orderedRequestSeasons, releaseLabel, requestableSeasons, requestQuotaLabel, requestSeasonNumbersLabel } from './model';
 
 const local: BaseItemDto[] = [{ Id: 'local-film', Name: 'Même titre', Type: 'Movie', ProviderIds: { Tmdb: '42' } },
     { Id: 'local-series', Name: 'Autre titre', Type: 'Series', ProviderIds: { Tmdb: '42' } }];
@@ -56,5 +56,22 @@ describe('release date label', () => {
     it('falls back to what is known', () => {
         expect(releaseLabel('2027', now)).toBe('2027');
         expect(releaseLabel(undefined, now)).toBe('');
+    });
+});
+
+describe('request form labels', () => {
+    it('sorts the regular seasons chronologically and puts specials last', () => {
+        const shuffled = [3, 0, 1, 2].map(seasonNumber => ({ id: seasonNumber, seasonNumber, name: String(seasonNumber) }));
+        expect(orderedRequestSeasons(shuffled).map(season => season.seasonNumber)).toEqual([1, 2, 3, 0]);
+        expect(shuffled.map(season => season.seasonNumber)).toEqual([3, 0, 1, 2]);
+    });
+
+    it('agrees the number of films and seasons with the quota and confirmation text', () => {
+        expect(requestQuotaLabel('tv', 1, true)).toBe('1 saison restante dans votre quota');
+        expect(requestQuotaLabel('tv', 3, true)).toBe('3 saisons restantes dans votre quota');
+        expect(requestQuotaLabel('movie', 1, true)).toBe('1 film restant dans votre quota');
+        expect(requestQuotaLabel('movie', 2, true)).toBe('2 films restants dans votre quota');
+        expect(requestSeasonNumbersLabel([2])).toBe('Saison 2');
+        expect(requestSeasonNumbersLabel([3, 2])).toBe('Saisons 2, 3');
     });
 });

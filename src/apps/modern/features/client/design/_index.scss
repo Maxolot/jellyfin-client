@@ -1,0 +1,57 @@
+// Outils de la charte Médiathèque pour les feuilles du client : `@use '<chemin>/design' as ds;`.
+// N'émet aucun CSS : les variables --client-* sont posées une seule fois par theme.scss.
+@use 'sass:list';
+@use 'sass:map';
+@use 'tokens';
+
+// Style de texte de la charte : taille, interligne, graisse et interlettrage.
+@mixin type($style) {
+    $entry: map.get(tokens.$type, $style);
+
+    @if not $entry { @error 'Style de texte inconnu : #{$style}'; }
+
+    font-size: map.get($entry, 'size');
+    font-weight: map.get($entry, 'weight');
+    line-height: map.get($entry, 'line-height');
+
+    @if map.has-key($entry, 'letter-spacing') { letter-spacing: map.get($entry, 'letter-spacing'); }
+}
+
+// Largeurs d'écran : téléphone (≤ 700 px), tablette (≤ 1 100 px), écran bas (≤ 820 px de haut).
+@mixin phone {
+    @media (max-width: map.get(tokens.$breakpoint, 'phone')) { @content; }
+}
+
+@mixin above-phone {
+    @media (min-width: map.get(tokens.$breakpoint, 'phone') + 1px) { @content; }
+}
+
+@mixin tablet {
+    @media (max-width: map.get(tokens.$breakpoint, 'tablet')) { @content; }
+}
+
+@mixin short {
+    @media (max-height: map.get(tokens.$breakpoint, 'short')) { @content; }
+}
+
+@mixin reduced-motion {
+    @media (prefers-reduced-motion: reduce) { @content; }
+}
+
+// Anneau de focus clavier ; `inset` pour une carte de média dont le bord est l'anneau.
+@mixin focus-ring($inset: false) {
+    outline: var(--client-size-focus-ring) solid var(--client-focus);
+
+    @if $inset { outline-offset: calc(-1 * var(--client-size-focus-ring) - 2px); }
+
+    @else { outline-offset: 4px; }
+}
+
+// Transition des changements d'état (couleur, fond, contour, ombre).
+@mixin state-transition($extra...) {
+    $states: background-color var(--client-duration-state) ease, border-color var(--client-duration-state) ease, color var(--client-duration-state) ease, box-shadow var(--client-duration-state) ease;
+
+    @if list.length($extra) > 0 { transition: list.join($states, $extra, comma); }
+
+    @else { transition: $states; }
+}

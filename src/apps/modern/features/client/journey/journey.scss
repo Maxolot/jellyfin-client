@@ -1,0 +1,529 @@
+/* Mon espace : tout ce que je veux regarder sur une ligne de temps, et le bilan. */
+/* stylelint-disable no-descending-specificity -- Les cartes, la frise et le bilan réutilisent les mêmes balises (h2, strong, img) dans des contextes distincts. */
+
+@use '../design' as ds;
+
+.client-journey {
+    --journey-panel: var(--client-surface-panel);
+
+    padding-bottom: var(--client-space-32);
+}
+
+.client-journey-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--client-space-16);
+    margin: var(--client-space-24) var(--client-margin) var(--client-space-24);
+
+    h1 { margin: 0 0 var(--client-space-8); }
+
+    .client-journey-layouts { flex-wrap: wrap; }
+}
+
+.client-journey-month {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--client-space-8) var(--client-space-24);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--client-ink-subtle);
+    font: inherit;
+    font-size: var(--client-text-14);
+    text-align: start;
+    cursor: pointer;
+
+    b {
+        margin-right: var(--client-space-4);
+        color: var(--client-ink);
+        font-size: var(--client-text-24);
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    &:hover .client-journey-month-link,
+    &:focus-visible .client-journey-month-link { color: var(--client-ink); }
+}
+
+.client-journey-month-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--client-space-4);
+    font-weight: 600;
+    transition: color var(--client-duration-hover) ease;
+
+    .client-icon {
+        width: 14px;
+        height: 14px;
+    }
+}
+
+.client-journey-empty {
+    margin: 0;
+    color: var(--client-ink-subtle);
+    font-size: var(--client-text-14);
+}
+
+.client-journey-progress {
+    display: block;
+    width: 100%;
+    height: 3px;
+    margin-top: var(--client-space-4);
+    overflow: hidden;
+    border-radius: var(--client-radius-pill);
+    background: var(--client-track);
+
+    i {
+        display: block;
+        height: 100%;
+        background: var(--client-progress);
+    }
+
+    &.is-request i { background: var(--client-ink); }
+}
+
+.client-journey-request {
+    display: flex;
+    align-items: center;
+    gap: var(--client-space-8);
+    min-width: 0;
+    height: var(--client-size-action-small);
+    padding: 0 var(--client-space-12);
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-pill);
+    background: var(--client-surface-control);
+    color: var(--client-ink-subtle);
+
+    &:focus-within {
+        border-color: var(--client-line-hover);
+        color: var(--client-ink);
+    }
+
+    .client-icon {
+        width: 16px;
+        height: 16px;
+        flex: none;
+    }
+
+    input {
+        width: 100%;
+        min-width: 0;
+        border: 0;
+        outline: 0;
+        background: none;
+        color: var(--client-ink);
+        font: inherit;
+        font-size: var(--client-text-14);
+
+        &::placeholder { color: var(--client-ink-subtle); }
+    }
+}
+
+/* Raison d'un titre : nouveauté en blanc avec une pastille, problème signalé. */
+.client-journey em.is-new {
+    color: var(--client-ink);
+    font-weight: 700;
+}
+
+.client-journey em.is-new::before {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: var(--client-space-4);
+    border-radius: 50%;
+    background: var(--client-progress);
+    vertical-align: middle;
+    content: '';
+}
+
+.client-journey em.is-alert {
+    color: var(--client-ink);
+    font-weight: 600;
+}
+
+.client-journey em.is-alert::before {
+    margin-right: var(--client-space-4);
+    content: '!';
+}
+
+/* Carte : affiche, raison et titre dans sa surface. */
+.client-journey-card {
+    position: relative;
+    width: clamp(150px, 13vw, 200px);
+    flex: none;
+
+    > a {
+        position: relative;
+        display: block;
+        aspect-ratio: 2 / 3;
+        overflow: hidden;
+        border-radius: var(--client-radius-control);
+        background: var(--client-art-placeholder);
+        color: var(--client-ink);
+        text-decoration: none;
+
+        > img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform var(--client-duration-move) var(--client-ease-move);
+        }
+
+        &:hover > img,
+        &:focus-visible > img { transform: scale(1.04); }
+
+        &::after {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(0deg, var(--client-art-scrim), transparent 55%);
+            content: '';
+        }
+    }
+
+    &.is-compact { width: 120px; }
+}
+
+.client-journey-card-copy {
+    position: absolute;
+    z-index: 1;
+    right: var(--client-space-12);
+    bottom: var(--client-space-12);
+    left: var(--client-space-12);
+    display: grid;
+    gap: var(--client-space-4);
+
+    strong {
+        overflow: hidden;
+        font-size: var(--client-text-14);
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    em {
+        color: var(--client-ink-muted);
+        font-size: var(--client-text-12);
+        font-style: normal;
+        line-height: 1.3;
+    }
+
+    .is-compact & strong { font-size: var(--client-text-12); }
+
+    .is-compact & em { font-size: var(--client-text-11); }
+}
+
+.client-journey-card-play {
+    position: absolute;
+    z-index: 2;
+    top: var(--client-space-8);
+    right: var(--client-space-8);
+}
+
+/* Ligne de temps : un axe horizontal centré sur maintenant ; la page tient sur un écran. */
+.client-interface:has(> .client-journey.is-temps) {
+    display: flex;
+    height: 100svh;
+    min-height: 600px;
+    box-sizing: border-box;
+    flex-direction: column;
+}
+
+.client-page:has(.client-journey.is-temps) { padding-bottom: 0 !important; }
+
+.client-journey.is-temps {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+    padding-bottom: var(--client-space-16);
+}
+
+.client-journey-timeline {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--client-space-16);
+
+    > footer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--client-space-16);
+        margin: 0 var(--client-margin);
+    }
+
+    > footer .client-journey-request { width: min(380px, 100%); }
+}
+
+.client-journey-side {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--client-space-4);
+    color: var(--client-ink-subtle);
+    font-size: var(--client-text-14);
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover { color: var(--client-ink); }
+
+    .client-icon {
+        width: 14px;
+        height: 14px;
+    }
+}
+
+.client-journey-track {
+    position: relative;
+    container-type: size;
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    gap: var(--client-space-24);
+    padding: 0 var(--client-margin);
+    overflow: auto hidden;
+    scrollbar-width: thin;
+
+    &::before {
+        position: absolute;
+        top: 15px;
+        right: 0;
+        left: 0;
+        height: 1px;
+        background: var(--client-line);
+        content: '';
+    }
+}
+
+.client-journey-day {
+    position: relative;
+    display: flex;
+    min-height: 0;
+    flex: none;
+    flex-direction: column;
+    gap: var(--client-space-16);
+
+    h2 {
+        display: flex;
+        align-items: center;
+        gap: var(--client-space-8);
+        height: 30px;
+        margin: 0;
+        color: var(--client-ink-subtle);
+        font-size: var(--client-text-13);
+        font-weight: 600;
+        white-space: nowrap;
+
+        i {
+            width: 9px;
+            height: 9px;
+            border: 2px solid var(--client-page);
+            border-radius: 50%;
+            background: var(--client-ink-subtle);
+        }
+    }
+
+    > ul {
+        display: flex;
+        min-height: 0;
+        flex: 1;
+        flex-direction: column;
+        gap: var(--client-space-12);
+        margin: 0;
+        padding: 0 0 var(--client-space-8);
+        overflow-y: auto;
+        list-style: none;
+        scrollbar-width: none;
+    }
+
+    &.is-today {
+        padding: 0 var(--client-space-16);
+        border-right: 1px solid var(--client-line);
+        border-left: 1px solid var(--client-line);
+
+        h2 {
+            color: var(--client-ink);
+            font-size: var(--client-text-16);
+        }
+
+        h2 i {
+            width: 13px;
+            height: 13px;
+            background: var(--client-progress);
+        }
+
+        /* Deux rangées d'affiches qui tiennent dans la hauteur de la frise. */
+        .client-journey-card { width: clamp(96px, calc((100cqh - 72px) / 3), 200px); }
+
+        > ul {
+            flex-flow: row wrap;
+            align-content: flex-start;
+            max-width: min(860px, 60vw);
+        }
+    }
+
+    &.is-future h2 i {
+        background: var(--client-page);
+        border-color: var(--client-ink-subtle);
+    }
+}
+
+/* Bilan : les chiffres racontés en grand. */
+.client-journey-recap {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: var(--client-space-24);
+    margin: 0 var(--client-margin);
+
+    > section {
+        padding: var(--client-space-32);
+        border: 1px solid var(--client-line);
+        border-radius: var(--client-radius-panel);
+        background: var(--journey-panel);
+        box-shadow: var(--client-shadow-surface);
+        backdrop-filter: var(--client-blur-surface);
+    }
+
+    h2 {
+        margin: 0 0 var(--client-space-16);
+        font-size: var(--client-text-18);
+    }
+
+    .client-genre-taste { margin: 0; }
+
+    .client-genre-taste > header { display: none; }
+}
+
+.client-journey-recap-lead {
+    p {
+        margin: 0;
+        color: var(--client-ink-muted);
+        font-size: var(--client-text-24);
+    }
+
+    strong {
+        display: block;
+        margin: var(--client-space-8) 0;
+        font-size: clamp(64px, 9vw, 128px);
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        line-height: 1;
+    }
+}
+
+.client-journey-recap-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--client-space-24);
+
+    div {
+        display: grid;
+        gap: var(--client-space-4);
+    }
+
+    strong {
+        font-size: clamp(36px, 4vw, 56px);
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    span {
+        color: var(--client-ink-subtle);
+        font-size: var(--client-text-14);
+    }
+}
+
+.client-journey-recap-wall {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--client-space-8);
+    align-content: start;
+
+    img {
+        width: 100%;
+        aspect-ratio: 2 / 3;
+        border-radius: var(--client-radius-small);
+        object-fit: cover;
+    }
+}
+
+/* Barre du bas : demande rapide et dossiers. */
+.client-journey-folders {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--client-space-8);
+
+    a:not(.client-journey-side) {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--client-space-8);
+        height: var(--client-size-action-small);
+        padding: 0 var(--client-space-12);
+        border: 1px solid var(--client-line);
+        border-radius: var(--client-radius-pill);
+        background: var(--client-surface-control);
+        color: var(--client-ink);
+        font-size: var(--client-text-13);
+        font-weight: 600;
+        text-decoration: none;
+        transition: border-color var(--client-duration-hover) ease, background-color var(--client-duration-hover) ease;
+
+        &:hover,
+        &:focus-visible {
+            border-color: var(--client-line-hover);
+            background: var(--client-surface-highlight);
+        }
+
+        .client-icon {
+            width: 14px;
+            height: 14px;
+        }
+    }
+}
+
+/* Une seule fois : ranger l'ancienne liste dans le dossier par défaut. */
+.client-journey-migration {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--client-space-12);
+    padding: var(--client-space-8) var(--client-space-8) var(--client-space-8) var(--client-space-16);
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-pill);
+    background: var(--client-surface-control);
+
+    p {
+        margin: 0;
+        font-size: var(--client-text-14);
+    }
+}
+
+.client-journey-migration-list {
+    max-height: 40svh;
+    margin: 0;
+    padding-left: var(--client-space-16);
+    overflow-y: auto;
+    color: var(--client-ink-muted);
+    font-size: var(--client-text-14);
+    line-height: 1.6;
+}
+
+@include ds.phone {
+    .client-interface:has(> .client-journey.is-temps) {
+        display: block;
+        height: auto;
+    }
+
+    .client-journey.is-temps { display: block; }
+
+    .client-journey-recap { grid-template-columns: minmax(0, 1fr); }
+
+    .client-journey-recap-wall { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    .client-journey-track { min-height: 460px; }
+}

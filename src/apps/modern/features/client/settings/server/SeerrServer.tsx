@@ -5,8 +5,8 @@ import { useApi } from 'hooks/useApi';
 
 import { seerrUrlProblem, withSeerrUrl } from '../../seerr/setup';
 import { useSeerr } from '../../seerr/SeerrContext';
-import { serverInterfaceUrl } from '../../session/ServerInterfacePage';
-import { SettingCard, StatusBadge, TextField } from '../controls';
+import { serverAdminUrl } from '../../session/ServerInterfacePage';
+import { SettingCard, StatusBadge, TextField } from '../../ui/controls';
 import SettingsIcon from '../SettingsIcon';
 import ExtensionSetup, { ExtensionHeader } from './ExtensionSetup';
 import { EXTENSIONS } from './extensions';
@@ -66,7 +66,7 @@ function MoonbaseMore() {
     if (!api) return null;
     return <SettingCard title='Autres réglages de Moonbase' description='Synchronisation des réglages, recommandations et listes IMDb sont propres à Moonbase et se règlent dans l’administration de Jellyfin.'>
         <div className='client-settings-actions'>
-            <a className='client-settings-button' href={serverInterfaceUrl(api.basePath, 'dashboard/plugins')} target='_blank' rel='noopener noreferrer'><SettingsIcon name='external' />Ouvrir les plugins du serveur</a>
+            <a className='client-settings-button' href={serverAdminUrl('dashboard/plugins')}><SettingsIcon name='external' />Ouvrir les plugins du serveur</a>
         </div>
     </SettingCard>;
 }

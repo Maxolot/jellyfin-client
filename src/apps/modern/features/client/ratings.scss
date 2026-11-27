@@ -1,7 +1,7 @@
 .client-personal-rating {
     margin-top: 17px;
-    color: #a4adbb;
-    font-size: 12px;
+    color: var(--client-ink-subtle);
+    font-size: var(--client-text-12);
 
     > small {
         display: block;
@@ -19,13 +19,13 @@
 .client-rating-stars {
     display: flex;
     gap: 0;
-    color: #8e929a;
+    color: var(--client-ink-subtle);
 }
 
 .client-rating-fill {
     position: absolute;
     inset: 8px;
-    color: #f4f4f5;
+    color: var(--client-ink);
     pointer-events: none;
 
     .client-icon {
@@ -42,7 +42,7 @@
     padding: 8px;
     border: 0;
     background: transparent;
-    color: #c8c9cd;
+    color: var(--client-ink-muted);
 
     .client-icon {
         width: 20px;
@@ -50,24 +50,23 @@
     }
 
     &:focus-visible {
-        outline: 2px solid white;
+        outline: var(--client-size-focus-ring) solid var(--client-focus);
         outline-offset: 1px;
     }
 }
 
 .client-rating-value {
     min-width: 42px;
-    color: #ddd;
+    color: var(--client-ink-muted);
 }
 
 .client-interface .client-rating-clear {
     padding: 7px 0;
     border: 0;
     background: transparent;
-    color: #b9bdc6;
-    font-size: 11px;
-    text-decoration: underline;
-    text-underline-offset: 3px;
+    color: var(--client-ink-subtle);
+    font-size: var(--client-text-11);
+    text-decoration: none;
 }
 
 .client-rated-section {
@@ -84,18 +83,11 @@
 
     h2 {
         margin: 0;
-        font-size: 24px;
-    }
-
-    select {
-        padding: 9px 12px;
-        border: 1px solid #ffffff40;
-        border-radius: 8px;
-        background: #191919;
+        font-size: var(--client-text-24);
     }
 
     > p {
-        color: #b5b7bd;
+        color: var(--client-ink-subtle);
         line-height: 1.5;
     }
 }
@@ -109,11 +101,11 @@
     right: 8px;
     bottom: 10px;
     padding: 6px 9px;
-    border: 1px solid #ffffff30;
-    border-radius: 20px;
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-panel);
     background: #141414d9;
-    color: white;
-    font-size: 12px;
+    color: var(--client-ink);
+    font-size: var(--client-text-12);
 }
 
 @media (pointer: coarse) {

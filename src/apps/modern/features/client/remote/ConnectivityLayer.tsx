@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useApi } from 'hooks/useApi';
 
 import ClientDialog from '../ClientDialog';
+import ActionLabel from '../ActionLabel';
 import ClientIcon from '../ClientIcon';
 import { formatClock } from '../mediaInfo';
 import { languageLabel, normalizeLanguage } from '../trackChoice';
@@ -115,10 +116,10 @@ function RemotePanel({ open, onClose }: Readonly<{ open: boolean; onClose: () =>
                     <button type='button' aria-label={state.muted ? 'Rétablir le son' : 'Couper le son'} aria-pressed={state.muted} onClick={remote.mute}><ClientIcon name={state.muted ? 'muted' : 'volume'} /></button>
                     <RangeControl label='Volume' value={state.muted ? 0 : state.volume} max={100} step={5} text={`${Math.round(state.volume)} %`} onChange={remote.volume} />
                 </div>
-                {state.audio.length > 1 && <section><h3>Audio</h3><div className='client-remote-choices'>{state.audio.map(stream => <button type='button' key={stream.Index} aria-pressed={state.audioIndex === stream.Index} onClick={() => remote.audio(stream.Index ?? 0)}>{streamName(stream)}</button>)}</div></section>}
+                {state.audio.length > 1 && <section><h3>Audio</h3><div className='client-remote-choices'>{state.audio.map(stream => <button type='button' key={stream.Index} aria-pressed={state.audioIndex === stream.Index} onClick={() => remote.audio(stream.Index ?? 0)}><ActionLabel icon='volume'>{streamName(stream)}</ActionLabel></button>)}</div></section>}
                 {state.subtitles.length > 0 && <section><h3>Sous-titres</h3><div className='client-remote-choices'>
-                    <button type='button' aria-pressed={state.subtitleIndex === -1} onClick={() => remote.subtitles(-1)}>Aucun</button>
-                    {state.subtitles.map(stream => <button type='button' key={stream.Index} aria-pressed={state.subtitleIndex === stream.Index} onClick={() => remote.subtitles(stream.Index ?? -1)}>{streamName(stream)}</button>)}
+                    <button type='button' aria-pressed={state.subtitleIndex === -1} onClick={() => remote.subtitles(-1)}><ActionLabel icon='close'>Aucun</ActionLabel></button>
+                    {state.subtitles.map(stream => <button type='button' key={stream.Index} aria-pressed={state.subtitleIndex === stream.Index} onClick={() => remote.subtitles(stream.Index ?? -1)}><ActionLabel icon='subtitles'>{streamName(stream)}</ActionLabel></button>)}
                 </div></section>}
                 <button type='button' className='client-remote-pill' onClick={remote.stop}><RemoteIcon name='stop' />Arrêter la lecture</button>
             </> : <p className='client-remote-note'>Rien en cours sur {device}. Lancez un titre depuis une fiche : il démarrera là-bas.</p>}

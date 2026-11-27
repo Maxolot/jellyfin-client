@@ -1,3 +1,5 @@
+@use 'design' as ds;
+
 .client-hero-background .client-browse-controls {
     position: relative;
     z-index: 2;
@@ -40,7 +42,7 @@
     }
 
     &::before {
-        background: linear-gradient(0deg, #090a0d, transparent 52%), linear-gradient(90deg, #090a0d80, transparent 70%), linear-gradient(180deg, #090a0d88, transparent 30%);
+        background: linear-gradient(0deg, var(--client-page), transparent 52%), linear-gradient(90deg, #090a0d80, transparent 70%), linear-gradient(180deg, #090a0d88, transparent 30%);
     }
 
     > .client-preview-sound {
@@ -56,14 +58,14 @@
 }
 
 .preview-hero-framed {
-    background: #11141b;
+    background: #141414;
 
     &::before {
         position: absolute;
         inset: 45px 12px 10px;
         border: 1px solid #ffffff50;
-        border-radius: 12px;
-        background: radial-gradient(ellipse at 80% 28%, #7093a8, transparent 40%), linear-gradient(130deg, #10151e, #23414e 65%, #17202e);
+        border-radius: var(--client-radius-control);
+        background: radial-gradient(ellipse at 80% 28%, #7093a8, transparent 40%), linear-gradient(130deg, #151515, #3e3e3e 65%, #202020);
         content: '';
     }
 }
@@ -72,7 +74,7 @@
     z-index: 1;
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     .client-hero-background .client-home-hero {
         --hero-inset: calc(var(--client-margin) + 22px);
 

@@ -1,0 +1,101 @@
+.client-advanced-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+
+    .client-icon {
+        width: 14px;
+        height: 14px;
+        transition: transform var(--client-duration-state) var(--client-ease-move);
+    }
+
+    &[aria-expanded='true'] .client-icon { transform: rotate(180deg); }
+}
+
+.client-advanced-count {
+    display: inline-grid;
+    min-width: 20px;
+    height: 20px;
+    place-items: center;
+    padding: 0 6px;
+    border-radius: var(--client-radius-pill);
+    background: #fff;
+    color: var(--client-ink-inverse);
+    font-size: var(--client-text-11);
+    font-weight: 700;
+}
+
+.client-advanced-panel {
+    order: 2;
+    flex-basis: 100%;
+    padding: clamp(14px, 2vw, 22px);
+    border: 1px solid #ffffff24;
+    border-radius: var(--client-radius-panel);
+    background: var(--client-surface-layer);
+    color: var(--client-ink-muted);
+    backdrop-filter: blur(18px);
+
+    p {
+        margin: 0;
+        line-height: 1.45;
+    }
+}
+
+.client-classic .client-advanced-panel { background: #181818; }
+
+.client-advanced-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr));
+    gap: 12px;
+}
+
+.client-advanced-field {
+    display: grid;
+    min-width: 0;
+    gap: 6px;
+    font-size: var(--client-text-13);
+}
+
+.client-advanced-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+    margin-block: 14px 0;
+    font-size: var(--client-text-13);
+}
+
+// Library filters: one row of identical pills; the advanced panel takes its own line below.
+.client-library .client-filter-options {
+    gap: 10px;
+
+    .client-select > button,
+    .client-advanced-toggle {
+        height: 40px;
+        min-height: 0;
+        padding: 0 16px;
+        border: 1px solid var(--client-line);
+        border-radius: var(--client-radius-pill);
+        background: var(--client-surface-control);
+        color: var(--client-ink);
+        font: inherit;
+        font-size: var(--client-text-13);
+        font-weight: 500;
+    }
+
+    .client-advanced-toggle:hover { border-color: #ffffff70; }
+
+    .client-advanced-toggle[aria-expanded='true'] {
+        border-color: #ffffffb3;
+        background: #ffffff26;
+    }
+
+    .client-advanced-panel .client-select > button {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+    }
+
+    .client-result-count { order: 1; }
+}

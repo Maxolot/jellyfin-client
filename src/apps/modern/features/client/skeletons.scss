@@ -1,3 +1,5 @@
+@use 'design' as ds;
+
 .client-loading-label {
     position: absolute;
     width: 1px;
@@ -27,8 +29,8 @@
     position: relative;
     display: block;
     overflow: hidden;
-    border-radius: 7px;
-    background: #ffffff0a;
+    border-radius: var(--client-radius-small);
+    background: var(--client-surface-layer);
 
     &::after {
         position: absolute;
@@ -79,7 +81,7 @@
 .client-skeleton-cover {
     width: 100%;
     aspect-ratio: 2 / 3;
-    border-radius: 10px;
+    border-radius: var(--client-radius-small);
 }
 
 .client-skeleton-hero,
@@ -103,7 +105,7 @@
     > span {
         width: 120px;
         height: 44px;
-        border-radius: 24px;
+        border-radius: var(--client-radius-panel);
     }
 }
 
@@ -171,13 +173,13 @@
     }
 }
 
-@media (max-width: 1000px) {
+@include ds.tablet {
     .client-skeleton-row .client-skeleton-items {
         grid-auto-columns: calc((100% - 48px) / 4);
     }
 }
 
-@media (max-width: 700px) {
+@include ds.phone {
     .client-skeleton-request .client-skeleton-items {
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 10px;
@@ -193,7 +195,7 @@
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-skeleton *,
     .client-skeleton *::after,
     .client-image-skeleton::after,

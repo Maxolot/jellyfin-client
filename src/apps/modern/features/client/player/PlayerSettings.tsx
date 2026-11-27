@@ -2,7 +2,7 @@
 import React, { type ReactNode } from 'react';
 import { useApi } from 'hooks/useApi';
 import { playerDefaults, playerPreferenceKey, usePlayerPreferences, type PlayerPreferences } from './preferences';
-import { Segmented, Select, SettingCard, Slider, Toggle } from '../settings/controls';
+import { Segmented, Select, SettingCard, Slider, Toggle } from '../ui/controls';
 import './player.scss';
 
 type Fields = Readonly<{ value: PlayerPreferences; save: (next: PlayerPreferences) => void; layout?: 'cards' | 'panel' }>;
@@ -19,6 +19,8 @@ export function PlayerPreferenceFields({ value, save, layout = 'panel' }: Fields
         <Group title='Apparence' layout={layout}>
             <Segmented label='Style' value={value.style} onChange={set('style')} options={[['glass', 'Glass'], ['classic', 'Classique'], ['minimal', 'Minimal']]} />
             <Segmented label='Couleur d’accent' value={value.accent} onChange={set('accent')} options={[['white', 'Blanc'], ['red', 'Rouge'], ['blue', 'Bleu'], ['gold', 'Doré']]} />
+            <Segmented label='Barre du bas' hint='Place de la barre de progression par rapport aux commandes.' stacked value={value.bar} onChange={set('bar')}
+                options={[['split', 'Séparée'], ['island', 'Intégrée'], ['inline', 'En ligne'], ['stacked', 'Deux îlots'], ['compact', 'Compacte'], ['float', 'Flottante']]} />
             <Slider label='Taille des commandes' value={value.size} min={80} max={130} unit=' %' onChange={set('size')} />
             <Slider label='Masquer les commandes après' value={value.hideAfter} min={2} max={12} unit=' s' onChange={set('hideAfter')} />
             <Select label='Affichage du temps' value={value.time} onChange={set('time')} options={[['remaining', 'Temps restant'], ['total', 'Durée totale'], ['end', 'Heure de fin']]} />

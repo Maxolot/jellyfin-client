@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { artworkUrl } from './artwork';
+import { artworkUrl, heroArtworkSizes, responsiveArtworkSet, rowPosterSizes } from './artwork';
 
 const base = 'https://media.example.test';
 afterEach(() => vi.unstubAllGlobals());
@@ -42,5 +42,19 @@ describe('versioned, usage-sized artwork', () => {
         expect(artworkUrl(base, { Id: 'film', ImageTags: { Thumb: 'thumb' } })).toContain('/Images/Thumb?');
         expect(artworkUrl(base, { Id: 'film', BackdropImageTags: ['backdrop'] })).toContain('/Images/Backdrop/0?');
         expect(artworkUrl(base, { Id: 'film', ImageTags: { Primary: 'poster', Thumb: 'thumb' } })).toContain('/Images/Primary?');
+    });
+});
+
+describe('responsive Jellyfin artwork', () => {
+    const local = 'https://fixture.invalid/Items/example/Images/Primary?maxWidth=320&quality=85&tag=known';
+    it('keeps the server image tag and provides appropriate row and full-width candidates', () => {
+        expect(responsiveArtworkSet(local, rowPosterSizes)?.split(', ')).toHaveLength(5);
+        expect(responsiveArtworkSet(local, rowPosterSizes)).toContain('maxWidth=160&quality=85&tag=known 160w');
+        expect(responsiveArtworkSet(local, heroArtworkSizes)).toContain('maxWidth=1920&quality=85&tag=known 1920w');
+    });
+    it('leaves arbitrary artwork and unresized thumbnails untouched', () => {
+        expect(responsiveArtworkSet('https://image.tmdb.org/t/p/w500/poster.jpg', heroArtworkSizes)).toBeUndefined();
+        expect(responsiveArtworkSet(local)).toBeUndefined();
+        expect(responsiveArtworkSet('/Items/test/Images/Primary', rowPosterSizes)).toBeUndefined();
     });
 });

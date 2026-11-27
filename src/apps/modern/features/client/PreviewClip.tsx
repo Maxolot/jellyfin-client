@@ -2,12 +2,14 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
 import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 
-import useMediaQuery from '@mui/material/useMediaQuery';
+import useClientMediaQuery from './useClientMediaQuery';
 import { useServerPreview } from './previews/provider';
 import { compactPreview } from './previews/model';
 import { createPreviewVideo, growFrom, prepareUpgrade, sameFile, type HandedClip } from './previews/handoff';
-import { detectLetterbox, frameHasContent, letterboxTransform } from './previews/letterbox';
+import { inspectPreviewLetterbox, letterboxTransform } from './previews/letterbox';
+import { startPreviewVideo } from './previews/playback';
 import ClientIcon from './ClientIcon';
+import { useEpisodeSpoilers } from './spoilers';
 import { usePreviews } from './PreviewProvider';
 import { previewSource, type PreviewSurface } from './previewSource';
 
@@ -17,6 +19,7 @@ const priority = { hero: 0, spotlight: 1, detail: 5, card: 10, episode: 20 };
 // eslint-disable-next-line sonarjs/cognitive-complexity -- Source ownership combines static and optional server-backed previews.
 export default function PreviewClip({ item, surface, enabled = true, soundControl = true }: Readonly<Props>) {
     const preview = usePreviews();
+    const protect = useEpisodeSpoilers();
     const generatedId = useId();
     const owner = `${preview?.scope || ''}:${generatedId}`;
     const region = useRef<HTMLSpanElement>(null);
@@ -28,7 +31,7 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
     const staticSource = preview ? previewSource(preview.sources, item, document.baseURI, surface !== 'episode', surface) : undefined;
     const key = `${surface}:${item.Id}`;
     const started = startedKey === key;
-    const small = useMediaQuery('(max-width: 700px)');
+    const small = useClientMediaQuery('(max-width: 700px)');
     const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
     const claim = preview?.claim;
     const release = preview?.release;
@@ -38,7 +41,7 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
     const playback = preview?.playback;
     const handoff = preview?.handoff;
     const [resuming, setResuming] = useState(false);
-    const available = (!!staticSource || !!preview?.serverAvailable) && enabled && !!preview?.enabled;
+    const available = (!!staticSource || !!preview?.serverAvailable) && enabled && !protect(item) && !!preview?.enabled;
     useEffect(() => {
         if (!available || !region.current || !('IntersectionObserver' in window)) return;
         const observer = new IntersectionObserver(entries => setNearby(entries.some(entry => entry.isIntersecting)), { threshold: 0.1 });
@@ -121,27 +124,22 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
         let finishTimer = 0;
         let fadeStarted = false;
         let finishing = false;
-        let frameTimer = 0;
-        let checks = 0;
-        let lastBars: { top: number; bottom: number } | undefined;
-        let stable = 0;
-        let cleanFrames = 0;
-        let inspectionStarted = false;
-        let measured: { top: number; bottom: number } | undefined;
-        const canvas = surface === 'hero' ? document.createElement('canvas') : undefined;
-        if (canvas) {
-            canvas.width = 160;
-            canvas.height = 90;
-        }
+        let stopInspection = () => undefined as void;
+        let inspectedVideo: HTMLVideoElement | undefined;
+        let startingVideo: HTMLVideoElement | undefined;
+        let growing = !!clip;
+        let measured: Parameters<typeof letterboxTransform>[4] | undefined;
+        const framed = surface === 'hero' || surface === 'detail';
         const applyFraming = () => {
             if (!measured || !element.parentElement) return;
             const bounds = element.parentElement.getBoundingClientRect();
             element.style.transform = letterboxTransform(element.videoWidth, element.videoHeight, bounds.width, bounds.height, measured);
+            element.classList.toggle('is-framed', !!element.style.transform);
         };
         const reveal = () => {
             if (disposed || finishing || !playback.owns(element, lease)) return;
             setVisible(true);
-            if (surface !== 'hero') {
+            if (!framed || clip) {
                 element.volume = 1;
                 return;
             }
@@ -153,44 +151,8 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
             };
             revealFrame = requestAnimationFrame(releaseAudio);
         };
-        const measureBars = () => {
-            if (disposed || !playback.owns(element, lease)) return;
-            const maxChecks = Number.isFinite(element.duration) && element.duration < 5 ? 3 : 8;
-            if (!canvas || !element.videoWidth || checks++ >= maxChecks) {
-                reveal();
-                return;
-            }
-            try {
-                const context = canvas.getContext('2d', { willReadFrequently: true });
-                if (!context) {
-                    reveal();
-                    return;
-                }
-                context.drawImage(element, 0, 0, canvas.width, canvas.height);
-                const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
-                const bars = detectLetterbox(pixels, canvas.width, canvas.height);
-                if (bars && lastBars && Math.abs(bars.top - lastBars.top) < 0.025 && Math.abs(bars.bottom - lastBars.bottom) < 0.025) stable++;
-                else stable = 0;
-                lastBars = bars;
-                cleanFrames = !bars && frameHasContent(pixels, canvas.width, canvas.height) ? cleanFrames + 1 : 0;
-                if (bars && stable >= 2) {
-                    measured = bars;
-                    applyFraming();
-                    reveal();
-                    return;
-                }
-                if (cleanFrames >= 3) {
-                    reveal();
-                    return;
-                }
-                frameTimer = window.setTimeout(measureBars, 250);
-            } catch {
-                // Cross-origin or unreadable video keeps the normal cover framing.
-                reveal();
-            }
-        };
         window.addEventListener('resize', applyFraming);
-        if (surface === 'hero') element.volume = 0;
+        if (framed && !clip) element.volume = 0;
         report?.(owner, true);
         const finish = () => {
             if (finishing || disposed || !playback.owns(element, lease)) return;
@@ -222,16 +184,21 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
             }
         };
         const ready = () => {
-            if (disposed || !playback.owns(element, lease)) {
-                playback.release(element, lease);
+            if (disposed || !playback.owns(element, lease)) return;
+            if (!framed) {
+                reveal();
                 return;
             }
-            if (surface !== 'hero') {
+            if (growing || inspectedVideo === element) return;
+            const target = element;
+            inspectedVideo = target;
+            stopInspection();
+            stopInspection = inspectPreviewLetterbox(target, bars => {
+                if (disposed || target !== element || !playback.owns(target, lease)) return;
+                measured = bars;
+                if (bars) applyFraming();
                 reveal();
-            } else if (!inspectionStarted) {
-                inspectionStarted = true;
-                frameTimer = window.setTimeout(measureBars, 100);
-            }
+            });
         };
         const metadata = () => {
             // A preview registry cannot silently turn a whole film into an autoplay source.
@@ -244,9 +211,10 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
             setResuming(false);
             report?.(owner, false);
             window.clearTimeout(finishTimer);
-            window.clearTimeout(frameTimer);
+            stopInspection();
             window.removeEventListener('resize', applyFraming);
             element.style.transform = '';
+            element.classList.remove('is-framed');
             cancelAnimationFrame(frame);
             cancelAnimationFrame(revealFrame);
             detach(element);
@@ -254,26 +222,39 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
             if (handedOver.current === element) handedOver.current = undefined;
             else playback?.release(element, lease);
         }
+        const onError = () => {
+            if (startingVideo !== element) finish();
+        };
+        const playTarget = async (target: HTMLVideoElement) => {
+            const targetLease = lease;
+            const current = () => !disposed && playback.owns(target, targetLease);
+            startingVideo = target;
+            const playing = await startPreviewVideo(target, current, () => mute?.());
+            if (startingVideo === target) startingVideo = undefined;
+            if (!current()) playback.release(target, targetLease);
+            else if (!playing) finish();
+        };
         const attach = (target: HTMLVideoElement) => {
             target.addEventListener('playing', ready);
             target.addEventListener('loadedmetadata', metadata);
             target.addEventListener('timeupdate', progress);
             target.addEventListener('ended', finish);
-            target.addEventListener('error', finish);
+            target.addEventListener('error', onError);
         };
         const detach = (target: HTMLVideoElement) => {
             target.removeEventListener('playing', ready);
             target.removeEventListener('loadedmetadata', metadata);
             target.removeEventListener('timeupdate', progress);
             target.removeEventListener('ended', finish);
-            target.removeEventListener('error', finish);
+            target.removeEventListener('error', onError);
         };
         attach(element);
         if (clip) {
             // The same video carries on: it only needs to reach its place, then its best quality.
-            if (element.paused) void element.play().catch(() => undefined);
+            if (element.paused) void playTarget(element);
             stopGrowing = growFrom(clip.from, place, element, () => {
-                reveal();
+                growing = false;
+                ready();
                 if (sameFile(element.currentSrc || element.src, source)) return;
                 stopUpgrade = prepareUpgrade(source, place, () => element, next => {
                     const previous = element;
@@ -285,26 +266,14 @@ export default function PreviewClip({ item, surface, enabled = true, soundContro
                     lease = playback.acquire(next);
                     attach(next);
                     previous.remove();
-                    if (next.paused) void next.play().catch(() => finish());
+                    if (measured) applyFraming();
+                    if (next.paused) void playTarget(next);
+                    else ready();
                 });
             });
             return cleanupPlayback;
         }
-        void element.play().then(() => {
-            if (disposed || !playback.owns(element, lease)) playback.release(element, lease);
-        }).catch(error => {
-            if (disposed || !playback.owns(element, lease)) return;
-            if (error?.name === 'NotAllowedError') {
-                element.muted = true;
-                mute?.();
-                return element.play().then(() => {
-                    if (disposed || !playback.owns(element, lease)) playback.release(element, lease);
-                }).catch(() => {
-                    if (!disposed && playback.owns(element, lease)) finish();
-                });
-            }
-            finish();
-        });
+        void playTarget(element);
         return cleanupPlayback;
     }, [active, started, source, key, completed, owner, report, mute, playback, surface]);
     if (!available || !preview) return null;

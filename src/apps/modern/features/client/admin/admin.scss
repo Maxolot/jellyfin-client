@@ -1,0 +1,361 @@
+// Administration : mêmes cartes que les Paramètres, avec les jetons partagés des deux thèmes.
+
+@use '../design' as ds;
+
+.client-controls .client-admin {
+    display: flex;
+    flex-direction: column;
+
+    .client-admin-columns {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0 18px;
+        align-items: start;
+    }
+
+    .client-admin-list {
+        margin: 0;
+        padding: 4px 0 8px;
+        list-style: none;
+
+        > li {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--client-surface-layer);
+
+            &:last-child {
+                border-bottom: 0;
+            }
+        }
+
+        &.is-compact > li {
+            align-items: center;
+            padding: 10px 0;
+        }
+    }
+
+    .client-admin-list > .client-admin-volume {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .client-admin-initial {
+        display: inline-grid;
+        width: 38px;
+        height: 38px;
+        flex: none;
+        place-items: center;
+        object-fit: cover;
+        color: var(--client-ink);
+        background: var(--client-surface-highlight);
+        border-radius: 50%;
+        font-size: var(--client-text-16);
+        font-weight: 600;
+    }
+
+    .client-admin-stream-body {
+        display: flex;
+        min-width: 0;
+        flex: 1;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .client-admin-stream-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+
+        strong {
+            overflow: hidden;
+            min-width: 0;
+            color: var(--client-ink);
+            font-size: var(--client-text-14);
+            font-weight: 600;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
+
+    .client-admin-stream-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    small {
+        color: var(--client-ink-subtle);
+        font-size: var(--client-text-12);
+        overflow-wrap: anywhere;
+    }
+
+    .client-admin-badges,
+    .client-admin-row-actions {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .client-admin-progress {
+        overflow: hidden;
+        height: 6px;
+        background: var(--client-track);
+        border-radius: var(--client-radius-pill);
+
+        i {
+            display: block;
+            height: 100%;
+            background: var(--client-progress);
+            border-radius: inherit;
+            transition: width var(--client-duration-fade) var(--client-ease-move);
+        }
+
+        &.is-warning i {
+            background: #f3cf7a;
+        }
+
+        &.is-error i {
+            background: #ff9a8f;
+        }
+    }
+
+    .client-admin-detail {
+        margin: 4px 0 0;
+        padding: 10px 12px;
+        color: var(--client-ink-muted);
+        background: var(--client-surface-layer);
+        border-radius: var(--client-radius-small);
+        font: inherit;
+        font-size: var(--client-text-13);
+        line-height: 1.5;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+
+    .client-admin-text-button {
+        padding: 4px 0;
+        color: var(--client-ink-muted);
+        background: none;
+        border: 0;
+        font: inherit;
+        font-size: var(--client-text-13);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        cursor: pointer;
+
+        &:hover,
+        &:focus-visible {
+            color: var(--client-ink);
+        }
+    }
+
+    .client-admin-empty {
+        margin: 0;
+        padding: 16px 0;
+        color: var(--client-ink-subtle);
+        font-size: var(--client-text-14);
+    }
+
+    .client-admin-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin: 14px 0 4px;
+
+        div {
+            padding: 10px 12px;
+            background: var(--client-surface-layer);
+            border-radius: var(--client-radius-control);
+        }
+
+        dt {
+            color: var(--client-ink-subtle);
+            font-size: var(--client-text-12);
+        }
+
+        dd {
+            margin: 2px 0 0;
+            color: var(--client-ink);
+            font-size: var(--client-text-18);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+    }
+
+    .client-admin-log-line {
+        > span:not(.client-admin-log-side) {
+            display: flex;
+            min-width: 0;
+            flex: 1;
+            flex-direction: column;
+            gap: 2px;
+            font-size: var(--client-text-14);
+        }
+
+        strong {
+            color: var(--client-ink);
+            font-weight: 500;
+        }
+    }
+
+    .client-admin-log-side {
+        display: flex;
+        flex: none;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 2px;
+        color: var(--client-ink-subtle);
+        font-size: var(--client-text-12);
+    }
+
+    .client-admin-dot {
+        width: 8px;
+        height: 8px;
+        flex: none;
+        background: #a7a7a7;
+        border-radius: 50%;
+
+        &.is-warning {
+            background: #f3cf7a;
+        }
+
+        &.is-error {
+            background: #ff9a8f;
+        }
+    }
+
+    .client-admin-list > .client-admin-task {
+        align-items: center;
+    }
+
+    .client-admin-list > .client-admin-account {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        padding: 0;
+
+        > div {
+            padding: 0 0 12px;
+        }
+    }
+
+    .client-admin-account-head {
+        display: flex;
+        width: 100%;
+        min-height: 64px;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 0;
+        color: inherit;
+        background: none;
+        border: 0;
+        font: inherit;
+        text-align: start;
+        cursor: pointer;
+
+        > span:nth-child(2) {
+            display: flex;
+            min-width: 0;
+            flex: 1;
+            flex-direction: column;
+            gap: 2px;
+
+            strong {
+                color: var(--client-ink);
+                font-size: var(--client-text-16);
+                font-weight: 600;
+            }
+        }
+
+        > svg {
+            width: 20px;
+            height: 20px;
+            flex: none;
+            fill: none;
+            stroke: currentcolor;
+            stroke-width: 1.8;
+            transition: transform var(--client-duration-state) var(--client-ease-move);
+        }
+    }
+
+    .client-admin-account.is-open .client-admin-account-head > svg {
+        transform: rotate(180deg);
+    }
+
+    .client-admin-editor {
+        padding: 4px 16px 8px;
+        background: var(--client-surface-layer);
+        border-radius: var(--client-radius-card);
+    }
+
+    .client-admin-checks {
+        display: flex;
+        margin: 0;
+        padding: 8px 0 14px;
+        flex-wrap: wrap;
+        gap: 8px 18px;
+        border: 0;
+
+        legend {
+            width: 100%;
+            margin-bottom: 6px;
+            padding: 0;
+            color: var(--client-ink-muted);
+            font-size: var(--client-text-13);
+        }
+
+        label {
+            display: inline-flex;
+            min-height: 36px;
+            align-items: center;
+            gap: 8px;
+            font-size: var(--client-text-14);
+            cursor: pointer;
+        }
+
+        input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--client-progress);
+        }
+    }
+
+    .client-admin-password {
+        margin-top: 8px;
+        border-top: 1px solid var(--client-surface-layer);
+    }
+
+    @include ds.tablet {
+        .client-admin-columns {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    @include ds.phone {
+        .client-admin-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .client-admin-stream-head {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .client-admin-list > .client-admin-task {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .client-admin-account-head .client-admin-badges {
+            display: none;
+        }
+    }
+}

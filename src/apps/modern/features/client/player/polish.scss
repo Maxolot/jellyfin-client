@@ -1,48 +1,22 @@
 /* stylelint-disable no-descending-specificity -- Independent player components share child tag selectors. */
 .client-player-center .client-player-jump {
     position: relative;
-    width: 4.1em;
-    height: 4.1em;
+    width: 3.9em;
+    height: 3.9em;
     flex-direction: column;
     gap: 0.1em;
-    border: 1px solid #ffffff24;
 
     svg {
-        width: 1.6em;
-        height: 1.6em;
-    }
-
-    strong {
-        font-size: 0.85em;
-        line-height: 1;
-        font-variant-numeric: tabular-nums;
-    }
-
-    small {
-        margin-left: 0.15em;
-        font-size: 0.75em;
-    }
-    &.is-jumping { background: #ffffff24; }
-    &.is-jumping > span { animation: player-jump-pulse 0.45s ease-out; }
-}
-
-@keyframes player-jump-pulse {
-    0% {
-        opacity: 0.5;
-        transform: rotate(-20deg) scale(0.88);
-    }
-
-    100% {
-        opacity: 1;
-        transform: rotate(0) scale(1);
+        width: 2.4em;
+        height: 2.4em;
     }
 }
 
 .client-player-offset {
     padding: 1em;
     border: 1px solid #ffffff25;
-    border-radius: 12px;
-    background: #ffffff06;
+    border-radius: var(--client-radius-control);
+    background: var(--client-surface-layer);
 
     h3 {
         margin: 0;
@@ -50,7 +24,7 @@
     }
 
     p {
-        color: #bbb;
+        color: var(--client-ink-subtle);
         font-size: 0.85em;
     }
 
@@ -87,13 +61,13 @@
 
     &[aria-current=true] {
         border-color: var(--player-accent);
-        background: #ffffff15;
+        background: var(--client-surface-highlight);
     }
 
     img {
         width: 36%;
         aspect-ratio: 16 / 9;
-        border-radius: 6px;
+        border-radius: var(--client-radius-small);
         object-fit: cover;
     }
 
@@ -105,7 +79,7 @@
     }
 
     small {
-        color: #bbb;
+        color: var(--client-ink-subtle);
         font-size: 0.75em;
     }
 }
@@ -113,48 +87,22 @@
 .client-player-panel:has(.client-player-episodes) { width: min(650px, calc(100vw - 2em)); }
 
 .client-player-technical dl,
-.client-player-help {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-    gap: 0.8em 1em;
-    font-size: 0.9em;
-    dt { color: #bdbdbd; }
-
-    dd {
-        margin: 0;
-        overflow-wrap: anywhere;
-    }
-}
-
 .client-player-scrub-preview > small {
     display: block;
     max-width: 200px;
     padding: 0.25em 0.5em;
-    color: #ccc;
+    color: var(--client-ink-muted);
     font-size: 0.7em;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .client-player-center .client-player-jump.is-jumping > span { animation: none; }
 }
 
 .client-player-chapter-image {
     display: block;
     width: min(220px, 40vw);
     aspect-ratio: 16 / 9;
-    border-radius: 6px;
+    border-radius: var(--client-radius-small);
     object-fit: cover;
 }
 
-.client-player-timeline > input {
-    height: 32px;
-    border-radius: 0;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 100% 5px;
-}
-
-.client-player-chapter-markers i { top: calc(50% - 3px); }
 .client-player-scrub-preview { bottom: calc(50% + 16px); }
 .client-player-tools { flex-wrap: wrap; }
 

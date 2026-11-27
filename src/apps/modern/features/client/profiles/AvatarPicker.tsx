@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { groupGallery, parseGallery, type GalleryAvatar } from './avatars';
+import { LABELS } from '../labels';
 
 type Props = { manifest: string; name: string; busy: boolean; problem: string; choose: (avatar: GalleryAvatar) => void; cancel: () => void };
 
@@ -29,7 +30,7 @@ export default function AvatarPicker({ manifest, name, busy, problem, choose, ca
     return <section className='client-avatar-picker' aria-label={`Photo de ${name}`}>
         <header>
             <h1>Photo de {name}</h1>
-            <button type='button' disabled={busy} onClick={cancel}>Annuler</button>
+            <button type='button' disabled={busy} onClick={cancel}>{LABELS.cancel}</button>
         </header>
         <input type='search' aria-label='Chercher une photo' placeholder='Chercher un personnage ou une série' value={search} disabled={busy} onChange={event => setSearch(event.target.value)} />
         {problem && <p role='alert' className='client-profile-error'>{problem}</p>}

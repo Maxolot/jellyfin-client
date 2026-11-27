@@ -6,6 +6,7 @@ import {
     Outlet
 } from 'react-router-dom';
 
+import { DASHBOARD_APP_ROUTES } from 'apps/dashboard/routes/routes';
 import { APP_ROUTES } from 'apps/modern/routes/routes';
 import AppHeader from 'components/AppHeader';
 import Backdrop from 'components/Backdrop';
@@ -18,6 +19,8 @@ const router = createHashRouter([
     {
         element: <RootAppLayout />,
         children: [
+            // The server's own administration stays reachable, for administrators only, behind the client's Administration.
+            ...DASHBOARD_APP_ROUTES,
             ...APP_ROUTES,
             {
                 path: '!/*',

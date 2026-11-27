@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 
 import { useApi } from 'hooks/useApi';
 
-import { SaveNote, SettingCard, StatusBadge, TextField, Toggle } from '../controls';
+import { SaveNote, SettingCard, StatusBadge, TextField, Toggle } from '../../ui/controls';
 import ExtensionSetup, { ExtensionHeader } from './ExtensionSetup';
 import { addressProblem, EXTENSIONS, withSecret } from './extensions';
 import { useExtension, useExtensionConfiguration } from './useServerExtensions';

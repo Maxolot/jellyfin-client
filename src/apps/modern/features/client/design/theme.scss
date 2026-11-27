@@ -1,0 +1,21 @@
+// Pose les jetons de la charte en propriétés CSS, une seule fois par page.
+// Classique partout ; Liquid Glass sur l'interface, la session et le lecteur en verre.
+@use 'sass:map';
+@use 'tokens';
+
+:root {
+    @include tokens.base-properties;
+
+    // Dérivés propres au code : titre de page fluide et fond des menus déroulants.
+    --client-heading-size: #{map.get(map.get(tokens.$type, 'page-heading'), 'size')};
+    --client-control-menu: var(--client-surface-control);
+}
+
+.client-interface.client-glass,
+.client-spotlight-glass,
+.client-session:not(.client-session-classic),
+body[data-client-player-theme='glass'] {
+    @include tokens.glass-properties;
+
+    --client-control-menu: var(--client-surface-raised);
+}

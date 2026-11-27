@@ -1,127 +1,353 @@
-// Connexion, serveurs et erreurs : même langage que la page de profils.
-.client-profiles.has-backdrop {
+/* stylelint-disable no-descending-specificity -- Session variants intentionally refine the shared card and controls. */
+
+@use '../design' as ds;
+
+.client-session {
+    --session-surface: #151a24f2;
+    --session-border: #e0e9ff36;
+    --session-muted: #b6bfd2;
+    --session-field: #0d111ac7;
+
     position: relative;
+    min-height: 100svh;
+    box-sizing: border-box;
+    padding: clamp(84px, 12vh, 140px) clamp(16px, 5vw, 80px) clamp(36px, 7vh, 76px);
     overflow: hidden;
     isolation: isolate;
+    background: radial-gradient(ellipse at 50% 0%, #262626, #0e0e0e 64%);
+    color: var(--client-ink);
 
-    // Le centre reste sombre pour le formulaire ; les affiches ne vivent que sur les bords.
-    &::after {
-        position: absolute;
-        z-index: -1;
-        background:
-            radial-gradient(ellipse 62% 78% at 50% 50%, rgb(10 11 14 / 96%) 30%, rgb(10 11 14 / 78%) 68%, rgb(10 11 14 / 52%) 100%),
-            linear-gradient(180deg, rgb(10 11 14 / 55%), transparent 22%, transparent 78%, rgb(10 11 14 / 70%));
-        content: '';
-        inset: 0;
+    &.client-session-classic {
+        --session-surface: #17191e;
+        --session-border: #ffffff29;
+        --session-field: #0e1015;
+
+        background: #0d0f13;
+    }
+
+    h1 {
+        margin: 0 0 clamp(20px, 4vw, 36px);
+        font-size: clamp(30px, 4.2vw, 46px);
+        font-weight: 700;
+        line-height: 1.12;
+        letter-spacing: -0.032em;
+        text-wrap: balance;
     }
 }
 
-// Le mur d'affiches défile très lentement, juste assez pour donner vie à la page.
+.client-session-brand {
+    position: absolute;
+    top: clamp(16px, 4vh, 38px);
+    left: clamp(16px, 5vw, 80px);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--client-ink);
+    font-size: var(--client-text-16);
+    font-weight: 700;
+
+    span {
+        display: grid;
+        width: 36px;
+        height: 36px;
+        place-items: center;
+        border: 1px solid #e2e2e255;
+        border-radius: var(--client-radius-control);
+        background: #171717d9;
+    }
+
+    .client-icon { width: 17px; }
+}
+
+.client-session.has-backdrop::after {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: linear-gradient(90deg, #0c0c0cb0, #0f0f0fa8 46%, #0f0f0fe8), linear-gradient(0deg, #0f0f0fc7, transparent 55%);
+    content: '';
+}
+
 .client-session-backdrop {
     position: absolute;
     z-index: -2;
-    top: -12%;
-    left: -12%;
-    width: 124%;
-    height: 124%;
+    inset: -7%;
+    width: 114%;
+    height: 114%;
     object-fit: cover;
     opacity: 0;
-    filter: saturate(0.9);
-    transition: opacity 1.2s ease;
+    transition: opacity var(--client-duration-fade) ease;
     animation: client-session-drift 90s ease-in-out infinite alternate;
-    will-change: transform;
 
-    &.is-shown {
-        opacity: 1;
-    }
+    &.is-shown { opacity: 1; }
 }
 
 @keyframes client-session-drift {
-    from {
-        transform: translate3d(-4%, 4%, 0);
-    }
+    from { transform: translate3d(-3%, 3%, 0); }
+    to { transform: translate3d(3%, -3%, 0); }
+}
 
-    to {
-        transform: translate3d(4%, -4%, 0);
+.client-session .client-profile-form,
+.client-session-card {
+    width: min(100%, 455px);
+    box-sizing: border-box;
+    gap: 16px;
+    padding: clamp(24px, 5vw, 42px);
+    border: 1px solid var(--session-border);
+    border-radius: var(--client-radius-panel);
+    background: var(--session-surface);
+    box-shadow: 0 24px 70px #0007;
+
+    h1 {
+        margin: 0 0 7px;
+        font-size: clamp(27px, 4vw, 38px);
+        text-align: start;
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .client-session-backdrop {
-        animation: none;
+.client-session .client-profile-form {
+    > p {
+        color: var(--session-muted);
+        line-height: 1.5;
+        text-align: start;
+    }
+
+    label {
+        gap: 8px;
+        color: var(--client-ink);
+        font-weight: 600;
+    }
+
+    input {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 50px;
+        padding: 0 15px;
+        border: 1px solid #e1e1e140;
+        border-radius: var(--client-radius-control);
+        background: var(--session-field);
+        color: var(--client-ink);
+    }
+
+    input::placeholder { color: var(--client-ink-subtle); }
+
+    button { min-height: 46px; }
+
+    .client-profile-primary {
+        border: 1px solid #f4f4f4;
+        background: #f2f2f2;
+        color: #1c1c1c;
+        font-weight: 700;
+
+        &:hover:not(:disabled) { background: #fff; }
+    }
+
+    .client-profile-quick {
+        border: 1px solid #e1e1e138;
+        background: #e4e4e40b;
+        color: var(--client-ink);
+        font-size: var(--client-text-14);
+        text-decoration: none;
+
+        &:hover:not(:disabled) { background: #e4e4e422; }
+    }
+
+    .client-profile-error {
+        padding: 12px 14px;
+        border: 1px solid #ffae9e48;
+        border-radius: var(--client-radius-control);
+        background: #54253166;
+        color: #ffd4cc;
+        font-size: var(--client-text-14);
+    }
+
+    .client-session-actions {
+        display: grid;
+        gap: 10px;
     }
 }
 
-.client-profile-form .client-session-actions {
-    display: grid;
-    gap: 12px;
+.client-session :is(button, a, input, summary):focus-visible {
+    outline: var(--client-size-focus-ring) solid var(--client-focus);
+    outline-offset: 3px;
+}
+
+.client-session .client-profile-form input:focus-visible,
+.client-session .client-avatar-picker input:focus-visible {
+    border-color: #b6cafd;
+    outline-offset: 2px;
 }
 
 .client-session-link {
-    color: #a4afc0;
-    font-size: 14px;
+    display: grid;
+    min-height: 36px;
+    place-items: center;
+    color: var(--client-ink-muted);
+    font-size: var(--client-text-14);
     text-align: center;
-    text-decoration: underline;
+    text-decoration: none;
+    text-decoration-color: #838383;
 
-    &:hover,
-    &:focus-visible {
-        color: #fff;
-    }
+    &:hover { color: var(--client-ink); }
 }
 
 .client-session-button {
-    display: flex;
-    min-height: 44px;
+    display: inline-flex;
+    min-height: 46px;
     align-items: center;
     justify-content: center;
-    border-radius: 99px;
+    padding: 8px 20px;
+    border-radius: var(--client-radius-pill);
     text-decoration: none;
 }
 
 .client-session-disclaimer {
-    max-width: 520px;
-    margin: 28px auto 0;
-    color: #a4afc0;
-    font-size: 13px;
+    width: min(100%, 455px);
+    margin-top: 18px;
+    color: var(--client-ink-muted);
+    font-size: var(--client-text-13);
+    line-height: 1.5;
     text-align: center;
 
-    a {
-        color: inherit;
-    }
+    a { color: inherit; }
 }
 
 .client-session-details {
-    color: #a4afc0;
-    font-size: 13px;
+    margin: 4px 0;
+    color: var(--client-ink-muted);
+    font-size: var(--client-text-14);
+
+    summary {
+        min-height: 40px;
+        padding: 8px;
+        cursor: pointer;
+    }
 
     pre {
-        overflow: auto;
-        max-height: 40vh;
+        max-height: 35vh;
         margin: 8px 0 0;
+        padding: 12px;
+        overflow: auto;
+        border-radius: var(--client-radius-small);
+        background: var(--session-field);
         white-space: pre-wrap;
+        overflow-wrap: anywhere;
     }
 }
 
-.client-server-list {
-    margin-bottom: 8px;
+.client-session-progress {
+    height: 4px;
+    overflow: hidden;
+    border-radius: var(--client-radius-pill);
+    background: #a6bdf42b;
+
+    &::after {
+        display: block;
+        width: 32%;
+        height: 100%;
+        border-radius: inherit;
+        background: #e0e0e0;
+        content: '';
+        animation: client-session-progress 1.15s ease-in-out infinite alternate;
+    }
+}
+
+@keyframes client-session-progress {
+    to { transform: translateX(212%); }
+}
+
+.client-session .client-quick-code {
+    padding: 14px 0 14px 0.14em;
+    border: 1px solid var(--session-border);
+    border-radius: var(--client-radius-control);
+    background: var(--session-field);
+    font-size: clamp(28px, 7vw, 42px);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.14em;
+}
+
+.client-session .client-profile-avatar,
+.client-session .client-avatar-picker li button { border-radius: var(--client-radius-card); }
+
+.client-session .client-profile-manage {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 26px;
+    background: #f4f4f40b;
+    text-decoration: none;
+}
+
+.client-session .client-server-list {
+    display: grid;
+    width: 100%;
+    justify-content: stretch;
+    gap: 8px;
+    margin: 18px 0 0;
+
+    button {
+        display: flex;
+        width: 100%;
+        min-height: 62px;
+        box-sizing: border-box;
+        flex-direction: row;
+        gap: 12px;
+        padding: 9px 11px;
+        border: 1px solid var(--session-border);
+        border-radius: var(--client-radius-control);
+        background: var(--session-field);
+        color: var(--client-ink);
+        text-align: start;
+    }
+
+    button > span:last-child {
+        display: grid;
+        min-width: 0;
+        gap: 3px;
+    }
 
     .client-profile-avatar {
-        background: rgb(255 255 255 / 8%);
+        width: 36px;
+        flex: none;
+        border-radius: var(--client-radius-small);
+        background: #e3e3e317;
+    }
+
+    small {
+        color: var(--session-muted);
+        overflow-wrap: anywhere;
     }
 }
 
 .client-session-footer {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    gap: 16px 24px;
-    margin-top: 24px;
+    gap: 8px;
+
+    .client-profile-manage { padding-inline: 13px; }
 }
 
-// Sur Safari, le champ actif garderait sinon le bleu du système.
-.client-avatar-picker input:focus-visible,
-.client-profiles .client-profile-form input:focus-visible {
-    border-color: #fff;
-    outline: 1px solid #fff;
-    outline-offset: 0;
+@media (min-width: 900px) {
+    .client-session-login.has-backdrop {
+        align-items: flex-end;
+        padding-inline: clamp(64px, 10vw, 168px);
+    }
+}
+
+@include ds.phone {
+    .client-session {
+        justify-content: flex-start;
+        padding-bottom: max(28px, env(safe-area-inset-bottom));
+    }
+
+    .client-session.has-backdrop::after {
+        background: linear-gradient(180deg, #0f0f0fca, #0f0f0fa8 40%, #0f0f0fef 82%);
+    }
+}
+
+@include ds.reduced-motion {
+    .client-session-backdrop,
+    .client-session-progress::after {
+        animation: none;
+        transition: none;
+    }
 }

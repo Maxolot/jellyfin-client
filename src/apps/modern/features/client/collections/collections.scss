@@ -1,0 +1,104 @@
+.client-collections {
+    min-height: 60vh;
+    margin: 0 var(--client-margin);
+    padding: clamp(24px, 5vw, 64px) 0 56px;
+
+    a { color: inherit; }
+}
+
+.client-collections-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 24px;
+    margin-bottom: clamp(20px, 3vw, 32px);
+
+    h1 {
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    p {
+        margin: 6px 0 0;
+        color: var(--client-ink-muted);
+    }
+}
+
+.client-collections-entry {
+    flex: none;
+    text-decoration: none;
+}
+
+.client-collections-note {
+    margin: 0;
+    color: var(--client-ink-muted);
+}
+
+.client-detail-dialog.client-collection-modal { width: min(560px, calc(100vw - 32px)); }
+
+.client-collection-form {
+    display: grid;
+    gap: 12px;
+
+    > p { margin: 0; }
+
+    input {
+        width: 100%;
+        min-height: 44px;
+        padding: 10px 12px;
+        border: 1px solid var(--client-line);
+        border-radius: var(--client-radius-control);
+        background: var(--client-surface-control);
+        color: inherit;
+        font: inherit;
+    }
+
+    > .client-play { justify-self: start; }
+}
+
+.client-collection-matches {
+    display: grid;
+    gap: 5px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    button {
+        display: grid;
+        width: 100%;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 12px;
+        padding: 7px 10px;
+        border: 1px solid var(--client-line);
+        border-radius: var(--client-radius-small);
+        background: var(--client-surface-control);
+        color: inherit;
+        text-align: start;
+
+        &:hover { background: var(--client-surface-highlight); }
+    }
+
+    strong,
+    small {
+        display: block;
+        overflow-wrap: anywhere;
+    }
+}
+
+.client-collection-thumb {
+    position: relative;
+    display: block;
+    width: 32px;
+    height: 44px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: var(--client-surface-highlight);
+}
+
+.client-collection-thumb .client-artwork {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

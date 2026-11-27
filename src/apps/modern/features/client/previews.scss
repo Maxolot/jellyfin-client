@@ -1,3 +1,5 @@
+@use 'design' as ds;
+
 .client-preview-media {
     position: absolute;
     z-index: 1;
@@ -27,7 +29,7 @@
     opacity: 0;
 }
 
-// Extrait qui change de page : la même vidéo continue, sans fondu d'apparition.
+/* Extrait qui change de page : la même vidéo continue, sans fondu d'apparition. */
 .client-preview-media.is-resuming:not(.is-fading) video {
     opacity: 1;
     transition: none;
@@ -37,10 +39,10 @@
     position: fixed;
     z-index: 5;
     inset: auto;
-    border-radius: 12px;
+    border-radius: var(--client-radius-control);
 }
 
-// Version de meilleure qualité qui se prépare, invisible, avant de prendre le relais.
+/* Version de meilleure qualité qui se prépare, invisible, avant de prendre le relais. */
 .client-preview-media.is-resuming video.is-loading {
     opacity: 0;
 }
@@ -71,7 +73,7 @@
     border: 1px solid #ffffff70;
     border-radius: 50%;
     background: #35353585;
-    color: white;
+    color: var(--client-ink);
     cursor: pointer;
 
     &::before {
@@ -90,24 +92,7 @@
     z-index: 0;
 }
 
-.client-interface .client-episode > .client-preview-media {
-    z-index: 0;
-    inset: 0;
-}
-
-.client-episode .client-episode-play,
-.client-episode-caption {
-    z-index: 1;
-}
-
-.client-preview-setting > label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 15px 0;
-}
-
-@media (max-width: 700px) {
+@include ds.phone {
     .client-detail > .client-preview-media {
         bottom: auto;
         height: 400px;
@@ -115,10 +100,12 @@
 
     .client-detail .client-preview-media video {
         object-position: 65% top;
+
+        &.is-framed { object-position: 65% center; }
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-preview-media {
         display: none;
     }

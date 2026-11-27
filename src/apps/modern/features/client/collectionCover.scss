@@ -1,0 +1,419 @@
+@use 'design' as ds;
+
+.client-collection-grid,
+.client-folder-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(205px, 1fr));
+    gap: clamp(12px, 2vw, 26px);
+    padding: 0;
+    list-style: none;
+
+    > li { min-width: 0; }
+}
+
+.client-collection-grid { margin: 0; }
+
+.client-cover {
+    display: grid;
+    color: inherit;
+    text-decoration: none;
+
+    &:focus-visible {
+        outline: 2px solid rgb(var(--cover-color));
+        outline-offset: 4px;
+        border-radius: var(--client-radius-card);
+    }
+}
+
+.client-cover-art {
+    position: relative;
+    display: grid;
+    isolation: isolate;
+    min-width: 0;
+    aspect-ratio: 1.27;
+    place-items: center;
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-card);
+    background: var(--client-surface-panel);
+    box-shadow: var(--client-shadow-card);
+}
+
+.client-folder-tile .client-cover-art:not([data-posters='0']) {
+    background: radial-gradient(ellipse at 50% 72%, rgb(var(--cover-color) / 0.21), transparent 75%), var(--client-surface-panel);
+}
+
+.client-cover-poster,
+.client-cover-empty {
+    position: absolute;
+    width: 39%;
+    aspect-ratio: 2 / 3;
+    border: 1px solid #ffffff40;
+    border-radius: var(--client-radius-small);
+    box-shadow: 0 6px 16px #0008;
+}
+
+.client-cover-poster {
+    overflow: hidden;
+    background: var(--client-art-placeholder);
+    transition: transform var(--client-duration-move) var(--client-ease-move);
+}
+
+.client-cover-poster .client-artwork,
+.client-shelf-column .client-artwork {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.client-cover:where(:hover, :focus-visible) .client-cover-art[data-posters='1'] .client-cover-poster {
+    transform: translateY(-4%) scale(1.04);
+}
+
+.client-cover-art:not([data-posters='1']) .client-cover-poster {
+    &:last-child { transform: translateX(31%) rotate(10deg) scale(0.89); }
+    &:first-child { transform: translateX(-31%) rotate(-10deg) scale(0.89); }
+    &:nth-child(2):not(:last-child) { z-index: 1; }
+}
+
+.client-cover:where(:hover, :focus-visible) {
+    .client-cover-art:not([data-posters='1']) .client-cover-poster {
+        &:last-child { transform: translate(49%, 3%) rotate(17deg) scale(0.86); }
+        &:first-child { transform: translate(-49%, 3%) rotate(-17deg) scale(0.86); }
+        &:nth-child(2):not(:last-child) { transform: translateY(-5%) scale(1.03); }
+    }
+}
+
+.client-cover-empty {
+    display: grid;
+    place-items: center;
+    border-color: #ffffff60;
+    background: var(--client-surface-raised);
+    color: var(--client-ink-muted);
+
+    &::after,
+    &::before {
+        position: absolute;
+        z-index: -1;
+        inset: 0;
+        border: 1px solid #ffffff3d;
+        border-radius: var(--client-radius-small);
+        background: #fff1;
+        content: '';
+    }
+
+    &::before { transform: translateX(-29%) rotate(-11deg) scale(0.92); }
+    &::after { transform: translateX(29%) rotate(11deg) scale(0.92); }
+
+    > .client-icon {
+        width: 27%;
+        height: auto;
+    }
+}
+
+.client-cover-info {
+    display: grid;
+    gap: 5px;
+    padding: 10px 2px 0;
+
+    strong {
+        font-size: clamp(14px, 1.4vw, 18px);
+        line-height: 1.2;
+        overflow-wrap: anywhere;
+    }
+
+    small {
+        color: var(--client-ink-muted);
+        font-size: var(--client-text-12);
+    }
+}
+
+.client-cover-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+}
+
+.client-cover-meta .client-cover-badge {
+    max-width: 100%;
+    padding: 2px 7px;
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-pill);
+    background: var(--client-surface-layer);
+    overflow-wrap: anywhere;
+}
+
+.client-shelf-page {
+    --shelf-tint: transparent;
+}
+
+.client-shelf-folder {
+    --shelf-tint: rgb(var(--shelf-color) / 0.13);
+
+    background: radial-gradient(ellipse at 50% 42%, rgb(var(--shelf-color) / 0.06), transparent 68%);
+}
+
+.client-interface .client-shelf-hero {
+    min-height: min(530px, 76svh);
+    margin-bottom: 0;
+    background: var(--shelf-tint);
+
+    &::before {
+        background:
+            linear-gradient(0deg, #090909f2, #09090982 72%),
+            linear-gradient(90deg, #0a0a0a9c, transparent 76%),
+            linear-gradient(150deg, var(--shelf-tint), transparent 86%);
+    }
+}
+
+.client-hero-background .client-shelf-hero.client-home-hero {
+    min-height: min(540px, 80svh);
+    background: transparent;
+}
+
+.client-shelf-art {
+    position: absolute;
+    z-index: -2;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    background: var(--shelf-tint);
+    pointer-events: none;
+}
+
+.client-shelf-art .client-shelf-backdrop {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.54;
+    filter: grayscale(1) blur(15px);
+    transform: scale(1.065);
+}
+
+.client-shelf-folder .client-shelf-backdrop {
+    filter: saturate(0.7) blur(15px);
+}
+
+.client-shelf-wall {
+    position: absolute;
+    inset: -34% -12%;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: clamp(6px, 1vw, 14px);
+    transform: translateX(-1%) rotate(-12deg);
+}
+
+.client-shelf-column {
+    display: grid;
+    align-content: start;
+    gap: clamp(6px, 1vw, 14px);
+    transform: translateY(-24%);
+    animation: client-shelf-wall-drift 130s linear infinite alternate;
+
+    &:nth-child(even) {
+        transform: translateY(-32%);
+        animation-delay: -40s;
+        animation-direction: alternate-reverse;
+    }
+
+    > span {
+        position: relative;
+        aspect-ratio: 2 / 3;
+        overflow: hidden;
+        border-radius: var(--client-radius-small);
+        background: var(--client-surface-highlight);
+    }
+}
+
+.client-shelf-wall[data-frozen='true'] .client-shelf-column { animation-play-state: paused; }
+
+@keyframes client-shelf-wall-drift {
+    from { transform: translateY(-18%); }
+    to { transform: translateY(-37%); }
+}
+
+.client-home-hero .client-shelf-copy {
+    z-index: 1;
+    width: min(100%, 900px);
+    max-width: 100%;
+
+    h1 {
+        max-width: 20ch;
+        margin: 12px 0 10px;
+        font-size: clamp(36px, 7.7vw, 96px);
+        font-weight: 700;
+        line-height: 0.96;
+        letter-spacing: -0.038em;
+        overflow-wrap: anywhere;
+        text-wrap: balance;
+    }
+}
+
+.client-shelf-back {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 7px;
+    color: inherit;
+    font-size: var(--client-text-14);
+    text-decoration: none;
+
+    &:hover { text-decoration: none; }
+}
+
+.client-shelf-meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    margin: 0 0 22px;
+
+    .client-folder-sharing {
+        min-height: 30px;
+        padding: 3px 9px;
+        border: 1px solid var(--client-line);
+        border-radius: var(--client-radius-pill);
+        background: var(--client-surface-layer);
+        font-size: var(--client-text-12);
+    }
+}
+
+.client-shelf-meta {
+    margin: 0;
+    color: var(--client-ink);
+    font-weight: 600;
+}
+
+.client-interface .client-shelf-actions {
+    flex-wrap: wrap;
+    row-gap: 8px;
+
+    --client-action-height: var(--client-size-icon-target);
+}
+
+.client-shelf-menu {
+    position: relative;
+
+    > button {
+        width: 44px;
+        justify-content: center;
+        padding: 0;
+    }
+}
+
+.client-shelf-menu-list {
+    position: absolute;
+    z-index: 3;
+    bottom: calc(100% + 8px);
+    right: 0;
+    display: grid;
+    width: max-content;
+    min-width: 164px;
+    padding: 5px;
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-card);
+    background: var(--client-surface-raised);
+    box-shadow: var(--client-shadow-surface);
+    backdrop-filter: var(--client-blur-surface);
+
+    button {
+        min-height: 44px;
+        padding: 6px 12px;
+        border: 0;
+        border-radius: var(--client-radius-small);
+        background: transparent;
+        color: inherit;
+        text-align: start;
+
+        &:hover { background: var(--client-surface-highlight); }
+    }
+}
+
+.client-library.client-shelf-grid {
+    min-height: 220px;
+    padding-top: clamp(20px, 3vw, 44px);
+}
+
+.client-shelf-grid-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 22px;
+
+    h2 {
+        margin: 0;
+        font-size: clamp(25px, 2.5vw, 40px);
+        font-weight: 700;
+    }
+
+    .client-filter-options { margin: 12px 0; }
+}
+
+.client-shelf-item {
+    position: relative;
+    min-width: 0;
+}
+
+.client-shelf-organize,
+.client-library.client-folder-unavailable { margin: 18px var(--client-margin); }
+
+/* Card actions sit on the poster and appear on hover or keyboard focus;
+   always shown on touch screens and while organizing. */
+.client-shelf-item-actions {
+    position: absolute;
+    z-index: 2;
+    top: 6px;
+    right: 6px;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity var(--client-duration-state) ease;
+
+    > button.client-button {
+        width: 32px;
+        height: 32px;
+        min-height: 0;
+        justify-content: center;
+        padding: 0;
+        border: 1px solid #ffffff40;
+        border-radius: 50%;
+        background: #0d0f13cc;
+        backdrop-filter: blur(8px);
+
+        .client-icon {
+            width: 16px;
+            height: 16px;
+        }
+    }
+}
+
+.client-shelf-item:where(:hover, :focus-within) .client-shelf-item-actions,
+.client-shelf-item-actions.is-organizing {
+    opacity: 1;
+}
+
+@media (hover: none) {
+    .client-shelf-item-actions { opacity: 1; }
+}
+
+@include ds.phone {
+    .client-collection-grid,
+    .client-folder-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .client-shelf-wall {
+        inset: -12% -30%;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .client-shelf-column:nth-child(n+5) { display: none; }
+
+    .client-hero-background .client-shelf-hero.client-home-hero { padding-bottom: 38px; }
+}
+
+@include ds.reduced-motion {
+    .client-shelf-column { animation: none; }
+
+    .client-cover-poster { transition: none; }
+}

@@ -1,35 +1,38 @@
 /* eslint-disable react/jsx-no-bind -- Menu handlers are local to this component. */
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 
 import { useApi } from 'hooks/useApi';
 
 import { CastDialog, hasCast } from './DetailExtras';
-import ClientIcon from './ClientIcon';
+import ActionLabel from './ActionLabel';
 import DownloadDialog from './offline/DownloadDialog';
 import { useFileTracks } from './languageTags';
 import MediaInfoDialog from './MediaInfoDialog';
+import { externalIdentity } from './seerr/model';
 import { useSeerr } from './seerr/SeerrContext';
-import { canRequestSeasons, RequestDialog, useMissingSeasons } from './seerr/SeerrViews';
-import { choiceSummary, readTrackChoice, saveTrackChoice, type TrackChoice } from './trackChoice';
+import { canRequestSeasons, useMissingSeasons } from './seerr/queries';
+import StorageRemoval, { useStorageRemovalAvailable } from './StorageRemoval';
+import { FollowCatalogAction } from './sharedCatalog';
+import { choiceSummary, type TrackChoice } from './trackChoice';
 import TrackMenu from './TrackMenu';
+import { ActionButton } from './ui';
+
+const RequestDialog = lazy(() => import(/* webpackChunkName: "client-seerr" */ './seerr/SeerrViews')
+    .then(module => ({ default: module.RequestDialog })));
 
 /** Secondary actions of a media page, kept behind one "more" button so the main row stays minimal. */
-export default function DetailMenu({ item, basePath, play }: Readonly<{ item: BaseItemDto; basePath: string; play: (item: BaseItemDto, startTicks?: number) => void }>) {
+export default function DetailMenu({ item, basePath, play, choice, chooseTracks }: Readonly<{ item: BaseItemDto; basePath: string; play: (item: BaseItemDto, startTicks?: number) => void; choice: TrackChoice; chooseTracks: (choice: TrackChoice) => void }>) {
     const seerr = useSeerr();
     const root = useRef<HTMLDivElement>(null);
     const trigger = useRef<HTMLButtonElement>(null);
     const [open, setOpen] = useState(false);
-    const [dialog, setDialog] = useState<'cast' | 'request' | 'info' | 'download' | null>(null);
+    const [dialog, setDialog] = useState<'cast' | 'request' | 'info' | 'download' | 'storage' | null>(null);
     const [tracksOpen, setTracksOpen] = useState(false);
-    const { api, user } = useApi();
+    const { user } = useApi();
     const tracks = useFileTracks(item);
-    const [choice, setChoice] = useState(() => readTrackChoice(api?.basePath, user?.Id, item.Id));
+    const storage = useStorageRemovalAvailable(item, open && user?.Policy?.IsAdministrator === true);
     const canChooseTracks = tracks.audio.length > 1 || tracks.subtitles.length > 0;
-    const chooseTracks = (next: TrackChoice) => {
-        setChoice(next);
-        if (item.Id) saveTrackChoice(api?.basePath, user?.Id, item.Id, next);
-    };
     const request = canRequestSeasons(item, seerr.connected);
     const missing = useMissingSeasons(item, request);
     let triggerLabel = 'Plus d’actions';
@@ -59,7 +62,7 @@ export default function DetailMenu({ item, basePath, play }: Readonly<{ item: Ba
         setTracksOpen(false);
         if (restoreFocus) trigger.current?.focus();
     };
-    const openDialog = (name: 'cast' | 'request' | 'info' | 'download') => {
+    const openDialog = (name: 'cast' | 'request' | 'info' | 'download' | 'storage') => {
         setOpen(false);
         setDialog(name);
     };
@@ -81,20 +84,25 @@ export default function DetailMenu({ item, basePath, play }: Readonly<{ item: Ba
     // Keyboard handling for the menu items; the wrapper itself is not interactive.
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     return <div className='client-more' ref={root} onKeyDown={onKeyDown}>
-        <button ref={trigger} type='button' className='client-button client-action-circle' aria-label={triggerLabel} title={missing ? 'Des saisons peuvent être demandées' : 'Plus d’actions'} aria-haspopup='menu' aria-expanded={open} onClick={() => setOpen(!open)}><ClientIcon name='more' />{missing > 0 && <span className='client-more-badge' aria-hidden='true' />}</button>
+        <ActionButton ref={trigger} round aria-label={triggerLabel} title={missing ? 'Des saisons peuvent être demandées' : 'Plus d’actions'} aria-haspopup='menu' aria-expanded={open} onClick={() => setOpen(!open)} icon='more'></ActionButton>
         {open && <div className='client-more-menu' role='menu' aria-label={tracksOpen ? 'Audio et sous-titres' : 'Plus d’actions'}>
             {tracksOpen ? <TrackMenu audio={tracks.audio} subtitles={tracks.subtitles} choice={choice} onChange={chooseTracks} onBack={() => setTracksOpen(false)} /> : <>
-                {canChooseTracks && <button type='button' role='menuitem' onClick={() => setTracksOpen(true)}><ClientIcon name='volume' /><span className='client-more-text'>Audio et sous-titres<span>{choiceSummary(choice)}</span></span></button>}
-                {request && <button type='button' role='menuitem' onClick={() => openDialog('request')}><ClientIcon name='plus' />Demander des saisons{missing > 0 && <small>{missing}</small>}</button>}
-                {user?.Policy?.EnableContentDownloading && ['Movie', 'Series', 'Episode'].includes(item.Type || '') && <button type='button' role='menuitem' onClick={() => openDialog('download')}><ClientIcon name='download' />Télécharger</button>}
-                {hasCast(item) && <button type='button' role='menuitem' onClick={() => openDialog('cast')}><ClientIcon name='collection' />Distribution et réalisation</button>}
-                <button type='button' role='menuitem' onClick={() => openDialog('info')}><ClientIcon name='info' />Informations</button>
+                {externalIdentity(item) && <FollowCatalogAction key={item.Id} item={item} menu />}
+                {canChooseTracks && <button type='button' role='menuitem' onClick={() => setTracksOpen(true)}><ActionLabel icon='volume' hint={choiceSummary(choice)}>Audio et sous-titres</ActionLabel></button>}
+                {request && <button type='button' role='menuitem' onClick={() => openDialog('request')}><ActionLabel icon='plus'>Demander des saisons</ActionLabel>{missing > 0 && <small>{missing}</small>}</button>}
+                {user?.Policy?.EnableContentDownloading && ['Movie', 'Series', 'Episode'].includes(item.Type || '') && <button type='button' role='menuitem' onClick={() => openDialog('download')}><ActionLabel icon='download'>Télécharger</ActionLabel></button>}
+                {storage && <button type='button' role='menuitem' onClick={() => openDialog('storage')}><ActionLabel icon='drive'>Retirer les fichiers du disque</ActionLabel></button>}
+                {hasCast(item) && <button type='button' role='menuitem' onClick={() => openDialog('cast')}><ActionLabel icon='people'>Distribution et réalisation</ActionLabel></button>}
+                <button type='button' role='menuitem' onClick={() => openDialog('info')}><ActionLabel icon='info'>Informations</ActionLabel></button>
             </>}
         </div>}
+        {dialog === 'storage' && <StorageRemoval item={item} onClose={() => setDialog(null)} />}
         <DownloadDialog item={item} open={dialog === 'download'} onClose={() => setDialog(null)} />
         <MediaInfoDialog item={item} basePath={basePath} open={dialog === 'info'} onClose={() => setDialog(null)} play={play} choice={choice} chooseVersion={version => chooseTracks({ ...choice, version })} />
         <CastDialog item={item} basePath={basePath} open={dialog === 'cast'} onClose={() => setDialog(null)} />
-        {request && <RequestDialog item={item} open={dialog === 'request'} onClose={() => setDialog(null)} />}
+        {request && dialog === 'request' && <Suspense fallback={null}>
+            <RequestDialog item={item} open onClose={() => setDialog(null)} />
+        </Suspense>}
     </div>;
 }
 

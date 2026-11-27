@@ -8,10 +8,11 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { useApi } from 'hooks/useApi';
 
-import { SaveNote, Select, SettingCard, TextField, Toggle } from '../controls';
+import { SaveNote, Select, SettingCard, TextField, Toggle } from '../../ui/controls';
 import { EXTENSIONS } from './extensions';
 import { type PreviewScene, sameItem, sceneProblem, sceneState } from './sceneModel';
 import { useExtensionEndpoint } from './useServerExtensions';
+import { episodeCode } from '../../labels';
 
 function useTitles(search: string, parentId?: string, ids?: string[]) {
     const { api, user } = useApi();
@@ -51,7 +52,7 @@ function SceneEditor({ item, existing, refresh }: Readonly<{ item: BaseItemDto; 
     }}>
         <p className='client-setting-note'>{item.Type === 'Series' ? 'Choisissez l’épisode qui fournit l’extrait de cette série.' : 'La scène est extraite de ce fichier local.'} Les scènes choisies peuvent révéler l’intrigue : vérifiez-les avant de les approuver.</p>
         {item.Type === 'Series' && <Select label='Épisode source' value={source} disabled={busy}
-            options={[[source, source ? (episodes.data?.find(entry => entry.Id === source)?.Name || 'Épisode enregistré') : 'Premier épisode de la saison 1'], ...(source ? [['', 'Premier épisode de la saison 1'] as const] : []), ...(episodes.data || []).filter(entry => entry.Id !== source).map(entry => [entry.Id!, `S${entry.ParentIndexNumber || 0}:E${entry.IndexNumber || 0} · ${entry.Name}`] as const)]}
+            options={[[source, source ? (episodes.data?.find(entry => entry.Id === source)?.Name || 'Épisode enregistré') : 'Premier épisode de la saison 1'], ...(source ? [['', 'Premier épisode de la saison 1'] as const] : []), ...(episodes.data || []).filter(entry => entry.Id !== source).map(entry => [entry.Id!, `${episodeCode(entry.ParentIndexNumber || 0, entry.IndexNumber || 0)} · ${entry.Name}`] as const)]}
             onChange={setSource} />}
         <TextField label='Début de la scène (secondes)' value={start} type='number' disabled={busy} onChange={setStart} />
         <TextField label='Durée de la scène (secondes)' hint='De 1 à 30 secondes.' value={duration} type='number' disabled={busy} onChange={setDuration} />

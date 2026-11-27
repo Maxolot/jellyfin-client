@@ -1,6 +1,9 @@
+@use 'design' as ds;
+
 .client-hero-background .client-home-hero {
-    // Full screen at the top of the page, then a framed card while scrolling (useHeroBackground):
-    // no blurred bottom edge, the image and its clip are only cut, never faded or resized.
+    /* Full screen at the top of the page, then a framed card while scrolling (useHeroBackground): */
+
+    /* no blurred bottom edge, the image and its clip are only cut, never faded or resized. */
     --hero-cut: calc(var(--hero-frame, 0) * var(--client-margin));
 
     > .client-hero-image-layer,
@@ -14,7 +17,7 @@
         transform-origin: 50% 0;
     }
 
-    // The frame of the encadré mode appears with the card.
+    /* The frame of the encadré mode appears with the card. */
     &::after {
         position: absolute;
         z-index: -1;
@@ -22,7 +25,7 @@
         right: var(--hero-cut);
         bottom: 0;
         left: var(--hero-cut);
-        border: 1px solid #fff3;
+        border: 1px solid var(--client-line);
         border-radius: calc(var(--hero-frame, 0) * 28px);
         opacity: var(--hero-frame, 0);
         pointer-events: none;
@@ -59,29 +62,7 @@
 
 .client-detail .client-hero-copy { text-shadow: 0 2px 12px #0008; }
 
-.client-backdrop-settings {
-    display: grid;
-    max-width: 680px;
-    gap: 24px;
-    margin: 28px 0;
-
-    label {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 12px;
-        font-size: 14px;
-    }
-
-    output { color: #b9bdc6; }
-
-    input {
-        width: 100%;
-        grid-column: 1 / -1;
-        accent-color: white;
-    }
-}
-
-@media (max-width: 700px) {
+@include ds.phone {
     .client-detail .client-detail-readability {
         background: linear-gradient(0deg, rgb(9 10 13 / var(--detail-shade)), transparent 95%);
 

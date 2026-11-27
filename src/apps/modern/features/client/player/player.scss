@@ -1,6 +1,15 @@
 /* stylelint-disable no-descending-specificity -- Theme and responsive overrides intentionally follow the shared controls. */
+
+@use '../design' as ds;
+
 html.client-video-active {
     overflow: hidden;
+
+    // Set by the player while its controls show, so the subtitles clear them.
+    .videoSubtitles {
+        transform: translateY(calc(-1 * var(--client-subtitle-lift, 0px)));
+        transition: transform var(--client-duration-state) var(--client-ease-move);
+    }
 
     .skinHeader,
     .appfooter,
@@ -23,7 +32,7 @@ html.client-video-active {
 .client-player-preview {
     --player-accent: #fff;
     --player-ink: #111;
-    color: #fff;
+    color: var(--client-ink);
     font-family: Arial, Helvetica, sans-serif;
 
     &.accent-red { --player-accent: #ff6872; }
@@ -31,13 +40,11 @@ html.client-video-active {
     &.accent-gold { --player-accent: #f5cf87; }
 
     button,
-    input,
-    select { font: inherit; }
+    input { font: inherit; }
     button { color: inherit; }
 
     button:focus-visible,
-    input:focus-visible,
-    select:focus-visible {
+    input:focus-visible {
         outline: 3px solid var(--player-accent);
         outline-offset: 4px;
     }
@@ -66,13 +73,13 @@ html.client-video-active {
         border-radius: 50%;
         background: transparent;
         cursor: pointer;
-        transition: background 0.2s, transform 0.2s;
+        transition: background var(--client-duration-state), transform var(--client-duration-state);
 
         &:hover { background: rgb(255 255 255 / 14%); }
         &:active { transform: scale(0.95); }
 
         &:disabled {
-            opacity: 0.35;
+            opacity: var(--client-opacity-disabled);
             cursor: default;
         }
     }
@@ -97,7 +104,7 @@ html.client-video-active {
 .client-player-center {
     position: absolute;
     z-index: 1;
-    transition: opacity 0.25s;
+    transition: opacity var(--client-duration-state);
 }
 
 .client-player-top {
@@ -117,7 +124,7 @@ html.client-video-active {
     }
 
     small {
-        color: #d1d1d1;
+        color: var(--client-ink-muted);
         font-size: 0.72em;
         letter-spacing: 0.1em;
     }
@@ -137,7 +144,7 @@ html.client-video-active {
     left: 50%;
     display: flex;
     align-items: center;
-    gap: 2em;
+    gap: 1.8em;
     transform: translate(-50%, -50%);
 
     > button {
@@ -147,15 +154,14 @@ html.client-video-active {
     }
 
     .client-player-main-play {
-        width: 5em;
-        height: 5em;
-        border: 1px solid #ffffff36;
+        width: 5.6em;
+        height: 5.6em;
         background: rgb(18 18 18 / 55%);
     }
 
     .client-player-main-play svg {
-        width: 2.6em;
-        height: 2.6em;
+        width: 2.9em;
+        height: 2.9em;
     }
 }
 
@@ -168,57 +174,6 @@ html.client-video-active {
     > * { pointer-events: auto; }
 }
 
-.client-player-timeline {
-    position: relative;
-    display: flex;
-    height: 30px;
-    align-items: center;
-
-    > input {
-        position: relative;
-        z-index: 1;
-        width: 100%;
-        height: 5px;
-        margin: 0;
-        border-radius: 4px;
-        appearance: none;
-        background: linear-gradient(to right, var(--player-accent) var(--progress), #ffffff40 var(--progress));
-        cursor: pointer;
-        touch-action: none;
-
-        &::-webkit-slider-thumb {
-            width: 15px;
-            height: 15px;
-            border: 0;
-            border-radius: 50%;
-            appearance: none;
-            background: var(--player-accent);
-        }
-
-        &::-moz-range-thumb {
-            width: 15px;
-            height: 15px;
-            border: 0;
-            border-radius: 50%;
-            background: var(--player-accent);
-        }
-    }
-}
-
-.client-player-chapter-markers {
-    position: absolute;
-    z-index: 2;
-    inset: 12px 0;
-    pointer-events: none;
-
-    i {
-        position: absolute;
-        width: 2px;
-        height: 6px;
-        background: #000b;
-    }
-}
-
 .client-player-scrub-preview {
     position: absolute;
     bottom: 35px;
@@ -226,7 +181,7 @@ html.client-video-active {
     max-width: 42vw;
     padding: 4px;
     border: 1px solid #ffffff35;
-    border-radius: 10px;
+    border-radius: var(--client-radius-small);
     background: #171717;
     box-shadow: 0 8px 35px #0008;
     text-align: center;
@@ -254,13 +209,14 @@ html.client-video-active {
     margin-left: auto;
 }
 
-.client-player-time {
+.client-player-time,
+.client-player-times {
     margin: 0 0.7em;
     font-size: 0.85em;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
-.client-player-time > span { color: #ccc; }
+.client-player-time > span { color: var(--client-ink-muted); }
 
 .client-player-volume {
     display: flex;
@@ -273,14 +229,8 @@ html.client-video-active {
 }
 
 .client-player.style-glass {
-    .client-player-toolbar {
-        padding: 0.25em 0.55em;
-        border: 1px solid #ffffff24;
-        border-radius: 20px;
-        backdrop-filter: blur(22px);
-        background: #19191973;
-        box-shadow: inset 0 1px #ffffff14, 0 12px 50px #0003;
-    }
+    // Material in liquidGlass.scss.
+    .client-player-toolbar { padding: 0.25em 0.55em; }
     .client-player-center button { backdrop-filter: blur(14px); }
 }
 
@@ -316,7 +266,7 @@ html.client-video-active {
     right: 3em;
     bottom: 11em;
     border: 1px solid #ffffff36 !important;
-    border-radius: 12px !important;
+    border-radius: var(--client-radius-control) !important;
     background: #171717e6 !important;
     box-shadow: 0 8px 35px #0005;
 }
@@ -325,33 +275,94 @@ html.client-video-active {
 
 .client-player-next {
     display: flex;
-    width: min(22em, 80vw);
+    width: min(30em, 86vw);
     box-sizing: border-box;
-    flex-direction: column;
-    gap: 0.6em;
-    padding: 1.3em;
+    align-items: stretch;
+    gap: 1em;
+    padding: 0.8em;
+    border-radius: var(--client-radius-panel) !important;
+    background: #121418d9 !important;
+    backdrop-filter: blur(22px) saturate(1.3);
 
     small {
-        color: #bdbdbd;
-        font-size: 0.7em;
-        letter-spacing: 0.12em;
+        color: var(--client-ink-subtle);
+        font-size: 0.72em;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
     }
 
-    > div {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5em;
+    strong {
+        overflow: hidden;
+        font-size: 1.05em;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
+
+    .client-player-next-copy > span {
+        overflow: hidden;
+        color: var(--client-ink-muted);
+        font-size: 0.88em;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+.client-player-next-art {
+    width: 10em;
+    flex: none;
+    border-radius: var(--client-radius-control);
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    align-self: center;
+}
+
+.client-player-next-copy {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.3em;
+}
+
+.client-player .client-player-next-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5em;
+    margin-top: 0.45em;
 
     button {
-        gap: 0.4em;
-        border-radius: 7px;
+        position: relative;
+        display: inline-flex;
+        overflow: hidden;
+        min-height: 2.5em;
+        align-items: center;
+        gap: 0.45em;
+        padding: 0 1.1em;
+        border: 1px solid #ffffff40;
+        border-radius: var(--client-radius-pill);
+        background: var(--client-surface-highlight);
+        color: var(--client-ink);
         font-size: 0.85em;
+        font-weight: 600;
     }
 
-    button:first-child {
-        background: var(--player-accent);
-        color: var(--player-ink);
+    button:hover { background: #ffffff2b; }
+
+    button.is-primary {
+        border-color: transparent;
+        background: linear-gradient(90deg, #0000001f var(--next-progress, 0%), transparent var(--next-progress, 0%)), #fff;
+        color: var(--client-ink-inverse);
+
+        &:hover { background: linear-gradient(90deg, #0000001f var(--next-progress, 0%), transparent var(--next-progress, 0%)), #e8e8e8; }
+    }
+
+    svg {
+        width: 1.1em;
+        height: 1.1em;
+        fill: currentColor;
     }
 }
 
@@ -365,7 +376,7 @@ html.client-video-active {
     top: 50%;
     left: 50%;
     padding: 1em 1.5em;
-    border-radius: 14px;
+    border-radius: var(--client-radius-card);
     background: #181818e6;
     text-align: center;
     transform: translate(-50%, -50%);
@@ -375,8 +386,8 @@ html.client-video-active {
 
 .client-player-ended button {
     margin: 0.3em;
-    border-radius: 8px;
-    background: #ffffff18;
+    border-radius: var(--client-radius-small);
+    background: var(--client-surface-highlight);
 }
 .client-player-error { color: #ffbaba; }
 
@@ -393,14 +404,14 @@ html.client-video-active {
     margin: 0;
     padding: 1.5em;
     overflow-y: auto;
-    border: 1px solid #ffffff30;
-    border-radius: 20px;
-    background: #171719;
+    border: 1px solid var(--client-line);
+    border-radius: var(--client-radius-panel);
+    background: #18191d;
     box-shadow: 0 20px 80px #0009;
 
     &.style-glass {
         backdrop-filter: blur(30px);
-        background: #1b1b1de8;
+        background: #1e1e1ef2;
     }
     &::backdrop { background: #0004; }
 
@@ -421,15 +432,23 @@ html.client-video-active {
         min-height: 44px;
         padding: 0.6em 0.9em;
         border: 1px solid #ffffff20;
-        border-radius: 8px;
-        background: #ffffff09;
+        border-radius: var(--client-radius-control);
+        background: var(--client-surface-layer);
         cursor: pointer;
     }
-    button:not(.client-controls button):hover { background: #ffffff1c; }
+    button:not(.client-controls button):hover { background: var(--client-surface-highlight); }
+
+    > header > button:not(.client-controls button) {
+        display: grid;
+        width: 44px;
+        place-items: center;
+        padding: 0;
+        border-radius: 50%;
+    }
 
     button[aria-pressed=true] {
         border-color: var(--player-accent);
-        background: #ffffff15;
+        background: var(--client-surface-highlight);
     }
 
     svg {
@@ -450,7 +469,7 @@ html.client-video-active {
         gap: 1em;
         text-align: left;
     }
-    small { color: #bbb; }
+    small { color: var(--client-ink-subtle); }
 }
 
 .client-player-settings {
@@ -470,7 +489,7 @@ html.client-video-active {
         align-items: center;
         justify-content: space-between;
         gap: 0.65em;
-        font-size: 15px;
+        font-size: var(--client-text-16);
     }
 
     select {
@@ -478,9 +497,9 @@ html.client-video-active {
         min-height: 44px;
         padding: 0.55em 0.7em;
         border: 1px solid #ffffff35;
-        border-radius: 7px;
+        border-radius: var(--client-radius-small);
         background: #202023;
-        color: #fff;
+        color: var(--client-ink);
     }
 
     input[type=range] {
@@ -494,13 +513,13 @@ html.client-video-active {
         accent-color: var(--player-accent, #fff);
     }
     > .client-player-check { justify-content: flex-start; }
-    output { color: #bbb; }
+    output { color: var(--client-ink-subtle); }
 
     .client-player-hint {
         grid-column: 1 / -1;
         margin: 0.2em 0;
-        color: #bdbdbd;
-        font-size: 13px;
+        color: var(--client-ink-subtle);
+        font-size: var(--client-text-13);
         line-height: 1.5;
     }
 
@@ -508,9 +527,9 @@ html.client-video-active {
         width: fit-content;
         padding: 0.75em 1em;
         border: 1px solid #ffffff35;
-        border-radius: 8px;
-        background: #ffffff0c;
-        color: #fff;
+        border-radius: var(--client-radius-small);
+        background: var(--client-surface-layer);
+        color: var(--client-ink);
         cursor: pointer;
     }
 }
@@ -525,8 +544,8 @@ html.client-video-active {
     padding: 1.5em;
     overflow: hidden;
     border: 1px solid #ffffff25;
-    border-radius: 14px;
-    background: radial-gradient(ellipse at 65% 30%, #5a616b, transparent 55%), linear-gradient(135deg, #171b25, #3b3036 55%, #141419);
+    border-radius: var(--client-radius-card);
+    background: radial-gradient(ellipse at 65% 30%, #616161, transparent 55%), linear-gradient(135deg, #1c1c1c, #3b3036 55%, #141419);
 
     .client-player-preview-label { font-size: 0.9em; }
 
@@ -551,10 +570,10 @@ html.client-video-active {
 
     &.style-glass > div {
         padding: 1em;
-        border: 1px solid #ffffff30;
-        border-radius: 12px;
+        border: 1px solid var(--client-line);
+        border-radius: var(--client-radius-control);
         backdrop-filter: blur(12px);
-        background: #ffffff12;
+        background: var(--client-surface-highlight);
     }
 
     &.style-minimal {
@@ -563,7 +582,7 @@ html.client-video-active {
     }
 }
 
-@media (width <= 700px) {
+@include ds.phone {
     .client-player-top {
         gap: 0.5em;
         padding: max(0.8em, env(safe-area-inset-top)) 0.6em 3em;
@@ -631,7 +650,84 @@ html.client-video-active {
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@include ds.reduced-motion {
     .client-player * { transition: none !important; }
 }
 /* stylelint-enable no-descending-specificity */
+
+// Chargement : le nom du film au centre à la place du rond de chargement de Jellyfin.
+html.client-video-active .docspinner {
+    display: none !important;
+}
+
+.client-player.is-loading .client-player-center {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.client-player-loading-title {
+    position: absolute;
+    z-index: 4;
+    top: 50%;
+    left: 50%;
+    display: flex;
+    width: min(80vw, 760px);
+    flex-direction: column;
+    align-items: center;
+    gap: 0.7em;
+    color: var(--client-ink);
+    pointer-events: none;
+    text-align: center;
+    transform: translate(-50%, -50%);
+
+    img {
+        max-width: min(70vw, 560px);
+        max-height: min(26vh, 220px);
+        object-fit: contain;
+        filter: drop-shadow(0 4px 24px #000c);
+        animation: client-player-title-pulse 1.8s ease-in-out infinite;
+    }
+
+    strong {
+        font-size: clamp(28px, 5vw, 64px);
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        line-height: 1.05;
+        text-shadow: 0 4px 30px #000d;
+        animation: client-player-title-pulse 1.8s ease-in-out infinite;
+    }
+}
+
+// Respiration lente du titre : seule indication du chargement.
+@keyframes client-player-title-pulse {
+    50% {
+        opacity: 0.55;
+        transform: scale(0.97);
+    }
+}
+
+@include ds.reduced-motion {
+    .client-player-loading-title img,
+    .client-player-loading-title strong {
+        animation: none;
+    }
+}
+
+// Entre « Lecture » et l'ouverture du lecteur : écran noir et nom du titre, sans le rond de Jellyfin.
+body.client-playback-starting-active .docspinner {
+    display: none !important;
+}
+
+.client-playback-starting {
+    position: fixed;
+    z-index: 1100;
+    inset: 0;
+    background: #000;
+    animation: client-playback-starting-in var(--client-duration-state) ease-out;
+}
+
+@keyframes client-playback-starting-in {
+    from {
+        opacity: 0;
+    }
+}

@@ -9,17 +9,18 @@ import { AppFeature } from 'constants/appFeature';
 import { useApi } from 'hooks/useApi';
 import { useWebConfig } from 'hooks/useWebConfig';
 
-import SessionPage from '../session/SessionPage';
+import SessionPage, { SessionNotice } from '../session/SessionPage';
 import { useLoginInfo } from '../session/useLoginInfo';
 
 import ClientIcon from '../ClientIcon';
 import AvatarPicker from './AvatarPicker';
 import { saveAvatar, type GalleryAvatar } from './avatars';
 import { enterProfile, restart } from './profileSession';
-import { leaveProfiles } from './profileEntrance';
+import { avatarBox, leaveProfiles, type Avatar as FlightAvatar } from './profileEntrance';
 import './entrance.scss';
 import { dropToken, forgetProfile, markProfileChosen, profileTone, readProfiles, rememberProfile, type SavedProfile } from './profileStore';
 import QuickConnectPanel from './QuickConnectPanel';
+import { LABELS } from '../labels';
 
 type Form = { name: string; locked: boolean; note?: string };
 /** Before anyone is signed in, the same page works directly with the chosen server. */
@@ -66,6 +67,7 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
     const [message, setMessage] = useState('');
     const [busy, setBusy] = useState(false);
     const formElement = useRef<HTMLFormElement>(null);
+    const selectedAvatar = useRef<{ id: string; avatar: FlightAvatar; box: ReturnType<typeof avatarBox> }>();
     const formOpen = !!form && !quick;
     useEffect(() => {
         if (!legacy) return;
@@ -109,6 +111,7 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
     async function choose(profile: SavedProfile, tile?: HTMLElement) {
         setMessage('');
         if (profile.userId === user?.Id) {
+            setBusy(true);
             markProfileChosen();
             await leaveProfiles(tile, entranceOf(profile));
             navigate('/client', { replace: true });
@@ -118,13 +121,16 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
             if (login?.passwordless.has(profile.userId) && legacy) {
                 setBusy(true);
                 try {
-                    await welcome(await legacy.authenticateUserByName(profile.name, ''), undefined);
+                    const result = await legacy.authenticateUserByName(profile.name, '');
+                    await leaveProfiles(tile, entranceOf(profile));
+                    await welcome(result, undefined);
                 } catch (error) {
                     setMessage(refusal((error as { status?: number }).status));
                     setBusy(false);
                 }
                 return;
             }
+            selectedAvatar.current = { id: profile.userId, avatar: entranceOf(profile), box: avatarBox(tile) };
             setForm({ name: profile.name, locked: true, note: 'Ce profil demande son mot de passe.' });
             return;
         }
@@ -136,6 +142,7 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
             if (response.status === 401 || (response.ok && owner?.replace(/-/g, '').toLowerCase() !== profile.userId.replace(/-/g, '').toLowerCase())) {
                 dropToken(basePath, profile.userId);
                 setProfiles(readProfiles(basePath));
+                selectedAvatar.current = { id: profile.userId, avatar: entranceOf(profile), box: avatarBox(tile) };
                 setForm({ name: profile.name, locked: true, note: 'Cette session a expiré.' });
                 return;
             }
@@ -157,7 +164,10 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
         setMessage('');
         const leaving = closing.current;
         try {
-            await welcome(await legacy.authenticateUserByName(form.name.trim(), password), leaving);
+            const result = await legacy.authenticateUserByName(form.name.trim(), password);
+            const selected = selectedAvatar.current;
+            if (selected && selected.id === result.User?.Id) await leaveProfiles(undefined, selected.avatar, selected.box);
+            await welcome(result, leaving);
         } catch (error) {
             setPassword('');
             setMessage(refusal((error as { status?: number }).status));
@@ -196,6 +206,7 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
     }
 
     function closeForm() {
+        selectedAvatar.current = undefined;
         setForm(undefined);
         setQuick(false);
         setPassword('');
@@ -219,6 +230,7 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
 
     const tiles = managing ? profiles : [...profiles, ...publicUsers];
     const formTitle = signedOut ? 'Connexion' : 'Ajouter un profil';
+    const submitLabel = signedOut ? 'Se connecter' : 'Continuer';
     const title = managing ? 'Gérer les profils' : 'Qui regarde ?';
     let content;
     if (picking && clientAvatars) {
@@ -231,15 +243,16 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
     } else if (quick && legacy) {
         content = <QuickConnectPanel legacy={legacy} done={quickDone} cancel={() => setQuick(false)} />;
     } else if (form) {
-        content = <form ref={formElement} className='client-profile-form' onSubmit={signIn}>
+        content = <form ref={formElement} className='client-profile-form' onSubmit={signIn} aria-busy={busy}>
             <h1>{form.locked ? form.name : formTitle}</h1>
             {form.note && <p>{form.note}</p>}
             {!form.locked && <label>Nom d’utilisateur<input autoComplete='username' value={form.name} disabled={busy} onChange={event => setForm({ ...form, name: event.target.value })} /></label>}
             <label>Mot de passe<input type='password' autoComplete='current-password' value={password} disabled={busy} onChange={event => setPassword(event.target.value)} /></label>
             {message && <p role='alert' className='client-profile-error'>{message}</p>}
+            {busy && <span className='client-session-progress' aria-hidden='true' />}
             <div>
-                <button type='submit' className='client-profile-primary' disabled={busy || !form.name.trim()}>{signedOut ? 'Se connecter' : 'Continuer'}</button>
-                {!!tiles.length && <button type='button' disabled={busy} onClick={closeForm}>Annuler</button>}
+                <button type='submit' className='client-profile-primary' disabled={busy || !form.name.trim()}>{busy ? 'Connexion…' : submitLabel}</button>
+                {!!tiles.length && <button type='button' disabled={busy} onClick={closeForm}>{LABELS.cancel}</button>}
             </div>
             {quickAvailable && <button type='button' className='client-profile-quick' disabled={busy} onClick={() => {
                 closingAtStart.current = closing.current;
@@ -270,10 +283,10 @@ export default function ProfilePage({ revision, signedOut }: Readonly<{ revision
             {!!profiles.length && <button type='button' className='client-profile-manage' disabled={busy} onClick={() => setManaging(!managing)}>{managing ? 'Terminé' : 'Gérer les profils'}</button>}
         </>;
     }
-    return <SessionPage title={signedOut ? 'Connexion' : title} background={login?.background}>
-        {basePath && (!signedOut || login) ? content : null}
-        {/* eslint-disable-next-line sonarjs/disabled-auto-escaping -- Sanitized by useLoginInfo. */}
-        {login?.disclaimer && <div className='client-session-disclaimer' dangerouslySetInnerHTML={{ __html: login.disclaimer }} />}
+    return <SessionPage title={signedOut ? 'Connexion' : title} background={login?.background} variant={signedOut ? 'login' : 'profiles'}>
+        {basePath && (!signedOut || login) ? content : <SessionNotice title='Connexion' message='Chargement des profils…' busy />}
+        {/* The server notice is sanitized by useLoginInfo; it only concerns signing in. */}
+        {signedOut && login?.disclaimer && <div className='client-session-disclaimer' dangerouslySetInnerHTML={{ __html: login.disclaimer }} />}
     </SessionPage>;
 }
 /* eslint-enable react/jsx-no-bind */

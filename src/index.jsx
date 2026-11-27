@@ -20,6 +20,7 @@ import { initialize as initializeAutoCast } from 'scripts/autocast';
 import browser from './scripts/browser';
 import keyboardNavigation from './scripts/keyboardNavigation';
 import { getPlugins } from './scripts/settings/webSettings';
+import { loadCjkFontFallbacks } from './scripts/loadCjkFontFallbacks';
 import taskButton from './scripts/taskbutton';
 import { pageClassOn, serverAddress } from './utils/dashboard';
 import Events from './utils/events';
@@ -138,6 +139,7 @@ function loadFonts() {
         console.debug('using default fonts');
         import('./styles/fonts.scss');
         import('./styles/fonts.noto.scss');
+        loadCjkFontFallbacks();
     }
 }
 
@@ -161,7 +163,8 @@ async function loadPlugins() {
     }
 
     try {
-        await Promise.all(list.map(plugin => pluginManager.loadPlugin(plugin)));
+        const deferred = pluginManager.deferLocalPlayers(list);
+        await Promise.all(list.filter(plugin => !deferred.has(plugin)).map(plugin => pluginManager.loadPlugin(plugin)));
         console.debug('finished loading plugins');
     } catch (e) {
         console.warn('failed loading plugins', e);

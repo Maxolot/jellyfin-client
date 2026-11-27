@@ -1,0 +1,21 @@
+services:
+  describe-search:
+    build: .
+    environment:
+      JELLYFIN_URL: ${JELLYFIN_URL:?Set the internal Jellyfin URL}
+      JELLYFIN_KEY: ${JELLYFIN_KEY:?Set a private Jellyfin API key}
+      DESCRIBE_SERVICE_TOKEN: ${DESCRIBE_SERVICE_TOKEN:?Set a private service token}
+      SHARED_CATALOG_PATH: /shared/catalog.json
+      REINDEX_SECONDS: "900"
+    volumes:
+      - index-data:/data
+      - ${SHARED_CATALOG_DIRECTORY:?Set the Shared Catalog data directory}:/shared:ro
+    networks:
+      - media-internal
+
+volumes:
+  index-data:
+
+networks:
+  media-internal:
+    external: true
