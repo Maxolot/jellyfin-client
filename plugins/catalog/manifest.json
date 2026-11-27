@@ -34,5 +34,23 @@
         "changelog": "Films and seasons, release languages (VF, VOSTFR, MULTi)."
       }
     ]
+  },
+  {
+    "guid": "d63d5a26-fbd6-4167-8ffb-426199825b06",
+    "name": "Shared Catalog",
+    "owner": "Maxolot",
+    "category": "General",
+    "description": "Personal and shared folders, followed titles kept without their files, request progress and evening suggestions for this client.",
+    "overview": "Folders, timeline and request tracking for Jellyfin 12 clients.",
+    "versions": [
+      {
+        "version": "0.6.4.0",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://raw.githubusercontent.com/Maxolot/jellyfin-client/main/plugins/catalog/shared-catalog-0.6.4.zip",
+        "checksum": "2b75a0841bb2bba42667a5c4ed0e2bbd",
+        "timestamp": "2026-11-27T17:30:00+01:00",
+        "changelog": "Folders (private or shared), followed titles in folders and collections, request progress with ETA, notifications, « Ce soir » suggestions."
+      }
+    ]
   }
 ]
