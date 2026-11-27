@@ -78,6 +78,7 @@ describe('administration model', () => {
     });
 
     it('saves only what the form changed, on top of the server copy', () => {
+        // eslint-disable-next-line sonarjs/no-hardcoded-passwords -- A provider id, not a password.
         const start = { EnableRemoteAccess: true, EnableAllFolders: false, EnabledFolders: ['a'], AuthenticationProviderId: 'x', PasswordResetProviderId: 'y' } as UserPolicy;
         const edited = { ...start, EnableRemoteAccess: false, EnabledFolders: ['a', 'b'] };
         const changes = policyChanges(start, edited);
