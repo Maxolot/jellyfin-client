@@ -4,9 +4,16 @@ Cette application est un client web indépendant pour les films et séries de Je
 
 ## Installer le paquet compilé
 
-Chaque version publiée fournit `jellyfin-client-web.tar.gz` (le client compilé), `SHA256SUMS` et l’archive des sources. Le client demande Jellyfin 12.0.
+Chaque version est publiée dans les [releases GitHub](https://github.com/Maxolot/jellyfin-client/releases) avec `jellyfin-client-web.tar.gz` (le client compilé), `SHA256SUMS` et l’archive des sources. Le client demande Jellyfin 12.0. Pour récupérer la dernière version :
 
-**Le plus simple : remplacer l’interface web de Jellyfin.** Décompressez l’archive dans un dossier, par exemple `/srv/jellyfin-client`, puis indiquez-le à Jellyfin comme dossier web. Avec l’image Docker officielle, montez-le à la place de l’interface d’origine et recréez le conteneur :
+```sh
+mkdir -p /srv/jellyfin-client
+curl -fL https://github.com/Maxolot/jellyfin-client/releases/latest/download/jellyfin-client-web.tar.gz | tar -xz -C /srv/jellyfin-client
+```
+
+Pour mettre à jour, videz le dossier et relancez ces commandes, puis rechargez la page.
+
+**Le plus simple : remplacer l’interface web de Jellyfin.** Indiquez ce dossier à Jellyfin comme dossier web. Avec l’image Docker officielle, montez-le à la place de l’interface d’origine et recréez le conteneur :
 
 ```yaml
 services:
